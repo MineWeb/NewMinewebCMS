@@ -4,17 +4,8 @@
 /config/app.php
 /config/app_local.php
 
-/tmp/debug_kit.sqlite
-/tmp/cache/models/*
-!/tmp/cache/models/empty
-/tmp/cache/persistent/*
-!/tmp/cache/persistent/empty
-/tmp/cache/views/*
-!/tmp/cache/views/empty
-/tmp/sessions/*
-!/tmp/sessions/empty
-/tmp/tests/*
-!/tmp/tests/empty
+/tmp/*
+!/tmp/.gitkeep
 
 /logs/*
 !/logs/empty
@@ -31,6 +22,7 @@ Thumbs.db
 .idea
 
 /plugins/*
+!/plugins/.gitkeep
 /templates/Themed/*
 
 /webroot/img/uploads/favicons/*
