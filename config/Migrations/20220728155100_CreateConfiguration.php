@@ -18,7 +18,7 @@ class CreateConfiguration extends AbstractMigration {
         $table->addColumn('server_cache', 'integer', ['null' => false, 'default' => 0, 'length' => 1, 'signed' => false]);
         $table->addColumn('server_secretkey', 'string', ['null' => false, 'default' => null, 'length' => 50]);
         $table->addColumn('server_timeout', 'float', ['null' => false, 'default' => null, 'signed' => false]);
-        $table->addColumn('usage_condition', 'string', ['null' => true, 'default' => null, 'length' => 250]);
+        $table->addColumn('condition', 'string', ['null' => true, 'default' => null, 'length' => 250]);
         $table->addColumn('banner_server', 'text', ['null' => true, 'default' => null]);
         $table->addColumn('email_send_type', 'integer', ['null' => true, 'default' => '1', 'length' => 1, 'signed' => false, 'comment' => '1 = default, 2 = smtp']);
         $table->addColumn('smtpHost', 'string', ['null' => true, 'default' => null, 'length' => 30]);
@@ -42,43 +42,5 @@ class CreateConfiguration extends AbstractMigration {
         $table->addColumn('microsoft_client_secret', 'string', array('null' => true, 'default' => null, 'length' => 50));
 
         $table->create();
-
-        $table->insert([
-            'website_url' => 'https://domain.fr',
-            'name' => 'MineWeb',
-            'email' => 'noreply@mineweb.org',
-            'lang' => 'fr_FR',
-            'theme' => 'default',
-            'layout' => 'default',
-            'money_name_singular' => 'point',
-            'money_name_plural' => 'points',
-            'server_state' => 0,
-            'server_cache' => 0,
-            'server_secretkey' => '',
-            'server_timeout' => 1,
-            'condition' => null,
-            'banner_server' => serialize([]),
-            'email_send_type' => '1',
-            'smtpHost' => null,
-            'smtpUsername' => null,
-            'smtpPort' => null,
-            'smtpPassword' => null,
-            'google_analytics' => null,
-            'end_layout_code' => null,
-            'check_uuid' => 0,
-            'captcha_type' => 1,
-            'captcha_sitekey' => null,
-            'captcha_secret' => null,
-            'confirm_mail_signup' => 0,
-            'confirm_mail_signup_block' => 0,
-            'member_page_type' => 0,
-            'passwords_hash' => 'blowfish',
-            'passwords_salt' => 0,
-            'forced_updates' => 1,
-            'session_type' => 'php',
-            'microsoft_client_id' => null,
-            'microsoft_client_secret' => null,
-        ]);
-        $table->saveData();
     }
 }

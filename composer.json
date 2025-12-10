@@ -18,7 +18,7 @@
         "htmlawed/htmlawed": "1.2.6",
         "robthree/twofactorauth": "1.8.2",
         "symfony/service-contracts": "^3.1",
-        "xpaw/php-minecraft-query": "^4.0",
+        "xpaw/php-minecraft-query": "^4.0"
     },
     "require-dev": {
         "cakephp/bake": "^3.0.0",

@@ -54,7 +54,7 @@ class UtilComponent extends Component
 
     // Encoder un mot de passe
 
-    public function password($password, $username, $hash_bcrypt = false, $hash = false)
+    public function password($password, $username, $existingHash = null, $hash = null)
     {
         $event = new Event('beforeEncodePassword', $this, ['password' => $password, 'username' => $username]);
         $this->controller->getEventManager()->dispatch($event);
@@ -62,23 +62,23 @@ class UtilComponent extends Component
             return $event->getResult();
         }
 
-        if (!$hash)
+        if (!$hash) {
             $hash = $this->getPasswordHashType();
+        }
+
         if (empty($hash)) {
             $hash = 'sha256';
         }
-        $salt = false;
 
-        if ($hash == 'blowfish') {
-            if ($hash_bcrypt)
-                $salt = $hash_bcrypt;
-        } else {
-            $salt = $this->controller->Configuration->getKey('passwords_salt');
-            if (empty($salt)) {
-                $salt = false;
+        if ($hash === 'blowfish' || $hash === 'bcrypt') {
+            if ($existingHash) {
+                return password_verify($password, $existingHash);
             }
+
+            return password_hash($password, PASSWORD_BCRYPT);
         }
 
+        $salt = $this->controller->Configuration->getKey('passwords_salt') ?? false;
 
         return Security::hash($password, $hash, $salt);
     }

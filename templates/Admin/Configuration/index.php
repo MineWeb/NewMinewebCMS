@@ -184,7 +184,7 @@ use Cake\Routing\Router;
                                     <div class="form-group">
                                         <div class="form-group">
                                             <label><?= $Lang->get('CONFIG__CONDITION_TITLE') ?></label>
-                                            <?= $this->Form->input('usage_condition', [
+                                            <?= $this->Form->input('condition', [
                                                 'div' => false,
                                                 'type' => 'text',
                                                 'class' => 'form-control',

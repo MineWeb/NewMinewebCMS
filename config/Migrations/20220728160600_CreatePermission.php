@@ -10,17 +10,5 @@ class CreatePermission extends AbstractMigration {
         $table->addColumn('permissions', 'text', ['null' => false, 'default' => null]);
 
         $table->create();
-
-        $table->insert([
-            [
-                'rank' => '0',
-                'permissions' => serialize(['COMMENT_NEWS', 'LIKE_NEWS', 'DELETE_HIS_COMMENT', 'EDIT_HIS_EMAIL'])
-            ],
-            [
-                'rank' => '2',
-                'permissions' => serialize(['COMMENT_NEWS', 'LIKE_NEWS', 'DELETE_HIS_COMMENT', 'EDIT_HIS_EMAIL'])
-            ]
-        ]);
-        $table->saveData();
     }
 }
