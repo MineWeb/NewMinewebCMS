@@ -2,6 +2,7 @@
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
+use App\Utility\LangService;
 use Cake\Core\App;
 use Cake\Core\Configure;
 use Cake\Filesystem\Folder;
@@ -15,7 +16,7 @@ class PluginController extends AppController
     {
         if (!$this->isConnected || !$this->Permissions->can('MANAGE_PLUGINS'))
             throw new ForbiddenException();
-        $this->set('title_for_layout', $this->Lang->get('PLUGIN__LIST'));
+        $this->set('title_for_layout', __('PLUGIN__LIST'));
     }
 
     function admin_delete($id = false)
@@ -28,9 +29,9 @@ class PluginController extends AppController
 
         if (isset($slug['name']) && !$this->EyPlugin->delete($slug['name'])) {
             $this->History->set('DELETE_PLUGIN', 'plugin');
-            $this->Session->setFlash($this->Lang->get('PLUGIN__DELETE_SUCCESS'), 'default.success');
+            $this->Session->setFlash(__('PLUGIN__DELETE_SUCCESS'), 'default.success');
         } else
-            $this->Session->setFlash($this->Lang->get('ERROR__INTERNAL_ERROR'), 'default.error');
+            $this->Session->setFlash(__('ERROR__INTERNAL_ERROR'), 'default.error');
 
         Configure::write('Cache.disable', true);
         App::uses('Folder', 'Utility');
@@ -51,9 +52,9 @@ class PluginController extends AppController
 
         if ($this->EyPlugin->enable($id)) {
             $this->History->set('ENABLE_PLUGIN', 'plugin');
-            $this->Session->setFlash($this->Lang->get('PLUGIN__ENABLE_SUCCESS'), 'default.success');
+            $this->Session->setFlash(__('PLUGIN__ENABLE_SUCCESS'), 'default.success');
         } else
-            $this->Session->setFlash($this->Lang->get('ERROR__INTERNAL_ERROR'), 'default.error');
+            $this->Session->setFlash(__('ERROR__INTERNAL_ERROR'), 'default.error');
         $this->redirect(['controller' => 'plugin', 'action' => 'index', 'admin' => true]);
     }
 
@@ -66,9 +67,9 @@ class PluginController extends AppController
 
         if ($this->EyPlugin->disable($id)) {
             $this->History->set('DISABLE_PLUGIN', 'plugin');
-            $this->Session->setFlash($this->Lang->get('PLUGIN__DISABLE_SUCCESS'), 'default.success');
+            $this->Session->setFlash(__('PLUGIN__DISABLE_SUCCESS'), 'default.success');
         } else
-            $this->Session->setFlash($this->Lang->get('ERROR__INTERNAL_ERROR'), 'default.error');
+            $this->Session->setFlash(__('ERROR__INTERNAL_ERROR'), 'default.error');
         $this->redirect(['controller' => 'plugin', 'action' => 'index', 'admin' => true]);
     }
 
@@ -84,7 +85,7 @@ class PluginController extends AppController
 
         $installed = $this->EyPlugin->download($slug, true);
         if ($installed !== true)
-            return $this->response->withStringBody(json_encode(['statut' => 'error', 'msg' => $this->Lang->get($installed)]));
+            return $this->response->withStringBody(json_encode(['statut' => 'error', 'msg' => __($installed)]));
 
         $this->History->set('INSTALL_PLUGIN', 'plugin');
 
@@ -103,7 +104,7 @@ class PluginController extends AppController
                 'name' => $search['name'],
                 'DBid' => $search['id'],
                 'author' => $search['author'],
-                'dateformatted' => $this->Lang->date($search['created']),
+                'dateformatted' => LangService::date($search['created']),
                 'version' => $search['version']
             ]
         ]));
@@ -126,9 +127,9 @@ class PluginController extends AppController
             }
 
             $this->History->set('UPDATE_PLUGIN', 'plugin');
-            $this->Session->setFlash($this->Lang->get('PLUGIN__UPDATE_SUCCESS'), 'default.success');
+            $this->Session->setFlash(__('PLUGIN__UPDATE_SUCCESS'), 'default.success');
         } else
-            $this->Session->setFlash($this->Lang->get($updated), 'default.error');
+            $this->Session->setFlash(__($updated), 'default.error');
         $this->redirect(['controller' => 'plugin', 'action' => 'index', 'admin' => true]);
     }
 

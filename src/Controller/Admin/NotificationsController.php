@@ -2,8 +2,10 @@
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
+use App\Utility\LangService;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
+use Cake\I18n\FrozenTime;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 
@@ -14,7 +16,7 @@ class NotificationsController extends AppController
         if (!$this->isConnected || !$this->Permissions->can('MANAGE_NOTIFICATIONS'))
             throw new ForbiddenException();
 
-        $this->set('title_for_layout', $this->Lang->get('NOTIFICATION__TITLE'));
+        $this->set('title_for_layout', __('NOTIFICATION__TITLE'));
     }
 
     public function getAll()
@@ -38,33 +40,33 @@ class NotificationsController extends AppController
             foreach ($response['aaData'] as $notification) {
 
                 if ($notification['from'] == null) {
-                    $from = '<small class="text-muted">' . $this->Lang->get('NOTIFICATION__NO_FROM') . '</small>';
+                    $from = '<small class="text-muted">' . __('NOTIFICATION__NO_FROM') . '</small>';
                 } else {
                     $from = $this->User->getFromUser('pseudo', $notification['from']);
                 }
 
                 $actions = '<div class="btn btn-group">';
                 if ($notification['seen']) {
-                    $actions .= '<btn class="btn btn-default disabled active" disabled>' . $this->Lang->get('NOTIFICATION__SEEN') . '</btn>';
+                    $actions .= '<btn class="btn btn-default disabled active" disabled>' . __('NOTIFICATION__SEEN') . '</btn>';
                 } else {
-                    $actions .= '<a class="btn btn-default mark-as-seen" data-seen="' . $this->Lang->get('NOTIFICATION__SEEN') . '" href="' . Router::url(['action' => 'markAsSeenFromUser', 'admin' => true, $notification['id'], $notification['user_id']]) . '">' . $this->Lang->get('NOTIFICATION__MARK_AS_SEEN') . '</a>';
+                    $actions .= '<a class="btn btn-default mark-as-seen" data-seen="' . __('NOTIFICATION__SEEN') . '" href="' . Router::url(['action' => 'markAsSeenFromUser', 'admin' => true, $notification['id'], $notification['user_id']]) . '">' . __('NOTIFICATION__MARK_AS_SEEN') . '</a>';
                 }
-                $actions .= '<a class="btn btn-danger delete-notification" href="' . Router::url(['action' => 'clearFromUser', 'admin' => true, $notification['id'], $notification['user_id']]) . '">' . $this->Lang->get('GLOBAL__DELETE') . '</a>';
+                $actions .= '<a class="btn btn-danger delete-notification" href="' . Router::url(['action' => 'clearFromUser', 'admin' => true, $notification['id'], $notification['user_id']]) . '">' . __('GLOBAL__DELETE') . '</a>';
                 $actions .= '</div>';
 
                 if ($notification['type'] == "admin") {
-                    $type = '<span class="label label-danger">' . $this->Lang->get('NOTIFICATION__TYPE_ADMIN') . '</span>';
+                    $type = '<span class="label label-danger">' . __('NOTIFICATION__TYPE_ADMIN') . '</span>';
                 } else {
-                    $type = '<span class="label label-success">' . $this->Lang->get('NOTIFICATION__TYPE_USER') . '</span>';
+                    $type = '<span class="label label-success">' . __('NOTIFICATION__TYPE_USER') . '</span>';
                 }
 
                 $data[] = [
                     'Notification' => [
-                        'group' => (!empty($notification['group']) ? '#' . $notification['group'] : '<small class="text-muted">' . $this->Lang->get('NOTIFICATION__NO_FROM') . '</small>'),
+                        'group' => (!empty($notification['group']) ? '#' . $notification['group'] : '<small class="text-muted">' . __('NOTIFICATION__NO_FROM') . '</small>'),
                         'from' => $from,
                         'content' => $notification['content'],
                         'type' => $type,
-                        'created' => $this->Lang->date($notification['created']),
+                        'created' => LangService::date($notification['created']),
                         'actions' => $actions
                     ],
                     'User' => $notification['user']
@@ -98,14 +100,14 @@ class NotificationsController extends AppController
                         $user_id = $this->User->getFromUser('id', $this->getRequest()->getData('user_pseudo'));
 
                         if (empty($user_id))
-                            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('USER__EDIT_ERROR_UNKNOWN')]));
+                            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('USER__EDIT_ERROR_UNKNOWN')]));
 
                         $this->Notification->setToUser($this->getRequest()->getData('content'), $user_id, $from);
                     }
 
-                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('NOTIFICATION__SUCCESS_SET')]));
+                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('NOTIFICATION__SUCCESS_SET')]));
                 } else {
-                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
+                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]));
                 }
 
             } else {
@@ -218,12 +220,12 @@ class NotificationsController extends AppController
         if (!$this->isConnected || !$this->Permissions->can('MANAGE_NOTIFICATIONS'))
             throw new ForbiddenException();
         if ($this->getRequest()->getData('group') == null || empty($this->getRequest()->getData('group')))
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
+            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]));
 
         $this->disableAutoRender();
 
         $this->Notification = TableRegistry::getTableLocator()->get('Notification');
         $this->Notification->clearAllFromGroup($this->getRequest()->getData('group'));
-        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('NOTIFICATION__SUCCESS_REMOVE')]));
+        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('NOTIFICATION__SUCCESS_REMOVE')]));
     }
 }

@@ -9,12 +9,12 @@ use Cake\Routing\Router;
         <div class="col-lg-8">
             <h1><?= before_display($news['title']) ?></h1>
             <p class="lead">
-                <?= $Lang->get('GLOBAL__BY') ?> <a href="#"><?= $news['author'] ?></a>
+                <?= __('GLOBAL__BY') ?> <a href="#"><?= $news['author'] ?></a>
             </p>
 
             <hr>
             <p>
-                <span class="glyphicon glyphicon-time"></span> <?= $Lang->get('NEWS__POSTED_ON') . ' ' . $Lang->date($news['created']); ?>
+                <span class="glyphicon glyphicon-time"></span> <?= __('NEWS__POSTED_ON') . ' ' . $this->Lang->date($news['created']); ?>
             </p>
 
             <hr>
@@ -27,7 +27,7 @@ use Cake\Routing\Router;
                 <div id="form-comment-fade-out">
                     <hr>
                     <div class="well">
-                        <h4><?= $Lang->get('NEWS__COMMENT_TITLE') ?> :</h4>
+                        <h4><?= __('NEWS__COMMENT_TITLE') ?> :</h4>
                         <form method="POST" data-ajax="true"
                               action="<?= Router::url(['controller' => 'news', 'action' => 'add_comment']) ?>"
                               data-callback-function="addcomment" data-success-msg="false">
@@ -35,7 +35,7 @@ use Cake\Routing\Router;
                             <div class="form-group">
                                 <textarea name="content" class="form-control" rows="3"></textarea>
                             </div>
-                            <button type="submit" class="btn btn-primary"><?= $Lang->get('GLOBAL__SUBMIT') ?></button>
+                            <button type="submit" class="btn btn-primary"><?= __('GLOBAL__SUBMIT') ?></button>
                         </form>
                     </div>
                 </div>
@@ -51,13 +51,13 @@ use Cake\Routing\Router;
                     </a>
                     <div class="media-body">
                         <h4 class="media-heading"><?= $v['author'] ?>
-                            <small><?= $Lang->date($v['created']); ?></small>
+                            <small><?= $this->Lang->date($v['created']); ?></small>
                         </h4>
                         <?= before_display($v['content']) ?>
                     </div>
                     <div class="pull-right">
                         <?php if ($Permissions->can('DELETE_COMMENT') or $Permissions->can('DELETE_HIS_COMMENT') and $user['pseudo'] == $v['author']) { ?>
-                            <p><a id="<?= $v['id'] ?>" title="<?= $Lang->get('GLOBAL__DELETE') ?>"
+                            <p><a id="<?= $v['id'] ?>" title="<?= __('GLOBAL__DELETE') ?>"
                                   class="comment-delete btn btn-danger btn-sm">
                                     <icon class="fa fa-times"></icon>
                                 </a></p>
@@ -68,7 +68,7 @@ use Cake\Routing\Router;
         </div>
         <div class="col-md-4">
             <div class="well">
-                <h4><?= $Lang->get('NEWS__LAST_TITLE') ?></h4>
+                <h4><?= __('NEWS__LAST_TITLE') ?></h4>
                 <div class="row">
                     <div class="col-lg-6">
                         <ul class="list-unstyled">
@@ -82,10 +82,10 @@ use Cake\Routing\Router;
                 </div>
             </div>
             <div class="well">
-                <h4><?= $Lang->get('GLOBAL__INFORMATIONS') ?></h4>
-                <p><b><?= $Lang->get('GLOBAL__UPDATED') ?> : </b><?= $Lang->date($news['updated']) ?></p>
-                <p><b><?= $Lang->get('NEWS__COMMENTS_NBR') ?> : </b><?= count($news['comment']) ?></p>
-                <p><b><?= $Lang->get('NEWS__LIKES_NBR') ?> : </b><?= count($news['likes']) ?></p>
+                <h4><?= __('GLOBAL__INFORMATIONS') ?></h4>
+                <p><b><?= __('GLOBAL__UPDATED') ?> : </b><?= $this->Lang->date($news['updated']) ?></p>
+                <p><b><?= __('NEWS__COMMENTS_NBR') ?> : </b><?= count($news['comment']) ?></p>
+                <p><b><?= __('NEWS__LIKES_NBR') ?> : </b><?= count($news['likes']) ?></p>
             </div>
         </div>
     </div>

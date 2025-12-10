@@ -12,7 +12,7 @@ class SeoController extends AppController
         if (!$this->isConnected || !$this->Permissions->can('MANAGE_SEO'))
             throw new ForbiddenException();
 
-        $this->set('title_for_layout', $this->Lang->get('SEO__TITLE'));
+        $this->set('title_for_layout', __('SEO__TITLE'));
 
         $default = $this->Seo->find('all', ["conditions" => ['page IS NULL']])->first();
         $seo_other = $this->Seo->find('all', ["conditions" => ['page IS NOT NULL']])->all();
@@ -45,7 +45,7 @@ class SeoController extends AppController
                 $url_img = WWW_ROOT . 'img' . DS . 'uploads' . DS . 'favicons' . DS . $time . '.' . $infos['extension'];
 
                 if (!$this->Util->uploadImage($this->request, $url_img)) {
-                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('FORM__ERROR_WHEN_UPLOAD')]));
+                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('FORM__ERROR_WHEN_UPLOAD')]));
                 }
                 $this->request = $this->getRequest()->withData('favicon_url', Router::url('/') . 'img' . DS . 'uploads' . DS . 'favicons' . DS . $time . '.' . $infos['extension']);
             }
@@ -60,7 +60,7 @@ class SeoController extends AppController
         $seo->set($this->getRequest()->getData());
         $this->Seo->save($seo);
 
-        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('SEO__EDIT_SUCCESS')]));
+        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('SEO__EDIT_SUCCESS')]));
     }
 
 
@@ -68,7 +68,7 @@ class SeoController extends AppController
     {
         if (!$this->isConnected || !$this->Permissions->can('MANAGE_SEO'))
             throw new ForbiddenException();
-        $this->set('title_for_layout', $this->Lang->get('SEO__TITLE'));
+        $this->set('title_for_layout', __('SEO__TITLE'));
         $this->layout = 'admin';
         if ($this->request->is('post')) {
             $this->disableAutoRender();
@@ -90,19 +90,19 @@ class SeoController extends AppController
                     $url_img = WWW_ROOT . 'img' . DS . 'uploads' . DS . 'favicons' . DS . $time . '.' . $infos['extension'];
 
                     if (!$this->Util->uploadImage($this->request, $url_img)) {
-                        return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('FORM__ERROR_WHEN_UPLOAD')]));
+                        return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('FORM__ERROR_WHEN_UPLOAD')]));
                     }
                     $this->request = $this->getRequest()->withData('favicon_url', Router::url('/') . 'img' . DS . 'uploads' . DS . 'favicons' . DS . $time . '.' . $infos['extension']);
                 }
             }
 
             if (empty($this->getRequest()->getData('page')) || (empty($this->getRequest()->getData('title')) && empty($this->getRequest()->getData('description')) && empty($this->getRequest()->getData('favicon_url')) && empty($this->getRequest()->getData('img-url'))))
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
+                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]));
 
             $seo = $this->Seo->newEntity($this->getRequest()->getData());
             $this->Seo->save($seo);
 
-            return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('SEO__PAGE_ADD_SUCCESS')]));
+            return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('SEO__PAGE_ADD_SUCCESS')]));
         }
     }
 
@@ -111,7 +111,7 @@ class SeoController extends AppController
     {
         if (!$this->isConnected || !$this->Permissions->can('MANAGE_SEO') || !$id)
             throw new ForbiddenException();
-        $this->set('title_for_layout', $this->Lang->get('SEO__TITLE'));
+        $this->set('title_for_layout', __('SEO__TITLE'));
         $this->layout = 'admin';
         $page = $this->Seo->find('all', ["conditions" => ['id' => $id]])->first();
         $this->set(compact('page'));
@@ -137,20 +137,20 @@ class SeoController extends AppController
                     $url_img = WWW_ROOT . 'img' . DS . 'uploads' . DS . 'favicons' . DS . $time . '.' . $infos['extension'];
 
                     if (!$this->Util->uploadImage($this->request, $url_img)) {
-                        return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('FORM__ERROR_WHEN_UPLOAD')]));
+                        return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('FORM__ERROR_WHEN_UPLOAD')]));
                     }
                     $this->request = $this->getRequest()->withData('favicon_url', Router::url('/') . 'img' . DS . 'uploads' . DS . 'favicons' . DS . $time . '.' . $infos['extension']);
                 }
             }
 
             if (empty($this->getRequest()->getData('page')) || (empty($this->getRequest()->getData('title')) && empty($this->getRequest()->getData('description')) && empty($this->getRequest()->getData('favicon_url')) && empty($this->getRequest()->getData('img-url'))))
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
+                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]));
 
             $seo = $this->Seo->get($page['id']);
             $seo->set($this->request->getData());
             $this->Seo->save($seo);
 
-            return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('SEO__EDIT_SUCCESS')]));
+            return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('SEO__EDIT_SUCCESS')]));
         }
     }
 
@@ -161,7 +161,7 @@ class SeoController extends AppController
             throw new ForbiddenException();
 
         $this->Seo->delete($this->Seo->get($id));
-        $this->Flash->success($this->Lang->get('SEO__PAGE_DELETE_SUCCESS'));
+        $this->Flash->success(__('SEO__PAGE_DELETE_SUCCESS'));
         $this->redirect(['controller' => 'seo', 'action' => 'index', 'admin' => true]);
     }
 

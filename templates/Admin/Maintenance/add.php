@@ -8,20 +8,20 @@ use Cake\Routing\Router;
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('MAINTENANCE__TITLE') ?></h3>
+                    <h3 class="card-title"><?= __('MAINTENANCE__TITLE') ?></h3>
                 </div>
                 <div class="card-body">
                     <form method="post" data-ajax="true"
                           data-redirect-url="<?= Router::url(['controller' => 'maintenance', 'action' => 'index', 'admin' => 'true']) ?>">
                         <div class="form-group">
-                            <label><?= $Lang->get("MAINTENANCE__PAGE") ?></label><br>
-                            <i><?= $Lang->get("MAINTENANCE__ADD_EXAMPLE") ?></i><br>
-                            <i><?= $Lang->get("MAINTENANCE__ADD_EMPTY_URL") ?></i>
+                            <label><?= __("MAINTENANCE__PAGE") ?></label><br>
+                            <i><?= __("MAINTENANCE__ADD_EXAMPLE") ?></i><br>
+                            <i><?= __("MAINTENANCE__ADD_EMPTY_URL") ?></i>
 
                             <input type="text" id="url" name="url" class="form-control">
                         </div>
                         <div class="form-group">
-                            <label><?= $Lang->get('MAINTENANCE__REASON') ?></label>
+                            <label><?= __('MAINTENANCE__REASON') ?></label>
                             <?= $this->Html->script('admin/tinymce/tinymce.min.js') ?>
                             <script type="text/javascript">
                                 tinymce.init({
@@ -42,7 +42,7 @@ use Cake\Routing\Router;
                             <div class="checkbox">
                                 <input name="sub_url_checkbox"
                                        type="checkbox">
-                                <label><?= $Lang->get('MAINTENANCE__USE_SUB_URL') ?></label>
+                                <label><?= __('MAINTENANCE__USE_SUB_URL') ?></label>
                             </div>
                         </div>
                         <script type="text/javascript">
@@ -55,8 +55,8 @@ use Cake\Routing\Router;
 
                         <div class="float-right">
                             <a href="<?= Router::url(['controller' => 'maintenance', 'action' => 'index', 'admin' => true]) ?>"
-                               class="btn btn-default"><?= $Lang->get('GLOBAL__CANCEL') ?></a>
-                            <button class="btn btn-primary" type="submit"><?= $Lang->get('GLOBAL__SUBMIT') ?></button>
+                               class="btn btn-default"><?= __('GLOBAL__CANCEL') ?></a>
+                            <button class="btn btn-primary" type="submit"><?= __('GLOBAL__SUBMIT') ?></button>
                         </div>
                     </form>
 

@@ -12,7 +12,7 @@ class LogController extends AppController
         if (!$this->isConnected || !$this->Permissions->can("PERMISSIONS__VIEW_WEBSITE_LOGS"))
             throw new ForbiddenException();
 
-        $this->set('title_for_layout', $this->Lang->get("LOG__VIEW_ERROR"));
+        $this->set('title_for_layout', __("LOG__VIEW_ERROR"));
 
         if (file_exists(LOGS . "error.log")) {
             $errorFile = new SplFileInfo(LOGS . "error.log");
@@ -42,7 +42,7 @@ class LogController extends AppController
         if (!$this->isConnected || !$this->Permissions->can("PERMISSIONS__VIEW_WEBSITE_LOGS"))
             throw new ForbiddenException();
 
-        $this->set('title_for_layout', $this->Lang->get("LOG__VIEW_DEBUG"));
+        $this->set('title_for_layout', __("LOG__VIEW_DEBUG"));
 
         if (file_exists(LOGS . "debug.log")) {
             $debugFile = new SplFileInfo(LOGS . "debug.log");

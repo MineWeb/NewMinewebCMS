@@ -20,7 +20,7 @@ class SocialController extends AppController
         if (!$this->isConnected || !$this->Permissions->can('MANAGE_SOCIAL'))
             throw new ForbiddenException();
 
-        $this->set('title_for_layout', $this->Lang->get('SOCIAL__HOME'));
+        $this->set('title_for_layout', __('SOCIAL__HOME'));
 
         $this->set('social_buttons', $this->SocialButton->find('all', ['order' => 'Social.order']));
     }
@@ -59,15 +59,15 @@ class SocialController extends AppController
                         }
                     }
                     if (empty($error)) {
-                        return $this->response->withStringBody(json_encode(array('statut' => true, 'msg' => $this->Lang->get('SOCIAL__SAVE_SUCCESS'))));
+                        return $this->response->withStringBody(json_encode(array('statut' => true, 'msg' => __('SOCIAL__SAVE_SUCCESS'))));
                     } else {
-                        return $this->response->withStringBody(json_encode(array('statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS'))));
+                        return $this->response->withStringBody(json_encode(array('statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS'))));
                     }
                 } else {
-                    return $this->response->withStringBody(json_encode(array('statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS'))));
+                    return $this->response->withStringBody(json_encode(array('statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS'))));
                 }
             } else {
-                return $this->response->withStringBody(json_encode(array('statut' => false, 'msg' => $this->Lang->get('ERROR__BAD_REQUEST'))));
+                return $this->response->withStringBody(json_encode(array('statut' => false, 'msg' => __('ERROR__BAD_REQUEST'))));
             }
         } else {
             return $this->redirect('/');
@@ -79,7 +79,7 @@ class SocialController extends AppController
         if (!$this->isConnected || !$this->Permissions->can('MANAGE_SOCIAL'))
             throw new ForbiddenException();
 
-        $this->set('title_for_layout', $this->Lang->get('SOCIAL__HOME'));
+        $this->set('title_for_layout', __('SOCIAL__HOME'));
 
         $this->set('social_default', $this->social_default);
 
@@ -88,9 +88,9 @@ class SocialController extends AppController
             $this->response = $this->response->withType('application/json');
 
             if (empty($this->request->getData('url')))
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
+                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]));
             if (!empty($this->request->getData('img')) && !empty($this->request->getData('icon')) && empty($this->request->getData('type')))
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('SOCIAL__CANNOT_TOW_TYPE')]));
+                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('SOCIAL__CANNOT_TOW_TYPE')]));
 
             $extra = null;
             if (!empty($this->request->getData('type'))) {
@@ -114,7 +114,7 @@ class SocialController extends AppController
             $this->SocialButton->save($button);
 
             $this->History->set('ADD_SOCIAL', 'social network');
-            return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('SOCIAL__BUTTON_SUCCESS')]));
+            return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('SOCIAL__BUTTON_SUCCESS')]));
         }
     }
 
@@ -130,7 +130,7 @@ class SocialController extends AppController
         if (empty($find))
             throw new NotFoundException();
 
-        $this->set('title_for_layout', $this->Lang->get('SOCIAL__HOME'));
+        $this->set('title_for_layout', __('SOCIAL__HOME'));
         $this->layout = 'admin';
 
         $social_button_type = null;
@@ -152,9 +152,9 @@ class SocialController extends AppController
             $this->response = $this->response->withType('application/json');
 
             if (empty($this->request->getData('url')))
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
+                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]));
             if (!empty($this->request->getData('img')) && !empty($this->request->getData('icon')) && empty($this->request->getData('type')))
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('SOCIAL__CANNOT_TOW_TYPE')]));
+                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('SOCIAL__CANNOT_TOW_TYPE')]));
 
             $extra = null;
             if (!empty($this->request->getData('type'))) {
@@ -175,7 +175,7 @@ class SocialController extends AppController
             $this->SocialButton->save($button);
 
             $this->History->set('EDIT_SOCIAL', 'social network');
-            return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('SOCIAL__BUTTON_EDIT_SUCCESS')]));
+            return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('SOCIAL__BUTTON_EDIT_SUCCESS')]));
         }
     }
 
@@ -186,7 +186,7 @@ class SocialController extends AppController
             if ($id) {
                 if ($this->SocialButton->delete($this->SocialButton->get($id))) {
                     $this->History->set('DELETE_SOCIAL', 'social network');
-                    $this->Flash->success($this->Lang->get('SOCIAL__BUTTON_DELETE_SUCCESS'));
+                    $this->Flash->success(__('SOCIAL__BUTTON_DELETE_SUCCESS'));
                 }
             }
 

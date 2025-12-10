@@ -13,7 +13,7 @@ class MotdController extends AppController
         if (!$this->Permissions->can('MANAGE_MOTD'))
             throw new ForbiddenException();
 
-        $this->set('title_for_layout', $this->Lang->get('MOTD__TITLE'));
+        $this->set('title_for_layout', __('MOTD__TITLE'));
 
         $this->ServerComponent = $this->loadComponent('Server');
         $this->Server = TableRegistry::getTableLocator()->get('Server');
@@ -43,7 +43,7 @@ class MotdController extends AppController
         if (!$server_id)
             throw new NotFoundException();
 
-        $this->set('title_for_layout', $this->Lang->get('MOTD__EDIT_TITLE'));
+        $this->set('title_for_layout', __('MOTD__EDIT_TITLE'));
 
         $this->ServerComponent = $this->loadComponent('Server');
         $this->Server = TableRegistry::getTableLocator()->get('Server');
@@ -80,8 +80,8 @@ class MotdController extends AppController
         $this->Server->call(['SET_MOTD' => $data], $server_id);
         $this->History->set('EDIT_MOTD', 'motd');
 
-        $this->Flash->success($this->Lang->get('MOTD__EDIT_SUCCESS'));
-        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('MOTD__EDIT_SUCCESS')]));
+        $this->Flash->success(__('MOTD__EDIT_SUCCESS'));
+        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('MOTD__EDIT_SUCCESS')]));
     }
 
     public function reset($server_id = false)
@@ -94,7 +94,7 @@ class MotdController extends AppController
 
         $this->Server->call(['SET_MOTD' => ""], $server_id);
 
-        $this->Flash->success($this->Lang->get('MOTD__RESET_SUCCESS'));
+        $this->Flash->success(__('MOTD__RESET_SUCCESS'));
         $this->redirect('/admin/motd');
     }
 

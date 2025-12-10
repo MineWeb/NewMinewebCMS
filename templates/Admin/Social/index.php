@@ -8,19 +8,19 @@ use Cake\Routing\Router;
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get("SOCIAL__HOME") ?></h3>
+                    <h3 class="card-title"><?= __("SOCIAL__HOME") ?></h3>
                 </div>
                 <div class="card-body">
-                    <a class="btn btn-large btn-block btn-primary" href="<?= Router::url(['controller' => 'social', 'action' => 'add', 'admin' => true]) ?>"><?= $Lang->get('SOCIAL__ADD') ?></a>
+                    <a class="btn btn-large btn-block btn-primary" href="<?= Router::url(['controller' => 'social', 'action' => 'add', 'admin' => true]) ?>"><?= __('SOCIAL__ADD') ?></a>
                     <hr>
                     <table class="table table-responsive-sm table-bordered">
                         <thead>
                             <tr>
-                                <th><?= $Lang->get("SOCIAL__BUTTON_TITLE") ?></th>
-                                <th><?= $Lang->get("SOCIAL__BUTTON_TYPE") ?></th>
-                                <th><?= $Lang->get("SOCIAL__BUTTON_URL") ?></th>
-                                <th><?= $Lang->get("SOCIAL__BUTTON_COLOR") ?></th>
-                                <th class="right"><?= $Lang->get("GLOBAL__ACTIONS") ?></th>
+                                <th><?= __("SOCIAL__BUTTON_TITLE") ?></th>
+                                <th><?= __("SOCIAL__BUTTON_TYPE") ?></th>
+                                <th><?= __("SOCIAL__BUTTON_URL") ?></th>
+                                <th><?= __("SOCIAL__BUTTON_COLOR") ?></th>
+                                <th class="right"><?= __("GLOBAL__ACTIONS") ?></th>
                             </tr>
                         </thead>
 
@@ -34,18 +34,18 @@ use Cake\Routing\Router;
                                                 <?php if(strpos($value['extra'], 'fa-')) { ?>
                                                     <i class="<?= $value['extra'] ?> fa-3x m-auto"></i>
                                                 <?php } else { ?>
-                                                    <img src="<?= $value['extra'] ?>" class="m-auto" alt="<?= $Lang->get("SOCIAL__BUTTON_IMG_ALT") . $value['title'] ?>" style="height: 3em;">
+                                                    <img src="<?= $value['extra'] ?>" class="m-auto" alt="<?= __("SOCIAL__BUTTON_IMG_ALT") . $value['title'] ?>" style="height: 3em;">
                                                 <?php } ?>
                                             </a>
                                         <?php } else {
-                                            echo $Lang->get("SOCIAL__EMPTY_TYPE");
+                                            echo __("SOCIAL__EMPTY_TYPE");
                                         } ?>
                                     </td>
                                     <td><a href="<?= $value['url'] ?>"><?= $value['url'] ?></a></td>
                                     <td><div class="socialbutton-color p-2 text-center" style="border: 1px solid #ccc;background-color: <?= $value['color'] ?>"><?= $value['color'] ?><div></td>
                                     <td>
-                                        <a href="<?= Router::url(['controller' => 'social', 'action' => 'edit', 'admin' => true, $value['id']]) ?>" class="btn btn-info"><?= $Lang->get('GLOBAL__EDIT') ?></a>
-                                        <a onClick="confirmDel('<?= Router::url(['controller' => 'social', 'action' => 'delete', 'admin' => true, $value['id']]) ?>')" class="btn btn-danger"><?= $Lang->get('GLOBAL__DELETE') ?></a>
+                                        <a href="<?= Router::url(['controller' => 'social', 'action' => 'edit', 'admin' => true, $value['id']]) ?>" class="btn btn-info"><?= __('GLOBAL__EDIT') ?></a>
+                                        <a onClick="confirmDel('<?= Router::url(['controller' => 'social', 'action' => 'delete', 'admin' => true, $value['id']]) ?>')" class="btn btn-danger"><?= __('GLOBAL__DELETE') ?></a>
                                     </td>
                                 </tr>
                             <?php } ?>
@@ -53,7 +53,7 @@ use Cake\Routing\Router;
                     </table>
                     <br>
                     <div class="ajax-msg"></div>
-                    <button id="save" class="btn btn-success pull-right active" disabled="disabled"><?= $Lang->get('SOCIAL__SAVE_SUCCESS') ?></button>
+                    <button id="save" class="btn btn-success pull-right active" disabled="disabled"><?= __('SOCIAL__SAVE_SUCCESS') ?></button>
                 </div>
             </div>
         </div>
@@ -65,17 +65,17 @@ use Cake\Routing\Router;
             axis: 'y',
             items: '.item:not(.fixed)',
             stop: function (event, ui) {
-                $('#save').empty().html('<?= $Lang->get('SOCIAL__SAVE_IN_PROGRESS') ?>');
+                $('#save').empty().html('<?= __('SOCIAL__SAVE_IN_PROGRESS') ?>');
                 let inputs = {};
                 inputs['social_button_order'] = $(this).sortable('serialize');
                 inputs['data[_Token][key]'] = '<?= $csrfToken ?>';
                 $.post("<?= Router::url(array('controller' => 'social', 'action' => 'save_ajax', 'admin' => true)) ?>", inputs, function(data) {
                     if(data.statut) {
-                        $('#save').empty().html('<?= $Lang->get('SOCIAL__SAVE_SUCCESS') ?>');
+                        $('#save').empty().html('<?= __('SOCIAL__SAVE_SUCCESS') ?>');
                     } else if(!data.statut) {
-                        $('.ajax-msg').empty().html('<div class="alert alert-danger" style="margin-top:10px;margin-right:10px;margin-left:10px;"><a class="close" data-dismiss="alert">×</a><i class="icon icon-warning-sign"></i> <b><?= $Lang->get('GLOBAL__ERROR') ?> :</b> '+data.msg+'</i></div>').fadeIn(500);
+                        $('.ajax-msg').empty().html('<div class="alert alert-danger" style="margin-top:10px;margin-right:10px;margin-left:10px;"><a class="close" data-dismiss="alert">×</a><i class="icon icon-warning-sign"></i> <b><?= __('GLOBAL__ERROR') ?> :</b> '+data.msg+'</i></div>').fadeIn(500);
                     } else {
-                        $('.ajax-msg').empty().html('<div class="alert alert-danger" style="margin-top:10px;margin-right:10px;margin-left:10px;"><a class="close" data-dismiss="alert">×</a><i class="icon icon-warning-sign"></i> <b><?= $Lang->get('GLOBAL__ERROR') ?> :</b> <?= $Lang->get('ERROR__INTERNAL_ERROR') ?></i></div>');
+                        $('.ajax-msg').empty().html('<div class="alert alert-danger" style="margin-top:10px;margin-right:10px;margin-left:10px;"><a class="close" data-dismiss="alert">×</a><i class="icon icon-warning-sign"></i> <b><?= __('GLOBAL__ERROR') ?> :</b> <?= __('ERROR__INTERNAL_ERROR') ?></i></div>');
                     }
                 });
             }

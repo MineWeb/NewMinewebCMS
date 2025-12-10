@@ -12,7 +12,7 @@ class PagesController extends AppController {
     {
         if ($this->isConnected and $this->Permissions->can('MANAGE_PAGE')) {
 
-            $this->set('title_for_layout', $this->Lang->get('PAGE__LIST'));
+            $this->set('title_for_layout', __('PAGE__LIST'));
             $this->layout = 'admin';
             $this->Page = TableRegistry::getTableLocator()->get('Page');
             $pages = $this->Page->find()->toArray();
@@ -29,7 +29,7 @@ class PagesController extends AppController {
     {
         if ($this->isConnected and $this->Permissions->can('MANAGE_PAGE')) {
 
-            $this->set('title_for_layout', $this->Lang->get('PAGE__ADD'));
+            $this->set('title_for_layout', __('PAGE__ADD'));
             $this->layout = 'admin';
         } else {
             $this->redirect('/');
@@ -53,13 +53,13 @@ class PagesController extends AppController {
                     ]);
                     $this->Page->save($newPage);
                     $this->History->set('ADD_PAGE', 'page');
-                    $this->Flash->success($this->Lang->get('PAGE__ADD_SUCCESS'));
-                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('PAGE__ADD_SUCCESS')]));
+                    $this->Flash->success(__('PAGE__ADD_SUCCESS'));
+                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('PAGE__ADD_SUCCESS')]));
                 } else {
-                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
+                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]));
                 }
             } else {
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__BAD_REQUEST')]));
+                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__BAD_REQUEST')]));
             }
         } else {
             throw new ForbiddenException();
@@ -74,7 +74,7 @@ class PagesController extends AppController {
                 $this->Page = TableRegistry::getTableLocator()->get('Page');
                 if ($this->Page->delete($this->Page->get($id))) {
                     $this->History->set('DELETE_PAGE', 'page');
-                    $this->Flash->success($this->Lang->get('PAGE__DELETE_SUCCESS'));
+                    $this->Flash->success(__('PAGE__DELETE_SUCCESS'));
                 }
             }
 
@@ -88,7 +88,7 @@ class PagesController extends AppController {
     {
         if ($this->isConnected and $this->Permissions->can('MANAGE_PAGE')) {
             if ($id) {
-                $this->set('title_for_layout', $this->Lang->get('PAGE__EDIT'));
+                $this->set('title_for_layout', __('PAGE__EDIT'));
                 $this->layout = 'admin';
                 $this->Page = TableRegistry::getTableLocator()->get('Page');
                 $page = $this->Page->find('all', conditions: ['id' => $id])->first();
@@ -122,10 +122,10 @@ class PagesController extends AppController {
                     ]);
                     $this->Page->save($page);
                     $this->History->set('EDIT_PAGE', 'page');
-                    $this->Flash->success($this->Lang->get('PAGE__EDIT_SUCCESS'));
-                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('PAGE__EDIT_SUCCESS')]));
+                    $this->Flash->success(__('PAGE__EDIT_SUCCESS'));
+                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('PAGE__EDIT_SUCCESS')]));
                 } else {
-                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
+                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]));
                 }
             } else {
                 throw new NotFoundException();

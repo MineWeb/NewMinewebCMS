@@ -37,7 +37,7 @@ class NewsController extends AppController
 
         $can_like = $this->Permissions->can('LIKE_NEWS');
 
-        $this->set('title_for_layout', $this->Lang->get('NEWS__TITLE'));
+        $this->set('title_for_layout', __('NEWS__TITLE'));
         $this->set(compact('search_news', 'can_like'));
     }
 
@@ -107,13 +107,13 @@ class NewsController extends AppController
 
                     return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => 'success']));
                 } else {
-                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
+                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]));
                 }
             } else {
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('USER__ERROR_MUST_BE_LOGGED')]));
+                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('USER__ERROR_MUST_BE_LOGGED')]));
             }
         } else {
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__BAD_REQUEST')]));
+            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__BAD_REQUEST')]));
         }
     }
 
@@ -135,13 +135,13 @@ class NewsController extends AppController
                     $this->Like->save($like);
                     return $this->response;
                 } else {
-                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__INTERNAL_ERROR')]));
+                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__INTERNAL_ERROR')]));
                 }
             } else {
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('USER__ERROR_MUST_BE_LOGGED')]));
+                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('USER__ERROR_MUST_BE_LOGGED')]));
             }
         } else {
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__BAD_REQUEST')]));
+            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__BAD_REQUEST')]));
         }
     }
 
@@ -162,13 +162,13 @@ class NewsController extends AppController
                     $this->Like->delete($already);
                     return $this->response;
                 } else {
-                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__INTERNAL_ERROR')]));
+                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__INTERNAL_ERROR')]));
                 }
             } else {
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('USER__ERROR_MUST_BE_LOGGED')]));
+                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('USER__ERROR_MUST_BE_LOGGED')]));
             }
         } else {
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__BAD_REQUEST')]));
+            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__BAD_REQUEST')]));
         }
     }
 

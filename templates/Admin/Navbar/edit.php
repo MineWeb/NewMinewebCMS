@@ -8,7 +8,7 @@ use Cake\Routing\Router;
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('NAVBAR__EDIT_TITLE') ?></h3>
+                    <h3 class="card-title"><?= __('NAVBAR__EDIT_TITLE') ?></h3>
                 </div>
                 <div class="card-body">
                     <form method="post" action="<?= Router::url(['action' => 'edit_ajax', 'admin' => true, $nav['id']]) ?>"
@@ -16,13 +16,13 @@ use Cake\Routing\Router;
                           data-custom-function="formatteData">
 
                         <div class="form-group">
-                            <label><?= $Lang->get('GLOBAL__NAME') ?></label>
+                            <label><?= __('GLOBAL__NAME') ?></label>
                             <input name="name" class="form-control" type="text" value="<?= $nav['name'] ?>">
                         </div>
                         <div class="form-group">
 
-                            <label><?= $Lang->get('NAVBAR__ICON') ?></label>
-                            <p><?= $Lang->get('NAVBAR__ICON__DESC') ?><a target="_blank"
+                            <label><?= __('NAVBAR__ICON') ?></label>
+                            <p><?= __('NAVBAR__ICON__DESC') ?><a target="_blank"
                                                                          href="https://fontawesome.com/">https://fontawesome.com/</a>
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
@@ -33,26 +33,26 @@ use Cake\Routing\Router;
                         </div>
 
                         <div class="form-group">
-                            <label><?= $Lang->get('GLOBAL__TYPE') ?></label>
+                            <label><?= __('GLOBAL__TYPE') ?></label>
                             <div class="radio">
                                 <input type="radio" id="normal" name="type"
                                        value="normal"<?= ($nav['type'] == "1") ? ' checked=""' : '' ?>>
-                                <label><?= $Lang->get('NAVBAR__LINK_TYPE_DEFAULT') ?></label>
+                                <label><?= __('NAVBAR__LINK_TYPE_DEFAULT') ?></label>
                             </div>
                             <div class="radio">
                                 <input type="radio" id="dropdown" name="type"
                                        value="dropdown"<?= ($nav['type'] == "2") ? ' checked=""' : '' ?>>
-                                <label><?= $Lang->get('NAVBAR__LINK_TYPE_DROPDOWN') ?></label>
+                                <label><?= __('NAVBAR__LINK_TYPE_DROPDOWN') ?></label>
                             </div>
                         </div>
 
                         <div id="type-normal" class="<?= ($nav['type'] == "1") ? '' : 'd-none' ?>">
                             <div class="form-group">
-                                <label><?= $Lang->get('URL') ?></label>
+                                <label><?= __('URL') ?></label>
                                 <div class="radio">
                                     <input type="radio" class="type_plugin" name="url_type"
                                            value="plugin"<?= ($nav['urlData']['type'] == "plugin") ? ' checked=""' : '' ?>>
-                                    <label><?= $Lang->get('NAVBAR__LINK_TYPE_PLUGIN') ?></label>
+                                    <label><?= __('NAVBAR__LINK_TYPE_PLUGIN') ?></label>
                                 </div>
                                 <div class="plugin<?= ($nav['urlData']['type'] == "plugin") ? '' : ' d-none' ?>">
                                     <select class="form-control" name="url_plugin">
@@ -68,7 +68,7 @@ use Cake\Routing\Router;
                                 <div class="radio">
                                     <input type="radio" class="type_page" name="url_type"
                                            value="page"<?= ($nav['urlData']['type'] == "page") ? ' checked=""' : '' ?>>
-                                    <label><?= $Lang->get('NAVBAR__LINK_TYPE_PAGE') ?></label>
+                                    <label><?= __('NAVBAR__LINK_TYPE_PAGE') ?></label>
                                 </div>
                                 <div class="page<?= ($nav['urlData']['type'] == "page") ? '' : ' d-none' ?>">
                                     <select class="form-control" name="url_page">
@@ -80,13 +80,13 @@ use Cake\Routing\Router;
                                 <div class="radio">
                                     <input type="radio" class="type_custom" name="url_type"
                                            value="custom"<?= ($nav['urlData']['type'] == "custom") ? ' checked=""' : '' ?>>
-                                    <label><?= $Lang->get('NAVBAR__LINK_TYPE_CUSTOM') ?></label>
+                                    <label><?= __('NAVBAR__LINK_TYPE_CUSTOM') ?></label>
                                 </div>
                                 </label>
                                 <input type="text"
                                        value="<?= ($nav['urlData']['type'] == "custom") ? $nav['urlData']['url'] : '' ?>"
                                        class="form-control custom<?= ($nav['urlData']['type'] == "custom") ? '' : ' d-none' ?>"
-                                       placeholder="<?= $Lang->get('NAVBAR__CUSTOM_URL') ?>" name="url_custom">
+                                       placeholder="<?= __('NAVBAR__CUSTOM_URL') ?>" name="url_custom">
                             </div>
                         </div>
 
@@ -100,18 +100,18 @@ use Cake\Routing\Router;
                                     ?>
                                     <div class="card card-body" id="nav-<?= $i ?>">
                                         <div class="form-group">
-                                            <label><?= $Lang->get('NAVBAR__LINK_NAME') ?></label>
+                                            <label><?= __('NAVBAR__LINK_NAME') ?></label>
                                             <input type="text" class="form-control name_of_nav"
                                                    value="<?= urldecode($name) ?>" name="name_of_nav">
                                         </div>
                                         <div class="form-group">
-                                            <label><?= $Lang->get('URL') ?></label>
+                                            <label><?= __('URL') ?></label>
                                             <input type="text" class="form-control url_of_nav"
                                                    value="<?= urldecode($url) ?>"
-                                                   placeholder="<?= $Lang->get('NAVBAR__CUSTOM_URL') ?>" name="url">
+                                                   placeholder="<?= __('NAVBAR__CUSTOM_URL') ?>" name="url">
                                         </div>
                                         <a href="#"
-                                           class="btn btn-danger delete-nav float-right"><?= $Lang->get('GLOBAL__DELETE') ?></a>
+                                           class="btn btn-danger delete-nav float-right"><?= __('GLOBAL__DELETE') ?></a>
                                         <br>
                                     </div>
                                 <?php } ?>
@@ -119,21 +119,21 @@ use Cake\Routing\Router;
                             <div id="add-js" data-number="<?= $i ?>"></div>
                             <div class="control-group">
                                 <a href="#" id="add_nav"
-                                   class="btn btn-success"><?= $Lang->get('NAVBAR__ADD_LINK') ?></a>
+                                   class="btn btn-success"><?= __('NAVBAR__ADD_LINK') ?></a>
                             </div>
                         </div>
 
                         <div class="form-group">
                             <div class="checkbox">
                                 <input type="checkbox" name="new_tab"<?= ($nav['open_new_tab']) ? ' checked=""' : '' ?>>
-                                <label><?= $Lang->get('NAVBAR__OPEN_IN_NEW_TAB') ?></label>
+                                <label><?= __('NAVBAR__OPEN_IN_NEW_TAB') ?></label>
                             </div>
                         </div>
 
                         <div class="float-right">
                             <a href="<?= Router::url(['controller' => 'navbar', 'action' => 'admin_index', 'admin' => true]) ?>"
-                               class="btn btn-default"><?= $Lang->get('GLOBAL__CANCEL') ?></a>
-                            <button class="btn btn-primary" type="submit"><?= $Lang->get('GLOBAL__SUBMIT') ?></button>
+                               class="btn btn-default"><?= __('GLOBAL__CANCEL') ?></a>
+                            <button class="btn btn-primary" type="submit"><?= __('GLOBAL__SUBMIT') ?></button>
                         </div>
                     </form>
                 </div>
@@ -146,7 +146,7 @@ use Cake\Routing\Router;
         e.preventDefault();
         var how = $('#add-js').attr('data-number');
         how = parseInt(how) + 1;
-        var add = '<div class="form-group"><div class="card card-body" id="nav-' + how + '"><div class="form-group"><label><?= addslashes($Lang->get('NAVBAR__LINK_NAME')) ?></label><input type="text" class="form-control name_of_nav" name="name_of_nav"></div><div class="form-group"><label><?= $Lang->get('URL') ?></label><input type="text" class="form-control url_of_nav" placeholder="<?= $Lang->get('NAVBAR__CUSTOM_URL') ?>" name="url"></div><a href="#" class="btn btn-danger delete-nav float-right"><?= $Lang->get('GLOBAL__DELETE') ?></a><br></div></div>';
+        var add = '<div class="form-group"><div class="card card-body" id="nav-' + how + '"><div class="form-group"><label><?= addslashes(__('NAVBAR__LINK_NAME')) ?></label><input type="text" class="form-control name_of_nav" name="name_of_nav"></div><div class="form-group"><label><?= __('URL') ?></label><input type="text" class="form-control url_of_nav" placeholder="<?= __('NAVBAR__CUSTOM_URL') ?>" name="url"></div><a href="#" class="btn btn-danger delete-nav float-right"><?= __('GLOBAL__DELETE') ?></a><br></div></div>';
         $('#add-js').append(add);
         $('#add-js').attr('data-number', how);
         deleteNavEvents();

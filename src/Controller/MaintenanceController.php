@@ -7,7 +7,7 @@ class MaintenanceController extends AppController
 {
     function index($url = "")
     {
-        $this->set('title_for_layout', $this->Lang->get('MAINTENANCE__TITLE'));
+        $this->set('title_for_layout', __('MAINTENANCE__TITLE'));
         $this->Mainteance = TableRegistry::getTableLocator()->get('Maintenance');
         $check = $this->Maintenance->checkMaintenance("/" . $url, $this->Util);
         if ($this->Permissions->can("BYPASS_MAINTENANCE") || !$check)

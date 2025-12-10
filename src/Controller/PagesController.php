@@ -55,7 +55,7 @@ class PagesController extends AppController
             $subpage = $path[1];
         }
 
-        $title_for_layout = $this->Lang->get('GLOBAL__HOME');
+        $title_for_layout = __('GLOBAL__HOME');
         $this->set(compact('page', 'subpage', 'title_for_layout'));
 
         try {

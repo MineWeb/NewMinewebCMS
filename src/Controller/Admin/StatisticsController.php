@@ -10,7 +10,7 @@ class StatisticsController extends AppController
     {
         if ($this->isConnected and $this->Permissions->can('VIEW_STATISTICS')) {
 
-            $this->set('title_for_layout', $this->Lang->get('STATS__TITLE'));
+            $this->set('title_for_layout', __('STATS__TITLE'));
             $this->layout = 'admin';
 
             $this->set('referers', $this->Visit->getGrouped('referer', 10));

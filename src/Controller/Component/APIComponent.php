@@ -11,7 +11,7 @@ use Cake\ORM\TableRegistry;
 
 class APIComponent extends Component
 {
-    public array $components = ['Session', 'Configuration', 'Lang'];
+    public array $components = ['Session', 'Configuration'];
 
     public bool $skin_active = false;
     public bool $cape_active = false;
@@ -29,10 +29,6 @@ class APIComponent extends Component
 
         $this->controller = $this->_registry->getController();
         $this->controller->set('API', $this);
-
-        if (isset($this->controller->Lang)) {
-            $this->Lang = $this->controller->Lang;
-        }
 
         if (isset($this->controller->Configuration)) {
             $this->Configuration = $this->controller->Configuration;

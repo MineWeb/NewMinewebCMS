@@ -142,22 +142,21 @@ class UtilComponent extends Component
         $waitTime = $this->secondsToTime($waitTime);
         $time = [];
 
-        $lang = $this->controller->Lang ?? null;
 
         if ($waitTime['d'] > 0) {
-            $label = $lang ? $lang->get('GLOBAL__DATE_R_DAYS') : 'days';
+            $label = __('GLOBAL__DATE_R_DAYS');
             $time[] = $waitTime['d'] . ' ' . $label;
         }
         if ($waitTime['h'] > 0) {
-            $label = $lang ? $lang->get('GLOBAL__DATE_R_HOURS') : 'hours';
+            $label = __('GLOBAL__DATE_R_HOURS');
             $time[] = $waitTime['h'] . ' ' . $label;
         }
         if ($waitTime['m'] > 0) {
-            $label = $lang ? $lang->get('GLOBAL__DATE_R_MINUTES') : 'minutes';
+            $label = __('GLOBAL__DATE_R_MINUTES');
             $time[] = $waitTime['m'] . ' ' . $label;
         }
         if ($waitTime['s'] > 0) {
-            $label = $lang ? $lang->get('GLOBAL__DATE_R_SECONDS') : 'seconds';
+            $label = __('GLOBAL__DATE_R_SECONDS');
             $time[] = $waitTime['s'] . ' ' . $label;
         }
 
@@ -285,15 +284,14 @@ class UtilComponent extends Component
     public function isValidImage(ServerRequest $request, array $extensions = ['png'], bool|int $width_max = false, bool|int $height_max = false, bool|int $max_size = false): array
     {
         $img = $request->getData('image');
-        $lang = $this->controller->Lang ?? null;
 
-        $msgEmpty = $lang ? $lang->get('FORM__EMPTY_IMG') : 'Aucune image sélectionnée';
-        $msgNotUploaded = $lang ? $lang->get('FORM__NOT_UPLOADED') : 'Fichier non uploadé';
-        $msgInvalid = $lang ? $lang->get('FORM__INVALID_IMG') : 'Image invalide';
-        $msgInvalidExt = $lang ? $lang->get('FORM__INVALID_EXTENSION') : 'Extension invalide';
-        $msgTooHeavy = $lang ? $lang->get('FORM__FILE_TOO_HEAVY') : 'Fichier trop lourd';
-        $msgInvalidWidth = $lang ? $lang->get('FORM__INVALID_WIDTH') : 'Largeur invalide';
-        $msgInvalidHeight = $lang ? $lang->get('FORM__INVALID_HEIGHT') : 'Hauteur invalide';
+        $msgEmpty = __('FORM__EMPTY_IMG');
+        $msgNotUploaded = __('FORM__NOT_UPLOADED');
+        $msgInvalid = __('FORM__INVALID_IMG');
+        $msgInvalidExt = __('FORM__INVALID_EXTENSION');
+        $msgTooHeavy = __('FORM__FILE_TOO_HEAVY');
+        $msgInvalidWidth = __('FORM__INVALID_WIDTH');
+        $msgInvalidHeight = __('FORM__INVALID_HEIGHT');
 
         if (!$img instanceof UploadedFile || empty($img->getClientFilename())) {
             return ['status' => false, 'msg' => $msgEmpty];

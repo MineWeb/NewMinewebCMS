@@ -523,8 +523,7 @@ class EyPluginComponent extends Component
 
     public function clearCakeCache()
     {
-        Cache::clearGroup(false, '_cake_core_');
-        Cache::clearGroup(false, '_cake_model_');
+        Cache::clearAll();
     }
 
     private function refreshPermissions()
@@ -636,8 +635,7 @@ class EyPluginComponent extends Component
             foreach ($pluginList as $value) {
                 $lastVersion = isset($versions[$value->slug]) ? $versions[$value->slug] : false;
                 if ($lastVersion && $value->version !== $lastVersion) {
-                    $this->Lang = $this->controller->Lang;
-                    return '<div class="alert alert-secondary">' . $this->Lang->get('UPDATE__AVAILABLE_TYPE_PLUGIN') . ' ' . $this->Lang->get('UPDATE__AVAILABLE') . ' ' . $this->Lang->get('UPDATE__PLUGIN') . ' <a href="' . Router::url(['controller' => 'plugin', 'action' => 'index', 'admin' => true]) . '" style="margin-top: -6px;" class="btn float-right">' . $this->Lang->get('GLOBAL__UPDATE_LOOK') . '</a></div>';
+                    return '<div class="alert alert-secondary">' . __('UPDATE__AVAILABLE_TYPE_PLUGIN') . ' ' . __('UPDATE__AVAILABLE') . ' ' . __('UPDATE__PLUGIN') . ' <a href="' . Router::url(['controller' => 'plugin', 'action' => 'index', 'admin' => true]) . '" style="margin-top: -6px;" class="btn float-right">' . __('GLOBAL__UPDATE_LOOK') . '</a></div>';
                 }
             }
         }

@@ -51,14 +51,14 @@ foreach ($pages as $page => $visitcount) {
 
         <div class="col-md-12">
             <a href="<?= Router::url(['action' => 'reset', 'admin' => true]) ?>"
-               class="btn btn-info btn-block"><?= $Lang->get('STATS__RESET_LABEL') ?></a>
+               class="btn btn-info btn-block"><?= __('STATS__RESET_LABEL') ?></a>
         </div>
         <br><br>
 
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('STATS__VISITS_REFERING_WEBSITE') ?></h3>
+                    <h3 class="card-title"><?= __('STATS__VISITS_REFERING_WEBSITE') ?></h3>
                 </div>
                 <div class="card-body">
                     <canvas id="pieChart_referers" height="300"></canvas>
@@ -87,7 +87,7 @@ foreach ($pages as $page => $visitcount) {
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('STATS__VISITS_PAGES') ?></h3>
+                    <h3 class="card-title"><?= __('STATS__VISITS_PAGES') ?></h3>
                 </div>
                 <div class="card-body">
 
@@ -119,7 +119,7 @@ foreach ($pages as $page => $visitcount) {
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('GLOBAL__VISITORS') ?></h3>
+                    <h3 class="card-title"><?= __('GLOBAL__VISITORS') ?></h3>
                 </div>
                 <div class="card-body">
                     <?= $this->Html->script('highcharts') ?>
@@ -146,12 +146,12 @@ foreach ($pages as $page => $visitcount) {
                 xAxis: {
                     type: 'datetime',
                     title: {
-                        text: '<?= $Lang->get('GLOBAL__CREATED') ?>'
+                        text: '<?= __('GLOBAL__CREATED') ?>'
                     }
                 },
                 yAxis: {
                     title: {
-                        text: '<?= $Lang->get('GLOBAL__VISITORS') ?>'
+                        text: '<?= __('GLOBAL__VISITORS') ?>'
                     }
                 },
                 legend: {
@@ -186,7 +186,7 @@ foreach ($pages as $page => $visitcount) {
 
                 series: [{
                     type: 'area',
-                    name: '<?= $Lang->get('GLOBAL__VISITORS') ?>',
+                    name: '<?= __('GLOBAL__VISITORS') ?>',
                     data: data
                 }]
             });

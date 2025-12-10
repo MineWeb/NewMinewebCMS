@@ -16,7 +16,7 @@ class NavbarController extends AppController
         if (!$this->Permissions->can('MANAGE_NAV'))
             throw new ForbiddenException();
 
-        $this->set('title_for_layout', $this->Lang->get('NAVBAR__TITLE'));
+        $this->set('title_for_layout', __('NAVBAR__TITLE'));
 
         $this->Navbar = TableRegistry::getTableLocator()->get('Navbar');
         $navbars = $this->Navbar->find()
@@ -90,15 +90,15 @@ class NavbarController extends AppController
                         }
                     }
                     if (empty($error)) {
-                        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('NAVBAR__SAVE_SUCCESS')]));
+                        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('NAVBAR__SAVE_SUCCESS')]));
                     } else {
-                        return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
+                        return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]));
                     }
                 } else {
-                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
+                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]));
                 }
             } else {
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__BAD_REQUEST')]));
+                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__BAD_REQUEST')]));
             }
         } else {
             $this->redirect('/');
@@ -119,7 +119,7 @@ class NavbarController extends AppController
 
                 if ($this->Navbar->delete($nav)) {
                     $this->History->set('DELETE_NAV', 'navbar');
-                    $this->Flash->success($this->Lang->get('NAVBAR__DELETE_SUCCESS'));
+                    $this->Flash->success(__('NAVBAR__DELETE_SUCCESS'));
                 }
             }
 
@@ -133,7 +133,7 @@ class NavbarController extends AppController
     {
         if (!$this->Permissions->can('MANAGE_NAV'))
             throw new ForbiddenException();
-        $this->set('title_for_layout', $this->Lang->get('NAVBAR__ADD_LINK'));
+        $this->set('title_for_layout', __('NAVBAR__ADD_LINK'));
 
         $this->Page = TableRegistry::getTableLocator()->get('Page');
         $url_pages = $this->Page->find('all');
@@ -156,7 +156,7 @@ class NavbarController extends AppController
 
 
         if (empty($this->getRequest()->getData('name')) || empty($this->getRequest()->getData('type')) || empty($this->getRequest()->getData('url')) || $this->getRequest()->getData('url') === "undefined")
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
+            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]));
 
         $this->Navbar = TableRegistry::getTableLocator()->get('Navbar');
         $order = $this->Navbar->find()
@@ -179,8 +179,8 @@ class NavbarController extends AppController
 
         $this->History->set('ADD_NAV', 'navbar');
 
-        $this->Flash->success($this->Lang->get('NAVBAR__ADD_SUCCESS'));
-        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('NAVBAR__ADD_SUCCESS')]));
+        $this->Flash->success(__('NAVBAR__ADD_SUCCESS'));
+        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('NAVBAR__ADD_SUCCESS')]));
     }
 
     public function edit($id = false)
@@ -195,7 +195,7 @@ class NavbarController extends AppController
         if (empty($nav))
             throw new NotFoundException();
 
-        $this->set('title_for_layout', $this->Lang->get('NAVBAR__EDIT_TITLE'));
+        $this->set('title_for_layout', __('NAVBAR__EDIT_TITLE'));
 
         $this->Page = TableRegistry::getTableLocator()->get('Page');
         $url_pages = $this->Page->find()->all();
@@ -219,7 +219,7 @@ class NavbarController extends AppController
         $this->response = $this->response->withType('application/json');
 
         if (empty($this->getRequest()->getData('name')) || empty($this->getRequest()->getData('type')) || empty($this->getRequest()->getData('url')) || $this->getRequest()->getData('url') === "undefined")
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
+            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]));
 
         $open_new_tab = ($this->getRequest()->getData('open_new_tab') == 'true') ? 1 : 0;
 
@@ -236,8 +236,8 @@ class NavbarController extends AppController
 
         $this->History->set('EDIT_NAV', 'navbar');
 
-        $this->Flash->success($this->Lang->get('NAVBAR__EDIT_SUCCESS'));
-        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('NAVBAR__EDIT_SUCCESS')]));
+        $this->Flash->success(__('NAVBAR__EDIT_SUCCESS'));
+        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('NAVBAR__EDIT_SUCCESS')]));
     }
 
     /**

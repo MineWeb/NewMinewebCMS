@@ -15,7 +15,7 @@ class UpdateController extends AppController
             throw new ForbiddenException();
         }
 
-        $this->set('title_for_layout', $this->Lang->get('GLOBAL__UPDATE'));
+        $this->set('title_for_layout', __('GLOBAL__UPDATE'));
     }
 
     public function clearCache()
@@ -80,7 +80,7 @@ class UpdateController extends AppController
 
         return $this->response->withStringBody(json_encode([
             'statut' => 'success',
-            'msg' => $this->Lang->get('UPDATE__SUCCESS'),
+            'msg' => __('UPDATE__SUCCESS'),
         ]));
     }
 

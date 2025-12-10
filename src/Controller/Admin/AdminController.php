@@ -12,7 +12,7 @@ class AdminController extends AppController
     function index()
     {
         if ($this->isConnected and $this->Permissions->can('ACCESS_DASHBOARD')) {
-            $this->set('title_for_layout', $this->Lang->get('GLOBAL__HOME'));
+            $this->set('title_for_layout', __('GLOBAL__HOME'));
             $this->viewBuilder()->setLayout('admin');
 
             $this->News = TableRegistry::getTableLocator()->get('News');
@@ -78,7 +78,7 @@ class AdminController extends AppController
                         $this->ServerComponent->send_command($this->request->getData('cmd2'), $this->request->getData('server_id'));
                     }
 
-                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('SERVER__SEND_COMMAND_SUCCESS')]));
+                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('SERVER__SEND_COMMAND_SUCCESS')]));
                 }
             }
 

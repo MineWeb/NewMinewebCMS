@@ -8,7 +8,7 @@ use Cake\Routing\Router;
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('PAGE__ADD') ?></h3>
+                    <h3 class="card-title"><?= __('PAGE__ADD') ?></h3>
                 </div>
                 <div class="card-body">
                     <form action="<?= Router::url(['controller' => 'pages', 'action' => 'add_ajax', 'admin' => true]) ?>"
@@ -18,22 +18,22 @@ use Cake\Routing\Router;
                         <div class="ajax-msg"></div>
 
                         <div class="form-group">
-                            <label><?= $Lang->get('GLOBAL__TITLE') ?></label>
-                            <input name="title" class="form-control" placeholder="<?= $Lang->get('GLOBAL__TITLE') ?>"
+                            <label><?= __('GLOBAL__TITLE') ?></label>
+                            <input name="title" class="form-control" placeholder="<?= __('GLOBAL__TITLE') ?>"
                                    type="text">
                         </div>
 
                         <div class="form-group">
-                            <label><?= $Lang->get('GLOBAL__SLUG') ?></label>
+                            <label><?= __('GLOBAL__SLUG') ?></label>
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text"><?= Router::url('/p/', true) ?></span>
                                 </div>
                                 <input name="slug" id="slug" class="form-control"
-                                       placeholder="<?= $Lang->get('GLOBAL__SLUG') ?>" type="text">
+                                       placeholder="<?= __('GLOBAL__SLUG') ?>" type="text">
                                 <div class="input-group-append">
                                     <a href="#" id="generate_slug"
-                                       class="btn btn-info"><?= $Lang->get('GLOBAL__GENERATE') ?></a>
+                                       class="btn btn-info"><?= __('GLOBAL__GENERATE') ?></a>
                                 </div>
                             </div>
                         </div>
@@ -55,8 +55,8 @@ use Cake\Routing\Router;
 
                         <div class="float-right">
                             <a href="<?= Router::url(['controller' => 'pages', 'action' => 'admin_index', 'admin' => true]) ?>"
-                               class="btn btn-default"><?= $Lang->get('GLOBAL__CANCEL') ?></a>
-                            <button class="btn btn-primary" type="submit"><?= $Lang->get('GLOBAL__SUBMIT') ?></button>
+                               class="btn btn-default"><?= __('GLOBAL__CANCEL') ?></a>
+                            <button class="btn btn-primary" type="submit"><?= __('GLOBAL__SUBMIT') ?></button>
                         </div>
                     </form>
                 </div>

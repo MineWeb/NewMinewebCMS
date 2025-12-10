@@ -8,7 +8,7 @@ use Cake\Routing\Router;
         <div class="col-md-3">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('THEME__CUSTOM_FILES_FILES') ?></h3>
+                    <h3 class="card-title"><?= __('THEME__CUSTOM_FILES_FILES') ?></h3>
                 </div>
                 <div class="card-body">
                     <ul>
@@ -25,18 +25,18 @@ use Cake\Routing\Router;
         <div class="col-md-9">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('THEME__CUSTOM_FILES_FILE_CONTENT') ?></h3>
+                    <h3 class="card-title"><?= __('THEME__CUSTOM_FILES_FILE_CONTENT') ?></h3>
                 </div>
                 <div class="card-body" style="position:relative;height:1000px;">
                     <p id="content">
-                        <i class="text-muted"><?= $Lang->get('THEME__CUSTOM_FILES_FILE_CONTENT_CHOOSE') ?></i>
+                        <i class="text-muted"><?= __('THEME__CUSTOM_FILES_FILE_CONTENT_CHOOSE') ?></i>
                     </p>
                     <div class="clearfix"></div>
                     <form data-ajax="true" action="<?= Router::url(['action' => 'save_custom_file', $slug]) ?>"
                           data-custom-function="getFileContent">
                         <div class="ajax-msg"></div>
                         <button id="saveButton" style="display:none;" type="submit"
-                                class="btn btn-primary"><?= $Lang->get('GLOBAL__SAVE') ?></button>
+                                class="btn btn-primary"><?= __('GLOBAL__SAVE') ?></button>
                     </form>
                 </div>
             </div>
@@ -115,7 +115,7 @@ use Cake\Routing\Router;
 
             },
             error: function () {
-                alert('<?= $Lang->get('ERROR__INTERNAL_ERROR') ?>');
+                alert('<?= __('ERROR__INTERNAL_ERROR') ?>');
             }
         });
 

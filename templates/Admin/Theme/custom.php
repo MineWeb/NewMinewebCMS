@@ -3,7 +3,7 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('THEME__CUSTOMIZATION') ?></h3>
+                    <h3 class="card-title"><?= __('THEME__CUSTOMIZATION') ?></h3>
                 </div>
                 <div class="card-body">
 
@@ -13,7 +13,7 @@
                             <div class="checkbox">
                                 <input type="checkbox" name="slider"
                                        id="slider"<?= (isset($config['slider']) && $config['slider'] == 'true') ? ' checked' : '' ?>>
-                                <label><?= $Lang->get('SLIDER__TITLE') ?></label>
+                                <label><?= __('SLIDER__TITLE') ?></label>
                             </div>
                         </div>
 
@@ -33,16 +33,16 @@
                         </script>
 
                         <div class="form-group">
-                            <label><?= $Lang->get('THEME__FAVICON_URL') ?></label>
+                            <label><?= __('THEME__FAVICON_URL') ?></label>
                             <input type="text" class="form-control" name="favicon_url"
                                    value="<?= (isset($config['favicon_url'])) ? $config['favicon_url'] : '' ?>">
                         </div>
 
                         <input type="hidden" name="data[_Token][key]" value="<?= $csrfToken ?>">
 
-                        <button class="btn btn-primary" type="submit"><?= $Lang->get('GLOBAL__SUBMIT') ?></button>
+                        <button class="btn btn-primary" type="submit"><?= __('GLOBAL__SUBMIT') ?></button>
                         <a href="<?= Cake\Routing\Router::url(['controller' => 'theme', 'action' => 'index', 'admin' => true]) ?>"
-                           type="button" class="btn btn-default"><?= $Lang->get('GLOBAL__CANCEL') ?></a>
+                           type="button" class="btn btn-default"><?= __('GLOBAL__CANCEL') ?></a>
                     </form>
 
                 </div>

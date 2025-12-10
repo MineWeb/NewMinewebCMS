@@ -65,10 +65,8 @@ class HistoryComponent extends Component
 
         $i = 0;
 
-        $this->Lang = $this->controller->Lang;
-
         foreach ($search_history as $value) { // je remplace les actions par leur traduction (ex: BUY_ITEM devient Achat d'un article)
-            $search_history[$i]['action'] = str_replace($value['action'], $this->Lang->get($value['action']), $value['action']);
+            $search_history[$i]['action'] = str_replace($value['action'], __($value['action']), $value['action']);
             $i++;
         }
         return $search_history;
@@ -76,14 +74,12 @@ class HistoryComponent extends Component
 
     function get_by_author($author)
     { // récupére tout l'historique d'un utilisateur
-        // j'inclue le fichier lang
-        $this->Lang = $this->controller->Lang;
 
         $this->History = TableRegistry::getTableLocator()->get("History"); // le model history
         $search_history = $this->History->find('all', conditions: ['author' => $author])->toArray(); // je cherche l'historique de l'utilisateur
         $i = 0;
         foreach ($search_history as $value) { // je remplace les actions par leur traduction (ex: BUY_ITEM devient Achat d'un article)
-            $search_history[$i]['action'] = str_replace($value['action'], $this->Lang->get($value['action']), $value['action']);
+            $search_history[$i]['action'] = str_replace($value['action'], __($value['action']), $value['action']);
             $i++;
         }
         return $search_history;

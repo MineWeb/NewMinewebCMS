@@ -89,7 +89,7 @@ use Cake\Routing\Router;
             <li class="nav-item">
                 <a class="nav-link"
                    href="<?= $this->Url->build(['controller' => 'user', 'action' => 'logout', 'admin' => false, 'plugin' => false]); ?>"><i
-                            class="fa fa-power-off"></i> <?= $Lang->get('USER__LOGOUT') ?></a>
+                            class="fa fa-power-off"></i> <?= __('USER__LOGOUT') ?></a>
             </li>
         </ul>
 
@@ -107,8 +107,8 @@ use Cake\Routing\Router;
                     'markAllAsSeen': '<?= $this->Url->build(['plugin' => false, 'admin' => false, 'controller' => 'notifications', 'action' => 'markAllAsSeen']) ?>'
                 },
                 'messages': {
-                    'markAsSeen': '<?= $Lang->get('NOTIFICATION__MARK_AS_SEEN') ?>',
-                    'notifiedBy': '<?= $Lang->get('NOTIFICATION__NOTIFIED_BY') ?>'
+                    'markAsSeen': '<?= __('NOTIFICATION__MARK_AS_SEEN') ?>',
+                    'notifiedBy': '<?= __('NOTIFICATION__NOTIFIED_BY') ?>'
                 },
                 'indicator': {
                     'element': '#notification-indicator',
@@ -154,7 +154,7 @@ use Cake\Routing\Router;
 
     <aside class="main-sidebar sidebar-dark-lightblue elevation-4">
         <a href="<?= Router::url('/') ?>" class="brand-link navbar-lightblue text-center text-white">
-            <span class="brand-text font-weight-light"><?= $Lang->get('GLOBAL__ADMINISTRATION'); ?></span>
+            <span class="brand-text font-weight-light"><?= __('GLOBAL__ADMINISTRATION'); ?></span>
         </a>
         <div class="sidebar">
             <nav class="mt-2">
@@ -196,7 +196,7 @@ use Cake\Routing\Router;
                             $route = (isset($value['route']) ? Router::url($value['route']) : '#');
                             $current = $route == Router::url(null, false);
                             echo '<a class="nav-link' . ($current || $currentMenu ? " active" : "") . '" href="' . $route . '">';
-                            echo '<i class="' . (strpos($value['icon'], "fa-") ? $value['icon'] : "fa fa-" . $value['icon']) . ' nav-icon"></i>  <p>' . $context->Lang->get($name);
+                            echo '<i class="' . (strpos($value['icon'], "fa-") ? $value['icon'] : "fa fa-" . $value['icon']) . ' nav-icon"></i>  <p>' . __($name);
                             if (isset($value['menu']))
                                 echo '<i class="fas fa-angle-left right"></i></p>';
                             else echo '</p>';
@@ -210,7 +210,7 @@ use Cake\Routing\Router;
                         }
                     }
 
-                    displayNav($adminNavbar, (object)['Lang' => $Lang, 'Permissions' => $Permissions]);
+                    displayNav($adminNavbar, (object)['Permissions' => $Permissions]);
                     ?>
                 </ul>
             </nav>
@@ -227,7 +227,7 @@ use Cake\Routing\Router;
     </div>
 
     <footer class="main-footer text-center">
-        <?= $Lang->get('GLOBAL__FOOTER_ADMIN') ?>
+        <?= __('GLOBAL__FOOTER_ADMIN') ?>
         <p>CakePhP version : <a href="https://cakephp.org/"><?= \Cake\Core\Configure::version(); ?></a></p>
         Credits <a href="http://almsaeedstudio.com">Almsaeed Studio</a>.</strong>
     </footer>
@@ -279,11 +279,11 @@ use Cake\Routing\Router;
 
 <?= $this->Html->script('form') ?>
 <script type="text/javascript">
-    var LOADING_MSG = "<?= $Lang->get('GLOBAL__LOADING') ?>";
-    var ERROR_MSG = "<?= $Lang->get('GLOBAL__ERROR') ?>";
-    var INTERNAL_ERROR_MSG = "<?= $Lang->get('ERROR__INTERNAL_ERROR') ?>";
-    var FORBIDDEN_ERROR_MSG = "<?= $Lang->get('ERROR__FORBIDDEN') ?>"
-    var SUCCESS_MSG = "<?= $Lang->get('GLOBAL__SUCCESS') ?>";
+    var LOADING_MSG = "<?= __('GLOBAL__LOADING') ?>";
+    var ERROR_MSG = "<?= __('GLOBAL__ERROR') ?>";
+    var INTERNAL_ERROR_MSG = "<?= __('ERROR__INTERNAL_ERROR') ?>";
+    var FORBIDDEN_ERROR_MSG = "<?= __('ERROR__FORBIDDEN') ?>"
+    var SUCCESS_MSG = "<?= __('GLOBAL__SUCCESS') ?>";
 
     var CSRF_TOKEN = "<?= $csrfToken ?>";
 </script>

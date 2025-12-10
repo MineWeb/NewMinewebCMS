@@ -8,7 +8,7 @@ use Cake\Routing\Router;
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('CONFIG__GENERAL_PREFERENCES') ?></h3>
+                    <h3 class="card-title"><?= __('CONFIG__GENERAL_PREFERENCES') ?></h3>
                 </div>
                 <div class="card-body">
 
@@ -18,17 +18,17 @@ use Cake\Routing\Router;
 
                             <ul class="nav nav-tabs">
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark active" href="#tab_1" data-toggle="tab" aria-expanded="true"><?= $Lang->get('CONFIG__GENERAL_PREFERENCES') ?></a>
+                                    <a class="nav-link text-dark active" href="#tab_1" data-toggle="tab" aria-expanded="true"><?= __('CONFIG__GENERAL_PREFERENCES') ?></a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark" href="#tab_2" data-toggle="tab" aria-expanded="false"><?= $Lang->get('CONFIG__OTHER_PREFERENCES') ?></a>
+                                    <a class="nav-link text-dark" href="#tab_2" data-toggle="tab" aria-expanded="false"><?= __('CONFIG__OTHER_PREFERENCES') ?></a>
                                 </li>
                             </ul>
                             <div class="tab-content">
                                 <div class="tab-pane fade show active" id="tab_1">
 
                                     <div class="form-group">
-                                        <label><?= $Lang->get('CONFIG__KEY_WEBSITE_URL') ?></label>
+                                        <label><?= __('CONFIG__KEY_WEBSITE_URL') ?></label>
                                         <?= $this->Form->input('website_url', [
                                             'div' => false,
                                             'type' => 'text',
@@ -38,7 +38,7 @@ use Cake\Routing\Router;
                                     </div>
 
                                     <div class="form-group">
-                                        <label><?= $Lang->get('CONFIG__KEY_NAME') ?></label>
+                                        <label><?= __('CONFIG__KEY_NAME') ?></label>
                                         <?= $this->Form->input('name', [
                                             'div' => false,
                                             'type' => 'text',
@@ -48,7 +48,7 @@ use Cake\Routing\Router;
                                     </div>
 
                                     <div class="form-group">
-                                        <label><?= $Lang->get('CONFIG__KEY_EMAIL') ?></label>
+                                        <label><?= __('CONFIG__KEY_EMAIL') ?></label>
                                         <?= $this->Form->input('email', [
                                             'div' => false,
                                             'type' => 'text',
@@ -60,7 +60,7 @@ use Cake\Routing\Router;
                                     <?php if ($shopIsInstalled) { ?>
 
                                         <div class="form-group">
-                                            <label><?= $Lang->get('CONFIG__KEY_MONEY_NAME_SINGULAR') ?></label>
+                                            <label><?= __('CONFIG__KEY_MONEY_NAME_SINGULAR') ?></label>
                                             <?= $this->Form->input('money_name_singular', [
                                                 'div' => false,
                                                 'type' => 'text',
@@ -70,7 +70,7 @@ use Cake\Routing\Router;
                                         </div>
 
                                         <div class="form-group">
-                                            <label><?= $Lang->get('CONFIG__KEY_MONEY_NAME_PLURAL') ?></label>
+                                            <label><?= __('CONFIG__KEY_MONEY_NAME_PLURAL') ?></label>
                                             <?= $this->Form->input('money_name_plural', [
                                                 'div' => false,
                                                 'type' => 'text',
@@ -85,7 +85,7 @@ use Cake\Routing\Router;
                                     <?= $this->Html->css('bootstrap-4/plugins/bootstrap-select/bootstrap-select.min.css') ?>
 
                                     <div class="form-group">
-                                        <label><?= $Lang->get('CONFIG__KEY_LANG') ?></label>
+                                        <label><?= __('CONFIG__KEY_LANG') ?></label>
                                         <div class="form-group">
                                             <?= $this->Form->select('lang', $config['languages_available'],
                                                 [
@@ -95,14 +95,14 @@ use Cake\Routing\Router;
                                                 ]);
                                             ?>
                                             <a href="<?= Router::url(['action' => 'editLang', 'admin' => true]) ?>"
-                                               class="btn btn-info"><?= $Lang->get('CONFIG__EDIT_LANG_FILE') ?></a>
+                                               class="btn btn-info"><?= __('CONFIG__EDIT_LANG_FILE') ?></a>
                                         </div>
                                     </div>
 
                                     <hr>
 
                                     <div class="form-group">
-                                        <label><?= $Lang->get('CONFIG__KEY_PASSWORDS_HASH') ?></label>
+                                        <label><?= __('CONFIG__KEY_PASSWORDS_HASH') ?></label>
                                         <div class="form-group">
                                             <?= $this->Form->select('passwords_hash',
                                                 [
@@ -124,7 +124,7 @@ use Cake\Routing\Router;
                                             <div class="checkbox">
                                                 <input name="passwords_salt_checkbox"
                                                        type="checkbox" <?= $config['passwords_salt'] == '1' ? 'checked' : '' ?>>
-                                                <label><?= $Lang->get('CONFIG__KEY_PASSWORDS_SALT') ?></label>
+                                                <label><?= __('CONFIG__KEY_PASSWORDS_SALT') ?></label>
                                             </div>
                                         </div>
                                         <script type="text/javascript">
@@ -132,20 +132,20 @@ use Cake\Routing\Router;
                                                 $('input[name="passwords_salt').val($('input[name="passwords_salt_checkbox"]:checked').length > 0 ? '1' : '0')
                                             })
                                         </script>
-                                        <small class="text-danger"><?= $Lang->get('CONFIG__KEY_PASSWORDS_ADVERTISSEMENT') ?></small>
+                                        <small class="text-danger"><?= __('CONFIG__KEY_PASSWORDS_ADVERTISSEMENT') ?></small>
                                     </div>
 
                                     <hr>
 
                                     <div class="form-group">
-                                        <label><?= $Lang->get('CONFIG__CHECK_UUID') ?></label>
+                                        <label><?= __('CONFIG__CHECK_UUID') ?></label>
                                         <div class="form-group">
                                             <input type="hidden" name="check_uuid"
                                                    value="<?= $config['check_uuid'] ?>">
                                             <div class="checkbox">
                                                 <input name="check_uuid_checkbox"
                                                        type="checkbox" <?= $config['check_uuid'] == '1' ? 'checked' : '' ?>>
-                                                <label><?= $Lang->get('CONFIG__CHECK_UUID_CHANGE') ?></label>
+                                                <label><?= __('CONFIG__CHECK_UUID_CHANGE') ?></label>
                                             </div>
                                         </div>
                                         <script type="text/javascript">
@@ -158,12 +158,12 @@ use Cake\Routing\Router;
                                     <hr>
 
                                     <div class="form-group">
-                                        <label><?= $Lang->get('CONFIG__MICROSOFT_CONNECTION') ?></label>
+                                        <label><?= __('CONFIG__MICROSOFT_CONNECTION') ?></label>
                                         <br>
-                                        <small class="text-danger"><?= $Lang->get('CONFIG__MICROSOFT_CONNECTION_REQUIREMENT') ?></small>
+                                        <small class="text-danger"><?= __('CONFIG__MICROSOFT_CONNECTION_REQUIREMENT') ?></small>
                                         <br>
 
-                                        <label><?= $Lang->get('CONFIG__MICROSOFT_CLIENT_ID') ?></label>
+                                        <label><?= __('CONFIG__MICROSOFT_CLIENT_ID') ?></label>
                                         <?= $this->Form->input('microsoft_client_id', array(
                                             'div' => false,
                                             'type' => 'text',
@@ -171,7 +171,7 @@ use Cake\Routing\Router;
                                             'value' => $config['microsoft_client_id']
                                         )); ?>
 
-                                        <label><?= $Lang->get('CONFIG__MICROSOFT_CLIENT_SECRET') ?></label>
+                                        <label><?= __('CONFIG__MICROSOFT_CLIENT_SECRET') ?></label>
                                         <?= $this->Form->input('microsoft_client_secret', array(
                                             'div' => false,
                                             'type' => 'text',
@@ -183,7 +183,7 @@ use Cake\Routing\Router;
                                     <hr>
                                     <div class="form-group">
                                         <div class="form-group">
-                                            <label><?= $Lang->get('CONFIG__CONDITION_TITLE') ?></label>
+                                            <label><?= __('CONFIG__CONDITION_TITLE') ?></label>
                                             <?= $this->Form->input('condition', [
                                                 'div' => false,
                                                 'type' => 'text',
@@ -191,18 +191,18 @@ use Cake\Routing\Router;
                                                 'value' => $config['condition']
                                             ]); ?>
                                         </div>
-                                        <small class="text-danger"><?= $Lang->get('CONFIG__CONDITION') ?></small>
+                                        <small class="text-danger"><?= __('CONFIG__CONDITION') ?></small>
                                     </div>
 
                                     <hr>
 
                                     <div class="form-group">
-                                        <label><?= $Lang->get('CONFIG__KEY_SESSION_TYPE') ?></label>
+                                        <label><?= __('CONFIG__KEY_SESSION_TYPE') ?></label>
                                         <div class="form-group">
                                             <?= $this->Form->select('session_type',
                                                 [
-                                                    'php' => $Lang->get('CONFIG__KEY_SESSION_TYPE_PHP'),
-                                                    'database' => $Lang->get('CONFIG__KEY_SESSION_TYPE_DB')
+                                                    'php' => __('CONFIG__KEY_SESSION_TYPE_PHP'),
+                                                    'database' => __('CONFIG__KEY_SESSION_TYPE_DB')
                                                 ],
                                                 [
                                                     'data-live-search' => 'true',
@@ -211,13 +211,13 @@ use Cake\Routing\Router;
                                                 ]);
                                             ?>
                                         </div>
-                                        <small class="text-info"><?= $Lang->get('CONFIG__KEY_SESSION_TYPE_INFO') ?></small>
+                                        <small class="text-info"><?= __('CONFIG__KEY_SESSION_TYPE_INFO') ?></small>
                                     </div>
 
                                     <hr>
 
                                     <div class="form-group">
-                                        <label><?= $Lang->get('CONFIG__KEY_VERSION') ?></label>
+                                        <label><?= __('CONFIG__KEY_VERSION') ?></label>
                                         <input type="text" value="<?= file_get_contents(ROOT . DS . 'VERSION') ?>"
                                                class="form-control disabled" disabled>
                                     </div>
@@ -227,36 +227,36 @@ use Cake\Routing\Router;
                                 <div class="tab-pane fade" id="tab_2">
 
                                     <div class="form-group">
-                                        <label><?= $Lang->get('CONFIG__KEY_MEMBER_PAGE_TYPE') ?></label>
+                                        <label><?= __('CONFIG__KEY_MEMBER_PAGE_TYPE') ?></label>
                                         <br>
-                                        <small><?= $Lang->get('CONFIG__KEY_MEMBER_PAGE_TYPE_EXPLAIN') ?></small>
+                                        <small><?= __('CONFIG__KEY_MEMBER_PAGE_TYPE_EXPLAIN') ?></small>
                                         <div class="radio">
                                             <input type="radio" name="member_page_type"
                                                    value="0" <?= ($config['member_page_type'] == '0') ? 'checked=""' : '' ?>>
-                                            <label><?= $Lang->get('CONFIG__KEY_MEMBER_PAGE_TYPE_DEFAULT') ?></label>
+                                            <label><?= __('CONFIG__KEY_MEMBER_PAGE_TYPE_DEFAULT') ?></label>
                                         </div>
                                         <div class="radio">
                                             <input type="radio" name="member_page_type"
                                                    value="1" <?= ($config['member_page_type'] == '1') ? 'checked=""' : '' ?>>
-                                            <label><?= $Lang->get('CONFIG__KEY_MEMBER_PAGE_TYPE_SEARCH') ?></label>
+                                            <label><?= __('CONFIG__KEY_MEMBER_PAGE_TYPE_SEARCH') ?></label>
                                         </div>
                                     </div>
 
                                     <hr>
 
                                     <div class="form-group">
-                                        <label><?= $Lang->get('CONFIG__KEY_CONFIRM_MAIL_SIGNUP') ?></label>
+                                        <label><?= __('CONFIG__KEY_CONFIRM_MAIL_SIGNUP') ?></label>
                                         <br>
-                                        <small><?= $Lang->get('CONFIG__CONFIRM_MAIL_SIGNUP_EXPLAIN') ?></small>
+                                        <small><?= __('CONFIG__CONFIRM_MAIL_SIGNUP_EXPLAIN') ?></small>
                                         <div class="radio">
                                             <input type="radio" name="confirm_mail_signup"
                                                    value="1" <?= ($config['confirm_mail_signup'] == '1') ? 'checked=""' : '' ?>>
-                                            <label><?= $Lang->get('GLOBAL__ENABLE') ?></label>
+                                            <label><?= __('GLOBAL__ENABLE') ?></label>
                                         </div>
                                         <div class="radio">
                                             <input type="radio" name="confirm_mail_signup"
                                                    value="0" <?= ($config['confirm_mail_signup'] == '0') ? 'checked=""' : '' ?>>
-                                            <label><?= $Lang->get('GLOBAL__DISABLE') ?></label>
+                                            <label><?= __('GLOBAL__DISABLE') ?></label>
                                         </div>
                                     </div>
 
@@ -273,16 +273,16 @@ use Cake\Routing\Router;
                                     <div id="confirm_mail_signup"
                                          style="display:<?= ($config['confirm_mail_signup'] == '1') ? 'block' : 'none' ?>;">
                                         <div class="form-group">
-                                            <label><?= $Lang->get('CONFIG__KEY_CONFIRM_MAIL_SIGNUP_BLOCK') ?></label>
+                                            <label><?= __('CONFIG__KEY_CONFIRM_MAIL_SIGNUP_BLOCK') ?></label>
                                             <div class="radio">
                                                 <input type="radio" name="confirm_mail_signup_block"
                                                        value="1" <?= ($config['confirm_mail_signup_block'] == '1') ? 'checked=""' : '' ?>>
-                                                <label><?= $Lang->get('GLOBAL__ENABLE') ?></label>
+                                                <label><?= __('GLOBAL__ENABLE') ?></label>
                                             </div>
                                             <div class="radio">
                                                 <input type="radio" name="confirm_mail_signup_block"
                                                        value="0" <?= ($config['confirm_mail_signup_block'] == '0') ? 'checked=""' : '' ?>>
-                                                <label><?= $Lang->get('GLOBAL__DISABLE') ?></label>
+                                                <label><?= __('GLOBAL__DISABLE') ?></label>
                                             </div>
                                         </div>
                                     </div>
@@ -290,22 +290,22 @@ use Cake\Routing\Router;
                                     <hr>
 
                                     <div class="form-group">
-                                        <label><?= $Lang->get('CONFIG__KEY_CAPTCHA_TYPE') ?></label>
+                                        <label><?= __('CONFIG__KEY_CAPTCHA_TYPE') ?></label>
                                         <div class="radio">
                                             <input type="radio" name="captcha_type"
                                                    value="1" <?= ($config['captcha_type'] == '1') ? 'checked=""' : '' ?>>
-                                            <label><?= $Lang->get('GLOBAL__TYPE_NORMAL') ?></label>
+                                            <label><?= __('GLOBAL__TYPE_NORMAL') ?></label>
                                         </div>
                                         <div class="radio">
                                             <input type="radio" name="captcha_type"
                                                    value="2" <?= ($config['captcha_type'] == '2') ? 'checked=""' : '' ?>>
-                                            <label><?= $Lang->get('CONFIG__TYPE_CAPTCHA_GOOGLE') ?></label>
+                                            <label><?= __('CONFIG__TYPE_CAPTCHA_GOOGLE') ?></label>
                                         </div>
 
                                         <div class="radio">
                                             <input type="radio" name="captcha_type"
                                                    value="3" <?= ($config['captcha_type'] == '3') ? 'checked=""' : '' ?>>
-                                            <label><?= $Lang->get('CONFIG__TYPE_CAPTCHA_HCAPTCHA') ?></label>
+                                            <label><?= __('CONFIG__TYPE_CAPTCHA_HCAPTCHA') ?></label>
                                         </div>
                                     </div>
 
@@ -322,7 +322,7 @@ use Cake\Routing\Router;
                                     <div id="captcha"
                                          style="display:<?= ($config['captcha_type'] == '2' || $config['captcha_type'] == '3') ? 'block' : 'none' ?>;">
                                         <div class="form-group">
-                                            <label><?= $Lang->get('CONFIG__KEY_CAPTCHA_SITEKEY') ?></label>
+                                            <label><?= __('CONFIG__KEY_CAPTCHA_SITEKEY') ?></label>
                                             <?= $this->Form->input('captcha_sitekey', [
                                                 'div' => false,
                                                 'type' => 'text',
@@ -332,7 +332,7 @@ use Cake\Routing\Router;
                                         </div>
 
                                         <div class="form-group">
-                                            <label><?= $Lang->get('CONFIG__KEY_CAPTCHA_SECRET') ?></label>
+                                            <label><?= __('CONFIG__KEY_CAPTCHA_SECRET') ?></label>
                                             <?= $this->Form->input('captcha_secret', [
                                                 'div' => false,
                                                 'type' => 'text',
@@ -345,7 +345,7 @@ use Cake\Routing\Router;
                                     <hr>
 
                                     <div class="form-group">
-                                        <label><?= $Lang->get('CONFIG__KEY_GOOGLE_ANALYTICS') ?></label>
+                                        <label><?= __('CONFIG__KEY_GOOGLE_ANALYTICS') ?></label>
                                         <?= $this->Form->input('google_analytics', [
                                             'div' => false,
                                             'type' => 'text',
@@ -358,7 +358,7 @@ use Cake\Routing\Router;
                                     <hr>
 
                                     <div class="form-group">
-                                        <label><?= $Lang->get('CONFIG__KEY_END_LAYOUT_COE') ?></label>
+                                        <label><?= __('CONFIG__KEY_END_LAYOUT_COE') ?></label>
                                         <?= $this->Form->textarea('end_layout_code', [
                                             'div' => false,
                                             'rows' => '5',
@@ -371,16 +371,16 @@ use Cake\Routing\Router;
                                     <hr>
 
                                     <div class="form-group">
-                                        <label><?= $Lang->get('CONFIG__KEY_EMAIL_SEND_TYPE') ?></label>
+                                        <label><?= __('CONFIG__KEY_EMAIL_SEND_TYPE') ?></label>
                                         <div class="radio">
                                             <input type="radio" name="email_send_type"
                                                    value="1" <?= ($config['email_send_type'] == '1') ? 'checked=""' : '' ?>>
-                                            <label><?= $Lang->get('GLOBAL__TYPE_NORMAL') ?></label>
+                                            <label><?= __('GLOBAL__TYPE_NORMAL') ?></label>
                                         </div>
                                         <div class="radio">
                                             <input type="radio" name="email_send_type"
                                                    value="2" <?= ($config['email_send_type'] == '2') ? 'checked=""' : '' ?>>
-                                            <label><?= $Lang->get('SMTP') ?></label>
+                                            <label><?= __('SMTP') ?></label>
                                         </div>
                                     </div>
 
@@ -398,7 +398,7 @@ use Cake\Routing\Router;
                                          style="display:<?= ($config['email_send_type'] == '1') ? 'none' : 'block' ?>;">
 
                                         <div class="form-group">
-                                            <label><?= $Lang->get('CONFIG__KEY_SMTP_HOST') ?></label>
+                                            <label><?= __('CONFIG__KEY_SMTP_HOST') ?></label>
                                             <?= $this->Form->input('smtpHost', [
                                                 'div' => false,
                                                 'type' => 'text',
@@ -409,7 +409,7 @@ use Cake\Routing\Router;
                                         </div>
 
                                         <div class="form-group">
-                                            <label><?= $Lang->get('CONFIG__KEY_SMTP_USERNAME') ?></label>
+                                            <label><?= __('CONFIG__KEY_SMTP_USERNAME') ?></label>
                                             <?= $this->Form->input('smtpUsername', [
                                                 'div' => false,
                                                 'type' => 'text',
@@ -420,7 +420,7 @@ use Cake\Routing\Router;
                                         </div>
 
                                         <div class="form-group">
-                                            <label><?= $Lang->get('CONFIG__KEY_SMTP_PORT') ?></label>
+                                            <label><?= __('CONFIG__KEY_SMTP_PORT') ?></label>
                                             <?= $this->Form->input('smtpPort', [
                                                 'div' => false,
                                                 'type' => 'text',
@@ -431,7 +431,7 @@ use Cake\Routing\Router;
                                         </div>
 
                                         <div class="form-group">
-                                            <label><?= $Lang->get('CONFIG__KEY_SMTP_PASSWORD') ?></label>
+                                            <label><?= __('CONFIG__KEY_SMTP_PASSWORD') ?></label>
                                             <?= $this->Form->input('smtpPassword', [
                                                 'div' => false,
                                                 'type' => 'password',
@@ -451,9 +451,9 @@ use Cake\Routing\Router;
 
                         <input type="hidden" name="data[_Token][key]" value="<?= $csrfToken ?>">
 
-                        <button class="btn btn-primary" type="submit"><?= $Lang->get('GLOBAL__SUBMIT') ?></button>
+                        <button class="btn btn-primary" type="submit"><?= __('GLOBAL__SUBMIT') ?></button>
                         <a href="<?= Router::url(['controller' => '', 'action' => '', 'admin' => true]) ?>"
-                           type="button" class="btn btn-default"><?= $Lang->get('GLOBAL__CANCEL') ?></a>
+                           type="button" class="btn btn-default"><?= __('GLOBAL__CANCEL') ?></a>
                     </form>
 
                 </div>

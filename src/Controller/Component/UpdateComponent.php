@@ -11,7 +11,7 @@ use ZipArchive;
 
 class UpdateComponent extends Component
 {
-    public array $components = ['Session', 'Configuration', 'Lang', 'Util'];
+    public array $components = ['Session', 'Configuration', 'Util'];
 
     public string $cmsVersion;
     public string $lastVersion;
@@ -39,11 +39,10 @@ class UpdateComponent extends Component
         parent::initialize($config);
 
         $this->controller = $this->_registry->getController();
-        $this->Lang = $this->controller->Lang;
         $this->controller->set('Update', $this);
 
         $this->updateCacheFile = ROOT . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'update';
-        $this->errorUpdate = $this->Lang->get('UPDATE__FAILED');
+        $this->errorUpdate = __('UPDATE__FAILED');
 
         $this->check();
     }
@@ -92,14 +91,14 @@ class UpdateComponent extends Component
         if (version_compare($this->cmsVersion, $this->lastVersion, '<')) {
             $url = Router::url(['controller' => 'update', 'action' => 'index', 'admin' => true]);
             return "<div class='alert alert-secondary'>"
-                . $this->Lang->get('UPDATE__AVAILABLE_TYPE_CMS') . ' '
-                . $this->Lang->get('UPDATE__AVAILABLE') . ' '
-                . $this->Lang->get('UPDATE__CMS_VERSION') . ' : '
+                . __('UPDATE__AVAILABLE_TYPE_CMS') . ' '
+                . __('UPDATE__AVAILABLE') . ' '
+                . __('UPDATE__CMS_VERSION') . ' : '
                 . $this->cmsVersion . ', '
-                . $this->Lang->get('UPDATE__LAST_VERSION') . ' : '
+                . __('UPDATE__LAST_VERSION') . ' : '
                 . $this->lastVersion . " "
                 . "<a href='" . $url . "' style='margin-top: -6px;' class='btn float-right'>"
-                . $this->Lang->get('GLOBAL__UPDATE')
+                . __('GLOBAL__UPDATE')
                 . '</a>'
                 . '</div>';
         }
@@ -124,7 +123,7 @@ class UpdateComponent extends Component
 
         $zip = new ZipArchive();
         if ($zip->open($zipPath) !== true) {
-            $this->errorUpdate = $this->Lang->get('UPDATE__FAILED');
+            $this->errorUpdate = __('UPDATE__FAILED');
             Log::error('[Update] Unable to open zip: ' . $zipPath);
             return false;
         }
@@ -135,7 +134,7 @@ class UpdateComponent extends Component
             $componentInZip = $rootPrefix . 'src/Controller/Component/UpdateComponent.php';
             $newContent = $zip->getFromName($componentInZip);
             if ($newContent === false || $newContent === '') {
-                $this->errorUpdate = $this->Lang->get('UPDATE__FAILED');
+                $this->errorUpdate = __('UPDATE__FAILED');
                 Log::error('[Update] UpdateComponent.php not found in archive: ' . $componentInZip);
                 $zip->close();
                 return false;
@@ -143,7 +142,7 @@ class UpdateComponent extends Component
 
             $target = ROOT . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component' . DIRECTORY_SEPARATOR . 'UpdateComponent.php';
             if (file_put_contents($target, $newContent) === false) {
-                $this->errorUpdate = $this->Lang->get('UPDATE__FAILED_FILE', ['{FILE}' => $target]);
+                $this->errorUpdate = __('UPDATE__FAILED_FILE', ['{FILE}' => $target]);
                 Log::error('[Update] Failed to write updated UpdateComponent.php to ' . $target);
                 $zip->close();
                 return false;
@@ -181,7 +180,7 @@ class UpdateComponent extends Component
             }
 
             if (file_exists($targetPath) && !is_writable($targetPath)) {
-                $this->errorUpdate = $this->Lang->get('UPDATE__FAILED_FILE', ['{FILE}' => $targetPath]);
+                $this->errorUpdate = __('UPDATE__FAILED_FILE', ['{FILE}' => $targetPath]);
                 Log::error('[Update] File not writable: ' . $targetPath);
                 $zip->close();
                 return false;
@@ -200,7 +199,7 @@ class UpdateComponent extends Component
             }
 
             if (file_put_contents($targetPath, $content) === false) {
-                $this->errorUpdate = $this->Lang->get('UPDATE__FAILED_FILE', ['{FILE}' => $targetPath]);
+                $this->errorUpdate = __('UPDATE__FAILED_FILE', ['{FILE}' => $targetPath]);
                 Log::error('[Update] Failed to write file ' . $targetPath);
                 $zip->close();
                 return false;
@@ -226,20 +225,20 @@ class UpdateComponent extends Component
             $url = "https://github.com/{$this->source['owner']}/{$this->source['repo']}/archive/v{$this->lastVersion}.zip";
             $content = $this->controller->sendGetRequest($url);
             if ($content === '') {
-                $this->errorUpdate = $this->Lang->get('UPDATE__FAILED');
+                $this->errorUpdate = __('UPDATE__FAILED');
                 Log::error('[Update] Empty content when downloading update zip');
                 return false;
             }
 
             if (file_put_contents($zipPath, $content) === false) {
-                $this->errorUpdate = $this->Lang->get('UPDATE__FAILED');
+                $this->errorUpdate = __('UPDATE__FAILED');
                 Log::error('[Update] Failed to write zip to ' . $zipPath);
                 return false;
             }
 
             return true;
         } catch (Throwable $e) {
-            $this->errorUpdate = $this->Lang->get('UPDATE__FAILED');
+            $this->errorUpdate = __('UPDATE__FAILED');
             Log::error('[Update] Error while downloading update zip: ' . $e->getMessage());
             return false;
         }
@@ -252,7 +251,7 @@ class UpdateComponent extends Component
             $migrations->migrate();
             return true;
         } catch (Throwable $e) {
-            $this->errorUpdate = $this->Lang->get('UPDATE__FAILED');
+            $this->errorUpdate = __('UPDATE__FAILED');
             Log::error('[Update] Failed to run migrations: ' . $e->getMessage());
             return false;
         }

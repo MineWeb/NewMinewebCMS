@@ -12,17 +12,17 @@ class PermissionsController extends AppController
         if (!$this->Permissions->can('MANAGE_PERMISSIONS'))
             throw new ForbiddenException();
 
-        $this->set('title_for_layout', $this->Lang->get('PERMISSIONS__LABEL'));
+        $this->set('title_for_layout', __('PERMISSIONS__LABEL'));
 
         $this->Rank = TableRegistry::getTableLocator()->get('Rank');
         $all_ranks = [
             [
                 'rank_id' => 0,
-                'name' => $this->Lang->get('GLOBAL__TYPE_NORMAL'),
+                'name' => __('GLOBAL__TYPE_NORMAL'),
             ],
             [
                 'rank_id' => 2,
-                'name' => $this->Lang->get('USER__RANK_MODERATOR'),
+                'name' => __('USER__RANK_MODERATOR'),
             ],
         ];
 
@@ -57,7 +57,7 @@ class PermissionsController extends AppController
                 $this->Permission->save($perm);
             }
 
-            $this->Flash->success($this->Lang->get('PERMISSIONS__SUCCESS_SAVE'));
+            $this->Flash->success(__('PERMISSIONS__SUCCESS_SAVE'));
         }
 
         $this->Permissions->ranks = [];
@@ -88,15 +88,15 @@ class PermissionsController extends AppController
 
                     $this->History->set('ADD_RANK', 'permissions');
 
-                    $this->Flash->success($this->Lang->get('USER__RANK_ADD_SUCCESS'));
-                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('USER__RANK_ADD_SUCCESS')]));
+                    $this->Flash->success(__('USER__RANK_ADD_SUCCESS'));
+                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('USER__RANK_ADD_SUCCESS')]));
 
                 } else {
-                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
+                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]));
                 }
 
             } else {
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__BAD_REQUEST')]));
+                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__BAD_REQUEST')]));
             }
         } else {
             $this->redirect('/');
@@ -119,7 +119,7 @@ class PermissionsController extends AppController
                     $this->Permission->delete($search_perm);
                 }
 
-                $this->Flash->success($this->Lang->get('USER__RANK_DELETE_SUCCESS'));
+                $this->Flash->success(__('USER__RANK_DELETE_SUCCESS'));
 
             }
             $this->redirect(['controller' => 'permissions', 'action' => 'index', 'admin' => true]);

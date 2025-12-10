@@ -104,6 +104,15 @@ return [
             'url' => env('CACHE_DEFAULT_URL', null),
         ],
 
+        '_cake_core_' => [
+            'className' => FileEngine::class,
+            'prefix' => 'myapp_cake_core_',
+            'path' => CACHE . 'persistent' . DS,
+            'serialize' => true,
+            'duration' => '+1 years',
+            'url' => env('CACHE_CAKECORE_URL'),
+        ],
+
         /*
          * Configure the cache used for general framework caching.
          * Translation cache files are stored with this configuration.

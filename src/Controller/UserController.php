@@ -6,6 +6,7 @@ use Cake\Http\Cookie\Cookie;
 use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
+use Cake\I18n\FrozenTime;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use DateTime;
@@ -56,7 +57,7 @@ class UserController extends AppController
                     if (!$pseudoToUUID) {
                         return $this->response->withStringBody(json_encode([
                             'statut' => false,
-                            'msg' => $this->Lang->get('USER__ERROR_UUID')
+                            'msg' => __('USER__ERROR_UUID')
                         ]));
                     }
 
@@ -87,15 +88,15 @@ class UserController extends AppController
                         // We send the mail if in the configuration it is activated
                         if ($this->Configuration->getKey('confirm_mail_signup')) {
                             $confirmCode = substr(md5(uniqid()), 0, 12);
-                            $emailMsg = $this->Lang->get('EMAIL__CONTENT_CONFIRM_MAIL', [
+                            $emailMsg = __('EMAIL__CONTENT_CONFIRM_MAIL', [
                                 '{LINK}' => $this->Configuration->getKey('website_url') . "/user/confirm/$confirmCode",
                                 '{IP}' => $this->Util->getIP(),
                                 '{USERNAME}' => $this->getRequest()->getData('pseudo'),
-                                '{DATE}' => $this->Lang->date(date('Y-m-d H:i:s'))
+                                '{DATE}' => FrozenTime::now()->i18nFormat('dd/MM/yyyy HH:mm')
                             ]);
                             $email = $this->Util->prepareMail(
                                 $this->getRequest()->getData('email'),
-                                $this->Lang->get('EMAIL__TITLE_CONFIRM_MAIL'),
+                                __('EMAIL__TITLE_CONFIRM_MAIL'),
                                 $emailMsg
                             )->sendMail();
                             if ($email) {
@@ -116,30 +117,30 @@ class UserController extends AppController
                         // on dis que c'est bon
                         return $this->response->withStringBody(json_encode([
                             'statut' => true,
-                            'msg' => $this->Lang->get('USER__REGISTER_SUCCESS')
+                            'msg' => __('USER__REGISTER_SUCCESS')
                         ]));
                     } else { // si c'est pas bon, on envoie le message d'erreur retourné par l'étape de validation
                         return $this->response->withStringBody(json_encode([
                             'statut' => false,
-                            'msg' => $this->Lang->get($isValid)
+                            'msg' => __($isValid)
                         ]));
                     }
                 } else {
                     return $this->response->withStringBody(json_encode([
                         'statut' => false,
-                        'msg' => $this->Lang->get('FORM__INVALID_CAPTCHA')
+                        'msg' => __('FORM__INVALID_CAPTCHA')
                     ]));
                 }
             } else {
                 return $this->response->withStringBody(json_encode([
                     'statut' => false,
-                    'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')
+                    'msg' => __('ERROR__FILL_ALL_FIELDS')
                 ]));
             }
         } else {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
-                'msg' => $this->Lang->get('ERROR__BAD_REQUEST')
+                'msg' => __('ERROR__BAD_REQUEST')
             ]));
         }
     }
@@ -149,7 +150,7 @@ class UserController extends AppController
         if (!$this->request->is('post'))
             throw new BadRequestException();
         if (empty($this->getRequest()->getData('pseudo')) || empty($this->getRequest()->getData('password')))
-            return $this->sendJSON(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]);
+            return $this->sendJSON(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]);
         $this->autoRender = false;
         $this->response->withType('json');
         $this->Authentification = TableRegistry::getTableLocator()->get('Authentification');
@@ -157,7 +158,7 @@ class UserController extends AppController
         $user_login = $this->User->getAllFromUser($this->getRequest()->getData('pseudo'));
 
         if (empty($user_login))
-            return $this->sendJSON(['statut' => false, 'msg' => $this->Lang->get('USER__ERROR_INVALID_CREDENTIALS')]);
+            return $this->sendJSON(['statut' => false, 'msg' => __('USER__ERROR_INVALID_CREDENTIALS')]);
 
         $infos = $this->Authentification->find('all', conditions: ['user_id' => $user_login['id'], 'enabled' => true])->first();
 
@@ -166,7 +167,7 @@ class UserController extends AppController
         if (!isset($login['status']) || $login['status'] !== true) {
             return $this->sendJSON([
                 'statut' => false,
-                'msg' => $this->Lang->get($login, ['{URL_RESEND_EMAIL}' => Router::url(['action' => 'resend_confirmation'])])
+                'msg' => __($login, ['{URL_RESEND_EMAIL}' => Router::url(['action' => 'resend_confirmation'])])
             ]);
         }
 
@@ -178,7 +179,7 @@ class UserController extends AppController
             $this->getRequest()->getSession()->write('user_id_two_factor_auth', $user_login['id']);
             return $this->sendJSON([
                 'statut' => true,
-                'msg' => $this->Lang->get('USER__REGISTER_LOGIN'),
+                'msg' => __('USER__REGISTER_LOGIN'),
                 'two-factor-auth' => true
             ]);
         } else {
@@ -190,7 +191,7 @@ class UserController extends AppController
                 $this->response = $this->getResponse()->withCookie($cookie);
             }
             $this->getRequest()->getSession()->write('user', $login['session']);
-            return $this->sendJSON(['statut' => true, 'msg' => $this->Lang->get('USER__REGISTER_LOGIN')]);
+            return $this->sendJSON(['statut' => true, 'msg' => __('USER__REGISTER_LOGIN')]);
         }
     }
 
@@ -210,7 +211,7 @@ class UserController extends AppController
                 $this->User->save($user);
                 $userSession = $find['User']['id'];
                 $this->Notification = TableRegistry::getTableLocator()->get('Notification');
-                $this->Notification->setToUser($this->Lang->get('USER__CONFIRM_NOTIFICATION'), $find['User']['id']);
+                $this->Notification->setToUser(__('USER__CONFIRM_NOTIFICATION'), $find['User']['id']);
                 $this->getRequest()->getSession()->write('user', $userSession);
                 $event = new Event('onLogin', $this, ['user' => $this->User->getAllFromCurrentUser(), 'confirmAccount' => true]);
                 $this->getEventManager()->dispatch($event);
@@ -238,12 +239,12 @@ class UserController extends AppController
                     $search = $this->User->find('all', conditions: ['email' => $this->getRequest()->getData('email')])->first();
                     if (!empty($search)) {
                         if ($search['User']['registered_by_microsoft'])
-                            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('USER__AUTH_MICROSOFT_CANNOT_RESET_PASSWORD')]));
+                            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('USER__AUTH_MICROSOFT_CANNOT_RESET_PASSWORD')]));
                         $this->Lostpassword = TableRegistry::getTableLocator()->get('Lostpassword');
                         $key = substr(md5(rand() . date('sihYdm')), 0, 10);
                         $to = $this->getRequest()->getData('email');
-                        $subject = $this->Lang->get('USER__PASSWORD_RESET_LINK');
-                        $message = $this->Lang->get('USER__PASSWORD_RESET_EMAIL_CONTENT', [
+                        $subject = __('USER__PASSWORD_RESET_LINK');
+                        $message = __('USER__PASSWORD_RESET_EMAIL_CONTENT', [
                             '{EMAIL}' => $this->getRequest()->getData('email'),
                             '{PSEUDO}' => $search['User']['pseudo'],
                             '{LINK}' => $this->Configuration->getKey('website_url') . "/?resetpasswd_$key"
@@ -261,36 +262,36 @@ class UserController extends AppController
                             $this->Lostpassword->save($lostPass);
                             $this->response->withStringBody(json_encode([
                                 'statut' => true,
-                                'msg' => $this->Lang->get('USER__PASSWORD_FORGOT_EMAIL_SUCCESS')
+                                'msg' => __('USER__PASSWORD_FORGOT_EMAIL_SUCCESS')
                             ]));
                         } else {
                             $this->response->withStringBody(json_encode([
                                 'statut' => false,
-                                'msg' => $this->Lang->get('ERROR__INTERNAL_ERROR')
+                                'msg' => __('ERROR__INTERNAL_ERROR')
                             ]));
                         }
                     } else {
                         $this->response->withStringBody(json_encode([
                             'statut' => false,
-                            'msg' => $this->Lang->get('USER__ERROR_NOT_FOUND')
+                            'msg' => __('USER__ERROR_NOT_FOUND')
                         ]));
                     }
                 } else {
                     $this->response->withStringBody(json_encode([
                         'statut' => false,
-                        'msg' => $this->Lang->get('USER__ERROR_EMAIL_NOT_VALID')
+                        'msg' => __('USER__ERROR_EMAIL_NOT_VALID')
                     ]));
                 }
             } else {
                 $this->response->withStringBody(json_encode([
                     'statut' => false,
-                    'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')
+                    'msg' => __('ERROR__FILL_ALL_FIELDS')
                 ]));
             }
         } else {
             $this->response->withStringBody(json_encode([
                 'statut' => false,
-                'msg' => $this->Lang->get('ERROR__BAD_REQUEST')
+                'msg' => __('ERROR__BAD_REQUEST')
             ]));
         }
 
@@ -310,21 +311,21 @@ class UserController extends AppController
                     $this->History->set('RESET_PASSWORD', 'user');
                     $this->response->withStringBody(json_encode([
                         'statut' => true,
-                        'msg' => $this->Lang->get('USER__PASSWORD_RESET_SUCCESS')
+                        'msg' => __('USER__PASSWORD_RESET_SUCCESS')
                     ]));
                 } else {
-                    $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get($reset)]));
+                    $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __($reset)]));
                 }
             } else {
                 $this->response->withStringBody(json_encode([
                     'statut' => false,
-                    'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')
+                    'msg' => __('ERROR__FILL_ALL_FIELDS')
                 ]));
             }
         } else {
             $this->response->withStringBody(json_encode([
                 'statut' => false,
-                'msg' => $this->Lang->get('ERROR__BAD_REQUEST')
+                'msg' => __('ERROR__BAD_REQUEST')
             ]));
         }
     }
@@ -363,7 +364,7 @@ class UserController extends AppController
                 $serverSkinRestorerID = $ApiConfiguration['skin_restorer_server_id'];
 
                 if ($useSkinRestorer & !$this->Server->userIsConnected($username, $serverSkinRestorerID)) {
-                    $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('API__SKIN_RESTORER_NOT_CONNECTED')]));
+                    $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('API__SKIN_RESTORER_NOT_CONNECTED')]));
                     return;
                 }
                 $skin_max_size = 10000000; // octet
@@ -386,7 +387,7 @@ class UserController extends AppController
                 if (!$this->Util->uploadImage($this->request, $target . $filename)) {
                     $this->response->withStringBody(json_encode([
                         'statut' => false,
-                        'msg' => $this->Lang->get('FORM__ERROR_WHEN_UPLOAD')
+                        'msg' => __('FORM__ERROR_WHEN_UPLOAD')
                     ]));
                     return;
                 }
@@ -398,7 +399,7 @@ class UserController extends AppController
 
                 $this->response->withStringBody(json_encode([
                     'statut' => true,
-                    'msg' => $this->Lang->get('API__UPLOAD_SKIN_SUCCESS')
+                    'msg' => __('API__UPLOAD_SKIN_SUCCESS')
                 ]));
             }
         } else {
@@ -433,13 +434,13 @@ class UserController extends AppController
                 if (!$this->Util->uploadImage($this->request, $target . $filename)) {
                     $this->response->withStringBody(json_encode([
                         'statut' => false,
-                        'msg' => $this->Lang->get('FORM__ERROR_WHEN_UPLOAD')
+                        'msg' => __('FORM__ERROR_WHEN_UPLOAD')
                     ]));
                     return;
                 }
                 $this->response->withStringBody(json_encode([
                     'statut' => true,
-                    'msg' => $this->Lang->get('API__UPLOAD_CAPE_SUCCESS')
+                    'msg' => __('API__UPLOAD_CAPE_SUCCESS')
                 ]));
             }
         } else {
@@ -471,10 +472,10 @@ class UserController extends AppController
                 $this->set('shop_active', false);
             }
             $available_ranks = [
-                0 => $this->Lang->get('USER__RANK_MEMBER'),
-                2 => $this->Lang->get('USER__RANK_MODERATOR'),
-                3 => $this->Lang->get('USER__RANK_ADMINISTRATOR'),
-                4 => $this->Lang->get('USER__RANK_ADMINISTRATOR')
+                0 => __('USER__RANK_MEMBER'),
+                2 => __('USER__RANK_MODERATOR'),
+                3 => __('USER__RANK_ADMINISTRATOR'),
+                4 => __('USER__RANK_ADMINISTRATOR')
             ];
             $this->Rank = TableRegistry::getTableLocator()->get('Rank');
             $custom_ranks = $this->Rank->find()->all();
@@ -493,7 +494,7 @@ class UserController extends AppController
             $this->set(compact('skin_width_max', 'skin_height_max', 'cape_width_max', 'cape_height_max'));
             $confirmed = $this->User->getKey('confirmed');
             if ($this->Configuration->getKey('confirm_mail_signup') && !empty($confirmed) && date('Y-m-d H:i:s', strtotime($confirmed)) != $confirmed) { // si ca ne correspond pas à une date -> compte non confirmé
-                $this->Flash->warning($this->Lang->get('USER__MSG_NOT_CONFIRMED_EMAIL', ['{URL_RESEND_EMAIL}' => Router::url(['action' => 'resend_confirmation'])]));
+                $this->Flash->warning(__('USER__MSG_NOT_CONFIRMED_EMAIL', ['{URL_RESEND_EMAIL}' => Router::url(['action' => 'resend_confirmation'])]));
             }
             $connected_by_microsoft = false;
             $microsoft_user_id = $this->getRequest()->getCookie('microsoft_user_id');
@@ -521,21 +522,21 @@ class UserController extends AppController
         $confirmed = $user['confirmed'];
         if (!$this->Configuration->getKey('confirm_mail_signup') || empty($confirmed) || date('Y-m-d H:i:s', strtotime($confirmed)) == $confirmed)
             throw new NotFoundException();
-        $emailMsg = $this->Lang->get('EMAIL__CONTENT_CONFIRM_MAIL', [
+        $emailMsg = __('EMAIL__CONTENT_CONFIRM_MAIL', [
             '{LINK}' => $this->Configuration->getKey('website_url') . "/user/confirm/$confirmed",
             '{IP}' => $this->Util->getIP(),
             '{USERNAME}' => $user['pseudo'],
-            '{DATE}' => $this->Lang->date(date('Y-m-d H:i:s'))
+            '{DATE}' => FrozenTime::now()->i18nFormat('dd/MM/yyyy HH:mm')
         ]);
         $email = $this->Util->prepareMail(
             $user['email'],
-            $this->Lang->get('EMAIL__TITLE_CONFIRM_MAIL'),
+            __('EMAIL__TITLE_CONFIRM_MAIL'),
             $emailMsg
         )->sendMail();
         if ($email)
-            $this->Flash->success($this->Lang->get('USER__CONFIRM_EMAIL_RESEND_SUCCESS'));
+            $this->Flash->success(__('USER__CONFIRM_EMAIL_RESEND_SUCCESS'));
         else
-            $this->Flash->error($this->Lang->get('USER__CONFIRM_EMAIL_RESEND_FAIL'));
+            $this->Flash->error(__('USER__CONFIRM_EMAIL_RESEND_FAIL'));
         if ($this->isConnected)
             $this->redirect(['action' => 'profile']);
         else
@@ -562,30 +563,30 @@ class UserController extends AppController
                         $this->User->setKey('password_hash', $this->Util->getPasswordHashType());
                         return $this->response->withStringBody(json_encode([
                             'statut' => true,
-                            'msg' => $this->Lang->get('USER__PASSWORD_UPDATE_SUCCESS')
+                            'msg' => __('USER__PASSWORD_UPDATE_SUCCESS')
                         ]));
                     } else {
                         return $this->response->withStringBody(json_encode([
                             'statut' => false,
-                            'msg' => $this->Lang->get('USER__ERROR_PASSWORDS_NOT_SAME')
+                            'msg' => __('USER__ERROR_PASSWORDS_NOT_SAME')
                         ]));
                     }
                 } else {
                     return $this->response->withStringBody(json_encode([
                         'statut' => false,
-                        'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')
+                        'msg' => __('ERROR__FILL_ALL_FIELDS')
                     ]));
                 }
             } else {
                 return $this->response->withStringBody(json_encode([
                     'statut' => false,
-                    'msg' => $this->Lang->get('ERROR__BAD_REQUEST')
+                    'msg' => __('ERROR__BAD_REQUEST')
                 ]));
             }
         } else {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
-                'msg' => $this->Lang->get('USER__ERROR_MUST_BE_LOGGED')
+                'msg' => __('USER__ERROR_MUST_BE_LOGGED')
             ]));
         }
     }
@@ -610,30 +611,30 @@ class UserController extends AppController
                             $this->User->setKey('email', htmlentities($this->getRequest()->getData('email')));
                             return $this->response->withStringBody(json_encode([
                                 'statut' => true,
-                                'msg' => $this->Lang->get('USER__EMAIL_UPDATE_SUCCESS')
+                                'msg' => __('USER__EMAIL_UPDATE_SUCCESS')
                             ]));
                         } else {
                             return $this->response->withStringBody(json_encode([
                                 'statut' => false,
-                                'msg' => $this->Lang->get('USER__ERROR_EMAIL_NOT_VALID')
+                                'msg' => __('USER__ERROR_EMAIL_NOT_VALID')
                             ]));
                         }
                     } else {
                         return $this->response->withStringBody(json_encode([
                             'statut' => false,
-                            'msg' => $this->Lang->get('USER__ERROR_EMAIL_NOT_SAME')
+                            'msg' => __('USER__ERROR_EMAIL_NOT_SAME')
                         ]));
                     }
                 } else {
                     return $this->response->withStringBody(json_encode([
                         'statut' => false,
-                        'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')
+                        'msg' => __('ERROR__FILL_ALL_FIELDS')
                     ]));
                 }
             } else {
                 return $this->response->withStringBody(json_encode([
                     'statut' => false,
-                    'msg' => $this->Lang->get('ERROR__BAD_REQUEST')
+                    'msg' => __('ERROR__BAD_REQUEST')
                 ]));
             }
         } else {

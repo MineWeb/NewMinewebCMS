@@ -10,8 +10,8 @@ use Cake\Routing\Router;
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
-                            class="sr-only"><?= $Lang->get('GLOBAL__CLOSE') ?></span></button>
-                <h4 class="modal-title" id="myModalLabel"><?= $Lang->get('USER__LOGIN') ?></h4>
+                            class="sr-only"><?= __('GLOBAL__CLOSE') ?></span></button>
+                <h4 class="modal-title" id="myModalLabel"><?= __('USER__LOGIN') ?></h4>
             </div>
             <form id="login-before-two-factor-auth" method="POST" data-ajax="true"
                   action="<?= Router::url(['plugin' => false, 'admin' => false, 'controller' => 'user', 'action' => 'ajax_login']) ?>"
@@ -19,15 +19,15 @@ use Cake\Routing\Router;
                 <div class="modal-body">
                     <div class="ajax-msg"></div>
                     <div class="form-group">
-                        <h5><?= $Lang->get('USER__USERNAME') ?></h5>
+                        <h5><?= __('USER__USERNAME') ?></h5>
                         <input type="text" class="form-control" name="pseudo" id="inputEmail3"
-                               placeholder="<?= $Lang->get('USER__USERNAME_LABEL') ?>">
+                               placeholder="<?= __('USER__USERNAME_LABEL') ?>">
                     </div>
 
                     <div class="form-group">
-                        <h5><?= $Lang->get('USER__PASSWORD') ?></h5>
+                        <h5><?= __('USER__PASSWORD') ?></h5>
                         <input type="password" class="form-control" name="password"
-                               placeholder="<?= $Lang->get('USER__PASSWORD_LABEL') ?>">
+                               placeholder="<?= __('USER__PASSWORD_LABEL') ?>">
                     </div>
 
                     <div class="row">
@@ -36,20 +36,19 @@ use Cake\Routing\Router;
                                 <div class="checkbox">
                                     <label>
                                         <input type="checkbox" name="remember_me">
-                                        <?= $Lang->get('USER__REMEMBER_ME') ?>
+                                        <?= __('USER__REMEMBER_ME') ?>
                                     </label>
                                 </div>
                             </div>
                         </div>
                         <div class="col-lg-6">
                             <div class="text-center"><h5><a data-dismiss="modal" href="#" data-toggle="modal"
-                                                            data-target="#lostpasswd"><?= $Lang->
-                                        get('USER__PASSWORD_FORGOT_LABEL') ?></a></h5></div>
+                                                            data-target="#lostpasswd"><?= __('USER__PASSWORD_FORGOT_LABEL') ?></a></h5></div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary btn-block"><?= $Lang->get('USER__LOGIN') ?></button>
+                    <button type="submit" class="btn btn-primary btn-block"><?= __('USER__LOGIN') ?></button>
                 </div>
             </form>
             <form id="login-two-factor-auth" style="display:none;" method="POST" data-ajax="true"
@@ -59,13 +58,13 @@ use Cake\Routing\Router;
                     <div class="ajax-msg"></div>
                     <input type="checkbox" style="display: none;" name="remember_me">
                     <div class="form-group">
-                        <h5><?= $Lang->get('USER__LOGIN_CODE') ?></h5>
+                        <h5><?= __('USER__LOGIN_CODE') ?></h5>
                         <input type="text" class="form-control" name="code"
-                               placeholder="<?= $Lang->get('USER__LOGIN_CODE') ?>">
+                               placeholder="<?= __('USER__LOGIN_CODE') ?>">
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary btn-block"><?= $Lang->get('USER__LOGIN') ?></button>
+                    <button type="submit" class="btn btn-primary btn-block"><?= __('USER__LOGIN') ?></button>
                 </div>
             </form>
         </div>
@@ -86,22 +85,22 @@ use Cake\Routing\Router;
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
-                            class="sr-only"><?= $Lang->get('GLOBAL__CLOSE') ?></span></button>
-                <h4 class="modal-title" id="myModalLabel"><?= $Lang->get('USER__PASSWORD_FORGOT_LABEL') ?></h4>
+                            class="sr-only"><?= __('GLOBAL__CLOSE') ?></span></button>
+                <h4 class="modal-title" id="myModalLabel"><?= __('USER__PASSWORD_FORGOT_LABEL') ?></h4>
             </div>
             <form method="POST" data-ajax="true"
                   action="<?= Router::url(['plugin' => null, 'admin' => false, 'controller' => 'user', 'action' => 'ajax_lostpasswd']) ?>">
                 <div class="modal-body">
                     <div class="ajax-msg"></div>
                     <div class="form-group">
-                        <h5><?= $Lang->get('USER__EMAIL') ?> </h5>
+                        <h5><?= __('USER__EMAIL') ?> </h5>
                         <input type="text" class="form-control" name="email"
-                               placeholder="<?= $Lang->get('USER__EMAIL_LABEL') ?>">
+                               placeholder="<?= __('USER__EMAIL_LABEL') ?>">
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="submit"
-                            class="btn btn-primary btn-block"><?= $Lang->get('USER__PASSWORD_FORGOT_SEND_MAIL') ?></button>
+                            class="btn btn-primary btn-block"><?= __('USER__PASSWORD_FORGOT_SEND_MAIL') ?></button>
                 </div>
             </form>
         </div>
@@ -116,8 +115,8 @@ use Cake\Routing\Router;
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal"><span
                                 aria-hidden="true">&times;</span><span
-                                class="sr-only"><?= $Lang->get('GLOBAL__CLOSE') ?></span></button>
-                    <h4 class="modal-title" id="myModalLabel"><?= $Lang->get('USER__PASSWORD_FORGOT_LABEL') ?></h4>
+                                class="sr-only"><?= __('GLOBAL__CLOSE') ?></span></button>
+                    <h4 class="modal-title" id="myModalLabel"><?= __('USER__PASSWORD_FORGOT_LABEL') ?></h4>
                 </div>
                 <form method="POST" data-ajax="true"
                       action="<?= Router::url(['plugin' => null, 'admin' => false, 'controller' => 'user', 'action' => 'ajax_resetpasswd']) ?>"
@@ -127,19 +126,19 @@ use Cake\Routing\Router;
                         <input type="hidden" name="key" value="<?= $resetpsswd['key'] ?>">
                         <input type="hidden" name="email" value="<?= $resetpsswd['email'] ?>">
                         <div class="form-group">
-                            <h5><?= $Lang->get('USER__PASSWORD') ?></h5>
+                            <h5><?= __('USER__PASSWORD') ?></h5>
                             <input type="password" class="form-control" name="password"
-                                   placeholder="<?= $Lang->get('USER__PASSWORD_LABEL') ?>">
+                                   placeholder="<?= __('USER__PASSWORD_LABEL') ?>">
                         </div>
                         <div class="form-group">
-                            <h5><?= $Lang->get('USER__PASSWORD_CONFIRM') ?></h5>
+                            <h5><?= __('USER__PASSWORD_CONFIRM') ?></h5>
                             <input type="password" class="form-control" name="password2"
-                                   placeholder="<?= $Lang->get('USER__PASSWORD_CONFIRM_LABEL') ?>">
+                                   placeholder="<?= __('USER__PASSWORD_CONFIRM_LABEL') ?>">
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="submit"
-                                class="btn btn-success btn-block"><?= $Lang->get('GLOBAL__SAVE') ?></button>
+                                class="btn btn-success btn-block"><?= __('GLOBAL__SAVE') ?></button>
                     </div>
                 </form>
             </div>
@@ -152,8 +151,8 @@ use Cake\Routing\Router;
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
-                            class="sr-only"><?= $Lang->get('GLOBAL__CLOSE') ?></span></button>
-                <h4 class="modal-title" id="myModalLabel"><?= $Lang->get('USER__REGISTER') ?></h4>
+                            class="sr-only"><?= __('GLOBAL__CLOSE') ?></span></button>
+                <h4 class="modal-title" id="myModalLabel"><?= __('USER__REGISTER') ?></h4>
             </div>
             <form method="POST" data-ajax="true"
                   action="<?= Router::url(['plugin' => null, 'admin' => false, 'controller' => 'user', 'action' => 'ajax_register', 'crsf' => false]) ?>"
@@ -161,49 +160,49 @@ use Cake\Routing\Router;
                 <div class="modal-body">
                     <div class="ajax-msg"></div>
                     <div class="form-group">
-                        <h5><?= $Lang->get('USER__USERNAME') ?></h5>
+                        <h5><?= __('USER__USERNAME') ?></h5>
                         <input type="text" class="form-control" name="pseudo"
-                               placeholder="<?= $Lang->get('USER__USERNAME_LABEL') ?>">
+                               placeholder="<?= __('USER__USERNAME_LABEL') ?>">
                     </div>
                     <div class="form-group">
-                        <h5><?= $Lang->get('USER__PASSWORD') ?></h5>
+                        <h5><?= __('USER__PASSWORD') ?></h5>
                         <input type="password" class="form-control" name="password"
-                               placeholder="<?= $Lang->get('USER__PASSWORD_LABEL') ?>">
+                               placeholder="<?= __('USER__PASSWORD_LABEL') ?>">
                     </div>
                     <div class="form-group">
-                        <h5><?= $Lang->get('USER__PASSWORD_CONFIRM') ?></h5>
+                        <h5><?= __('USER__PASSWORD_CONFIRM') ?></h5>
                         <input type="password" class="form-control" name="password_confirmation"
-                               placeholder="<?= $Lang->get('USER__PASSWORD_CONFIRM_LABEL') ?>">
+                               placeholder="<?= __('USER__PASSWORD_CONFIRM_LABEL') ?>">
                     </div>
                     <div class="form-group">
-                        <h5><?= $Lang->get('USER__EMAIL') ?> </h5>
+                        <h5><?= __('USER__EMAIL') ?> </h5>
                         <input type="email" class="form-control" name="email"
-                               placeholder="<?= $Lang->get('USER__EMAIL_LABEL') ?>">
+                               placeholder="<?= __('USER__EMAIL_LABEL') ?>">
                     </div>
                     <?php if ($captcha['type'] == "google") { ?>
                         <script src='https://www.google.com/recaptcha/api.js'></script>
                         <div class="form-group">
-                            <h5><?= $Lang->get('FORM__CAPTCHA') ?></h5>
+                            <h5><?= __('FORM__CAPTCHA') ?></h5>
                             <div class="g-recaptcha" data-sitekey="<?= $captcha['siteKey'] ?>"></div>
                         </div>
 
                     <?php } else if ($captcha['type'] == "hcaptcha") { ?>
                         <script src='https://www.hCaptcha.com/1/api.js' async defer></script>
                         <div class="form-group">
-                            <h5><?= $Lang->get('FORM__CAPTCHA') ?></h5>
+                            <h5><?= __('FORM__CAPTCHA') ?></h5>
                             <div class="h-captcha" data-sitekey="<?= $captcha['siteKey'] ?>"></div>
                         </div>
                     <?php } else { ?>
                         <div class="form-group">
-                            <h5><?= $Lang->get('FORM__CAPTCHA') ?></h5>
+                            <h5><?= __('FORM__CAPTCHA') ?></h5>
                             <?php
                             echo $this->Html->image(['controller' => 'user', 'action' => 'get_captcha', 'plugin' => false, 'admin' => false], ['plugin' => false, 'admin' => false, 'id' => 'captcha_image']);
-                            echo $this->Html->link($Lang->get('FORM__RELOAD_CAPTCHA'), 'javascript:void(0);', ['id' => 'reload']);
+                            echo $this->Html->link(__('FORM__RELOAD_CAPTCHA'), 'javascript:void(0);', ['id' => 'reload']);
                             ?>
                         </div>
                         <div class="form-group">
                             <input type="text" class="form-control" name="captcha" id="inputPassword3"
-                                   placeholder="<?= $Lang->get('FORM__CAPTCHA_LABEL') ?>">
+                                   placeholder="<?= __('FORM__CAPTCHA_LABEL') ?>">
                         </div>
                     <?php } ?>
                     <?php if (!empty($condition)) { ?>
@@ -211,15 +210,15 @@ use Cake\Routing\Router;
                             <div class="checkbox">
                                 <label>
                                     <input type="checkbox" name="condition">
-                                    <?= $Lang->get('USER__CONDITION_1') ?> <a
-                                            href="<?= $condition ?>"> <?= $Lang->get('USER__CONDITION_2') ?></a>
+                                    <?= __('USER__CONDITION_1') ?> <a
+                                            href="<?= $condition ?>"> <?= __('USER__CONDITION_2') ?></a>
                                 </label>
                             </div>
                         </div>
                     <?php } ?>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary btn-block"><?= $Lang->get('USER__REGISTER') ?></button>
+                    <button type="submit" class="btn btn-primary btn-block"><?= __('USER__REGISTER') ?></button>
                 </div>
             </form>
         </div>
@@ -241,8 +240,8 @@ use Cake\Routing\Router;
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal"><span
                                 aria-hidden="true">&times;</span><span
-                                class="sr-only"><?= $Lang->get('GLOBAL__CLOSE') ?></span></button>
-                    <h4 class="modal-title"><?= $Lang->get('NOTIFICATIONS__LIST') ?></h4>
+                                class="sr-only"><?= __('GLOBAL__CLOSE') ?></span></button>
+                    <h4 class="modal-title"><?= __('NOTIFICATIONS__LIST') ?></h4>
                 </div>
                 <div class="modal-body" style="padding:0;">
 
@@ -251,9 +250,9 @@ use Cake\Routing\Router;
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default btn-block" onclick="notification.markAllAsSeen()"
-                            data-dismiss="modal"><?= $Lang->get('NOTIFICATIONS__MARK_ALL_AS_SEEN') ?></button>
+                            data-dismiss="modal"><?= __('NOTIFICATIONS__MARK_ALL_AS_SEEN') ?></button>
                     <button type="submit" class="btn btn-danger btn-block" onclick="notification.clearAll()"
-                            data-dismiss="modal"><?= $Lang->get('NOTIFICATIONS__CLEAR_ALL') ?></button>
+                            data-dismiss="modal"><?= __('NOTIFICATIONS__CLEAR_ALL') ?></button>
                 </div>
             </div>
         </div>

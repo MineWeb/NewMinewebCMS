@@ -8,10 +8,10 @@ use Cake\Routing\Router;
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('SERVER__CMD_TITLE') ?> &nbsp;&nbsp;<button
+                    <h3 class="card-title"><?= __('SERVER__CMD_TITLE') ?> &nbsp;&nbsp;<button
                                 data-toggle="modal"
                                 data-target="#executeCommand"
-                                class="btn btn-success"><?= $Lang->get('GLOBAL__ADD') ?></button>
+                                class="btn btn-success"><?= __('GLOBAL__ADD') ?></button>
                     </h3>
                 </div>
                 <div class="card-body">
@@ -19,10 +19,10 @@ use Cake\Routing\Router;
                     <table class="table table-bordered dataTable">
                         <thead>
                         <tr>
-                            <th><?= $Lang->get('SERVER__CMD_NAME') ?></th>
-                            <th><?= $Lang->get('SERVER__COMMAND') ?></th>
-                            <th><?= $Lang->get('SERVER__TITLE') ?></th>
-                            <th class="right"><?= $Lang->get('GLOBAL__ACTIONS') ?></th>
+                            <th><?= __('SERVER__CMD_NAME') ?></th>
+                            <th><?= __('SERVER__COMMAND') ?></th>
+                            <th><?= __('SERVER__TITLE') ?></th>
+                            <th class="right"><?= __('GLOBAL__ACTIONS') ?></th>
                         </tr>
                         </thead>
                         <tbody>
@@ -41,10 +41,10 @@ use Cake\Routing\Router;
                                         <input type="hidden" name="server_id"
                                                value="<?= $c['server_id'] ?>">
                                         <button class="btn btn-primary"
-                                                type="submit"><?= $Lang->get('GLOBAL__SUBMIT') ?></button>
+                                                type="submit"><?= __('GLOBAL__SUBMIT') ?></button>
 
                                         <a onClick="confirmDel('<?= Router::url(['controller' => 'server', 'action' => 'delete_cmd/' . $c['id'], 'admin' => true]) ?>')"
-                                           class="btn btn-danger"><?= $Lang->get('GLOBAL__DELETE') ?></a>
+                                           class="btn btn-danger"><?= __('GLOBAL__DELETE') ?></a>
                                     </form>
                                 </td>
                             </tr>
@@ -62,7 +62,7 @@ use Cake\Routing\Router;
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title"><?= $Lang->get('SERVER__CMD_TITLE') ?></h4>
+                <h4 class="modal-title"><?= __('SERVER__CMD_TITLE') ?></h4>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">×</span>
                 </button>
@@ -72,17 +72,17 @@ use Cake\Routing\Router;
                       data-redirect-url="<?= Router::url(['action' => 'cmd', 'admin' => true]) ?>">
                     <div class="ajax-msg"></div>
                     <div class="form-group">
-                        <label><?= $Lang->get('GLOBAL__NAME') ?></label>
+                        <label><?= __('GLOBAL__NAME') ?></label>
                         <input name="name" class="form-control" type="text">
                     </div>
 
                     <div class="form-group">
-                        <label><?= $Lang->get('SERVER__COMMAND') ?></label>
+                        <label><?= __('SERVER__COMMAND') ?></label>
                         <input name="cmd" class="form-control" type="text">
                     </div>
 
                     <div class="form-group">
-                        <label><?= $Lang->get('SERVER__TITLE') ?></label>
+                        <label><?= __('SERVER__TITLE') ?></label>
                         <select class="form-control" name="server_id">
                             <?php foreach ($search_server as $c) {
                                 if ($c['type'] == 0 or $c['type'] == 2) ?>
@@ -93,8 +93,8 @@ use Cake\Routing\Router;
 
                     <div class="float-right">
                         <a href="<?= Router::url(['action' => 'cmd', 'admin' => true]) ?>"
-                           class="btn btn-default"><?= $Lang->get('GLOBAL__CANCEL') ?></a>
-                        <button class="btn btn-primary" type="submit"><?= $Lang->get('GLOBAL__SUBMIT') ?></button>
+                           class="btn btn-default"><?= __('GLOBAL__CANCEL') ?></a>
+                        <button class="btn btn-primary" type="submit"><?= __('GLOBAL__SUBMIT') ?></button>
                     </div>
                 </form>
             </div>
@@ -109,7 +109,7 @@ use Cake\Routing\Router;
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header with-border">
-                        <h3 class="card-title"><?= $Lang->get('SERVER__CMD_TITLE') ?></h3>
+                        <h3 class="card-title"><?= __('SERVER__CMD_TITLE') ?></h3>
                     </div>
                     <div class="card-body">
                         <form action="<?= Router::url(['action' => 'add_cmd', 'admin' => true]) ?>" method="post" data-ajax="true"
@@ -118,17 +118,17 @@ use Cake\Routing\Router;
                             <div class="ajax-msg"></div>
 
                             <div class="form-group">
-                                <label><?= $Lang->get('GLOBAL__NAME') ?></label>
+                                <label><?= __('GLOBAL__NAME') ?></label>
                                 <input name="name" class="form-control" type="text">
                             </div>
 
                             <div class="form-group">
-                                <label><?= $Lang->get('SERVER__COMMAND') ?></label>
+                                <label><?= __('SERVER__COMMAND') ?></label>
                                 <input name="cmd" class="form-control" type="text">
                             </div>
 
                             <div class="form-group">
-                                <label><?= $Lang->get('SERVER__TITLE') ?></label>
+                                <label><?= __('SERVER__TITLE') ?></label>
                                 <select class="form-control" name="server_id">
                                     <?php foreach ($search_server as $c) {
                                         if ($c['type'] == 0 or $c['type'] == 2) ?>
@@ -139,9 +139,9 @@ use Cake\Routing\Router;
 
                             <div class="float-right">
                                 <a href="<?= Router::url(['action' => 'admin_cmd', 'admin' => true]) ?>"
-                                   class="btn btn-default"><?= $Lang->get('GLOBAL__CANCEL') ?></a>
+                                   class="btn btn-default"><?= __('GLOBAL__CANCEL') ?></a>
                                 <button class="btn btn-primary"
-                                        type="submit"><?= $Lang->get('GLOBAL__SUBMIT') ?></button>
+                                        type="submit"><?= __('GLOBAL__SUBMIT') ?></button>
                             </div>
                         </form>
                     </div>

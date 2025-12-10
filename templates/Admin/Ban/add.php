@@ -8,7 +8,7 @@ use Cake\Routing\Router;
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('BAN__HOME') ?></h3>
+                    <h3 class="card-title"><?= __('BAN__HOME') ?></h3>
                 </div>
                 <div class="card-body">
                     <form method="post" data-ajax="true" data-upload-image="true"
@@ -17,18 +17,18 @@ use Cake\Routing\Router;
                                style="table-layout: fixed;word-wrap: break-word;" id="users">
                             <thead>
                             <tr>
-                                <th><?= $Lang->get('BAN__QUESTION') ?></th>
-                                <th><?= $Lang->get('USER__TITLE') ?></th>
-                                <th><?= $Lang->get('USER__RANK') ?></th>
+                                <th><?= __('BAN__QUESTION') ?></th>
+                                <th><?= __('USER__TITLE') ?></th>
+                                <th><?= __('USER__RANK') ?></th>
                                 <th>IP</th>
-                                <th><?= $Lang->get('BAN__IP_QUESTION') ?></th>
+                                <th><?= __('BAN__IP_QUESTION') ?></th>
                             </tr>
                             </thead>
                         </table>
 
                         <div class="col-sm-6">
                             <div class="form-group">
-                                <label><?= $Lang->get('BAN__REASON') ?></label>
+                                <label><?= __('BAN__REASON') ?></label>
                                 <input type="text" class="form-control"
                                        name="reason">
                             </div>
@@ -36,8 +36,8 @@ use Cake\Routing\Router;
 
                         <div class="float-right">
                             <a href="<?= Router::url(['controller' => 'ban', 'action' => 'index', 'admin' => true]) ?>"
-                               class="btn btn-default"><?= $Lang->get('GLOBAL__CANCEL') ?></a>
-                            <button class="btn btn-primary" type="submit"><?= $Lang->get('GLOBAL__SUBMIT') ?></button>
+                               class="btn btn-default"><?= __('GLOBAL__CANCEL') ?></a>
+                            <button class="btn btn-primary" type="submit"><?= __('GLOBAL__SUBMIT') ?></button>
                         </div>
                     </form>
                 </div>

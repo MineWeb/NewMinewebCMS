@@ -8,7 +8,7 @@ use Cake\Routing\Router;
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('USER__LIST') ?></h3>
+                    <h3 class="card-title"><?= __('USER__LIST') ?></h3>
                 </div>
                 <div class="card-body">
                     <?php if ($type == '0') { ?>
@@ -16,11 +16,11 @@ use Cake\Routing\Router;
                                style="table-layout: fixed;word-wrap: break-word;" id="users">
                             <thead>
                             <tr>
-                                <th><?= $Lang->get('USER__TITLE') ?></th>
-                                <th><?= $Lang->get('USER__EMAIL') ?></th>
-                                <th><?= $Lang->get('GLOBAL__CREATED') ?></th>
-                                <th><?= $Lang->get('USER__RANK') ?></th>
-                                <th class="right"><?= $Lang->get('GLOBAL__ACTIONS') ?></th>
+                                <th><?= __('USER__TITLE') ?></th>
+                                <th><?= __('USER__EMAIL') ?></th>
+                                <th><?= __('GLOBAL__CREATED') ?></th>
+                                <th><?= __('USER__RANK') ?></th>
+                                <th class="right"><?= __('GLOBAL__ACTIONS') ?></th>
                             </tr>
                             </thead>
                             <tbody>
@@ -30,7 +30,7 @@ use Cake\Routing\Router;
                         <form action="<?= Router::url(['action' => 'liveSearch', 'admin' => true]) ?>" method="search">
 
                             <div class="form-group">
-                                <label><?= $Lang->get('GLOBAL__SEARCH') ?></label>
+                                <label><?= __('GLOBAL__SEARCH') ?></label>
                                 <input type="text" name="search" placeholder="Pseudo..." autocomplete="off"
                                        class="form-control">
                                 <div class="list-group" style="display:none;">

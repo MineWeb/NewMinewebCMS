@@ -3,17 +3,17 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('HELP__CHOOSE_QUESTION') ?></h3>
+                    <h3 class="card-title"><?= __('HELP__CHOOSE_QUESTION') ?></h3>
                 </div>
                 <div class="card-body">
-                    <label><?= $Lang->get('HELP__CHOOSE_QUESTION') ?></label>
+                    <label><?= __('HELP__CHOOSE_QUESTION') ?></label>
 
                     <?= $this->Html->script('admin/bootstrap-select') ?>
                     <?= $this->Html->css('bootstrap-select.min.css') ?>
 
                     <div class="form-group">
                         <select class="selectpicker" id="questions" data-live-search="true"
-                                title="<?= $Lang->get('HELP__CHOOSE_QUESTION') ?>">
+                                title="<?= __('HELP__CHOOSE_QUESTION') ?>">
                         </select>
                     </div>
                 </div>
@@ -22,11 +22,11 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('HELP__PAGE_EXPLAIN_TITLE') ?></h3>
+                    <h3 class="card-title"><?= __('HELP__PAGE_EXPLAIN_TITLE') ?></h3>
                 </div>
                 <div class="card-body">
                     <blockquote cite="http://mineweb.org">
-                        <?= $Lang->get('HELP__PAGE_EXPLAIN_CONTENT') ?>
+                        <?= __('HELP__PAGE_EXPLAIN_CONTENT') ?>
                     </blockquote>
                 </div>
             </div>
@@ -34,12 +34,12 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('HELP__ANSWER_TITLE') ?></h3>
+                    <h3 class="card-title"><?= __('HELP__ANSWER_TITLE') ?></h3>
                 </div>
                 <div class="card-body">
                     <div id="answers">
                         <blockquote>
-                            <small><i><?= $Lang->get('HELP__CHOOSE_QUESTION') ?></i></small>
+                            <small><i><?= __('HELP__CHOOSE_QUESTION') ?></i></small>
                         </blockquote>
                     </div>
                 </div>
@@ -48,22 +48,22 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('HELP__POST_TICKET_TITLE_BOX') ?></h3>
+                    <h3 class="card-title"><?= __('HELP__POST_TICKET_TITLE_BOX') ?></h3>
                 </div>
                 <div class="card-body">
-                    <p><?= $Lang->get('HELP__POST_TICKET_EXPLAIN') ?></p>
+                    <p><?= __('HELP__POST_TICKET_EXPLAIN') ?></p>
                     <form action="<?= $this->Html->url(['action' => 'submitTicket']) ?>" method="post" data-ajax="true"
                           data-callback="afterSubmitTicket">
                         <div class="form-group">
-                            <label><?= $Lang->get('HELP__POST_TICKET_TITLE') ?></label>
+                            <label><?= __('HELP__POST_TICKET_TITLE') ?></label>
                             <input type="text" class="form-control" name="title" placeholder="Problème de...">
                         </div>
                         <div class="form-group">
-                            <label><?= $Lang->get('HELP__POST_TICKET_CONTENT') ?></label>
+                            <label><?= __('HELP__POST_TICKET_CONTENT') ?></label>
                             <textarea class="form-control" name="content"></textarea>
                         </div>
                         <div class="form-group">
-                            <button type="submit" class="btn btn-info"><?= $Lang->get('GLOBAL__SUBMIT') ?></button>
+                            <button type="submit" class="btn btn-info"><?= __('GLOBAL__SUBMIT') ?></button>
                         </div>
                     </form>
                 </div>

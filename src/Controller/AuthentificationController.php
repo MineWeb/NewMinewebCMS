@@ -22,24 +22,24 @@ class AuthentificationController extends AppController
         if (!$this->request->is('post'))
             throw new NotFoundException('Not post');
         if (!$this->getRequest()->getSession()->read('user_id_two_factor_auth'))
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('USER__LOGIN_INFOS_NOT_FOUND')]));
+            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('USER__LOGIN_INFOS_NOT_FOUND')]));
         if (empty($this->request->getData('code')))
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('USER__LOGIN_CODE_EMPTY')]));
+            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('USER__LOGIN_CODE_EMPTY')]));
         // find user
         $user = $this->User->find('all', ['conditions' => ['id' => $this->getRequest()->getSession()->read('user_id_two_factor_auth')]])->first();
         if (empty($user))
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('USER__LOGIN_INFOS_NOT_FOUND')]));
+            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('USER__LOGIN_INFOS_NOT_FOUND')]));
         // get user infos
         $this->Authentification = TableRegistry::getTableLocator()->get('Authentification');
         $infos = $this->Authentification->find('all', conditions: ['user_id' => $user['id']])->first();
         if ($infos == null || !$infos['enabled'])
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('USER__LOGIN_INFOS_NOT_FOUND')]));
+            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('USER__LOGIN_INFOS_NOT_FOUND')]));
         // include library & init
         $ga = new TwoFactorAuth();
         // check code
         $checkResult = $ga->verifyCode($infos['secret'], $this->request->getData('code'), 2);    // 2 = 2*30sec clock tolerance
         if (!$checkResult)
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('USER__LOGIN_CODE_INVALID')]));
+            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('USER__LOGIN_CODE_INVALID')]));
         // remove TwoFactorAuth session
         $this->getRequest()->getSession()->delete('user_id_two_factor_auth');
         // login
@@ -56,7 +56,7 @@ class AuthentificationController extends AppController
         if ($event->isStopped()) {
             return $event->getResult();
         }
-        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('USER__REGISTER_LOGIN')]));
+        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('USER__REGISTER_LOGIN')]));
     }
 
     /**
@@ -90,16 +90,16 @@ class AuthentificationController extends AppController
         if (!$this->isConnected)
             throw new ForbiddenException('Not logged');
         if (empty($this->request->getData('code')))
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('USER__LOGIN_CODE_EMPTY')]));
+            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('USER__LOGIN_CODE_EMPTY')]));
         if (!$this->getRequest()->getSession()->read('two-factor-auth-secret'))
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('USER__SECRET_NOT_FOUND')]));
+            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('USER__SECRET_NOT_FOUND')]));
         $secret = $this->getRequest()->getSession()->read('two-factor-auth-secret');
         // include library & init
         $ga = new TwoFactorAuth();
         // check code
         $checkResult = $ga->verifyCode($secret, $this->request->getData('code'), 2);    // 2 = 2*30sec clock tolerance
         if (!$checkResult)
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('USER__LOGIN_CODE_INVALID')]));
+            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('USER__LOGIN_CODE_INVALID')]));
         // remove TwoFactorAuth session
         $this->getRequest()->getSession()->delete('two-factor-auth-secret');
         // save into db
@@ -113,7 +113,7 @@ class AuthentificationController extends AppController
         $auth->set(['secret' => $secret, 'enabled' => true, 'user_id' => $this->User->getKey('id')]);
         $this->Authentification->save($auth);
         // send to user
-        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('USER__SUCCESS_ENABLED_TWO_FACTOR_AUTH')]));
+        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('USER__SUCCESS_ENABLED_TWO_FACTOR_AUTH')]));
     }
 
     public function disable()
@@ -130,6 +130,6 @@ class AuthentificationController extends AppController
         $auth->set(['enabled' => false]);
         $this->Authentification->save($auth);
         //send to user
-        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('USER__SUCCESS_DISABLED_TWO_FACTOR_AUTH')]));
+        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('USER__SUCCESS_DISABLED_TWO_FACTOR_AUTH')]));
     }
 }

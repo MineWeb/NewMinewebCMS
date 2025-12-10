@@ -7,13 +7,13 @@ use Cake\Routing\Router;
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1 class="m-0"><?= $Lang->get('GLOBAL__ADMIN_PANEL'); ?> <small>Version 3.0</small></h1>
+                <h1 class="m-0"><?= __('GLOBAL__ADMIN_PANEL'); ?> <small>Version 3.0</small></h1>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <li class="breadcrumb-item"><a
-                                href="<?= Router::url('/') ?>"><?= $Lang->get('GLOBAL__HOME'); ?></a></li>
-                    <li class="breadcrumb-item active"><?= $Lang->get('GLOBAL__ADMIN_PANEL'); ?></li>
+                                href="<?= Router::url('/') ?>"><?= __('GLOBAL__HOME'); ?></a></li>
+                    <li class="breadcrumb-item active"><?= __('GLOBAL__ADMIN_PANEL'); ?></li>
                 </ol>
             </div>
         </div>
@@ -28,14 +28,14 @@ use Cake\Routing\Router;
                     <i class="fa fa-user"></i>
                 </span>
                 <div class="info-box-content">
-                    <span class="info-box-text"><?= $Lang->get('USER__NBR_REGISTERED') ?></span>
+                    <span class="info-box-text"><?= __('USER__NBR_REGISTERED') ?></span>
 
                     <span class="info-box-number"><?= $registered_users ?></span>
                     <div class="progress">
                         <div class="progress-bar" style="width:0%"></div>
                     </div>
                     <span class="progress-description">
-                        + <?= $registered_users_today ?> <?= $Lang->get('GLOBAL__TODAY') ?>
+                        + <?= $registered_users_today ?> <?= __('GLOBAL__TODAY') ?>
                     </span>
                 </div>
             </div>
@@ -46,13 +46,13 @@ use Cake\Routing\Router;
                     <i class="fa fa-rss"></i>
                 </span>
                 <div class="info-box-content">
-                    <span class="info-box-text"><?= $Lang->get('STATS__NBR_VISITS') ?></span>
+                    <span class="info-box-text"><?= __('STATS__NBR_VISITS') ?></span>
                     <span class="info-box-number"><?= $count_visits ?></span>
                     <div class="progress">
                         <div class="progress-bar" style="width:0%"></div>
                     </div>
                     <span class="progress-description">
-                        + <?= $count_visits_today ?> <?= $Lang->get('GLOBAL__TODAY') ?>
+                        + <?= $count_visits_today ?> <?= __('GLOBAL__TODAY') ?>
                     </span>
                 </div>
             </div>
@@ -67,13 +67,13 @@ use Cake\Routing\Router;
                     <i class="fa fa-shopping-cart"></i>
                 </span>
                     <div class="info-box-content">
-                        <span class="info-box-text"><?= $Lang->get('DASHBOARD__PURCHASES') ?></span>
+                        <span class="info-box-text"><?= __('DASHBOARD__PURCHASES') ?></span>
                         <span class="info-box-number"><?= $purchase ?></span>
                         <div class="progress">
                             <div class="progress-bar" style="width:0%"></div>
                         </div>
                         <span class="progress-description">
-                        + <?= $purchase_today ?> <?= $Lang->get('GLOBAL__TODAY') ?>
+                        + <?= $purchase_today ?> <?= __('GLOBAL__TODAY') ?>
                     </span>
                     </div>
                 </div>
@@ -85,7 +85,7 @@ use Cake\Routing\Router;
                     <i class="fas fa-pencil-ruler"></i>
                 </span>
                 <div class="info-box-content">
-                    <span class="info-box-text"><?= $Lang->get('DASHBOARD__NEWS_WRITTEN') ?></span>
+                    <span class="info-box-text"><?= __('DASHBOARD__NEWS_WRITTEN') ?></span>
                     <span class="info-box-number"><?= $nbr_news ?></span>
                     <div class="progress">
                         <div class="progress-bar" style="width:0%"></div>
@@ -97,7 +97,7 @@ use Cake\Routing\Router;
                         }
                         echo $nbr_comments;
                         ?>
-                        <?= $Lang->get('NEWS__COMMENTS_TITLE') ?>
+                        <?= __('NEWS__COMMENTS_TITLE') ?>
                     </span>
                 </div>
             </div>
@@ -110,18 +110,18 @@ use Cake\Routing\Router;
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('GLOBAL__VISITORS') ?></h3>
+                    <h3 class="card-title"><?= __('GLOBAL__VISITORS') ?></h3>
                 </div>
                 <div class="card-body">
-                    <div class="alert alert-info"><b><?= $Lang->get('GLOBAL__INFORMATIONS') ?>
-                            :</b> <?= $Lang->get('DASHBOARD__VISITS_LAST_DAYS') ?></div>
+                    <div class="alert alert-info"><b><?= __('GLOBAL__INFORMATIONS') ?>
+                            :</b> <?= __('DASHBOARD__VISITS_LAST_DAYS') ?></div>
                     <div class="chart">
                         <canvas id="line-chart" height="75"></canvas>
                         <script>
                             new Chart(document.getElementById("line-chart"), {
                                 type: 'line',
                                 data: {
-                                    labels: ["<?= date('d/m/y', strtotime('-2 day')) ?>", "<?= $Lang->get('GLOBAL__YESTERDAY') ?>", "<?= $Lang->get('GLOBAL__TODAY') ?>"],
+                                    labels: ["<?= date('d/m/y', strtotime('-2 day')) ?>", "<?= __('GLOBAL__YESTERDAY') ?>", "<?= __('GLOBAL__TODAY') ?>"],
                                     datasets: [{
                                         data: [<?= $count_visits_before_yesterday ?>, <?= $count_visits_yesterday ?>, <?= $count_visits_today ?>],
                                         fill: true,
@@ -167,13 +167,13 @@ use Cake\Routing\Router;
         <div class="col-md-4">
             <div class="card card-default">
                 <div class="card-header with-border">
-                    <h3 class="card-title"> <?= $Lang->get('DASHBOARD__EARNINGS') ?></h3>
+                    <h3 class="card-title"> <?= __('DASHBOARD__EARNINGS') ?></h3>
                 </div>
                 <div class="card-body">
                     <?php if ($EyPlugin->isInstalled('eywek.shop')) { ?>
                         <?php if (count($items_solded) >= 5) { ?>
-                            <div class="alert alert-warning"><b><?= $Lang->get('GLOBAL__INFORMATIONS') ?>
-                                    :</b> <?= $Lang->get('DASHBOARD__BIGGEST_SELLERS') ?></div>
+                            <div class="alert alert-warning"><b><?= __('GLOBAL__INFORMATIONS') ?>
+                                    :</b> <?= __('DASHBOARD__BIGGEST_SELLERS') ?></div>
                             <div class="row">
                                 <div class="col-md-8">
                                     <div class="chart-responsive">
@@ -203,34 +203,34 @@ use Cake\Routing\Router;
                                     <ul class="chart-legend clearfix">
                                         <li><i class="fa fa-circle-o"
                                                style="color:#1abc9c;"></i> <?= $items_solded[0]['item_name'] ?>
-                                            (<?= $items_solded[0]['count'] ?> <?= $Lang->get('GLOBAL__SALES') ?>)
+                                            (<?= $items_solded[0]['count'] ?> <?= __('GLOBAL__SALES') ?>)
                                         </li>
                                         <li><i class="fa fa-circle-o"
                                                style="color:#2ecc71;"></i> <?= $items_solded[1]['item_name'] ?>
-                                            (<?= $items_solded[1]['count'] ?> <?= $Lang->get('GLOBAL__SALES') ?>)
+                                            (<?= $items_solded[1]['count'] ?> <?= __('GLOBAL__SALES') ?>)
                                         </li>
                                         <li><i class="fa fa-circle-o"
                                                style="color:#3498db;"></i> <?= $items_solded[2]['item_name'] ?>
-                                            (<?= $items_solded[2]['count'] ?> <?= $Lang->get('GLOBAL__SALES') ?>)
+                                            (<?= $items_solded[2]['count'] ?> <?= __('GLOBAL__SALES') ?>)
                                         </li>
                                         <li><i class="fa fa-circle-o"
                                                style="color:#e67e22;"></i> <?= $items_solded[3]['item_name'] ?>
-                                            (<?= $items_solded[3]['count'] ?> <?= $Lang->get('GLOBAL__SALES') ?>)
+                                            (<?= $items_solded[3]['count'] ?> <?= __('GLOBAL__SALES') ?>)
                                         </li>
                                         <li><i class="fa fa-circle-o"
                                                style="color:#e74c3c;"></i> <?= $items_solded[4]['item_name'] ?>
-                                            (<?= $items_solded[4]['count'] ?> <?= $Lang->get('GLOBAL__SALES') ?>)
+                                            (<?= $items_solded[4]['count'] ?> <?= __('GLOBAL__SALES') ?>)
                                         </li>
                                     </ul>
                                 </div>
                             </div>
                         <?php } else { ?>
                             <div class="alert alert-danger"><i class="icon-shopping-cart"></i>
-                                <b><?= $Lang->get('GLOBAL__ERROR') ?>
-                                    :</b> <?= $Lang->get('SHOP__DASHBOARD_GRAPH_ERROR') ?></div>
+                                <b><?= __('GLOBAL__ERROR') ?>
+                                    :</b> <?= __('SHOP__DASHBOARD_GRAPH_ERROR') ?></div>
                         <?php } ?>
                     <?php } else {
-                        echo $Lang->get('DASHBOARD__PLUGIN_SHOP_NOT_INSTALLED');
+                        echo __('DASHBOARD__PLUGIN_SHOP_NOT_INSTALLED');
                     } ?>
                 </div>
             </div>
@@ -240,22 +240,22 @@ use Cake\Routing\Router;
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('DASHBOARD__LAST_ACTIONS') ?></h3>
+                    <h3 class="card-title"><?= __('DASHBOARD__LAST_ACTIONS') ?></h3>
                 </div>
                 <div class="card-body">
                     <table class="table table-bordered">
                         <tbody>
                         <tr>
-                            <th><?= $Lang->get('GLOBAL__ACTIONS') ?></th>
-                            <th><?= $Lang->get('GLOBAL__CATEGORY') ?></th>
-                            <th><?= $Lang->get('GLOBAL__CREATED') ?></th>
-                            <th><?= $Lang->get('GLOBAL__AUTHOR') ?></th>
+                            <th><?= __('GLOBAL__ACTIONS') ?></th>
+                            <th><?= __('GLOBAL__CATEGORY') ?></th>
+                            <th><?= __('GLOBAL__CREATED') ?></th>
+                            <th><?= __('GLOBAL__AUTHOR') ?></th>
                         </tr>
                         <?php foreach ($History->get(false, 5) as $k => $v) { ?>
                             <tr>
-                                <td><?= $Lang->history($v['action']) ?></td>
+                                <td><?= $this->Lang->history($v['action']) ?></td>
                                 <td><?= $v['category'] ?></td>
-                                <td><?= $Lang->date($v['created']) ?></td>
+                                <td><?= $this->Lang->date($v['created']) ?></td>
                                 <td><?= $v['author'] ?></td>
                             </tr>
                         <?php } ?>
@@ -272,7 +272,7 @@ use Cake\Routing\Router;
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-header with-border">
-                        <h3 class="card-title"><?= $Lang->get('SERVER__TITLE') ?> - <?= $value['name'] ?></h3>
+                        <h3 class="card-title"><?= __('SERVER__TITLE') ?> - <?= $value['name'] ?></h3>
                     </div>
 
                     <div class="card-body">
@@ -282,12 +282,12 @@ use Cake\Routing\Router;
                                     <button class="btn" type="button" data-toggle="modal"
                                             onClick="$('#server_id').val(<?= $value['id'] ?>)"
                                             data-target="#executeCommand" style="padding: 4px 12px;margin-right: 8px;">
-                                        <i class="fa fa-terminal"></i> <?= $Lang->get('SERVER__COMMAND') ?></button>
+                                        <i class="fa fa-terminal"></i> <?= __('SERVER__COMMAND') ?></button>
                                 </div>
                                 <br>
                             <?php } ?>
                             <button class="btn btn-large btn-block btn-success"
-                                    type="button"><?= $Lang->get('SERVER__STATUS_ONLINE') ?> <br>
+                                    type="button"><?= __('SERVER__STATUS_ONLINE') ?> <br>
                                 <?php
                                 $get = $Server->call(['GET_PLAYER_COUNT' => [], 'GET_MAX_PLAYERS' => []], $value['id']);
                                 echo $get['GET_PLAYER_COUNT'] . '/' . $get['GET_MAX_PLAYERS'];
@@ -295,7 +295,7 @@ use Cake\Routing\Router;
                             </button>
                         <?php } else { ?>
                             <button class="btn btn-large btn-block btn-danger"
-                                    type="button"><?= $Lang->get('SERVER__STATUS_OFFLINE') ?></button>
+                                    type="button"><?= __('SERVER__STATUS_OFFLINE') ?></button>
                         <?php } ?>
                     </div>
                 </div>
@@ -309,7 +309,7 @@ use Cake\Routing\Router;
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title"><?= $Lang->get('SERVER__COMMAND') ?></h4>
+                <h4 class="modal-title"><?= __('SERVER__COMMAND') ?></h4>
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
             </div>
             <div class="modal-body">
@@ -322,7 +322,7 @@ use Cake\Routing\Router;
                             <input class="form-control col-md-4" name="cmd" type="text"/>
                         </div>
 
-                        <button class="btn btn-info" type="submit"><?= $Lang->get('GLOBAL__SUBMIT') ?></button>
+                        <button class="btn btn-info" type="submit"><?= __('GLOBAL__SUBMIT') ?></button>
                         <br>
                     </div>
                     <br>
@@ -337,12 +337,12 @@ use Cake\Routing\Router;
                     </div>
 
                     <input type="hidden" name="data[_Token][key]" value="<?= $this->request->getAttribute('csrfToken') ?>">
-                    <button class="btn btn-info" type="submit"><?= $Lang->get('GLOBAL__SUBMIT') ?></button>
+                    <button class="btn btn-info" type="submit"><?= __('GLOBAL__SUBMIT') ?></button>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default"
-                        data-dismiss="modal"><?= $Lang->get('GLOBAL__CANCEL') ?></button>
+                        data-dismiss="modal"><?= __('GLOBAL__CANCEL') ?></button>
             </div>
         </div>
     </div>

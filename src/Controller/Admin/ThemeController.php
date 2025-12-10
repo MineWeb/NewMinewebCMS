@@ -14,7 +14,7 @@ class ThemeController extends AppController
         if (!$this->isConnected || !$this->Permissions->can('MANAGE_THEMES'))
             throw new ForbiddenException();
 
-        $this->set('title_for_layout', $this->Lang->get('THEME__LIST'));
+        $this->set('title_for_layout', __('THEME__LIST'));
 
         $this->set('themesAvailable', $this->Theme->getThemesOnAPI(true, true));
         $this->set('themesInstalled', $this->Theme->getThemesInstalled());
@@ -30,7 +30,7 @@ class ThemeController extends AppController
 
         $this->Configuration->setKey('theme', $slug);
         $this->History->set('SET_THEME', 'theme');
-        $this->Flash->success($this->Lang->get('THEME__ENABLED_SUCCESS'));
+        $this->Flash->success(__('THEME__ENABLED_SUCCESS'));
         $this->redirect(['controller' => 'theme', 'action' => 'index', 'admin' => true]);
     }
 
@@ -43,13 +43,13 @@ class ThemeController extends AppController
             throw new NotFoundException();
 
         if ($this->Configuration->getKey('theme') == $slug) { // active theme
-            $this->Flash->error($this->Lang->get('THEME__CANT_DELETE_IF_ACTIVE'));
+            $this->Flash->error(__('THEME__CANT_DELETE_IF_ACTIVE'));
             return $this->redirect(['controller' => 'theme', 'action' => 'index', 'admin' => true]);
         }
 
         clearDir(ROOT . '/templates/Themed/' . $slug);
         $this->History->set('DELETE_THEME', 'theme');
-        $this->Flash->success($this->Lang->get('THEME__DELETE_SUCCESS'));
+        $this->Flash->success(__('THEME__DELETE_SUCCESS'));
         return $this->redirect(['controller' => 'theme', 'action' => 'index', 'admin' => true]);
     }
 
@@ -64,12 +64,12 @@ class ThemeController extends AppController
         $error = $this->Theme->install($slug);
 
         if ($error !== true) {
-            $this->Flash->error($this->Lang->get($error));
+            $this->Flash->error(__($error));
             return $this->redirect(['controller' => 'theme', 'action' => 'index', 'admin' => true]);
         }
 
         $this->History->set('INSTALL_THEME', 'theme');
-        $this->Flash->success($this->Lang->get('THEME__INSTALL_SUCCESS'));
+        $this->Flash->success(__('THEME__INSTALL_SUCCESS'));
         return $this->redirect(['controller' => 'theme', 'action' => 'index', 'admin' => true]);
     }
 
@@ -83,12 +83,12 @@ class ThemeController extends AppController
         // install
         $error = $this->Theme->install($slug, true);
         if ($error !== true) {
-            $this->Flash->error($this->Lang->get($error));
+            $this->Flash->error(__($error));
             return $this->redirect(['controller' => 'theme', 'action' => 'index', 'admin' => true]);
         }
 
         $this->History->set('UPDATE_THEME', 'theme');
-        $this->Flash->success($this->Lang->get('THEME__UPDATE_SUCCESS'));
+        $this->Flash->success(__('THEME__UPDATE_SUCCESS'));
         return $this->redirect(['controller' => 'theme', 'action' => 'index', 'admin' => true]);
     }
 
@@ -99,13 +99,13 @@ class ThemeController extends AppController
         if (!$slug)
             throw new NotFoundException();
         // config
-        $this->set('title_for_layout', $this->Lang->get('THEME__CUSTOMIZATION'));
+        $this->set('title_for_layout', __('THEME__CUSTOMIZATION'));
         list($theme_name, $config) = $this->Theme->getCustomData($slug);
         $this->set(compact('config', 'theme_name'));
 
         if ($this->request->is('post')) {
             if ($this->Theme->processCustomData($slug, $this->request)) // success save
-                $this->Flash->success($this->Lang->get('THEME__CUSTOMIZATION_SUCCESS'));
+                $this->Flash->success(__('THEME__CUSTOMIZATION_SUCCESS'));
             return $this->redirect(['controller' => 'theme', 'action' => 'custom', 'admin' => true, $slug]);
         }
 
@@ -120,7 +120,7 @@ class ThemeController extends AppController
         if (!$slug)
             throw new NotFoundException();
         // config
-        $this->set('title_for_layout', $this->Lang->get('THEME__CUSTOM_FILES'));
+        $this->set('title_for_layout', __('THEME__CUSTOM_FILES'));
         $CSSfolder = $this->getCSSfolder($slug);
         // each files
         $files = findRecursive($CSSfolder, array('css'));
@@ -175,7 +175,7 @@ class ThemeController extends AppController
             throw new NotFoundException();
 
         @file_put_contents($CSSfolder . DS . $file, $content);
-        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('THEME__CUSTOM_FILES_FILE_CONTENT_SAVE_SUCCESS')]));
+        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('THEME__CUSTOM_FILES_FILE_CONTENT_SAVE_SUCCESS')]));
     }
 
     /**

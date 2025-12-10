@@ -8,6 +8,7 @@ use Cake\Core\Configure;
 use Cake\Event\Event;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
+use Cake\I18n\I18n;
 use Cake\Routing\Router;
 
 define('TIMESTAMP_DEBUT', microtime(true));
@@ -45,21 +46,14 @@ class AppController extends BaseController
         closedir($componentsDir);
     }
 
-    public function __get(string $name): mixed
-    {
-        if ($this->components()->has($name)) {
-            return $this->components()->get($name);
-        }
-
-        return parent::__get($name);
-    }
-
     public function beforeFilter(EventInterface $event): ?Response
     {
         $response = parent::beforeFilter($event);
         if ($response instanceof Response) {
             return $response;
         }
+
+        $this->setLocale();
 
         $loginCondition = $this->getRequest()->getRequestTarget() !== '/login' || !$this->EyPlugin->isInstalled('phpierre.signinup');
 
@@ -125,6 +119,32 @@ class AppController extends BaseController
         }
 
         return null;
+    }
+
+    protected function setLocale(): void
+    {
+        $cookie = $this->request->getCookie('language');
+        $bddLang = isset($this->Configuration) ? $this->Configuration->getKey('lang') : null;
+
+        $header = $this->request->getHeaderLine('Accept-Language');
+        $headerLocale = $header ? substr($header, 0, 5) : null;
+
+        if ($headerLocale) {
+            $headerLocale = str_replace('-', '_', $headerLocale);
+        }
+
+        if ($cookie) {
+            $cookie = str_replace('-', '_', $cookie);
+        }
+
+        if ($bddLang) {
+            $bddLang = str_replace('-', '_', $bddLang);
+        }
+
+        $locale = $cookie ?: $bddLang ?: $headerLocale ?: 'fr_FR';
+
+        I18n::setLocale($locale);
+        $this->set('currentLocale', $locale);
     }
 
     protected function __initConfiguration(): void
@@ -605,7 +625,7 @@ class AppController extends BaseController
         }
 
         $this->set([
-            'banner_server' => $this->Lang->get('SERVER__STATUS_MESSAGE', [
+            'banner_server' => __('SERVER__STATUS_MESSAGE', [
                 '{MOTD}' => $server_infos['getMOTD'] ?? null,
                 '{VERSION}' => $server_infos['getVersion'] ?? null,
                 '{ONLINE}' => $server_infos['GET_PLAYER_COUNT'] ?? null,
@@ -685,7 +705,7 @@ class AppController extends BaseController
             ? $seo_config['favicon_url']
             : Router::url($seo_config['img_url'], true);
 
-        $title_for_layout = $this->viewBuilder()->getVar('title_for_layout') ?: $this->Lang->get('GLOBAL__ERROR');
+        $title_for_layout = $this->viewBuilder()->getVar('title_for_layout') ?: __('GLOBAL__ERROR');
         $website_name = $this->viewBuilder()->getVar('website_name') ?: 'MineWeb';
 
         $seo_config['title'] = str_replace(

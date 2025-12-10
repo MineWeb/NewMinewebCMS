@@ -20,13 +20,9 @@ class InstallController extends BaseController
     {
         parent::initialize();
 
-        $this->loadComponent('Lang');
-        $this->Lang->mode = 'cookie';
-
         $this->loadComponent('Util');
 
         $this->viewBuilder()->setLayout('install');
-        $this->set('Lang', $this->Lang);
     }
 
     public function beforeFilter(EventInterface $event): ?Response
@@ -56,7 +52,7 @@ class InstallController extends BaseController
         }
 
         $titleKey = 'INSTALL__DATABASE_CONFIG';
-        $title = $this->Lang->get($titleKey);
+        $title = __($titleKey);
         if ($title === $titleKey) {
             $title = 'Configuration de la base de donnees';
         }
@@ -199,7 +195,7 @@ class InstallController extends BaseController
             if ($host === '' || $database === '' || $username === '') {
                 return $this->json([
                     'status' => false,
-                    'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS') ?: 'Veuillez remplir tous les champs',
+                    'msg' => __('ERROR__FILL_ALL_FIELDS') ?: 'Veuillez remplir tous les champs',
                 ]);
             }
 
@@ -342,7 +338,7 @@ class InstallController extends BaseController
         }
 
         $titleKey = 'INSTALL__ADMIN_CONFIG';
-        $title = $this->Lang->get($titleKey);
+        $title = __($titleKey);
         if ($title === $titleKey) {
             $title = 'Creation du compte administrateur';
         }
@@ -364,21 +360,21 @@ class InstallController extends BaseController
         if (empty($data['pseudo']) || empty($data['password']) || empty($data['password_confirmation']) || empty($data['email'])) {
             return $this->json([
                 'statut' => false,
-                'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS') ?: 'Veuillez remplir tous les champs',
+                'msg' => __('ERROR__FILL_ALL_FIELDS') ?: 'Veuillez remplir tous les champs',
             ]);
         }
 
         if ($data['password'] !== $data['password_confirmation']) {
             return $this->json([
                 'statut' => false,
-                'msg' => $this->Lang->get('USER__ERROR_PASSWORDS_NOT_SAME') ?: 'Les mots de passe ne correspondent pas',
+                'msg' => __('USER__ERROR_PASSWORDS_NOT_SAME') ?: 'Les mots de passe ne correspondent pas',
             ]);
         }
 
         if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             return $this->json([
                 'statut' => false,
-                'msg' => $this->Lang->get('USER__ERROR_EMAIL_NOT_VALID') ?: 'Adresse email invalide',
+                'msg' => __('USER__ERROR_EMAIL_NOT_VALID') ?: 'Adresse email invalide',
             ]);
         }
 
@@ -387,7 +383,7 @@ class InstallController extends BaseController
         if ($existingAdmin) {
             return $this->json([
                 'statut' => false,
-                'msg' => $this->Lang->get('INSTALL__ADMIN_ALREADY_EXISTS') ?: 'Un administrateur existe deja',
+                'msg' => __('INSTALL__ADMIN_ALREADY_EXISTS') ?: 'Un administrateur existe deja',
             ]);
         }
 
@@ -401,7 +397,7 @@ class InstallController extends BaseController
         if (!$saved) {
             return $this->json([
                 'statut' => false,
-                'msg' => $this->Lang->get('ERROR__UNKNOWN') ?: 'Une erreur inconnue est survenue',
+                'msg' => __('ERROR__UNKNOWN') ?: 'Une erreur inconnue est survenue',
             ]);
         }
 
@@ -409,7 +405,7 @@ class InstallController extends BaseController
 
         return $this->json([
             'statut' => true,
-            'msg' => $this->Lang->get('USER__REGISTER_SUCCESS') ?: 'Compte administrateur cree',
+            'msg' => __('USER__REGISTER_SUCCESS') ?: 'Compte administrateur cree',
         ]);
     }
 

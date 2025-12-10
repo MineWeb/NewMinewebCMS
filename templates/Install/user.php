@@ -7,60 +7,60 @@ use Cake\Routing\Router;
     <ul class="nav nav-tabs nav-pills nav-stacked col-xs-6 col-sm-3" style="max-width: 300px;">
         <li role="presentation" class="">
             <a href="#tabsleft-tab2" data-toggle="tab"
-               title="<?= $Lang->get('INSTALL__NO_SKIP') ?>"><?= $Lang->get('INSTALL__STEP_1_TITLE') ?></a>
+               title="<?= __('INSTALL__NO_SKIP') ?>"><?= __('INSTALL__STEP_1_TITLE') ?></a>
         </li>
         <li role="presentation" class="">
             <a href="#tabsleft-tab3" data-toggle="tab"
-               title="<?= $Lang->get('INSTALL__NO_SKIP') ?>"><?= $Lang->get('INSTALL__STEP_2_TITLE') ?></a>
+               title="<?= __('INSTALL__NO_SKIP') ?>"><?= __('INSTALL__STEP_2_TITLE') ?></a>
         </li>
     </ul>
 
     <div class="col-xs-12 col-sm-9">
         <div class="tab-content">
             <div class="tab-pane active" id="tabsleft-tab2">
-                <h1><?= $Lang->get('INSTALL__STEP_1_TITLE') ?></h1>
-                <p><?= $Lang->get('INSTALL__STEP_1_DESC') ?></p>
+                <h1><?= __('INSTALL__STEP_1_TITLE') ?></h1>
+                <p><?= __('INSTALL__STEP_1_DESC') ?></p>
 
                 <form id="step3" data-user-url="<?= Router::url(['controller' => 'Install', 'action' => 'user']) ?>">
                     <div class="ajax-msg-step3"></div>
                     <div class="form-group">
-                        <label><?= $Lang->get('USER__USERNAME') ?></label>
+                        <label><?= __('USER__USERNAME') ?></label>
                         <input type="text" class="form-control" name="pseudo"<?php if (!empty($admin_pseudo)) {
                             echo ' value="' . $admin_pseudo . '"';
-                        } ?> placeholder="<?= $Lang->get('USER__USERNAME_LABEL') ?>">
+                        } ?> placeholder="<?= __('USER__USERNAME_LABEL') ?>">
                     </div>
                     <div class="form-group">
-                        <label><?= $Lang->get('USER__PASSWORD') ?></label>
+                        <label><?= __('USER__PASSWORD') ?></label>
                         <input type="password" class="form-control" name="password"<?php if (!empty($admin_password)) {
                             echo ' value="*********"';
-                        } ?> placeholder="<?= $Lang->get('USER__PASSWORD_LABEL') ?>">
+                        } ?> placeholder="<?= __('USER__PASSWORD_LABEL') ?>">
                     </div>
                     <div class="form-group">
-                        <label><?= $Lang->get('USER__PASSWORD_CONFIRM') ?></label>
+                        <label><?= __('USER__PASSWORD_CONFIRM') ?></label>
                         <input type="password" class="form-control"
                                name="password_confirmation"<?php if (!empty($admin_password)) {
                             echo ' value="*********"';
-                        } ?> placeholder="<?= $Lang->get('USER__PASSWORD_CONFIRM_LABEL') ?>">
+                        } ?> placeholder="<?= __('USER__PASSWORD_CONFIRM_LABEL') ?>">
                     </div>
                     <div class="form-group">
-                        <label><?= $Lang->get('USER__EMAIL') ?></label>
+                        <label><?= __('USER__EMAIL') ?></label>
                         <input type="email" class="form-control" name="email"<?php if (!empty($admin_email)) {
                             echo ' value="' . $admin_email . '"';
-                        } ?> placeholder="<?= $Lang->get('USER__EMAIL_LABEL') ?>">
+                        } ?> placeholder="<?= __('USER__EMAIL_LABEL') ?>">
                     </div>
                     <?php if (!empty($admin_pseudo)) { ?>
                         <input type="hidden" name="step3" value="true">
                     <?php } ?>
                     <div id="input"></div>
                     <li class="next finish hidden" style="display: none;">
-                        <a href="javascript:"><?= $Lang->get('GLOBAL__END') ?></a>
+                        <a href="javascript:"><?= __('GLOBAL__END') ?></a>
                     </li>
                     <ul class="pager wizard">
                         <li class="next" style="display: inline;">
-                            <a id="tabsleft-link" href="javascript:"><?= $Lang->get('GLOBAL__NEXT') ?></a>
+                            <a id="tabsleft-link" href="javascript:"><?= __('GLOBAL__NEXT') ?></a>
                         </li>
                         <li class="next finish hidden" style="display: none;">
-                            <a href="javascript:"><?= $Lang->get('GLOBAL__END') ?></a>
+                            <a href="javascript:"><?= __('GLOBAL__END') ?></a>
                         </li>
                     </ul>
                 </form>
@@ -68,18 +68,18 @@ use Cake\Routing\Router;
             </div>
 
             <div class="tab-pane" id="tabsleft-tab3">
-                <h1><?= $Lang->get('INSTALL__STEP_2_TITLE') ?></h1>
-                <div class="alert alert-success"><?= $Lang->get('INSTALL__STEP_2_DESC') ?></div>
+                <h1><?= __('INSTALL__STEP_2_TITLE') ?></h1>
+                <div class="alert alert-success"><?= __('INSTALL__STEP_2_DESC') ?></div>
 
                 <p>
                     <a href="<?= Router::url(['controller' => 'install', 'action' => 'end']) ?>"
-                       class="btn btn-block btn-success"><?= $Lang->get('INSTALL__GO_TO_INDEX') ?></a>
+                       class="btn btn-block btn-success"><?= __('INSTALL__GO_TO_INDEX') ?></a>
                 <ul class="pager wizard">
                     <li class="previous disabled">
-                        <a href="javascript:"><?= $Lang->get('GLOBAL__PREVIOUS') ?></a>
+                        <a href="javascript:"><?= __('GLOBAL__PREVIOUS') ?></a>
                     </li>
                     <li class="next" style="display: inline;">
-                        <a id="tabsleft-link" href="javascript:"><?= $Lang->get('GLOBAL__NEXT') ?></a>
+                        <a id="tabsleft-link" href="javascript:"><?= __('GLOBAL__NEXT') ?></a>
                     </li>
                 </ul>
                 </p>

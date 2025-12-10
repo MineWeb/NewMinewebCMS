@@ -46,15 +46,14 @@ class ThemeComponent extends Component
         if (!empty((array)$themes)) {
             foreach ($themes as $value) {
                 if (isset($value->lastVersion) && $value->version !== $value->lastVersion) {
-                    $this->Lang = $this->controller->Lang;
                     return '<div class="alert alert-secondary">'
-                        . $this->Lang->get('UPDATE__AVAILABLE_TYPE_THEME') . ' '
-                        . $this->Lang->get('UPDATE__AVAILABLE') . ' '
-                        . $this->Lang->get('UPDATE__THEME')
+                        . __('UPDATE__AVAILABLE_TYPE_THEME') . ' '
+                        . __('UPDATE__AVAILABLE') . ' '
+                        . __('UPDATE__THEME')
                         . '<a href="'
                         . Router::url(['prefix' => 'Admin', 'controller' => 'Theme', 'action' => 'index'])
                         . '" style="margin-top: -6px;" class="btn float-right">'
-                        . $this->Lang->get('GLOBAL__UPDATE_LOOK')
+                        . __('GLOBAL__UPDATE_LOOK')
                         . '</a></div>';
                 }
             }
@@ -553,7 +552,6 @@ class ThemeComponent extends Component
 
         $this->Util = $this->controller->Util;
         $this->Session = $this->controller->Session;
-        $this->Lang = $this->controller->Lang;
         $this->Flash = $this->controller->Flash;
 
         $finded = false;
@@ -578,7 +576,7 @@ class ThemeComponent extends Component
             } else {
                 $isValidImg = $this->Util->isValidImage($request, ['png', 'jpg', 'jpeg']);
 
-                if (!$isValidImg['status'] && ($isValidImg['msg'] ?? '') !== $this->Lang->get('FORM__EMPTY_IMG')) {
+                if (!$isValidImg['status'] && ($isValidImg['msg'] ?? '') !== __('FORM__EMPTY_IMG')) {
                     $this->Flash->error($isValidImg['msg']);
                     return false;
                 }
@@ -588,7 +586,7 @@ class ThemeComponent extends Component
                     $urlImg = WWW_ROOT . 'img' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'theme_logo.' . $infos['extension'];
 
                     if (!$this->Util->uploadImage($request, $urlImg)) {
-                        $this->Flash->error($this->Lang->get('FORM__ERROR_WHEN_UPLOAD'));
+                        $this->Flash->error(__('FORM__ERROR_WHEN_UPLOAD'));
                         return false;
                     }
 

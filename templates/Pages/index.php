@@ -11,9 +11,10 @@
             <div class="panel panel-default">
                 <div class="panel-body">
                     <?= $page['content'] ?>
-                    <small class="pull-right"><?= $Lang->get('GLOBAL__UPDATED') ?>
-                        : <?= $Lang->date($page['updated']) ?></small><br>
-                    <small class="pull-right"><?= $Lang->get('GLOBAL__AUTHOR') ?> : <?= $page['author'] ?></small>
+                    <small class="pull-right"><?= __('GLOBAL__UPDATED') ?>
+                        : <?= $this->Lang->date($page['updated']) ?>
+                    </small><br>
+                    <small class="pull-right"><?= __('GLOBAL__AUTHOR') ?> : <?= $page['author'] ?></small>
                 </div>
             </div>
         </div>

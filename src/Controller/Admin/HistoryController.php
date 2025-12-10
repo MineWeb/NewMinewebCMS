@@ -2,8 +2,8 @@
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
+use App\Utility\LangService;
 use Cake\Http\Exception\ForbiddenException;
-use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
 
 class HistoryController extends AppController
@@ -12,13 +12,14 @@ class HistoryController extends AppController
     {
         if (!$this->Permissions->can('VIEW_WEBSITE_HISTORY'))
             throw new ForbiddenException();
-        $this->set('title_for_layout', $this->Lang->get('HISTORY__VIEW_GLOBAL'));
+        $this->set('title_for_layout', __('HISTORY__VIEW_GLOBAL'));
     }
 
     public function getAll()
     {
-        if (!$this->Permissions->can('VIEW_WEBSITE_HISTORY'))
+        if (!$this->Permissions->can('VIEW_WEBSITE_HISTORY')) {
             throw new ForbiddenException();
+        }
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
@@ -36,18 +37,18 @@ class HistoryController extends AppController
         $response = $this->DataTable->getResponse();
 
         $data = [];
-        foreach ($response["aaData"] as $history) {
+        foreach ($response['aaData'] as $history) {
             $data[] = [
-                "History" => [
-                    "action" => $this->Lang->history($history["action"]),
-                    "category" => $history["category"],
-                    "created" => $this->Lang->date($history["created"])
+                'History' => [
+                    'action' => LangService::history($history['action']),
+                    'category' => $history['category'],
+                    'created' => LangService::date($history['created'])
                 ],
-                "User" => $history["user"]
+                'User' => $history['user']
             ];
         }
 
-        $response["aaData"] = $data;
+        $response['aaData'] = $data;
         return $this->response->withStringBody(json_encode($response));
     }
 }

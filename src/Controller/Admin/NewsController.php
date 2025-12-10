@@ -12,7 +12,7 @@ class NewsController extends AppController {
     function index()
     {
         if ($this->isConnected and $this->Permissions->can('MANAGE_NEWS')) {
-            $this->set('title_for_layout', $this->Lang->get('NEWS__LIST_PUBLISHED'));
+            $this->set('title_for_layout', __('NEWS__LIST_PUBLISHED'));
             $this->News = TableRegistry::getTableLocator()->get('News');
             $view_news = $this->News->find()->all();
             $this->set(compact('view_news'));
@@ -38,7 +38,7 @@ class NewsController extends AppController {
                     $this->Like->deleteAll(['Likes.news_id' => $id]);
                     $this->Comment->deleteAll(['Comment.news_id' => $id]);
                     $this->History->set('DELETE_NEWS', 'news');
-                    $this->Flash->success($this->Lang->get('NEWS__SUCCESS_DELETE'));
+                    $this->Flash->success(__('NEWS__SUCCESS_DELETE'));
                 }
 
                 $this->redirect(['controller' => 'news', 'action' => 'index', 'admin' => true]);
@@ -53,7 +53,7 @@ class NewsController extends AppController {
     function add()
     {
         if ($this->isConnected and $this->Permissions->can('MANAGE_NEWS')) {
-            $this->set('title_for_layout', $this->Lang->get('NEWS__ADD_NEWS'));
+            $this->set('title_for_layout', __('NEWS__ADD_NEWS'));
         } else {
             $this->redirect('/');
         }
@@ -87,13 +87,13 @@ class NewsController extends AppController {
                     $this->News->save($news);
 
                     $this->History->set('ADD_NEWS', 'news');
-                    $this->Flash->success($this->Lang->get('NEWS__SUCCESS_ADD'));
-                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('NEWS__SUCCESS_ADD')]));
+                    $this->Flash->success(__('NEWS__SUCCESS_ADD'));
+                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('NEWS__SUCCESS_ADD')]));
                 } else {
-                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
+                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]));
                 }
             } else {
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__BAD_REQUEST')]));
+                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__BAD_REQUEST')]));
             }
         } else {
             throw new ForbiddenException();
@@ -103,7 +103,7 @@ class NewsController extends AppController {
     function edit($id = false)
     {
         if ($this->isConnected and $this->Permissions->can('MANAGE_NEWS')) {
-            $this->set('title_for_layout', $this->Lang->get('NEWS__EDIT'));
+            $this->set('title_for_layout', __('NEWS__EDIT'));
             if ($id) {
                 $this->News = TableRegistry::getTableLocator()->get('News');
                 $news = $this->News->find('all', conditions: ['id' => $id])->first();
@@ -145,13 +145,13 @@ class NewsController extends AppController {
                     ]);
                     $this->News->save($news);
                     $this->History->set('EDIT_NEWS', 'news');
-                    $this->Flash->success($this->Lang->get('NEWS__SUCCESS_EDIT'));
-                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('NEWS__SUCCESS_EDIT')]));
+                    $this->Flash->success(__('NEWS__SUCCESS_EDIT'));
+                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('NEWS__SUCCESS_EDIT')]));
                 } else {
-                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
+                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]));
                 }
             } else {
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__BAD_REQUEST')]));
+                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__BAD_REQUEST')]));
             }
         } else {
             throw new ForbiddenException();

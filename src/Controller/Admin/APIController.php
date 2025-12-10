@@ -8,7 +8,7 @@ class APIController extends AppController {
     public function index()
     {
         if ($this->isConnected and $this->Permissions->can('MANAGE_API')) {
-            $this->set('title_for_layout', $this->Lang->get('API__LABEL'));
+            $this->set('title_for_layout', __('API__LABEL'));
 
             $this->ApiConfiguration = TableRegistry::getTableLocator()->get('ApiConfiguration');
             $config = $this->ApiConfiguration->find()->first();
@@ -25,9 +25,9 @@ class APIController extends AppController {
                     $config = $this->request->getData();
 
                     $this->History->set('EDIT_CONFIGURATION', 'api');
-                    $this->Flash->success($this->Lang->get('CONFIG__EDIT_SUCCESS'));
+                    $this->Flash->success(__('CONFIG__EDIT_SUCCESS'));
                 } else {
-                    $this->Flash->error($this->Lang->get('ERROR__FILL_ALL_FIELDS'));
+                    $this->Flash->error(__('ERROR__FILL_ALL_FIELDS'));
                 }
             }
 

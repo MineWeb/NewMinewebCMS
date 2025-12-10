@@ -9,6 +9,7 @@ if (!isset($params['escape']) || $params['escape'] !== false) {
 }
 ?>
 <div class="alert alert-warning alert-dismissible" role="alert">
-    <strong><?= (isset($Lang)) ? $Lang->get('GLOBAL__WARNING') : 'Warning' ?> :</strong> <?php echo h($message); ?>
+    <strong><?= (__('GLOBAL__WARNING') !== null) ? __('GLOBAL__WARNING') : 'Warning' ?>
+        :</strong> <?php echo h($message); ?>
 </div>
 

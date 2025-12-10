@@ -8,7 +8,7 @@ use Cake\Routing\Router;
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('NOTIFICATION__ADD_NOTIFICATION') ?></h3>
+                    <h3 class="card-title"><?= __('NOTIFICATION__ADD_NOTIFICATION') ?></h3>
                 </div>
                 <div class="card-body">
 
@@ -16,22 +16,22 @@ use Cake\Routing\Router;
                           data-callback-function="afterSendNotification">
 
                         <div class="form-group">
-                            <label><?= $Lang->get('NOTIFICATION__CONTENT') ?></label>
+                            <label><?= __('NOTIFICATION__CONTENT') ?></label>
                             <textarea class="form-control" name="content" maxlength="255"></textarea>
                         </div>
 
                         <div class="form-group">
                             <div class="checkbox">
                                 <input name="from" type="checkbox">
-                                <label><?= $Lang->get('NOTIFICATION__DISPLAY_FROM') ?></label>
+                                <label><?= __('NOTIFICATION__DISPLAY_FROM') ?></label>
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label><?= $Lang->get('NOTIFICATION__WHO') ?></label>
+                            <label><?= __('NOTIFICATION__WHO') ?></label>
                             <select class="form-control" name="user_id">
-                                <option value="all"><?= $Lang->get('NOTIFICATION__ALL') ?></option>
-                                <option value="user"><?= $Lang->get('NOTIFICATION__USER') ?></option>
+                                <option value="all"><?= __('NOTIFICATION__ALL') ?></option>
+                                <option value="user"><?= __('NOTIFICATION__USER') ?></option>
                             </select>
                         </div>
 
@@ -46,12 +46,12 @@ use Cake\Routing\Router;
                         </script>
 
                         <div class="form-group" style="display:none;" id="userInput">
-                            <label><?= $Lang->get('NOTIFICATION__WHO_USERNAME') ?></label>
+                            <label><?= __('NOTIFICATION__WHO_USERNAME') ?></label>
                             <input type="text" name="user_pseudo" class="form-control">
                         </div>
 
                         <div class="form-group">
-                            <button type="submit" class="btn btn-info"><?= $Lang->get('GLOBAL__SUBMIT') ?></button>
+                            <button type="submit" class="btn btn-info"><?= __('GLOBAL__SUBMIT') ?></button>
                         </div>
                     </form>
 
@@ -61,16 +61,16 @@ use Cake\Routing\Router;
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('NOTIFICATION__OTHER_ACTIONS') ?></h3>
+                    <h3 class="card-title"><?= __('NOTIFICATION__OTHER_ACTIONS') ?></h3>
                 </div>
                 <div class="card-body">
 
                     <a href="<?= Router::url(['action' => 'clearAllFromAllUsers', 'admin' => true]) ?>"
                        class="btn btn-danger btn-block"
-                       id="delete-all"><?= $Lang->get('NOTIFICATION__DELETE_ALL_FROM_ALL_USERS') ?></a>
+                       id="delete-all"><?= __('NOTIFICATION__DELETE_ALL_FROM_ALL_USERS') ?></a>
                     <a href="<?= Router::url(['action' => 'markAllAsSeenFromAllUsers', 'admin' => true]) ?>"
                        class="btn btn-default btn-block"
-                       id="mark-all-as-seen"><?= $Lang->get('NOTIFICATION__MARK_ALL_AS_SEEN_FROM_ALL_USERS') ?></a>
+                       id="mark-all-as-seen"><?= __('NOTIFICATION__MARK_ALL_AS_SEEN_FROM_ALL_USERS') ?></a>
 
                     <hr>
 
@@ -82,9 +82,9 @@ use Cake\Routing\Router;
                                     <span class="input-group-text">#</span>
                                 </div>
                                 <input type="text" class="form-control" name="group"
-                                       placeholder="<?= $Lang->get('NOTIFICATION__DELETE_ALL_FROM_GROUP_INPUT') ?>">
+                                       placeholder="<?= __('NOTIFICATION__DELETE_ALL_FROM_GROUP_INPUT') ?>">
                                 <div class="input-group-append">
-                                    <button class="btn btn-danger"><?= $Lang->get('NOTIFICATION__DELETE_ALL_FROM_GROUP_BTN') ?></button>
+                                    <button class="btn btn-danger"><?= __('NOTIFICATION__DELETE_ALL_FROM_GROUP_BTN') ?></button>
                                 </div>
                             </div>
                             </span>
@@ -97,20 +97,20 @@ use Cake\Routing\Router;
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('NOTIFICATION__NOTIFICATIONS_LIST') ?></h3>
+                    <h3 class="card-title"><?= __('NOTIFICATION__NOTIFICATIONS_LIST') ?></h3>
                 </div>
                 <div class="card-body">
                     <table class="table table-responsive-sm table-bordered"
                            style="table-layout: fixed;word-wrap: break-word;">
                         <thead>
                         <tr>
-                            <th><?= $Lang->get('USER__USERNAME') ?></th>
-                            <th><?= $Lang->get('NOTIFICATION__GROUP') ?></th>
-                            <th><?= $Lang->get('NOTIFICATION__FROM') ?></th>
-                            <th><?= $Lang->get('NOTIFICATION__CONTENT') ?></th>
-                            <th><?= $Lang->get('NOTIFICATION__TYPE') ?></th>
-                            <th><?= $Lang->get('GLOBAL__CREATED') ?></th>
-                            <th><?= $Lang->get('GLOBAL__ACTIONS') ?></th>
+                            <th><?= __('USER__USERNAME') ?></th>
+                            <th><?= __('NOTIFICATION__GROUP') ?></th>
+                            <th><?= __('NOTIFICATION__FROM') ?></th>
+                            <th><?= __('NOTIFICATION__CONTENT') ?></th>
+                            <th><?= __('NOTIFICATION__TYPE') ?></th>
+                            <th><?= __('GLOBAL__CREATED') ?></th>
+                            <th><?= __('GLOBAL__ACTIONS') ?></th>
                         </tr>
                         </thead>
                         <tbody>

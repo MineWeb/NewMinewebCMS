@@ -8,7 +8,7 @@ use Cake\Routing\Router;
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('SERVER__ONLINE_PLAYERS') ?></h3>
+                    <h3 class="card-title"><?= __('SERVER__ONLINE_PLAYERS') ?></h3>
                 </div>
                 <div class="card-body">
 
@@ -23,7 +23,7 @@ use Cake\Routing\Router;
                         <table class="table table-bordered dataTable">
                             <thead>
                             <tr>
-                                <th><?= $Lang->get('USER__USERNAME') ?></th>
+                                <th><?= __('USER__USERNAME') ?></th>
                             </tr>
                             </thead>
                             <tbody>
@@ -36,7 +36,7 @@ use Cake\Routing\Router;
                         </table>
                     <?php } else { ?>
                         <div class="card card-body bg-light">
-                            <div class="alert alert-danger"><?= $Lang->get('SERVER__MUST_BE_ON') ?></div>
+                            <div class="alert alert-danger"><?= __('SERVER__MUST_BE_ON') ?></div>
                         </div>
                     <?php } ?>
 

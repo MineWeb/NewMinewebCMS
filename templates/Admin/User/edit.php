@@ -8,7 +8,7 @@ use Cake\Routing\Router;
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('USER__EDIT_TITLE') ?></h3>
+                    <h3 class="card-title"><?= __('USER__EDIT_TITLE') ?></h3>
                 </div>
                 <div class="card-body">
                     <form action="<?= Router::url(['controller' => 'user', 'action' => 'edit_ajax', 'admin' => 'true']) ?>"
@@ -18,7 +18,7 @@ use Cake\Routing\Router;
                         <input type="hidden" value="<?= $search_user['id'] ?>" name="id">
 
                         <div class="form-group">
-                            <label><?= $Lang->get('USER__USERNAME') ?></label>
+                            <label><?= __('USER__USERNAME') ?></label>
                             <input name="pseudo" class="form-control" value="<?= $search_user['pseudo'] ?>" type="text"
                                    autocomplete="off">
                         </div>
@@ -30,31 +30,31 @@ use Cake\Routing\Router;
 
                         <?php if (!$Configuration->getKey('confirm_mail_signup')) { ?>
                             <div class="form-group">
-                                <label><?= $Lang->get('USER__EMAIL') ?></label>
+                                <label><?= __('USER__EMAIL') ?></label>
                                 <input name="email" class="form-control" value="<?= $search_user['email'] ?>"
                                        type="email" autocomplete="off">
                             </div>
                         <?php } else { ?>
                             <div class="form-group">
-                                <label><?= $Lang->get('USER__EMAIL') ?></label>
+                                <label><?= __('USER__EMAIL') ?></label>
                                 <div class="input-group mb-3">
                                     <input value="<?= $search_user['email'] ?>" type="email" name="email"
                                            class="form-control">
                                     <div class="input-group-append">
                                         <a class="btn btn-success<?= ($search_user['confirmed']) ? ' disabled' : '' ?>"
-                                           href="<?= ($search_user['confirmed']) ? '#' : Router::url(['action' => 'confirm', $search_user['id']]) ?>"><?= ($search_user['confirmed']) ? $Lang->get('USER__EMAIL_CONFIRMED') : $Lang->get('USER__CONFIRM_EMAIL') ?></a>
+                                           href="<?= ($search_user['confirmed']) ? '#' : Router::url(['action' => 'confirm', $search_user['id']]) ?>"><?= ($search_user['confirmed']) ? __('USER__EMAIL_CONFIRMED') : __('USER__CONFIRM_EMAIL') ?></a>
                                     </div>
                                 </div>
                             </div>
                         <?php } ?>
 
                         <div class="form-group">
-                            <label><?= $Lang->get('USER__PASSWORD') ?></label>
+                            <label><?= __('USER__PASSWORD') ?></label>
                             <input name="password" class="form-control" type="password">
                         </div>
 
                         <div class="form-group">
-                            <label><?= $Lang->get('USER__RANK') ?></label>
+                            <label><?= __('USER__RANK') ?></label>
                             <select class="form-control" name="rank">
                                 <?php foreach ($options_ranks as $key => $value) { ?>
                                     <option value="<?= $key ?>"<?= ($search_user['rank'] == $key) ? ' selected' : '' ?>><?= $value ?></option>
@@ -64,7 +64,7 @@ use Cake\Routing\Router;
 
                         <?php if ($EyPlugin->isInstalled('eywek.shop')) { ?>
                             <div class="form-group">
-                                <label><?= $Lang->get('USER__MONEY') ?></label>
+                                <label><?= __('USER__MONEY') ?></label>
                                 <input name="money" class="form-control" value="<?= $search_user['money'] ?>"
                                        type="text">
                             </div>
@@ -76,7 +76,7 @@ use Cake\Routing\Router;
                         </div>
 
                         <div class="form-group">
-                            <label><?= $Lang->get('USER__REGISTER_DATE') ?></label>
+                            <label><?= __('USER__REGISTER_DATE') ?></label>
                             <input class="form-control" value="<?= $search_user['created'] ?>" type="text" disabled="">
                         </div>
 
@@ -84,8 +84,8 @@ use Cake\Routing\Router;
 
                         <div class="float-right">
                             <a href="<?= Router::url(['controller' => 'user', 'action' => 'index', 'admin' => true]) ?>"
-                               class="btn btn-default"><?= $Lang->get('GLOBAL__CANCEL') ?></a>
-                            <button class="btn btn-primary" type="submit"><?= $Lang->get('GLOBAL__SUBMIT') ?></button>
+                               class="btn btn-default"><?= __('GLOBAL__CANCEL') ?></a>
+                            <button class="btn btn-primary" type="submit"><?= __('GLOBAL__SUBMIT') ?></button>
                         </div>
                     </form>
                 </div>
@@ -96,7 +96,7 @@ use Cake\Routing\Router;
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('USER__HIS_HISTORIES') ?></h3>
+                    <h3 class="card-title"><?= __('USER__HIS_HISTORIES') ?></h3>
                 </div>
                 <div class="card-body">
 
@@ -104,7 +104,7 @@ use Cake\Routing\Router;
                         <thead>
                         <tr>
                             <th>ID</th>
-                            <th><?= $Lang->get('GLOBAL__ACTIONS') ?></th>
+                            <th><?= __('GLOBAL__ACTIONS') ?></th>
                         </tr>
                         </thead>
                         <tbody>

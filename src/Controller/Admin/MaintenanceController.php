@@ -10,7 +10,7 @@ class MaintenanceController extends AppController {
         if (!$this->isConnected and !$this->Permissions->can('MANAGE_MAINTENANCE'))
             throw new ForbiddenException();
 
-        $this->set('title_for_layout', $this->Lang->get('MAINTENANCE__TITLE'));
+        $this->set('title_for_layout', __('MAINTENANCE__TITLE'));
 
         $pagesInMaintenance = $this->Maintenance->find()->all();
         $this->set("pages", $pagesInMaintenance);
@@ -21,19 +21,19 @@ class MaintenanceController extends AppController {
         if (!$this->isConnected and !$this->Permissions->can('MANAGE_MAINTENANCE'))
             throw new ForbiddenException();
 
-        $this->set('title_for_layout', $this->Lang->get('MAINTENANCE__TITLE'));
+        $this->set('title_for_layout', __('MAINTENANCE__TITLE'));
 
         if ($this->request->is("post")) {
             $this->disableAutoRender();
             $this->response = $this->response->withType('application/json');
 
             if ($this->getRequest()->getData('reason') == null)
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('MAINTENANCE__ADD_REASON_EMPTY')]));
+                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('MAINTENANCE__ADD_REASON_EMPTY')]));
 
             $maintenance = $this->Maintenance->newEntity($this->getRequest()->getData());
             $this->Maintenance->save($maintenance);
 
-            return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('MAINTENANCE__ADD_SUCCESS')]));
+            return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('MAINTENANCE__ADD_SUCCESS')]));
         }
     }
 
@@ -42,7 +42,7 @@ class MaintenanceController extends AppController {
         if (!$this->isConnected and !$this->Permissions->can('MANAGE_MAINTENANCE') | !$id)
             throw new ForbiddenException();
 
-        $this->set('title_for_layout', $this->Lang->get('MAINTENANCE__TITLE'));
+        $this->set('title_for_layout', __('MAINTENANCE__TITLE'));
 
         $page = $this->Maintenance->find("all", ["conditions" => ["id" => $id]])->first();
         $this->set("page", $page);
@@ -52,13 +52,13 @@ class MaintenanceController extends AppController {
             $this->response = $this->response->withType('application/json');
 
             if ($this->getRequest()->getData('reason') == null)
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('MAINTENANCE__ADD_REASON_EMPTY')]));
+                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('MAINTENANCE__ADD_REASON_EMPTY')]));
 
             $maintenance = $this->Maintenance->get($id);
             $maintenance->set($this->getRequest()->getData());
             $this->Maintenance->save($maintenance);
 
-            return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('MAINTENANCE__EDIT_SUCCESS')]));
+            return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('MAINTENANCE__EDIT_SUCCESS')]));
         }
     }
 
@@ -72,7 +72,7 @@ class MaintenanceController extends AppController {
         $maintenance->set(["active" => "0"]);
         $this->Maintenance->save($maintenance);
 
-        $this->Flash->success($this->Lang->get('MAINTENANCE__DISABLED_PAGE', [
+        $this->Flash->success(__('MAINTENANCE__DISABLED_PAGE', [
             '{PAGE}' => $maintenance['url'],
         ]));
         $this->redirect(['controller' => 'maintenance', 'action' => 'index', 'admin' => true]);
@@ -88,7 +88,7 @@ class MaintenanceController extends AppController {
         $maintenance->set(["active" => "1"]);
         $this->Maintenance->save($maintenance);
 
-        $this->Flash->success($this->Lang->get('MAINTENANCE__ENABLED_PAGE', [
+        $this->Flash->success(__('MAINTENANCE__ENABLED_PAGE', [
             '{PAGE}' => $maintenance['url'],
         ]));
         $this->redirect(['controller' => 'maintenance', 'action' => 'index', 'admin' => true]);
@@ -103,7 +103,7 @@ class MaintenanceController extends AppController {
         $pageUrl = $this->Maintenance->find('all', ["conditions" => ['id' => $id]])->first()["url"];
         $this->Maintenance->delete($this->Maintenance->get($id));
 
-        $this->Flash->success($this->Lang->get('MAINTENANCE__DELETED_PAGE', [
+        $this->Flash->success(__('MAINTENANCE__DELETED_PAGE', [
             '{PAGE}' => $pageUrl,
         ]));
         $this->redirect(['controller' => 'maintenance', 'action' => 'index', 'admin' => true]);

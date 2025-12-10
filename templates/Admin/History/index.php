@@ -8,16 +8,16 @@ use Cake\Routing\Router;
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('HISTORY__VIEW_GLOBAL') ?></h3>
+                    <h3 class="card-title"><?= __('HISTORY__VIEW_GLOBAL') ?></h3>
                 </div>
                 <div class="card-body">
                     <table class="table table-bordered" style="table-layout: fixed;word-wrap: break-word;">
                         <thead>
                         <tr>
-                            <th><?= $Lang->get('USER__USERNAME') ?></th>
-                            <th><?= $Lang->get('GLOBAL__ACTIONS') ?></th>
-                            <th><?= $Lang->get('GLOBAL__CATEGORY') ?></th>
-                            <th><?= $Lang->get('GLOBAL__CREATED') ?></th>
+                            <th><?= __('USER__USERNAME') ?></th>
+                            <th><?= __('GLOBAL__ACTIONS') ?></th>
+                            <th><?= __('GLOBAL__CATEGORY') ?></th>
+                            <th><?= __('GLOBAL__CREATED') ?></th>
                         </tr>
                         </thead>
                         <tbody>

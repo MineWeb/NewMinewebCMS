@@ -12,7 +12,7 @@ class BanController extends AppController
         if (!$this->isConnected || !$this->Permissions->can("MANAGE_BAN"))
             throw new ForbiddenException();
 
-        $this->set('title_for_layout', $this->Lang->get("BAN__HOME"));
+        $this->set('title_for_layout', __("BAN__HOME"));
         $banned_users = $this->Ban->find()->all();
 
         $this->set(compact("banned_users"));
@@ -23,7 +23,7 @@ class BanController extends AppController
         if (!$this->isConnected || !$this->Permissions->can("MANAGE_BAN"))
             throw new ForbiddenException();
 
-        $this->set('title_for_layout', $this->Lang->get("BAN__HOME"));
+        $this->set('title_for_layout', __("BAN__HOME"));
         $this->set('type', $this->Configuration->getKey('member_page_type'));
 
         if ($this->request->is("post")) {
@@ -31,7 +31,7 @@ class BanController extends AppController
             $this->response = $this->response->withType('application/json');
 
             if (empty($this->getRequest()->getData("reason")))
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
+                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]));
 
             foreach ($this->request->getData() as $key => $v) {
                 if ($v != "on" || $key == "name" || strpos($key, "-ip"))
@@ -49,7 +49,7 @@ class BanController extends AppController
                 $this->Ban->save($ban);
             }
 
-            return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('BAN__SUCCESS')]));
+            return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('BAN__SUCCESS')]));
         }
     }
 
@@ -59,7 +59,7 @@ class BanController extends AppController
             throw new ForbiddenException();
 
         $this->Ban->delete($this->Ban->get($id));
-        $this->Flash->success($this->Lang->get('BAN__UNBAN_SUCCESS'));
+        $this->Flash->success(__('BAN__UNBAN_SUCCESS'));
         $this->redirect(['controller' => 'ban', 'action' => 'index', 'admin' => true]);
         return $this->response;
     }
@@ -71,10 +71,10 @@ class BanController extends AppController
             $this->response = $this->response->withType('application/json');
             if ($this->request->is('ajax')) {
                 $available_ranks = [
-                    0 => ['label' => 'success', 'name' => $this->Lang->get('USER__RANK_MEMBER')],
-                    2 => ['label' => 'warning', 'name' => $this->Lang->get('USER__RANK_MODERATOR')],
-                    3 => ['label' => 'danger', 'name' => $this->Lang->get('USER__RANK_ADMINISTRATOR')],
-                    4 => ['label' => 'danger', 'name' => $this->Lang->get('USER__RANK_ADMINISTRATOR')]
+                    0 => ['label' => 'success', 'name' => __('USER__RANK_MEMBER')],
+                    2 => ['label' => 'warning', 'name' => __('USER__RANK_MODERATOR')],
+                    3 => ['label' => 'danger', 'name' => __('USER__RANK_ADMINISTRATOR')],
+                    4 => ['label' => 'danger', 'name' => __('USER__RANK_ADMINISTRATOR')]
                 ];
                 $this->Rank = TableRegistry::getTableLocator()->get('Rank');
                 $custom_ranks = $this->Rank->find()->all();

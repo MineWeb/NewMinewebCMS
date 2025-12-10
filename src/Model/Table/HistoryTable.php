@@ -1,7 +1,7 @@
 <?php
 namespace App\Model\Table;
 
-use Cake\Database\Schema\TableSchema;
+use App\Utility\LangService;
 use Cake\Datasource\ResultSetInterface;
 use Cake\ORM\Table;
 
@@ -18,7 +18,7 @@ class HistoryTable extends Table
         return $this->find('all', conditions: ['user_id' => $user_id], limit: '50', order: 'id DESC')->all();
     }
 
-    public function format($data, $lang)
+    public function format($data)
     {
 
         if (empty($data)) {
@@ -27,18 +27,16 @@ class HistoryTable extends Table
 
         $return = [];
 
-        $this->Lang = $lang;
-
         foreach ($data as $key => $value) {
 
             $category = 'HISTORY__CATEGORY_' . strtoupper($value['category']);
-            $category = ($this->Lang->get($category) != $category) ? $this->Lang->get($category) : $value['category'];
+            $category = (__($category) != $category) ? __($category) : $value['category'];
             $string = '(' . $category . ') ';
 
-            $string .= 'Le ' . $this->Lang->date($value['created']);
+            $string .= 'Le ' . LangService::date($value['created']);
 
             $action = 'HISTORY__ACTION_' . strtoupper($value['action']);
-            $action = ($this->Lang->get($action) != $action) ? $this->Lang->get($action) : $value['action'];
+            $action = (__($action) != $action) ? __($action) : $value['action'];
             $string .= ' : ' . $action;
 
             // Autres

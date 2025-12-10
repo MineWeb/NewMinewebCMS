@@ -9,7 +9,7 @@ class BanController extends AppController
             return;
         }
 
-        $this->set('title_for_layout', $this->Lang->get("BAN__BAN"));
+        $this->set('title_for_layout', __("BAN__BAN"));
         $this->set('reason', $this->isBanned);
     }
 
@@ -19,7 +19,7 @@ class BanController extends AppController
             return;
         }
 
-        $this->set('title_for_layout', $this->Lang->get("BAN__BAN"));
+        $this->set('title_for_layout', __("BAN__BAN"));
         $this->set('reason', $this->isBanned);
     }
 }

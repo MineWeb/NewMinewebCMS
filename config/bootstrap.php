@@ -4,6 +4,7 @@ declare(strict_types=1);
 require __DIR__ . DIRECTORY_SEPARATOR . 'paths.php';
 require CORE_PATH . 'config' . DS . 'bootstrap.php';
 
+use App\I18n\JsonFileLoader;
 use Cake\Cache\Cache;
 use Cake\Core\Configure;
 use Cake\Core\Configure\Engine\PhpConfig;
@@ -13,6 +14,8 @@ use Cake\Datasource\ConnectionManager;
 use Cake\Error\ErrorTrap;
 use Cake\Error\ExceptionTrap;
 use Cake\Http\ServerRequest;
+use Cake\I18n\I18n;
+use Cake\I18n\Package;
 use Cake\Log\Log;
 use Cake\Mailer\Mailer;
 use Cake\Mailer\TransportFactory;
@@ -30,13 +33,11 @@ try {
 }
 
 if (file_exists(CONFIG . 'app_local.php')) {
-    Configure::load('app_local', 'default');
+    Configure::load('app_local');
 }
 
 if (Configure::read('debug')) {
-    Configure::write('Cache._cake_model_.duration', '+2 minutes');
-    Configure::write('Cache._cake_core_.duration', '+2 minutes');
-    Configure::write('Cache._cake_routes_.duration', '+2 seconds');
+    Configure::write('Cache.default.duration', '+2 minutes');
 }
 
 date_default_timezone_set((string)Configure::read('App.defaultTimezone'));
@@ -119,3 +120,41 @@ Configure::write('Install.dbConfigured', $dbConfigured);
 $installLockFile = $configDir . 'install.lock';
 $installed = file_exists($installLockFile);
 Configure::write('Install.installed', $installed);
+
+I18n::config('_fallback', function (string $domain, string $locale) {
+    $loader = new JsonFileLoader();
+
+    $files = [];
+
+    $basePath = ROOT . '/resources/locales/' . $locale . '/';
+
+    // App
+    $files[] = $basePath . $domain . '.json';
+    if ($domain !== 'default') {
+        $files[] = $basePath . 'default.json';
+    }
+
+    // Plugins
+    foreach (glob(ROOT . '/plugins/*/*/resources/locales/' . $locale . '/' . $domain . '.json') ?: [] as $file) {
+        $files[] = $file;
+    }
+    if ($domain !== 'default') {
+        foreach (glob(ROOT . '/plugins/*/*/resources/locales/' . $locale . '/default.json') ?: [] as $file) {
+            $files[] = $file;
+        }
+    }
+
+    // Thèmes
+    foreach (glob(ROOT . '/templates/Themed/*/resources/locales/' . $locale . '/' . $domain . '.json') ?: [] as $file) {
+        $files[] = $file;
+    }
+    if ($domain !== 'default') {
+        foreach (glob(ROOT . '/templates/Themed/*/resources/locales/' . $locale . '/default.json') ?: [] as $file) {
+            $files[] = $file;
+        }
+    }
+
+    $messages = $loader->loadFiles($files);
+
+    return new Package('default', null, $messages);
+});
