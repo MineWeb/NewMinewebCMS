@@ -4,57 +4,86 @@ namespace App\Controller\Component;
 use Cake\Controller\Component;
 use Cake\Database\Driver\Sqlite;
 use Cake\Datasource\ConnectionManager;
+use Cake\Datasource\Exception\MissingDatasourceConfigException;
 use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Mailer\Mailer;
-use Cake\Network\Exception\SocketException;
+use Cake\Mailer\TransportFactory;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Security;
+use Exception;
 use Laminas\Diactoros\UploadedFile;
-use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
-use SplFileInfo;
 use ZipArchive;
 
 class UtilComponent extends Component
 {
     private $controller;
 
-    private $to;
-    private $from;
-    private $subject;
-    private $message;
-    private $typeSend = 'default';
+    private mixed $to = null;
+    private mixed $from = null;
+    private ?string $subject = null;
+    private ?string $message = null;
+    private string $typeSend = 'default';
 
-    private $smtpOptions = [];
+    private array $smtpOptions = [];
 
-    private $db_type = "mysql";
+    private mixed $dbType = 'mysql';
 
-    function initialize(array $config): void
+    private bool $dbAvailable = false;
+
+    public function initialize(array $config): void
     {
-        $this->controller = $this->_registry->getController();
+        parent::initialize($config);
 
-        if (isset($this->controller->Configuration)) {
-            $this->controller->Configuration = TableRegistry::getTableLocator()->get("Configuration");
+        $this->controller = $this->_registry->getController();
+        $this->dbAvailable = $this->checkDatabaseAvailable();
+
+        if ($this->dbAvailable && isset($this->controller->Configuration)) {
+            $this->controller->Configuration = TableRegistry::getTableLocator()->get('Configuration');
+        }
+    }
+
+    private function checkDatabaseAvailable(): bool
+    {
+        try {
+            ConnectionManager::getConfig('default');
+        } catch (MissingDatasourceConfigException) {
+            return false;
         }
 
+        try {
+            ConnectionManager::get('default');
+        } catch (Exception) {
+            return false;
+        }
+
+        return true;
     }
 
-    public function startup(Event $event) {
-        $this->db_type = ConnectionManager::get("default")->getDriver();
-    }
-
-    // Get ip (support cloudfare)
-
-    public function getIP()
+    public function startup(EventInterface $event): void
     {
-        return isset($_SERVER["HTTP_CF_CONNECTING_IP"]) ? htmlentities($_SERVER["HTTP_CF_CONNECTING_IP"]) : htmlentities($_SERVER["REMOTE_ADDR"]);
+        if ($this->dbAvailable) {
+            try {
+                $this->dbType = ConnectionManager::get('default')->getDriver();
+            } catch (Exception) {
+                $this->dbType = null;
+            }
+        }
     }
 
-    // Encoder un mot de passe
+    public function getIP(): string
+    {
+        if (isset($_SERVER['HTTP_CF_CONNECTING_IP'])) {
+            return htmlentities($_SERVER['HTTP_CF_CONNECTING_IP']);
+        }
 
-    public function password($password, $username, $existingHash = null, $hash = null)
+        return isset($_SERVER['REMOTE_ADDR']) ? htmlentities($_SERVER['REMOTE_ADDR']) : '0.0.0.0';
+    }
+
+    public function password(string $password, string $username, ?string $existingHash = null, ?string $hash = null): bool|string
     {
         $event = new Event('beforeEncodePassword', $this, ['password' => $password, 'username' => $username]);
         $this->controller->getEventManager()->dispatch($event);
@@ -62,7 +91,7 @@ class UtilComponent extends Component
             return $event->getResult();
         }
 
-        if (!$hash) {
+        if ($hash === null) {
             $hash = $this->getPasswordHashType();
         }
 
@@ -71,139 +100,178 @@ class UtilComponent extends Component
         }
 
         if ($hash === 'blowfish' || $hash === 'bcrypt') {
-            if ($existingHash) {
+            if ($existingHash !== null) {
                 return password_verify($password, $existingHash);
             }
 
             return password_hash($password, PASSWORD_BCRYPT);
         }
 
-        $salt = $this->controller->Configuration->getKey('passwords_salt') ?? false;
+        $salt = false;
+        if ($this->hasConfiguration()) {
+            $salt = $this->controller->Configuration->getKey('passwords_salt') ?? false;
+        }
 
         return Security::hash($password, $hash, $salt);
     }
 
-
-    public function getPasswordHashType()
+    private function hasConfiguration(): bool
     {
-        return $this->controller->Configuration->getKey('passwords_hash');
+        if (!$this->dbAvailable) {
+            return false;
+        }
+
+        if (!isset($this->controller->Configuration)) {
+            return false;
+        }
+
+        return is_object($this->controller->Configuration) && method_exists($this->controller->Configuration, 'getKey');
     }
 
-    // Pour gérer les temps d'attente ou autre
+    public function getPasswordHashType(): ?string
+    {
+        if ($this->hasConfiguration()) {
+            return $this->controller->Configuration->getKey('passwords_hash');
+        }
 
-    public function generateStringFromTime($waitTime)
+        return 'bcrypt';
+    }
+
+    public function generateStringFromTime(int $waitTime): string
     {
         $waitTime = $this->secondsToTime($waitTime);
         $time = [];
-        if ($waitTime['d'] > 0)
-            $time[] = $waitTime['d'] . ' ' . $this->controller->Lang->get('GLOBAL__DATE_R_DAYS');
-        if ($waitTime['h'] > 0)
-            $time[] = $waitTime['h'] . ' ' . $this->controller->Lang->get('GLOBAL__DATE_R_HOURS');
-        if ($waitTime['m'] > 0)
-            $time[] = $waitTime['m'] . ' ' . $this->controller->Lang->get('GLOBAL__DATE_R_MINUTES');
-        if ($waitTime['s'] > 0)
-            $time[] = $waitTime['s'] . ' ' . $this->controller->Lang->get('GLOBAL__DATE_R_SECONDS');
+
+        $lang = $this->controller->Lang ?? null;
+
+        if ($waitTime['d'] > 0) {
+            $label = $lang ? $lang->get('GLOBAL__DATE_R_DAYS') : 'days';
+            $time[] = $waitTime['d'] . ' ' . $label;
+        }
+        if ($waitTime['h'] > 0) {
+            $label = $lang ? $lang->get('GLOBAL__DATE_R_HOURS') : 'hours';
+            $time[] = $waitTime['h'] . ' ' . $label;
+        }
+        if ($waitTime['m'] > 0) {
+            $label = $lang ? $lang->get('GLOBAL__DATE_R_MINUTES') : 'minutes';
+            $time[] = $waitTime['m'] . ' ' . $label;
+        }
+        if ($waitTime['s'] > 0) {
+            $label = $lang ? $lang->get('GLOBAL__DATE_R_SECONDS') : 'seconds';
+            $time[] = $waitTime['s'] . ' ' . $label;
+        }
+
         return implode(', ', $time);
     }
 
-    public function secondsToTime($inputSeconds)
+    public function secondsToTime(int $inputSeconds): array
     {
-
         $secondsInAMinute = 60;
         $secondsInAnHour = 60 * $secondsInAMinute;
         $secondsInADay = 24 * $secondsInAnHour;
 
-        // extract days
-        $days = floor($inputSeconds / $secondsInADay);
-
-        // extract hours
+        $days = (int)floor($inputSeconds / $secondsInADay);
         $hourSeconds = $inputSeconds % $secondsInADay;
-        $hours = floor($hourSeconds / $secondsInAnHour);
+        $hours = (int)floor($hourSeconds / $secondsInAnHour);
 
-        // extract minutes
         $minuteSeconds = $hourSeconds % $secondsInAnHour;
-        $minutes = floor($minuteSeconds / $secondsInAMinute);
+        $minutes = (int)floor($minuteSeconds / $secondsInAMinute);
 
-        // extract the remaining seconds
         $remainingSeconds = $minuteSeconds % $secondsInAMinute;
-        $seconds = ceil($remainingSeconds);
+        $seconds = (int)ceil($remainingSeconds);
 
-        // return the final array
         return [
-            'd' => (int)$days,
-            'h' => (int)$hours,
-            'm' => (int)$minutes,
-            's' => (int)$seconds,
+            'd' => $days,
+            'h' => $hours,
+            'm' => $minutes,
+            's' => $seconds,
         ];
     }
 
-    /*
-      MAIL
-    */
-
-    public function prepareMail($to, $subject, $message)
+    public function prepareMail($to, string $subject, string $message): self
     {
+        if (!$this->hasConfiguration()) {
+            $this->to = $to;
+            $this->subject = $subject;
+            $this->message = $message;
+            $this->from = null;
+            $this->typeSend = 'default';
+            $this->smtpOptions = [];
+            return $this;
+        }
 
         $configuration = $this->controller->Configuration;
 
         $this->to = $to;
-
-        $this->subject = $subject . ' | ' . $configuration->getKey('name');
-
+        $this->subject = $subject . ' | ' . (string)$configuration->getKey('name');
         $this->message = $message;
+        $this->from = [
+            $configuration->getKey('email') => $configuration->getKey('name'),
+        ];
 
-        $this->from = [$configuration->getKey('email') => $configuration->getKey('name')];
+        $sendType = $configuration->getKey('email_send_type');
+        $this->typeSend = (!$sendType || (int)$sendType !== 2) ? 'default' : 'smtp';
 
-        $this->typeSend = (!$configuration->getKey('email_send_type') || $configuration->getKey('email_send_type') != 2) ? 'default' : 'smtp';
-
-        if ($this->typeSend == "smtp") {
-
-            $this->smtpOptions['host'] = $configuration->getKey('smtpHost'); // smtp.sendgrid.net - ssl://smtp.gmail.com
-            $this->smtpOptions['port'] = $configuration->getKey('smtpPort'); // 587 - 465
-            $this->smtpOptions['username'] = $configuration->getKey('smtpUsername'); // Eywek
-            $this->smtpOptions['password'] = $configuration->getKey('smtpPassword'); // motdepasse
-            $this->smtpOptions['timeout'] = '30';
-            //$this->smtpOptions['client'] = ''; // mineweb.org
-
+        if ($this->typeSend === 'smtp') {
+            $this->smtpOptions = [
+                'className' => 'Smtp',
+                'host' => $configuration->getKey('smtpHost'),
+                'port' => $configuration->getKey('smtpPort'),
+                'username' => $configuration->getKey('smtpUsername'),
+                'password' => $configuration->getKey('smtpPassword'),
+                'timeout' => 30,
+            ];
+        } else {
+            $this->smtpOptions = [];
         }
 
         return $this;
     }
 
-    public function sendMail()
+    public function sendMail(): bool
     {
-        $this->Email = new Mailer();
+        $mailer = new Mailer();
 
-        if ($this->typeSend == "smtp") {
-            $this->Email->setTransport('Smtp');
-
-            $this->Email->config($this->smtpOptions);
+        if ($this->typeSend === 'smtp' && !empty($this->smtpOptions['host'])) {
+            TransportFactory::setConfig('dynamic_smtp', $this->smtpOptions);
+            $mailer->setTransport('dynamic_smtp');
         }
 
-        $this->Email->setFrom($this->from);
-        $this->Email->setTo($this->to);
-        $this->Email->setSubject($this->subject);
-        $this->Email->setTemplate('default');
-        $this->Email->setEmailFormat('html');
-        $this->Email->setTheme($this->controller->Configuration->getKey('theme'));
-
-        $event = new Event('beforeSendMail', $this, ['emailConfig' => $this->Email, 'message' => $this->message]);
-        $this->controller->getEventManager()->dispatch($event);
-        if ($event->isStopped()) {
-            return $event->getResult();
+        if ($this->from !== null) {
+            $mailer->setFrom($this->from);
         }
 
-        $result = false;
+        if ($this->to !== null) {
+            $mailer->setTo($this->to);
+        }
+
+        if ($this->subject !== null) {
+            $mailer->setSubject($this->subject);
+        }
+
+        $mailer->viewBuilder()
+            ->setTemplate('default')
+            ->setLayout(null)
+            ->setVar('message', $this->message);
+
+        if ($this->hasConfiguration()) {
+            $theme = $this->controller->Configuration->getKey('theme');
+            if ($theme) {
+                $mailer->viewBuilder()->setTheme($theme);
+            }
+        }
+
+        $mailer->setEmailFormat('html');
+
         try {
-            $result = $this->Email->send($this->message);
-        } catch (SocketException $e) {
+            return (bool)$mailer->deliver();
+        } catch (\Throwable $e) {
             $this->log($e->getMessage());
+            return false;
         }
-        return $result;
-
     }
 
-    public function in_array_r($needle, $haystack, $strict = false)
+    public function in_array_r(mixed $needle, array $haystack, bool $strict = false): bool
     {
         foreach ($haystack as $item) {
             if (($strict ? $item === $needle : $item == $needle) || (is_array($item) && $this->in_array_r($needle, $item, $strict))) {
@@ -214,59 +282,71 @@ class UtilComponent extends Component
         return false;
     }
 
-    public function isValidImage(ServerRequest $request, $extensions = ['png'], $width_max = false, $height_max = false, $max_size = false): array
+    public function isValidImage(ServerRequest $request, array $extensions = ['png'], bool|int $width_max = false, bool|int $height_max = false, bool|int $max_size = false): array
     {
-        /**
-         * @var UploadedFile $img
-         */
         $img = $request->getData('image');
-        $Lang = $this->controller->Lang;
+        $lang = $this->controller->Lang ?? null;
 
-        if (empty($img->getClientFilename())) {
-            return ['status' => false, 'msg' => $Lang->get('FORM__EMPTY_IMG')];
+        $msgEmpty = $lang ? $lang->get('FORM__EMPTY_IMG') : 'Aucune image sélectionnée';
+        $msgNotUploaded = $lang ? $lang->get('FORM__NOT_UPLOADED') : 'Fichier non uploadé';
+        $msgInvalid = $lang ? $lang->get('FORM__INVALID_IMG') : 'Image invalide';
+        $msgInvalidExt = $lang ? $lang->get('FORM__INVALID_EXTENSION') : 'Extension invalide';
+        $msgTooHeavy = $lang ? $lang->get('FORM__FILE_TOO_HEAVY') : 'Fichier trop lourd';
+        $msgInvalidWidth = $lang ? $lang->get('FORM__INVALID_WIDTH') : 'Largeur invalide';
+        $msgInvalidHeight = $lang ? $lang->get('FORM__INVALID_HEIGHT') : 'Hauteur invalide';
+
+        if (!$img instanceof UploadedFile || empty($img->getClientFilename())) {
+            return ['status' => false, 'msg' => $msgEmpty];
         }
 
-        if (!$img->getSize() || !$img->getStream()->getMetadata('uri')) {
-            return ['status' => false, 'msg' => $Lang->get('FORM__NOT_UPLOADED')];
+        $uri = $img->getStream()->getMetadata('uri');
+
+        if (!$img->getSize() || !$uri) {
+            return ['status' => false, 'msg' => $msgNotUploaded];
         }
 
         $extension = pathinfo($img->getClientFilename(), PATHINFO_EXTENSION);
 
-        if (!in_array(strtolower($extension), $extensions)) {
-            return ['status' => false, 'msg' => str_replace('{LIST_EXTENSIONS}', implode(', ', $extensions), $Lang->get('FORM__INVALID_EXTENSION'))];
+        if (!in_array(strtolower((string)$extension), $extensions, true)) {
+            $msg = str_replace('{LIST_EXTENSIONS}', implode(', ', $extensions), $msgInvalidExt);
+            return ['status' => false, 'msg' => $msg];
         }
 
-        $infos = getimagesize($img->getStream()->getMetadata('uri'));
+        $infos = @getimagesize($uri);
 
-        if ($infos[2] < 1 || $infos[2] > 14 || $infos[0] === null || $infos[1] === null) {
-            return ['status' => false, 'msg' => $Lang->get('FORM__INVALID_IMG')];
+        if (!is_array($infos) || !isset($infos[0], $infos[1], $infos[2]) || $infos[2] < 1 || $infos[2] > 14) {
+            return ['status' => false, 'msg' => $msgInvalid];
         }
 
         if ($max_size) {
-            $size = filesize($img->getStream()->getMetadata('uri'));
-
+            $size = filesize($uri);
             if ($size > $max_size) {
-                return ['status' => false, 'msg' => str_replace('{MAX_SIZE}', $max_size, $Lang->get('FORM__FILE_TOO_HEAVY'))];
+                $msg = str_replace('{MAX_SIZE}', (string)$max_size, $msgTooHeavy);
+                return ['status' => false, 'msg' => $msg];
             }
         }
 
-        if ($width_max) {
-            if ($infos[0] > $width_max) {
-                return ['status' => false, 'msg' => str_replace('{MAX_WIDTH}', $width_max, $Lang->get('FORM__INVALID_WIDTH'))];
-            }
+        if ($width_max && $infos[0] > $width_max) {
+            $msg = str_replace('{MAX_WIDTH}', (string)$width_max, $msgInvalidWidth);
+            return ['status' => false, 'msg' => $msg];
         }
 
-        if ($height_max) {
-            if ($infos[1] > $height_max) {
-                return ['status' => false, 'msg' => str_replace('{MAX_HEIGHT}', $height_max, $Lang->get('FORM__INVALID_HEIGHT'))];
-            }
+        if ($height_max && $infos[1] > $height_max) {
+            $msg = str_replace('{MAX_HEIGHT}', (string)$height_max, $msgInvalidHeight);
+            return ['status' => false, 'msg' => $msg];
         }
 
-        return ['status' => true, 'infos' => ['extension' => $extension, 'width' => $infos[0], 'height' => $infos[1]]];
-
+        return [
+            'status' => true,
+            'infos' => [
+                'extension' => $extension,
+                'width' => $infos[0],
+                'height' => $infos[1],
+            ],
+        ];
     }
 
-    public function uploadImage(ServerRequest $request, $name)
+    public function uploadImage(ServerRequest $request, string $name): mixed
     {
         $event = new Event('beforeUploadImage', $this, ['request' => $request, 'name' => $name]);
         $this->controller->getEventManager()->dispatch($event);
@@ -274,41 +354,51 @@ class UtilComponent extends Component
             return $event->getResult();
         }
 
-        $path = pathinfo($name);
-        $path = $path['dirname'];
+        $pathInfo = pathinfo($name);
+        $path = $pathInfo['dirname'] ?? '.';
+
         if (!is_dir($path)) {
-            if (!mkdir($path, 0755, true)) {
+            if (!mkdir($path, 0755, true) && !is_dir($path)) {
                 return false;
             }
         }
 
-        $request->getData('image')->moveTo($name);
-        return true;
+        $file = $request->getData('image');
+        if ($file instanceof UploadedFile) {
+            $file->moveTo($name);
+            return true;
+        }
+
+        return false;
     }
 
-    public function isValidReCaptcha($code, $ip, $secret, $type = 2)
+    public function isValidReCaptcha(string $code, ?string $ip, string $secret, int $type = 2): bool
     {
-        if (empty($code)) {
-            return false; // Si aucun code n'est entré, on s'arrete ici
+        if ($code === '') {
+            return false;
         }
+
         $params = [
-            'secret' => $secret, // Clé secrète a obtenir sur https://www.google.com/recaptcha/admin
-            'response' => $code
+            'secret' => $secret,
+            'response' => $code,
         ];
         if ($ip) {
             $params['remoteip'] = $ip;
         }
-        $website = "";
 
-        switch ($type) {
-            case 2:
-                $website = "https://www.google.com/recaptcha/api/siteverify";
-                break;
-            case 3:
-                $website = "https://hcaptcha.com/siteverify";
-                break;
+        $website = '';
+        if ($type === 2) {
+            $website = 'https://www.google.com/recaptcha/api/siteverify';
+        } elseif ($type === 3) {
+            $website = 'https://hcaptcha.com/siteverify';
         }
-        $url = "{$website}?" . http_build_query($params);
+
+        if ($website === '') {
+            return false;
+        }
+
+        $url = $website . '?' . http_build_query($params);
+
         if (function_exists('curl_version')) {
             $curl = curl_init($url);
             curl_setopt($curl, CURLOPT_HEADER, false);
@@ -317,8 +407,9 @@ class UtilComponent extends Component
             curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 1);
             curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
             $response = curl_exec($curl);
+            curl_close($curl);
         } else {
-            $response = file_get_contents($url);
+            $response = @file_get_contents($url);
         }
 
         if (empty($response)) {
@@ -326,12 +417,10 @@ class UtilComponent extends Component
         }
 
         $json = json_decode($response);
-        return $json->success;
+        return is_object($json) && !empty($json->success);
     }
 
-    // Retourne un item aléatoire selon sa probabilité
-
-    public function random($list, $probabilityTotal)
+    public function random(array $list, float|int $probabilityTotal): string|int|null
     {
         $pct = 1000;
         $rand = mt_rand(0, $pct);
@@ -339,7 +428,7 @@ class UtilComponent extends Component
         $item = null;
 
         foreach ($list as $key => $value) {
-            $items[$key] = $value / $probabilityTotal;
+            $items[$key] = $probabilityTotal > 0 ? $value / $probabilityTotal : 0;
         }
 
         $i = 0;
@@ -347,32 +436,37 @@ class UtilComponent extends Component
 
         foreach ($items as $name => $value) {
             $item = $name;
-            if ($rand <= $i += ($value * $pct)) {
-                $item = $name;
+            $i += $value * $pct;
+            if ($rand <= $i) {
                 break;
             }
         }
+
         return $item;
     }
 
-    public function getDBType()
+    public function getDBType(): mixed
     {
-        return $this->db_type;
+        return $this->dbType;
     }
 
-    public function useSqlite()
+    public function useSqlite(): bool
     {
-        if ($this->getDBType() instanceof Sqlite)
-            return true;
-
-        return false;
+        return $this->getDBType() instanceof Sqlite;
     }
 
-    public function saveFolderInZIP($path, $location, $name)
+    public function saveFolderInZIP(string $path, string $location, string $name): void
     {
         $rootPath = realpath($path);
+        if ($rootPath === false) {
+            return;
+        }
+
         $zip = new ZipArchive();
-        $zip->open($location . $name . '.zip', ZipArchive::CREATE | ZipArchive::OVERWRITE);
+        if ($zip->open($location . $name . '.zip', ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            return;
+        }
+
         $files = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($rootPath),
             RecursiveIteratorIterator::LEAVES_ONLY
@@ -380,11 +474,15 @@ class UtilComponent extends Component
 
         foreach ($files as $file) {
             if (!$file->isDir()) {
-                $file_path = $file->getRealPath();
-                $relativePath = substr($file_path, strlen($rootPath) + 1);
-                $zip->addFile($file_path, $relativePath);
+                $filePath = $file->getRealPath();
+                if ($filePath === false) {
+                    continue;
+                }
+                $relativePath = substr($filePath, strlen($rootPath) + 1);
+                $zip->addFile($filePath, $relativePath);
             }
         }
+
         $zip->close();
     }
 }

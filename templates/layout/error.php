@@ -36,7 +36,7 @@
             <div id="content">
 
 
-                <?php echo $this->fetch('content'); ?>
+                <?= $this->fetch('content'); ?>
 
             </div>
         </div>

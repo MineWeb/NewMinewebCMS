@@ -7,7 +7,6 @@ use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
 use Cake\View\Exception\MissingViewException;
 
-
 class PagesController extends AppController
 {
     public function display()

@@ -18,14 +18,14 @@ use Cake\Mailer\Mailer;
 use Cake\Mailer\TransportFactory;
 use Cake\Routing\Router;
 use Cake\Utility\Security;
-use Migrations\Migrations;
+use Detection\MobileDetect;
 
 require CAKE . 'functions.php';
 
 try {
     Configure::config('default', new PhpConfig());
     Configure::load('app', 'default', false);
-} catch (\Exception $e) {
+} catch (Exception $e) {
     exit($e->getMessage() . "\n");
 }
 
@@ -39,12 +39,12 @@ if (Configure::read('debug')) {
     Configure::write('Cache._cake_routes_.duration', '+2 seconds');
 }
 
-date_default_timezone_set(Configure::read('App.defaultTimezone'));
-mb_internal_encoding(Configure::read('App.encoding'));
-ini_set('intl.default_locale', Configure::read('App.defaultLocale'));
+date_default_timezone_set((string)Configure::read('App.defaultTimezone'));
+mb_internal_encoding((string)Configure::read('App.encoding'));
+ini_set('intl.default_locale', (string)Configure::read('App.defaultLocale'));
 
-(new ErrorTrap(Configure::read('Error')))->register();
-(new ExceptionTrap(Configure::read('Error')))->register();
+(new ErrorTrap((array)Configure::read('Error')))->register();
+(new ExceptionTrap((array)Configure::read('Error')))->register();
 
 if (PHP_SAPI === 'cli') {
     require CONFIG . 'bootstrap_cli.php';
@@ -70,18 +70,18 @@ if ($fullBaseUrl) {
 }
 unset($fullBaseUrl);
 
-Cache::setConfig(Configure::consume('Cache'));
-TransportFactory::setConfig(Configure::consume('EmailTransport'));
-Mailer::setConfig(Configure::consume('Email'));
-Log::setConfig(Configure::consume('Log'));
-Security::setSalt(Configure::consume('Security.salt'));
+Cache::setConfig((array)Configure::consume('Cache'));
+TransportFactory::setConfig((array)Configure::consume('EmailTransport'));
+Mailer::setConfig((array)Configure::consume('Email'));
+Log::setConfig((array)Configure::consume('Log'));
+Security::setSalt((string)Configure::consume('Security.salt'));
 
-ServerRequest::addDetector('mobile', function ($request) {
-    $detector = new \Detection\MobileDetect();
+ServerRequest::addDetector('mobile', function () {
+    $detector = new MobileDetect();
     return $detector->isMobile();
 });
-ServerRequest::addDetector('tablet', function ($request) {
-    $detector = new \Detection\MobileDetect();
+ServerRequest::addDetector('tablet', function () {
+    $detector = new MobileDetect();
     return $detector->isTablet();
 });
 
@@ -92,43 +92,30 @@ require_once ROOT . DS . 'config' . DS . 'function.php';
 $configDir = ROOT . DS . 'config' . DS;
 $dbConfigFile = $configDir . 'databases.json';
 
-if (!is_readable($dbConfigFile)) {
-    exit("Missing or unreadable databases.json\n");
-}
-
-$dbData = json_decode((string)file_get_contents($dbConfigFile));
-
-if (!$dbData || !isset($dbData->driver, $dbData->host, $dbData->username, $dbData->database)) {
-    exit("Invalid databases.json configuration\n");
-}
-
-ConnectionManager::setConfig('default', [
-    'className' => 'Cake\Database\Connection',
-    'driver' => 'Cake\Database\Driver\\' . $dbData->driver,
-    'persistent' => false,
-    'host' => $dbData->host,
-    'username' => $dbData->username,
-    'password' => $dbData->password ?? '',
-    'database' => $dbData->database,
-    'encoding' => 'utf8mb4',
-    'timezone' => 'UTC',
-    'cacheMetadata' => true,
-    'quoteIdentifiers' => true,
-]);
-
-$installFlagFile = $configDir . 'install.txt';
-
-if (!file_exists($installFlagFile)) {
-    $migrations = new Migrations();
-
-    try {
-        $migrations->migrate();
-        $migrations->seed();
-    } catch (\Exception $e) {
-        echo $e->getMessage() . "\n";
-        exit("Unable to install database (create config/install.txt to skip auto install)\n");
+$dbConfigured = false;
+if (is_readable($dbConfigFile)) {
+    $dbData = json_decode((string)file_get_contents($dbConfigFile));
+    if ($dbData && isset($dbData->configured) && $dbData->configured === true) {
+        if (!empty($dbData->driver) && !empty($dbData->host) && !empty($dbData->username) && !empty($dbData->database)) {
+            $dbConfigured = true;
+            ConnectionManager::setConfig('default', [
+                'className' => 'Cake\Database\Connection',
+                'driver' => 'Cake\Database\Driver\\' . $dbData->driver,
+                'persistent' => false,
+                'host' => $dbData->host,
+                'username' => $dbData->username,
+                'password' => $dbData->password ?? '',
+                'database' => $dbData->database,
+                'encoding' => 'utf8mb4',
+                'timezone' => 'UTC',
+                'cacheMetadata' => true,
+                'quoteIdentifiers' => true
+            ]);
+        }
     }
-
-    $data = 'CREATED AT ' . date('H:i:s d/m/Y') . "\n";
-    file_put_contents($installFlagFile, $data);
 }
+Configure::write('Install.dbConfigured', $dbConfigured);
+
+$installLockFile = $configDir . 'install.lock';
+$installed = file_exists($installLockFile);
+Configure::write('Install.installed', $installed);

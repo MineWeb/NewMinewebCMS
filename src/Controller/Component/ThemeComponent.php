@@ -22,10 +22,11 @@ class ThemeComponent extends Component
     private string $reference = 'https://raw.githubusercontent.com/MineWeb/mineweb.org/gh-pages/market/themes.json';
 
     private $controller;
+    private $EyPlugin;
 
     public function __construct(ComponentRegistry $registry, array $config = [])
     {
-        $this->themesFolder = ROOT . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . 'Themed';
+        $this->themesFolder = ROOT . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'Themes';
         parent::__construct($registry, $config);
     }
 
@@ -42,7 +43,7 @@ class ThemeComponent extends Component
     public function displayAvailableUpdate(): ?string
     {
         $themes = $this->getThemesInstalled(true);
-        if (!empty($themes)) {
+        if (!empty((array)$themes)) {
             foreach ($themes as $value) {
                 if (isset($value->lastVersion) && $value->version !== $value->lastVersion) {
                     $this->Lang = $this->controller->Lang;
@@ -76,10 +77,10 @@ class ThemeComponent extends Component
         $themes = scandir($dir);
         if ($themes === false) {
             Log::error('Unable to scan theme folder.');
-            return $this->themesInstalled[$api] = (object) [];
+            return $this->themesInstalled[$api] = (object)[];
         }
 
-        $themesList = (object) [];
+        $themesList = (object)[];
         $bypassedFiles = ['.', '..', '.DS_Store', '__MACOSX', '.gitkeep'];
 
         if ($api) {
@@ -201,7 +202,7 @@ class ThemeComponent extends Component
             if ($array) {
                 return ['slider' => true, 'configurations' => $config];
             }
-            return (object) ['slider' => true, 'configurations' => $config];
+            return (object)['slider' => true, 'configurations' => $config];
         }
         return @json_decode(@file_get_contents($path), $array);
     }
@@ -221,7 +222,7 @@ class ThemeComponent extends Component
         if (is_array($supported)) {
             foreach ($supported as $type => $version) {
                 if ($type === 'CMS') {
-                    $versionToCompare = trim((string) @file_get_contents(ROOT . DIRECTORY_SEPARATOR . 'VERSION'));
+                    $versionToCompare = trim((string)@file_get_contents(ROOT . DIRECTORY_SEPARATOR . 'VERSION'));
                 } else {
                     if (!$this->EyPlugin) {
                         continue;
@@ -268,10 +269,12 @@ class ThemeComponent extends Component
 
         if (!file_exists($file)) {
             Log::error('Themes folder : ' . $file . ' does not exist. Theme not valid.');
+            $this->alreadyCheckValid[$slugUc] = false;
             return false;
         }
         if (!is_dir($file)) {
             Log::error('File : ' . $file . ' is not a folder. Theme not valid.');
+            $this->alreadyCheckValid[$slugUc] = false;
             return false;
         }
 
@@ -287,7 +290,7 @@ class ThemeComponent extends Component
         $needToBeJSON = ['Config/config.json'];
         foreach ($needToBeJSON as $value) {
             $content = @file_get_contents($file . DIRECTORY_SEPARATOR . $value);
-            $json = json_decode((string) $content);
+            $json = json_decode((string)$content);
             if ($json === false || $json === null) {
                 Log::error('Theme "' . $slugUc . '" not valid. "' . $file . DIRECTORY_SEPARATOR . $value . '" is not valid JSON.');
                 $this->alreadyCheckValid[$slugUc] = false;
@@ -296,7 +299,7 @@ class ThemeComponent extends Component
         }
 
         $configRaw = @file_get_contents($file . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . 'config.json');
-        $config = json_decode((string) $configRaw, true);
+        $config = json_decode((string)$configRaw, true);
         $needConfigKey = [
             'name' => 'string',
             'slug' => 'string',
@@ -382,7 +385,7 @@ class ThemeComponent extends Component
         $configuredTheme = $this->controller->Configuration->getKey('theme');
         foreach ($this->getThemesInstalled(false) as $theme) {
             if ($configuredTheme === $theme->slug && $theme->valid) {
-                return [$theme->slug, (array) $theme->configurations];
+                return [$theme->slug, (array)$theme->configurations];
             }
         }
         return ['default', $this->getThemeConfig('default', true)['configurations']];
@@ -481,8 +484,8 @@ class ThemeComponent extends Component
             $dest = $themeDir . $relative;
 
             if ($stat['size'] === 0 && strpos($filename, '.') === false) {
-                if (!file_exists($dest)) {
-                    mkdir($dest, 0755, true);
+                if (!file_exists($dest) && !mkdir($dest, 0755, true) && !is_dir($dest)) {
+                    return 'THEME__ERROR_INSTALL_UNZIP';
                 }
                 continue;
             }
@@ -502,7 +505,7 @@ class ThemeComponent extends Component
     {
         $config = [];
         if ($slug === 'default') {
-            $config = json_decode((string) file_get_contents(ROOT . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'theme.default.json'), true);
+            $config = json_decode((string)file_get_contents(ROOT . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'theme.default.json'), true);
             $themeName = 'Bootstrap';
         } else {
             $themesInstalled = $this->getThemesInstalled(false);
@@ -516,7 +519,7 @@ class ThemeComponent extends Component
         }
 
         if (isset($config)) {
-            $config = (array) $config;
+            $config = (array)$config;
         }
 
         return isset($themeName) ? [$themeName, $config] : false;
@@ -602,7 +605,7 @@ class ThemeComponent extends Component
         }
 
         $jsonPath = $this->themesFolder . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . 'config.json';
-        $json = json_decode((string) file_get_contents($jsonPath));
+        $json = json_decode((string)file_get_contents($jsonPath));
         $json->configurations = $request->getData();
 
         $data = json_encode($json, JSON_PRETTY_PRINT);
