@@ -87,9 +87,9 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        var sortableBody = document.getElementById('sortable');
-        var saveButton = document.getElementById('save');
-        var ajaxMsg = document.querySelector('.ajax-msg');
+        let sortableBody = document.getElementById('sortable');
+        let saveButton = document.getElementById('save');
+        let ajaxMsg = document.querySelector('.ajax-msg');
 
         if (!sortableBody) {
             return;
@@ -116,12 +116,12 @@
         }
 
         function buildOrderString() {
-            var items = sortableBody.querySelectorAll('.item');
-            var parts = [];
-            var regexp = /^(.+)[\-=_](.+)$/;
+            let items = sortableBody.querySelectorAll('.item');
+            let parts = [];
+            let regexp = /^(.+)[\-=_](.+)$/;
 
             items.forEach(function (row) {
-                var match = row.id.match(regexp);
+                let match = row.id.match(regexp);
                 if (match) {
                     parts.push(match[1] + '[]=' + match[2]);
                 }
@@ -133,7 +133,7 @@
         function sendOrder() {
             setButtonLoading();
 
-            var params = new URLSearchParams();
+            let params = new URLSearchParams();
             params.append('social_button_order', buildOrderString());
 
             fetch('<?= $this->Url->build(['_name' => 'admin_social_save_ajax']) ?>', {

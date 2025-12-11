@@ -101,9 +101,9 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        var sortableBody = document.getElementById('sortable');
-        var saveButton = document.getElementById('save');
-        var ajaxMsg = document.querySelector('.ajax-msg');
+        let sortableBody = document.getElementById('sortable');
+        let saveButton = document.getElementById('save');
+        let ajaxMsg = document.querySelector('.ajax-msg');
 
         if (!sortableBody) {
             return;
@@ -130,12 +130,12 @@
         }
 
         function buildOrderString() {
-            var rows = sortableBody.querySelectorAll('tr');
-            var parts = [];
+            let rows = sortableBody.querySelectorAll('tr');
+            let parts = [];
             rows.forEach(function (row, index) {
-                var rawId = row.id || '';
-                var idParts = rawId.split('-');
-                var id = idParts[0];
+                let rawId = row.id || '';
+                let idParts = rawId.split('-');
+                let id = idParts[0];
                 if (id) {
                     parts.push(id + '[]=' + (index + 1));
                 }
@@ -146,7 +146,7 @@
         function saveOrder() {
             setButtonLoading();
 
-            var params = new URLSearchParams();
+            let params = new URLSearchParams();
             params.append('navbar_order', buildOrderString());
 
             fetch('<?= $this->Url->build(['_name' => 'admin_navbar_save_ajax']) ?>', {

@@ -31,7 +31,7 @@
 
                         <div class="input-group mb-3">
                                 <span class="input-group-text">
-                                    <?= $this->Url->build('/blog/', true) ?>
+                                    <?= $this->Url->build('/blog/', ['fullBase' => true]) ?>
                                 </span>
 
                             <input id="slug"

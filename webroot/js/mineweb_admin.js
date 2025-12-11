@@ -1,131 +1,189 @@
 function string_to_slug(str) {
-  str = str.replace(/^\s+|\s+$/g, ''); // trim
-  str = str.toLowerCase();
+    let s = str == null ? '' : String(str);
+    s = s.trim().toLowerCase();
 
-  // remove accents, swap ñ for n, etc
-  var from = "àáäâèéëêìíïîòóöôùúüûñç·/_,:;";
-  var to   = "aaaaeeeeiiiioooouuuunc------";
-  for (var i=0, l=from.length ; i<l ; i++) {
-    str = str.replace(new RegExp(from.charAt(i), 'g'), to.charAt(i));
-  }
+    let from = 'àáäâèéëêìíïîòóöôùúüûñç·/_,:;';
+    let to = 'aaaaeeeeiiiioooouuuunc------';
+    for (let i = 0, l = from.length; i < l; i++) {
+        s = s.replace(new RegExp(from.charAt(i), 'g'), to.charAt(i));
+    }
 
-  str = str.replace(/[^a-z0-9 -]/g, '') // remove invalid chars
-    .replace(/\s+/g, '-') // collapse whitespace and replace by -
-    .replace(/-+/g, '-'); // collapse dashes
+    s = s
+        .replace(/[^a-z0-9 -]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
 
-  return str;
+    return s;
 }
 
-$("#generate_slug").click(function( event ) {
-    event.preventDefault();
-    var $form = $( this );
-    var title = $('body').find("input[name='title']").val();
-	$('#slug').val(string_to_slug(title));
-    return false;
-});
-
-$(function () {
-  $('table.dataTable').each(function(e) {
-
-    if(!$.fn.dataTable.isDataTable(this)) {
-      $(this).DataTable({
-        "paging": true,
-        "lengthChange": false,
-        "searching": false,
-        "ordering": false,
-        "info": false,
-        "autoWidth": false,
-        'searching': true
-      });
+document.addEventListener('DOMContentLoaded', function () {
+    let generateSlugBtn = document.getElementById('generate_slug');
+    if (generateSlugBtn) {
+        generateSlugBtn.addEventListener('click', function (event) {
+            event.preventDefault();
+            let titleInput = document.getElementById('title');
+            let slugInput = document.getElementById('slug');
+            if (titleInput && slugInput) {
+                slugInput.value = string_to_slug(titleInput.value || '');
+            }
+        });
     }
 
-  });
-});
-
-// Btn browse
-
-$(document).on('change', '.btn-file :file', function() {
-  var input = $(this),
-  numFiles = input.get(0).files ? input.get(0).files.length : 1,
-  label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
-  input.trigger('fileselect', [numFiles, label]);
-});
-
-$(document).ready( function() {
-  $('.btn-file :file').on('fileselect', function(event, numFiles, label) {
-
-    var input = $(this).parents('.input-group').find(':text'),
-        log = numFiles > 1 ? numFiles + ' files selected' : label;
-
-    if( input.length ) {
-        input.val(log);
-    } else {
-        if(log) {
-          console.log('File : ', log);
-          $('span.browse').html(log);
-        }
+    if (window.jQuery && window.jQuery.fn && window.jQuery.fn.dataTable) {
+        let tables = document.querySelectorAll('table.dataTable');
+        tables.forEach(function (table) {
+            if (!window.jQuery.fn.dataTable.isDataTable(table)) {
+                window.jQuery(table).DataTable({
+                    paging: true,
+                    lengthChange: false,
+                    searching: true,
+                    ordering: false,
+                    info: false,
+                    autoWidth: false
+                });
+            }
+        });
     }
 
-  });
+    let fileInputs = document.querySelectorAll('.btn-file input[type="file"]');
+    fileInputs.forEach(function (input) {
+        input.addEventListener('change', function () {
+            let files = input.files;
+            let numFiles = files ? files.length : 1;
+            let label = input.value.split('\\').pop().split('/').pop();
+            let log = numFiles > 1 ? numFiles + ' files selected' : label;
+            let group = input.closest('.input-group');
+            if (group) {
+                let textInput = group.querySelector('input[type="text"]');
+                if (textInput) {
+                    textInput.value = log;
+                } else {
+                    if (log) {
+                        let browseSpan = document.querySelector('span.browse');
+                        if (browseSpan) {
+                            browseSpan.textContent = log;
+                        }
+                    }
+                }
+            }
+        });
+    });
 
-  $('.choose-from-gallery-img').on('click', function(e) {
-    e.preventDefault();
+    let galleryButtons = document.querySelectorAll('.choose-from-gallery-img');
+    galleryButtons.forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
 
-    var path = $(this).attr('data-path');
-    var filename = $(this).attr('data-filename');
-    var basename = $(this).attr('data-basename');
+            let path = btn.getAttribute('data-path');
+            let filename = btn.getAttribute('data-filename');
+            let basename = btn.getAttribute('data-basename');
 
-    $('#image_preview').find('.thumbnail img').attr('src', path);
-    $('#img-name').html(filename);
+            let imagePreview = document.getElementById('image_preview');
+            if (imagePreview) {
+                let thumbImg = imagePreview.querySelector('.thumbnail img');
+                if (thumbImg && path) {
+                    thumbImg.setAttribute('src', path);
+                }
+                let imgName = document.getElementById('img-name');
+                if (imgName && filename) {
+                    imgName.textContent = filename;
+                }
 
-    if($('input[name="img-uploaded"]').length == 0) {
-      $('#image_preview').append('<input type="hidden" name="img-uploaded" value="'+basename+'">');
-    } else {
-      $('input[name="img-uploaded"]').val(basename);
+                let hidden = imagePreview.querySelector('input[name="img-uploaded"]');
+                if (!hidden) {
+                    hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'img-uploaded';
+                    imagePreview.appendChild(hidden);
+                }
+                hidden.value = basename || '';
+            }
+
+            let galleryModal = document.getElementById('galery');
+            if (galleryModal) {
+                galleryModal.style.display = 'none';
+                galleryModal.classList.remove('show');
+            }
+        });
+    });
+
+    let deleteUploadBtn = document.querySelector('form #delete_upload_file');
+    if (deleteUploadBtn) {
+        deleteUploadBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            let form = deleteUploadBtn.closest('form') || document.querySelector('form');
+            if (!form) {
+                return;
+            }
+            let imageInput = form.querySelector('input[name="image"]');
+            if (imageInput) {
+                imageInput.value = '';
+            }
+            let imagePreview = document.getElementById('image_preview');
+            if (imagePreview) {
+                let thumbImg = imagePreview.querySelector('.thumbnail img');
+                if (thumbImg) {
+                    thumbImg.setAttribute('src', '#');
+                }
+                let captionTitle = imagePreview.querySelector('.thumbnail .caption h5');
+                if (captionTitle) {
+                    captionTitle.textContent = '';
+                }
+            }
+        });
     }
 
-    $('#galery').modal('hide');
-  });
+    let formImageInputs = document.querySelectorAll('form input[name="image"]');
+    formImageInputs.forEach(function (input) {
+        input.addEventListener('change', function () {
+            let files = input.files;
+            if (!files || files.length === 0) {
+                return;
+            }
 
-});
+            let file = files[0];
+            let imagePreview = document.getElementById('image_preview');
+            if (!imagePreview) {
+                return;
+            }
 
-$('form #delete_upload_file').on('click', function(e) {
-  e.preventDefault();
+            let thumbnail = imagePreview.querySelector('.thumbnail');
+            if (thumbnail) {
+                thumbnail.classList.remove('hidden');
+            }
 
-  $('form').find('input[name="image"]').val('');
-  $('#image_preview').find('.thumbnail img').attr('src', '#');
-  $('#image_preview .thumbnail .caption h5').html('');
-})
+            let img = imagePreview.querySelector('img');
+            if (img) {
+                img.src = window.URL.createObjectURL(file);
+            }
 
-// A change sélection de fichier
-$('form').find('input[name="image"]').on('change', function (e) {
-    var files = $(this)[0].files;
+            let title = imagePreview.querySelector('h5');
+            if (title) {
+                title.textContent = file.name;
+            }
 
-    if (files.length > 0) {
-        // On part du principe qu'il n'y qu'un seul fichier
-        // étant donné que l'on a pas renseigné l'attribut "multiple"
-        var file = files[0],
-            $image_preview = $('#image_preview');
+            let sizeParagraph = imagePreview.querySelector('.caption p:first-child') || imagePreview.querySelector('.caption p');
+            if (sizeParagraph) {
+                sizeParagraph.textContent = file.size + ' bytes';
+            }
+        });
+    });
 
-        // Ici on injecte les informations recoltées sur le fichier pour l'utilisateur
-        $image_preview.find('.thumbnail').removeClass('hidden');
-        $image_preview.find('img').attr('src', window.URL.createObjectURL(file));
-        $image_preview.find('h5').html(file.name);
-        $image_preview.find('.caption p:first').html(file.size +' bytes');
+    let initBtnChooseUploadedFiles = false;
+    let chooseUploadedBtn = document.getElementById('choose_form_uploaded_files');
+    if (chooseUploadedBtn) {
+        chooseUploadedBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            if (!initBtnChooseUploadedFiles) {
+                let modal = '';
+                let container = document.createElement('div');
+                container.innerHTML = modal;
+                while (container.firstChild) {
+                    document.body.appendChild(container.firstChild);
+                }
+                initBtnChooseUploadedFiles = true;
+            }
+        });
     }
-});
-
-var initBtnChooseUploadedFiles = false;
-$('#choose_form_uploaded_files').click(function(e) {
-  e.preventDefault();
-
-  if(!initBtnChooseUploadedFiles) {
-    var modal = '';
-    modal += '';
-
-    $('body').append(modal);
-  }
-
-
-
 });
