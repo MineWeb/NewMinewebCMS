@@ -117,12 +117,12 @@ class UserController extends AppController
 
             $editUrl = Router::url([
                 '_name' => 'admin_user_edit',
-                'pass' => [$value['id']],
+                $value['id'],
             ]);
 
             $deleteUrl = Router::url([
                 '_name' => 'admin_user_delete',
-                'pass' => [$value['id']],
+                $value['id'],
             ]);
 
             $btns = '<a href="' . $editUrl . '" class="btn btn-info">' . __('GLOBAL__EDIT') . '</a>';
@@ -235,7 +235,7 @@ class UserController extends AppController
 
         return $this->redirect([
             '_name' => 'admin_user_edit',
-            'pass' => [$user_id],
+            $user_id,
         ]);
     }
 

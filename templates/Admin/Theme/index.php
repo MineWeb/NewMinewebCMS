@@ -1,8 +1,3 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <section class="content">
     <div class="row">
         <div class="col-md-12">
@@ -42,12 +37,12 @@ use Cake\Routing\Router;
                             </td>
                             <td>
                                 <?php if ('default' != $Configuration->getKey('theme')) { ?>
-                                    <a href="<?= Router::url(['_name' => 'admin_theme_enable', 'pass' => ['default']]) ?>"
+                                    <a href="<?= $this->Url->build(['_name' => 'admin_theme_enable', 'default']) ?>"
                                        class="btn btn-success"><?= __('GLOBAL__ENABLE') ?></a>
                                 <?php } ?>
-                                <a href="<?= Router::url(['_name' => 'admin_theme_custom', 'pass' => ['default']]) ?>"
+                                <a href="<?= $this->Url->build(['_name' => 'admin_theme_custom', 'default']) ?>"
                                    class="btn btn-info"><?= __('THEME__CUSTOMIZATION') ?></a>
-                                <a href="<?= Router::url(['_name' => 'admin_theme_custom_files', 'pass' => ['default']]) ?>"
+                                <a href="<?= $this->Url->build(['_name' => 'admin_theme_custom_files', 'default']) ?>"
                                    class="btn btn-primary"><?= __('THEME__CUSTOM_FILES') ?></a>
                             </td>
                         </tr>
@@ -78,21 +73,21 @@ use Cake\Routing\Router;
                                     </td>
                                     <td>
                                         <?php if ($value->slug != $Configuration->getKey('theme') && $value->valid) { ?>
-                                            <a href="<?= Router::url(['_name' => 'admin_theme_enable', 'pass' => [$value->slug]]) ?>"
+                                            <a href="<?= $this->Url->build(['_name' => 'admin_theme_enable', $value->slug]) ?>"
                                                class="btn btn-success"><?= __('GLOBAL__ENABLE') ?></a>
                                         <?php } ?>
-                                        <a onClick="confirmDel('<?= Router::url(['_name' => 'admin_theme_delete', 'pass' => [$value->slug]]) ?>')"
+                                        <a onClick="confirmDel('<?= $this->Url->build(['_name' => 'admin_theme_delete', $value->slug]) ?>')"
                                            class="btn btn-danger"><?= __('GLOBAL__DELETE') ?></a>
                                         <?php if (file_exists(ROOT . '/templates/Themed/' . $value->slug . '/Config/view.php')) { ?>
-                                            <a href="<?= Router::url(['_name' => 'admin_theme_custom', 'pass' => [$value->slug]]) ?>"
+                                            <a href="<?= $this->Url->build(['_name' => 'admin_theme_custom', $value->slug]) ?>"
                                                class="btn btn-info"><?= __('THEME__CUSTOMIZATION') ?></a>
                                         <?php } ?>
-                                        <a href="<?= Router::url(['_name' => 'admin_theme_custom_files', 'pass' => [$value->slug]]) ?>"
+                                        <a href="<?= $this->Url->build(['_name' => 'admin_theme_custom_files', $value->slug]) ?>"
                                            class="btn btn-primary"><?= __('THEME__CUSTOM_FILES') ?></a>
                                         <?php if (isset($value->lastVersion)) { ?>
                                             <?php if ($value->version !== $value->lastVersion) { ?>
                                                 <a <?= (explode('.', $value->lastVersion)[0] > explode('.', $value->version)[0] ? 'data-warning-update' : '') ?>
-                                                    href="<?= Router::url(['_name' => 'admin_theme_update', 'pass' => [$value->slug]]) ?>"
+                                                    href="<?= $this->Url->build(['_name' => 'admin_theme_update', $value->slug]) ?>"
                                                     class="btn btn-warning"><?= __('GLOBAL__UPDATE') ?></a>
                                             <?php } ?>
                                         <?php } ?>
@@ -149,7 +144,7 @@ use Cake\Routing\Router;
                                     <td><?= isset($value['version']) ? $value['version'] : __('THEME__NEED_PURCHASE') ?></td>
                                     <td>
                                         <?php if ($value['free']): ?>
-                                            <a href="<?= Router::url(['_name' => 'admin_theme_install', 'pass' => [$value['slug']]]) ?>"
+                                            <a href="<?= $this->Url->build(['_name' => 'admin_theme_install', $value['slug']]) ?>"
                                                class="btn btn-success"><?= __('INSTALL__INSTALL') ?></a>
                                         <?php endif; ?>
                                     </td>

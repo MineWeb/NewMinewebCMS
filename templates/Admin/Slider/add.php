@@ -1,76 +1,72 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <section class="content">
     <div class="row">
         <div class="col-md-12">
+
             <div class="card">
+
                 <div class="card-header with-border">
                     <h3 class="card-title"><?= __('SLIDER__ADD') ?></h3>
                 </div>
+
                 <div class="card-body">
-                    <form action="<?= Router::url(['controller' => 'slider', 'action' => 'add_ajax']) ?>"
-                          method="post" data-ajax="true" data-upload-image="true"
-                          data-redirect-url="<?= Router::url(['controller' => 'slider', 'action' => 'index', 'admin' => 'true']) ?>">
 
-                        <div class="ajax-msg"></div>
+                    <?= $this->Form->create(null, [
+                        'url' => ['_name' => 'admin_slider_add_ajax'],
+                        'type' => 'post',
+                        'data-ajax' => 'true',
+                        'data-upload-image' => 'true',
+                        'data-redirect-url' => $this->Url->build(['_name' => 'admin_slider_index'])
+                    ]) ?>
 
-                        <div class="col-md-4">
-                            <?= $this->element('form.input.upload.img') ?>
+                    <div class="ajax-msg"></div>
+
+                    <div class="col-md-4">
+                        <?= $this->element('form.input.upload.img') ?>
+                    </div>
+
+                    <div class="col-md-12">
+
+                        <div class="form-group">
+                            <label for="slider-title"><?= __('GLOBAL__TITLE') ?></label>
+                            <input
+                                id="slider-title"
+                                name="title"
+                                class="form-control"
+                                type="text"
+                            >
                         </div>
 
-                        <div class="col-md-12">
-
-                            <div class="form-group">
-                                <label><?= __('GLOBAL__TITLE') ?></label>
-                                <input name="title" class="form-control" type="text">
-                            </div>
-
-                            <div class="form-group">
-                                <label><?= __('SLIDER__SUBTITLE') ?></label>
-                                <input name="subtitle" class="form-control" type="text">
-                            </div>
-
-                            <div class="float-right">
-                                <a href="<?= Router::url(['controller' => 'slider', 'action' => 'index', 'admin' => true]) ?>"
-                                   class="btn btn-default"><?= __('GLOBAL__CANCEL') ?></a>
-                                <button class="btn btn-primary"
-                                        type="submit"><?= __('GLOBAL__SUBMIT') ?></button>
-                            </div>
-
+                        <div class="form-group">
+                            <label for="slider-subtitle"><?= __('SLIDER__SUBTITLE') ?></label>
+                            <input
+                                id="slider-subtitle"
+                                name="subtitle"
+                                class="form-control"
+                                type="text"
+                            >
                         </div>
-                    </form>
 
+                        <div class="float-right">
+                            <a
+                                href="<?= $this->Url->build(['_name' => 'admin_slider_index']) ?>"
+                                class="btn btn-default"
+                            >
+                                <?= __('GLOBAL__CANCEL') ?>
+                            </a>
 
-                    <script type="text/javascript">/*
-          $(function () {
-  $('#my_form').on('submit', function (e) {
-      // On empêche le navigateur de soumettre le formulaire
-      e.preventDefault();
+                            <button class="btn btn-primary" type="submit">
+                                <?= __('GLOBAL__SUBMIT') ?>
+                            </button>
+                        </div>
 
-      var $form = $(this);
-      var formdata = (window.FormData) ? new FormData($form[0]) : null;
-      var data = (formdata !== null) ? formdata : $form.serialize();
+                    </div>
 
-      $.ajax({
-          url: $form.attr('action'),
-          type: $form.attr('method'),
-          contentType: false, // obligatoire pour de l'upload
-          processData: false, // obligatoire pour de l'upload
-          dataType: 'json', // selon le retour attendu
-          data: data,
-          success: function (response) {
-              // La réponse du serveur
-          }
-      });
-  });*/
-                    </script>
-
+                    <?= $this->Form->end() ?>
 
                 </div>
+
             </div>
+
         </div>
     </div>
 </section>

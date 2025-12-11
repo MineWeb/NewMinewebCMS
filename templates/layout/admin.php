@@ -1,8 +1,3 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -15,7 +10,8 @@ use Cake\Routing\Router;
     <?= $this->Html->css('bootstrap-4/plugins/tempusdominus/tempusdominus-bootstrap-4.min'); ?>
     <?= $this->Html->css('bootstrap-4/plugins/icheck/icheck-bootstrap.min'); ?>
     <?= $this->Html->css('adminlte-3/adminlte.min'); ?>
-    <?= $this->Html->css('adminlte-3/plugins/datatables-bs4/dataTables.bootstrap4.min') ?>
+    <?= $this->Html->css('datatables/2.3.5/dataTables.bootstrap4.min'); ?>
+
     <?= $this->Html->css('admin'); ?>
     <?= $this->Html->css('adminlte-3/plugins/overlayScrollbars/OverlayScrollbars.min'); ?>
     <?= $this->Html->css('adminlte-3/plugins/daterangepicker/daterangepicker'); ?>
@@ -53,7 +49,7 @@ use Cake\Routing\Router;
                         $('body').removeClass("dark-mode");
                     }
 
-                    $.get('<?= Router::url(['_name' => 'admin_switch_dark_mode']) ?>');
+                    $.get('<?= $this->Url->build(['_name' => 'admin_switch_dark_mode']) ?>');
 
                     return false;
                 });
@@ -140,7 +136,7 @@ use Cake\Routing\Router;
     </nav>
 
     <aside class="main-sidebar sidebar-dark-lightblue elevation-4">
-        <a href="<?= Router::url(['_name' => 'home']) ?>" class="brand-link navbar-lightblue text-center text-white">
+        <a href="<?= $this->Url->build(['_name' => 'home']) ?>" class="brand-link navbar-lightblue text-center text-white">
             <span class="brand-text font-weight-light"><?= __('GLOBAL__ADMINISTRATION'); ?></span>
         </a>
         <div class="sidebar">
@@ -157,8 +153,8 @@ use Cake\Routing\Router;
                                 if (isset($v['menu'])) {
                                     return checkCurrent($v['menu']);
                                 }
-                                $route = (isset($value['route']) ? Router::url($value['route']) : '#');
-                                $current = $route == Router::url(null, false);
+                                $route = (isset($value['route']) ? $this->Url->build($value['route']) : '#');
+                                $current = $route == $this->Url->build(null, false);
                                 if ($current == $route) {
                                     return true;
                                 }
@@ -183,8 +179,8 @@ use Cake\Routing\Router;
                             } else {
                                 echo '<li class="nav-item">';
                             }
-                            $route = (isset($value['route']) ? Router::url($value['route']) : '#');
-                            $current = $route == Router::url(null, false);
+                            $route = (isset($value['route']) ? $this->Url->build($value['route']) : '#');
+                            $current = $route == $this->Url->build(null, false);
                             echo '<a class="nav-link' . ($current || $currentMenu ? " active" : "") . '" href="' . $route . '">';
                             echo '<i class="' . (strpos($value['icon'], "fa-") ? $value['icon'] : "fa fa-" . $value['icon']) . ' nav-icon"></i>  <p>' . __($name);
                             if (isset($value['menu'])) {
@@ -241,8 +237,11 @@ use Cake\Routing\Router;
     $.widget.bridge('uibutton', $.ui.button)
 </script>
 <?= $this->Html->script('bootstrap-4/bootstrap.bundle.min') ?>
-<?= $this->Html->script('adminlte-3/plugins/datatables/jquery.dataTables.min') ?>
-<?= $this->Html->script('adminlte-3/plugins/datatables-bs4/dataTables.bootstrap4.min') ?>
+
+<?= $this->Html->script('datatables/2.3.5/dataTables.min') ?>
+<?= $this->Html->script('datatables/2.3.5/dataTables.bootstrap4.min') ?>
+
+
 <?= $this->Html->script('adminlte-3/plugins/sparklines/sparkline') ?>
 <?= $this->Html->script('adminlte-3/plugins/jquery-knob/jquery.knob.min') ?>
 <?= $this->Html->script('bootstrap-4/plugins/moment/moment.min') ?>

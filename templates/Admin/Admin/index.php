@@ -1,8 +1,3 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <div class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
@@ -12,7 +7,7 @@ use Cake\Routing\Router;
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <li class="breadcrumb-item"><a
-                                href="<?= Router::url('/') ?>"><?= __('GLOBAL__HOME'); ?></a></li>
+                                href="<?= $this->Url->build('/') ?>"><?= __('GLOBAL__HOME'); ?></a></li>
                     <li class="breadcrumb-item active"><?= __('GLOBAL__ADMIN_PANEL'); ?></li>
                 </ol>
             </div>

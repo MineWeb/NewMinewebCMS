@@ -1,8 +1,3 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <section class="content">
     <div class="row">
         <div class="col-md-12">
@@ -116,7 +111,7 @@ use Cake\Routing\Router;
                                     <div class="input-group mb-3">
 
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text"><?= Router::url('/', true) ?></span>
+                                            <span class="input-group-text"><?= $this->Url->build('/', true) ?></span>
                                         </div>
                                         <input type="text" class="form-control" name="skin_filename"
                                                value="<?= $config['skin_filename'] ?>"
@@ -196,7 +191,7 @@ use Cake\Routing\Router;
                                     <label><?= __('API__FILENAME') ?></label>
                                     <div class="input-group mb-3">
                                         <div class="input-group-prepend">
-                                    <span class="input-group-text"><?= Router::url('/', true) ?></span>
+                                    <span class="input-group-text"><?= $this->Url->build('/', true) ?></span>
                                         </div>
                                         <input type="text" class="form-control" name="cape_filename"
                                                value="<?= $config['cape_filename'] ?>"

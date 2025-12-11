@@ -24,6 +24,10 @@ use Cake\View\View;
  *
  * @link https://book.cakephp.org/4/en/views.html#the-app-view
  */
+
+/**
+ * @property \App\View\Helper\LangHelper $Lang
+ */
 class AppView extends View
 {
     /**

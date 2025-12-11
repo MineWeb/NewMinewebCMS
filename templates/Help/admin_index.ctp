@@ -6,19 +6,23 @@
                     <h3 class="card-title"><?= __('HELP__CHOOSE_QUESTION') ?></h3>
                 </div>
                 <div class="card-body">
-                    <label><?= __('HELP__CHOOSE_QUESTION') ?></label>
-
-                    <?= $this->Html->script('admin/bootstrap-select') ?>
-                    <?= $this->Html->css('bootstrap-select.min.css') ?>
-
                     <div class="form-group">
-                        <select class="selectpicker" id="questions" data-live-search="true"
-                                title="<?= __('HELP__CHOOSE_QUESTION') ?>">
+                        <label for="questions"><?= __('HELP__CHOOSE_QUESTION') ?></label>
+                        <select
+                            id="questions"
+                            class="form-control"
+                            aria-describedby="questions-help"
+                        >
+                            <option value=""><?= __('HELP__CHOOSE_QUESTION') ?></option>
                         </select>
+                        <small id="questions-help" class="form-text text-muted">
+                            <?= __('HELP__CHOOSE_QUESTION') ?>
+                        </small>
                     </div>
                 </div>
             </div>
         </div>
+
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header with-border">
@@ -31,6 +35,7 @@
                 </div>
             </div>
         </div>
+
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header with-border">
@@ -38,13 +43,14 @@
                 </div>
                 <div class="card-body">
                     <div id="answers">
-                        <blockquote>
+                        <blockquote id="answers-placeholder">
                             <small><i><?= __('HELP__CHOOSE_QUESTION') ?></i></small>
                         </blockquote>
                     </div>
                 </div>
             </div>
         </div>
+
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header with-border">
@@ -52,83 +58,128 @@
                 </div>
                 <div class="card-body">
                     <p><?= __('HELP__POST_TICKET_EXPLAIN') ?></p>
-                    <form action="<?= $this->Html->url(['action' => 'submitTicket']) ?>" method="post" data-ajax="true"
-                          data-callback="afterSubmitTicket">
-                        <div class="form-group">
-                            <label><?= __('HELP__POST_TICKET_TITLE') ?></label>
-                            <input type="text" class="form-control" name="title" placeholder="Problème de...">
-                        </div>
-                        <div class="form-group">
-                            <label><?= __('HELP__POST_TICKET_CONTENT') ?></label>
-                            <textarea class="form-control" name="content"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-info"><?= __('GLOBAL__SUBMIT') ?></button>
-                        </div>
-                    </form>
+
+                    <?= $this->Form->create(null, [
+                        'url' => ['_name' => 'help_submit_ticket'],
+                        'data-ajax' => 'true',
+                        'data-callback' => 'afterSubmitTicket',
+                    ]) ?>
+
+                    <div class="form-group">
+                        <label for="ticket-title"><?= __('HELP__POST_TICKET_TITLE') ?></label>
+                        <input
+                            id="ticket-title"
+                            type="text"
+                            class="form-control"
+                            name="title"
+                            placeholder="Problème de..."
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ticket-content"><?= __('HELP__POST_TICKET_CONTENT') ?></label>
+                        <textarea
+                            id="ticket-content"
+                            class="form-control"
+                            name="content"
+                            rows="4"
+                        ></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-info">
+                            <?= __('GLOBAL__SUBMIT') ?>
+                        </button>
+                    </div>
+
+                    <?= $this->Form->end() ?>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
 <script type="text/javascript">
     function afterSubmitTicket(data) {
-
     }
 
-    $(document).ready(function () {
+    document.addEventListener("DOMContentLoaded", function () {
+        var questionsSelect = document.getElementById("questions");
+        var answersContainer = document.getElementById("answers");
+        var placeholder = document.getElementById("answers-placeholder");
 
-        $('select#questions').on('changed.bs.select', function (e) {
-
-            var id;
-
-            $('ul.dropdown-menu.inner li').each(function () {
-                console.log($(this));
-                if ($(this).hasClass('selected')) {
-
-                    id = $('select#questions option')[$(this).attr('data-original-index')].attributes[0].nodeValue;
-
-                    return false;
-                }
-            });
-
-            $('#answers div[data-question-id]').each(function () {
-                $(this).slideUp(150);
-            });
-
-            $('#answers blockquote').slideUp(150);
-
-            $('#answers div[data-question-id="' + id + '"]').fadeIn();
-
-        });
-
-    });
-
-    $.get('<?= $this->Html->url(['action' => 'getQuestionsAndAnswers']) ?>', function (data) {
-
-        for (var i = 0; i < data.length; i++) {
-
-            if (i == 0) {
-                $('select#questions').empty();
-            }
-
-            var option = '<option';
-            option += ' data-id="' + data[i]['id'] + '"';
-            option += '>';
-            option += data[i]['question'];
-            option += '</option>';
-
-            var answer = '<div data-question-id="' + data[i]['id'] + '" style="display:none;">';
-            answer += data[i]['answer'];
-            answer += '</div>';
-
-            $('#answers').append(answer);
-
-            $('select#questions').append(option);
-
-            $('select#questions').selectpicker('refresh');
-
+        if (!questionsSelect || !answersContainer) {
+            return;
         }
 
+        function hideAllAnswers() {
+            var answerBlocks = answersContainer.querySelectorAll("div[data-question-id]");
+            answerBlocks.forEach(function (block) {
+                block.style.display = "none";
+            });
+        }
+
+        function handleQuestionChange() {
+            var selectedId = questionsSelect.value;
+            hideAllAnswers();
+
+            if (placeholder) {
+                placeholder.style.display = selectedId ? "none" : "block";
+            }
+
+            if (!selectedId) {
+                return;
+            }
+
+            var target = answersContainer.querySelector('div[data-question-id="' + selectedId + '"]');
+            if (target) {
+                target.style.display = "block";
+            }
+        }
+
+        questionsSelect.addEventListener("change", handleQuestionChange);
+
+        fetch("<?= $this->Url->build(['_name' => 'help_get_questions_and_answers']) ?>", {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                if (!Array.isArray(data)) {
+                    return;
+                }
+
+                questionsSelect.innerHTML = "";
+
+                var defaultOption = document.createElement("option");
+                defaultOption.value = "";
+                defaultOption.textContent = "<?= addslashes(__('HELP__CHOOSE_QUESTION')) ?>";
+                questionsSelect.appendChild(defaultOption);
+
+                data.forEach(function (item) {
+                    var option = document.createElement("option");
+                    option.value = item.id;
+                    option.textContent = item.question;
+                    questionsSelect.appendChild(option);
+
+                    var answer = document.createElement("div");
+                    answer.setAttribute("data-question-id", item.id);
+                    answer.style.display = "none";
+                    answer.innerHTML = item.answer;
+                    answersContainer.appendChild(answer);
+                });
+
+                if (placeholder) {
+                    placeholder.style.display = "block";
+                }
+            })
+            .catch(function (error) {
+                console.error(error);
+            });
     });
 </script>

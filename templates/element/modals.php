@@ -1,8 +1,3 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <!-- Modal (connexion ...) -->
 <div class="modal modal-medium fade" id="login" tabindex="-1" role="dialog" aria-labelledby="loginLabel"
      aria-hidden="true">
@@ -14,7 +9,7 @@ use Cake\Routing\Router;
                 <h4 class="modal-title" id="myModalLabel"><?= __('USER__LOGIN') ?></h4>
             </div>
             <form id="login-before-two-factor-auth" method="POST" data-ajax="true"
-                  action="<?= Router::url(['_name' => 'user_ajax_login']) ?>"
+                  action="<?= $this->Url->build(['_name' => 'user_ajax_login']) ?>"
                   data-callback-function="afterLogin">
                 <div class="modal-body">
                     <div class="ajax-msg"></div>
@@ -52,7 +47,7 @@ use Cake\Routing\Router;
                 </div>
             </form>
             <form id="login-two-factor-auth" style="display:none;" method="POST" data-ajax="true"
-                  action="<?= Router::url(['_name' => 'authentification_valid_login']) ?>"
+                  action="<?= $this->Url->build(['_name' => 'authentification_valid_login']) ?>"
                   data-redirect-url="?">
                 <div class="modal-body">
                     <div class="ajax-msg"></div>
@@ -89,7 +84,7 @@ use Cake\Routing\Router;
                 <h4 class="modal-title" id="myModalLabel"><?= __('USER__PASSWORD_FORGOT_LABEL') ?></h4>
             </div>
             <form method="POST" data-ajax="true"
-                  action="<?= Router::url(['_name' => 'user_ajax_lostpasswd']) ?>">
+                  action="<?= $this->Url->build(['_name' => 'user_ajax_lostpasswd']) ?>">
                 <div class="modal-body">
                     <div class="ajax-msg"></div>
                     <div class="form-group">
@@ -119,7 +114,7 @@ use Cake\Routing\Router;
                     <h4 class="modal-title" id="myModalLabel"><?= __('USER__PASSWORD_FORGOT_LABEL') ?></h4>
                 </div>
                 <form method="POST" data-ajax="true"
-                      action="<?= Router::url(['_name' => 'user_ajax_resetpasswd']) ?>"
+                      action="<?= $this->Url->build(['_name' => 'user_ajax_resetpasswd']) ?>"
                       data-redirect-url="?">
                     <div class="modal-body">
                         <div class="ajax-msg"></div>
@@ -155,7 +150,7 @@ use Cake\Routing\Router;
                 <h4 class="modal-title" id="myModalLabel"><?= __('USER__REGISTER') ?></h4>
             </div>
             <form method="POST" data-ajax="true"
-                  action="<?= Router::url(['_name' => 'user_ajax_register', 'crsf' => false]) ?>"
+                  action="<?= $this->Url->build(['_name' => 'user_ajax_register', 'crsf' => false]) ?>"
                   data-redirect-url="?">
                 <div class="modal-body">
                     <div class="ajax-msg"></div>
@@ -197,7 +192,7 @@ use Cake\Routing\Router;
                             <h5><?= __('FORM__CAPTCHA') ?></h5>
                             <?php
                             echo $this->Html->image(
-                                Router::url(['_name' => 'user_get_captcha']),
+                                $this->Url->build(['_name' => 'user_get_captcha']),
                                 ['id' => 'captcha_image']
                             );
                             echo $this->Html->link(__('FORM__RELOAD_CAPTCHA'), 'javascript:void(0);', ['id' => 'reload']);

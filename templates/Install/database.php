@@ -1,8 +1,3 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <div class="container" style="max-width:700px">
 
     <img
@@ -11,54 +6,58 @@ use Cake\Routing\Router;
 
     <div class="first center" style="display:none;">
         <h1><?= __('INSTALL__DB_TITLE') ?></h1>
-
-        <p>
-            <?= __('INSTALL__DB_INTRO') ?>
-        </p>
+        <p><?= __('INSTALL__DB_INTRO') ?></p>
     </div>
 
     <div class="ajax-msg"></div>
 
     <div class="database"
-         data-db-url="<?= Router::url(['controller' => 'Install', 'action' => 'database']) ?>"
-         data-install-url="<?= Router::url(['controller' => 'Install', 'action' => 'install']) ?>"
-    >
-        <form id="saveDB">
+         data-db-url="<?= $this->Url->build(['_name' => 'install_database']) ?>"
+         data-install-url="<?= $this->Url->build(['_name' => 'install_run']) ?>">
+        <?= $this->Form->create(null, [
+            'id' => 'saveDB',
+            'data-ajax' => 'true'
+        ]) ?>
+
+        <div class="form-group">
+            <label for="type"><?= __('INSTALL__DB_TYPE') ?></label>
+            <select id="type" name="type" class="form-control">
+                <option value="0"><?= __('INSTALL__DB_MYSQL') ?></option>
+                <option value="1"><?= __('INSTALL__DB_SQLITE') ?></option>
+            </select>
+        </div>
+
+        <div id="mysql_require">
             <div class="form-group">
-                <label for="type"><?= __('INSTALL__DB_TYPE') ?></label>
-                <select id="type" name="type" class="form-control">
-                    <option value="0"><?= __('INSTALL__DB_MYSQL') ?></option>
-                    <option value="1"><?= __('INSTALL__DB_SQLITE') ?></option>
-                </select>
+                <label for="host"><?= __('INSTALL__DB_HOST') ?></label>
+                <input type="text" class="form-control" id="host" name="host"
+                       placeholder="<?= __('INSTALL__DB_HOST_EXAMPLE') ?>">
             </div>
 
-            <div id="mysql_require">
-                <div class="form-group">
-                    <label for="host"><?= __('INSTALL__DB_HOST') ?></label>
-                    <input type="text" class="form-control" id="host" name="host"
-                           placeholder="<?= __('INSTALL__DB_HOST_EXAMPLE') ?>">
-                </div>
-                <div class="form-group">
-                    <label for="database"><?= __('INSTALL__DB_NAME') ?></label>
-                    <input type="text" class="form-control" id="database" name="database"
-                           placeholder="<?= __('INSTALL__DB_NAME_EXAMPLE') ?>">
-                </div>
-                <div class="form-group">
-                    <label for="login"><?= __('INSTALL__DB_USER') ?></label>
-                    <input type="text" class="form-control" id="login" name="login"
-                           placeholder="<?= __('INSTALL__DB_USER_EXAMPLE') ?>">
-                </div>
-                <div class="form-group">
-                    <label for="password"><?= __('INSTALL__DB_PASSWORD') ?></label>
-                    <input type="password" class="form-control" id="password" name="password"
-                           placeholder="<?= __('INSTALL__DB_PASSWORD_EXAMPLE') ?>">
-                </div>
+            <div class="form-group">
+                <label for="database"><?= __('INSTALL__DB_NAME') ?></label>
+                <input type="text" class="form-control" id="database" name="database"
+                       placeholder="<?= __('INSTALL__DB_NAME_EXAMPLE') ?>">
             </div>
 
-            <button type="submit" class="btn btn-success saveDB pull-right">
-                <?= __('INSTALL__DB_TEST_AND_SAVE') ?>
-            </button>
-        </form>
+            <div class="form-group">
+                <label for="login"><?= __('INSTALL__DB_USER') ?></label>
+                <input type="text" class="form-control" id="login" name="login"
+                       placeholder="<?= __('INSTALL__DB_USER_EXAMPLE') ?>">
+            </div>
+
+            <div class="form-group">
+                <label for="password"><?= __('INSTALL__DB_PASSWORD') ?></label>
+                <input type="password" class="form-control" id="password" name="password"
+                       placeholder="<?= __('INSTALL__DB_PASSWORD_EXAMPLE') ?>">
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success pull-right">
+            <?= __('INSTALL__DB_TEST_AND_SAVE') ?>
+        </button>
+
+        <?= $this->Form->end() ?>
     </div>
 
     <button type="button" class="btn btn-primary btn-block installSQL" style="display:none;">

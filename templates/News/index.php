@@ -1,8 +1,3 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <br><br><br>
 <div class="container">
     <div class="row">
@@ -20,8 +15,10 @@ use Cake\Routing\Router;
             <hr>
             <p class="lead"><?= $news['content'] ?></p>
             <button id="<?= $news['id'] ?>" type="button"
-                    class="btn btn-primary pull-right like<?= ($news['liked']) ? ' active' : '' ?>"<?= (!$Permissions->can('LIKE_NEWS')) ? ' disabled' : '' ?>><?= count($news['likes']) ?>
-                <i class="fa fa-thumbs-up"></i></button>
+                    class="btn btn-primary pull-right like<?= ($news['liked']) ? ' active' : '' ?>"<?= (!$Permissions->can('LIKE_NEWS')) ? ' disabled' : '' ?>>
+                <?= count($news['likes']) ?>
+                <i class="fa fa-thumbs-up"></i>
+            </button>
             <br>
             <?php if ($Permissions->can('COMMENT_NEWS')) { ?>
                 <div id="form-comment-fade-out">
@@ -29,7 +26,7 @@ use Cake\Routing\Router;
                     <div class="well">
                         <h4><?= __('NEWS__COMMENT_TITLE') ?> :</h4>
                         <form method="POST" data-ajax="true"
-                              action="<?= Router::url(['controller' => 'news', 'action' => 'add_comment']) ?>"
+                              action="<?= $this->Url->build(['_name' => 'news_add_comment']) ?>"
                               data-callback-function="addcomment" data-success-msg="false">
                             <input name="news_id" value="<?= $news['id'] ?>" type="hidden">
                             <div class="form-group">
@@ -46,21 +43,24 @@ use Cake\Routing\Router;
                 <div class="media comment" id="comment-<?= $v['id'] ?>">
                     <a class="pull-left" href="#">
                         <img class="media-object"
-                             src="<?= Router::url(['controller' => 'API', 'action' => 'get_head_skin/']) ?>/<?= $v['author'] ?>/64"
+                             src="<?= $this->Url->build(['_name' => 'api_get_head_skin', $v['author'], 64]) ?>"
                              alt="">
                     </a>
                     <div class="media-body">
-                        <h4 class="media-heading"><?= $v['author'] ?>
+                        <h4 class="media-heading">
+                            <?= $v['author'] ?>
                             <small><?= $this->Lang->date($v['created']); ?></small>
                         </h4>
                         <?= before_display($v['content']) ?>
                     </div>
                     <div class="pull-right">
                         <?php if ($Permissions->can('DELETE_COMMENT') or $Permissions->can('DELETE_HIS_COMMENT') and $user['pseudo'] == $v['author']) { ?>
-                            <p><a id="<?= $v['id'] ?>" title="<?= __('GLOBAL__DELETE') ?>"
-                                  class="comment-delete btn btn-danger btn-sm">
+                            <p>
+                                <a id="<?= $v['id'] ?>" title="<?= __('GLOBAL__DELETE') ?>"
+                                   class="comment-delete btn btn-danger btn-sm">
                                     <icon class="fa fa-times"></icon>
-                                </a></p>
+                                </a>
+                            </p>
                         <?php } ?>
                     </div>
                 </div>
@@ -74,7 +74,9 @@ use Cake\Routing\Router;
                         <ul class="list-unstyled">
                             <?php foreach ($search_news as $k => $v) { ?>
                                 <li>
-                                    <a href="<?= Router::url(['controller' => 'blog', 'action' => $v['slug']]) ?>"><?= $v['title'] ?></a>
+                                    <a href="<?= $this->Url->build(['_name' => 'blog_view', $v['slug']]) ?>">
+                                        <?= $v['title'] ?>
+                                    </a>
                                 </li>
                             <?php } ?>
                         </ul>
@@ -93,29 +95,78 @@ use Cake\Routing\Router;
 <?= $Module->loadModules('news') ?>
 <script>
     <?php if (!empty($user)) { ?>
-        function addcomment(data) {
-            var d = new Date();
-            var comment = '<div class="media"><a class="pull-left" href="#"><img class="media-object" src="<?= Router::url(['controller' => 'API', 'action' => 'get_head_skin', $user['pseudo'], '64']) ?>" alt=""></a><div class="media-body"><h4 class="media-heading"><?= $user['pseudo'] ?> <small>' + d.getHours() + 'h' + d.getMinutes() + '</small></h4>' + data['content'] + '</div></div>';
-            $('.add-comment').hide().html(comment).fadeIn(1500);
-            $('#form-comment-fade-out').slideUp(1500);
+    function addcomment(data) {
+        var d = new Date();
+        var hours = String(d.getHours()).padStart(2, "0");
+        var minutes = String(d.getMinutes()).padStart(2, "0");
+        var comment =
+            '<div class="media">' +
+            '<a class="pull-left" href="#">' +
+            '<img class="media-object" src="<?= $this->Url->build(['_name' => 'api_get_head_skin', $user['pseudo'], 64]) ?>" alt="">' +
+            '</a>' +
+            '<div class="media-body">' +
+            '<h4 class="media-heading"><?= $user['pseudo'] ?> ' +
+            '<small>' + hours + 'h' + minutes + '</small>' +
+            '</h4>' +
+            data["content"] +
+            '</div>' +
+            '</div>';
+
+        var addCommentContainer = document.querySelector(".add-comment");
+        if (addCommentContainer) {
+            addCommentContainer.style.display = "none";
+            addCommentContainer.innerHTML = comment;
+            addCommentContainer.style.display = "block";
         }
+
+        var formFadeOut = document.getElementById("form-comment-fade-out");
+        if (formFadeOut) {
+            formFadeOut.style.display = "none";
+        }
+    }
     <?php } ?>
 
-    $(".comment-delete").click(function () {
-        comment_delete(this);
-    });
-
-    function comment_delete(e) {
-        var inputs = {};
-        var id = $(e).attr("id");
-        inputs["id"] = id;
-        inputs["data[_Token][key]"] = '<?= $csrfToken ?>';
-        $.post("<?= Router::url(['controller' => 'news', 'action' => 'ajax_comment_delete']) ?>", inputs, function (data) {
-            if (data === 'true') {
-                $('#comment-' + id).slideUp(500);
-            } else {
-                console.log(data);
-            }
+    function attachCommentDeleteHandlers() {
+        var buttons = document.querySelectorAll(".comment-delete");
+        buttons.forEach(function (button) {
+            button.addEventListener("click", function () {
+                comment_delete(this);
+            });
         });
     }
+
+    function comment_delete(e) {
+        var id = e.getAttribute("id");
+        var params = new URLSearchParams();
+        params.append("id", id);
+        params.append("data[_Token][key]", "<?= $csrfToken ?>");
+
+        fetch("<?= $this->Url->build(['_name' => 'news_ajax_comment_delete']) ?>", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+            },
+            body: params.toString()
+        })
+            .then(function (response) {
+                return response.text();
+            })
+            .then(function (data) {
+                if (data === "true") {
+                    var comment = document.getElementById("comment-" + id);
+                    if (comment) {
+                        comment.style.display = "none";
+                    }
+                } else {
+                    console.log(data);
+                }
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        attachCommentDeleteHandlers();
+    });
 </script>

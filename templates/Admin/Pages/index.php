@@ -1,8 +1,3 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <section class="content">
     <div class="row">
         <div class="col-md-12">
@@ -12,8 +7,11 @@ use Cake\Routing\Router;
                 </div>
                 <div class="card-body">
 
-                    <a class="btn btn-large btn-block btn-primary"
-                       href="<?= Router::url(['controller' => 'pages', 'action' => 'add', 'admin' => true]) ?>"><?= __('PAGE__ADD') ?></a>
+                    <a
+                        class="btn btn-large btn-block btn-primary"
+                        href="<?= $this->Url->build(['_name' => 'admin_pages_add']) ?>">
+                        <?= __('PAGE__ADD') ?>
+                    </a>
 
                     <hr>
 
@@ -29,23 +27,38 @@ use Cake\Routing\Router;
                         </tr>
                         </thead>
                         <tbody>
-                        <?php foreach ($pages as $key => $value) { ?>
+
+                        <?php foreach ($pages as $value) { ?>
                             <tr>
-                                <td><?= $value['title'] ?></td>
-                                <td><?= $value['author'] ?></td>
+                                <td><?= h($value['title']) ?></td>
+                                <td><?= h($value['author']) ?></td>
                                 <td><?= $this->Lang->date($value['created']) ?></td>
                                 <td><?= $this->Lang->date($value['updated']) ?></td>
+
                                 <td>
-                                    <a href="<?= Router::url(['controller' => 'p', 'action' => $value['slug'], 'admin' => false]) ?>"><?= $value['slug'] ?></a>
+                                    <a
+                                        href="<?= $this->Url->build('/p/' . h($value['slug']), ['fullBase' => true]) ?>"
+                                        target="_blank">
+                                        <?= h($value['slug']) ?>
+                                    </a>
                                 </td>
+
                                 <td>
-                                    <a href="<?= Router::url(['controller' => 'pages', 'action' => 'edit/' . $value['id'], 'admin' => true]) ?>"
-                                       class="btn btn-info"><?= __('GLOBAL__EDIT') ?></a>
-                                    <a onClick="confirmDel('<?= Router::url(['controller' => 'pages', 'action' => 'delete/' . $value['id'], 'admin' => true]) ?>')"
-                                       class="btn btn-danger"><?= __('GLOBAL__DELETE') ?></a>
+                                    <a
+                                        href="<?= $this->Url->build(['_name' => 'admin_pages_edit', $value['id']]) ?>"
+                                        class="btn btn-info">
+                                        <?= __('GLOBAL__EDIT') ?>
+                                    </a>
+
+                                    <a
+                                        onClick="confirmDel('<?= $this->Url->build(['_name' => 'admin_pages_delete', $value['id']]) ?>')"
+                                        class="btn btn-danger">
+                                        <?= __('GLOBAL__DELETE') ?>
+                                    </a>
                                 </td>
                             </tr>
                         <?php } ?>
+
                         </tbody>
                     </table>
 

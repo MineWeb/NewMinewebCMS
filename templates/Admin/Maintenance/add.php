@@ -1,8 +1,3 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <section class="content">
     <div class="row">
         <div class="col-md-12">
@@ -11,55 +6,87 @@ use Cake\Routing\Router;
                     <h3 class="card-title"><?= __('MAINTENANCE__TITLE') ?></h3>
                 </div>
                 <div class="card-body">
-                    <form method="post" data-ajax="true"
-                          data-redirect-url="<?= Router::url(['controller' => 'maintenance', 'action' => 'index', 'admin' => 'true']) ?>">
+                    <?= $this->Form->create(null, [
+                        'url' => ['_name' => 'admin_maintenance_add'],
+                        'id' => 'maintenance-form',
+                        'data-ajax' => 'true',
+                        'data-redirect-url' => $this->Url->build(['_name' => 'admin_maintenance_index']),
+                    ]) ?>
                         <div class="form-group">
-                            <label><?= __("MAINTENANCE__PAGE") ?></label><br>
-                            <i><?= __("MAINTENANCE__ADD_EXAMPLE") ?></i><br>
-                            <i><?= __("MAINTENANCE__ADD_EMPTY_URL") ?></i>
-
-                            <input type="text" id="url" name="url" class="form-control">
+                            <label for="maintenance-url"><?= __('MAINTENANCE__PAGE') ?></label><br>
+                            <i><?= __('MAINTENANCE__ADD_EXAMPLE') ?></i><br>
+                            <i><?= __('MAINTENANCE__ADD_EMPTY_URL') ?></i>
+                            <input
+                                type="text"
+                                id="maintenance-url"
+                                name="url"
+                                class="form-control">
                         </div>
+
                         <div class="form-group">
-                            <label><?= __('MAINTENANCE__REASON') ?></label>
+                            <label for="maintenance-reason"><?= __('MAINTENANCE__REASON') ?></label>
                             <?= $this->Html->script('admin/tinymce/tinymce.min.js') ?>
                             <script type="text/javascript">
-                                tinymce.init({
-                                    selector: "textarea",
-                                    height: 300,
-                                    width: '100%',
-                                    language: 'fr_FR',
-                                    plugins: "textcolor code image link",
-                                    toolbar: "fontselect fontsizeselect bold italic underline strikethrough link image forecolor backcolor alignleft aligncenter alignright alignjustify cut copy paste bullist numlist outdent indent blockquote code"
+                                document.addEventListener("DOMContentLoaded", function () {
+                                    if (typeof tinymce === "undefined") {
+                                        return;
+                                    }
+                                    tinymce.init({
+                                        selector: "#maintenance-reason",
+                                        height: 300,
+                                        width: "100%",
+                                        language: "fr_FR",
+                                        plugins: "textcolor code image link",
+                                        toolbar: "fontselect fontsizeselect bold italic underline strikethrough link image forecolor backcolor alignleft aligncenter alignright alignjustify cut copy paste bullist numlist outdent indent blockquote code"
+                                    });
                                 });
                             </script>
-                            <textarea id="editor" name="reason" cols="30"
-                                      rows="10"></textarea>
+                            <textarea
+                                id="maintenance-reason"
+                                name="reason"
+                                cols="30"
+                                rows="10"
+                            ></textarea>
                         </div>
 
                         <div class="form-group">
                             <input type="hidden" name="sub_url" value="0">
                             <div class="checkbox">
-                                <input name="sub_url_checkbox"
-                                       type="checkbox">
-                                <label><?= __('MAINTENANCE__USE_SUB_URL') ?></label>
+                                <input
+                                    id="maintenance-sub-url"
+                                    name="sub_url_checkbox"
+                                    type="checkbox"
+                                >
+                                <label for="maintenance-sub-url"><?= __('MAINTENANCE__USE_SUB_URL') ?></label>
                             </div>
                         </div>
+
                         <script type="text/javascript">
-                            $('input[name="sub_url_checkbox"]').on('change', function (e) {
-                                $('input[name="sub_url').val($('input[name="sub_url_checkbox"]:checked').length > 0 ? '1' : '0')
-                            })
+                            document.addEventListener("DOMContentLoaded", function () {
+                                var checkbox = document.querySelector('input[name="sub_url_checkbox"]');
+                                var hiddenInput = document.querySelector('input[name="sub_url"]');
+
+                                if (!checkbox || !hiddenInput) {
+                                    return;
+                                }
+
+                                checkbox.addEventListener("change", function () {
+                                    hiddenInput.value = checkbox.checked ? "1" : "0";
+                                });
+                            });
                         </script>
 
-                        <input type="hidden" name="data[_Token][key]" value="<?= $csrfToken ?>">
-
                         <div class="float-right">
-                            <a href="<?= Router::url(['controller' => 'maintenance', 'action' => 'index', 'admin' => true]) ?>"
-                               class="btn btn-default"><?= __('GLOBAL__CANCEL') ?></a>
-                            <button class="btn btn-primary" type="submit"><?= __('GLOBAL__SUBMIT') ?></button>
+                            <a
+                                href="<?= $this->Url->build(['_name' => 'admin_maintenance_index']) ?>"
+                                class="btn btn-default">
+                                <?= __('GLOBAL__CANCEL') ?>
+                            </a>
+                            <button class="btn btn-primary" type="submit">
+                                <?= __('GLOBAL__SUBMIT') ?>
+                            </button>
                         </div>
-                    </form>
-
+                    <?= $this->Form->end() ?>
                 </div>
             </div>
         </div>

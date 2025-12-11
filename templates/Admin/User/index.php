@@ -1,7 +1,5 @@
 <?php
 
-use Cake\Routing\Router;
-
 ?>
 <section class="content">
     <div class="row">
@@ -16,27 +14,24 @@ use Cake\Routing\Router;
                                style="table-layout: fixed;word-wrap: break-word;" id="users">
                             <thead>
                             <tr>
-                                <th><?= __('USER__TITLE') ?></th>
-                                <th><?= __('USER__EMAIL') ?></th>
-                                <th><?= __('GLOBAL__CREATED') ?></th>
-                                <th><?= __('USER__RANK') ?></th>
-                                <th class="right"><?= __('GLOBAL__ACTIONS') ?></th>
+                                <th scope="col"><?= __('USER__TITLE') ?></th>
+                                <th scope="col"><?= __('USER__EMAIL') ?></th>
+                                <th scope="col"><?= __('GLOBAL__CREATED') ?></th>
+                                <th scope="col"><?= __('USER__RANK') ?></th>
+                                <th scope="col" class="right"><?= __('GLOBAL__ACTIONS') ?></th>
                             </tr>
                             </thead>
                             <tbody>
                             </tbody>
                         </table>
                     <?php } else { ?>
-                        <form action="<?= Router::url(['action' => 'liveSearch', 'admin' => true]) ?>" method="search">
-
+                        <form action="<?= $this->Url->build(['_name' => 'admin_user_live_search']) ?>" method="search">
                             <div class="form-group">
-                                <label><?= __('GLOBAL__SEARCH') ?></label>
-                                <input type="text" name="search" placeholder="Pseudo..." autocomplete="off"
+                                <label for="user-search"><?= __('GLOBAL__SEARCH') ?></label>
+                                <input id="user-search" type="text" name="search" placeholder="Pseudo..." autocomplete="off"
                                        class="form-control">
-                                <div class="list-group" style="display:none;">
-                                </div>
+                                <div class="list-group" style="display:none;"></div>
                             </div>
-
                         </form>
                     <?php } ?>
                 </div>
@@ -45,76 +40,92 @@ use Cake\Routing\Router;
     </div>
 </section>
 <script type="text/javascript">
-    <?php if($type == '0') { ?>
-    $(document).ready(function () {
-        $('#users').DataTable({
-            "paging": true,
-            "lengthChange": false,
-            "searching": false,
-            "ordering": false,
-            "info": false,
-            "autoWidth": false,
-            'searching': true,
-            "bProcessing": true,
-            "bServerSide": true,
-            "sAjaxSource": "<?= Router::url(['action' => 'get_users', 'admin' => true]) ?>",
-            "aoColumns": [
-                {mData: "User.pseudo", "bSearchable": true},
-                {mData: "User.email", "bSearchable": true},
-                {mData: "User.created", "bSearchable": true},
-                {mData: "User.rank", "bSearchable": false},
-                {mData: "actions", "bSearchable": false}
+    <?php if ($type == '0') { ?>
+    document.addEventListener("DOMContentLoaded", function () {
+        if (typeof DataTable === "undefined") {
+            return;
+        }
+
+        new DataTable("#users", {
+            paging: true,
+            lengthChange: false,
+            searching: true,
+            ordering: false,
+            info: false,
+            autoWidth: false,
+            processing: true,
+            serverSide: true,
+            ajax: "<?= $this->Url->build(['_name' => 'admin_user_get_users']) ?>",
+            columns: [
+                {data: "User.pseudo", searchable: true},
+                {data: "User.email", searchable: true},
+                {data: "User.created", searchable: true},
+                {data: "User.rank", searchable: false},
+                {data: "actions", searchable: false}
             ]
         });
     });
     <?php } else { ?>
-    $('form[method="search"]').each(function (e) {
+    document.addEventListener("DOMContentLoaded", function () {
+        var forms = document.querySelectorAll('form[method="search"]');
 
-        $(this).on('submit', function (e) {
-            e.preventDefault();
-            var val = $(this).find('input[name="search"]').val();
-            window.location = '<?= Router::url(['action' => 'edit', 'admin' => true]) ?>/' + val;
-        });
+        forms.forEach(function (form) {
+            var searchInput = form.querySelector('input[name="search"]');
+            var listGroup = form.querySelector('.list-group');
+            var baseUrl = form.getAttribute('action');
 
-        var url = $(this).attr('action');
-        var form = $(this);
+            if (!searchInput) {
+                return;
+            }
 
-        $(this).find('input[name="search"]').keyup(function (e) {
-
-            var value = $(this).val();
-
-            $.ajax({
-                url: url + '/' + encodeURI(value),
-                method: 'GET',
-                dataType: 'JSON',
-                success: function (data) {
-
-                    form.find('.list-group').empty();
-
-                    if (data.status) {
-
-                        var users = data.data;
-
-                        for (var i = 0; i < users.length; i++) {
-
-                            console.log(users[i]);
-
-                            form.find('.list-group').prepend('<a href="<?= Router::url(['action' => 'edit', 'admin' => true]) ?>/' + users[i]['id'] + '" class="list-group-item">' + users[i]['pseudo'] + '</a>')
-
-                        }
-
-                        form.find('.list-group').slideDown(250);
-
-                    } else {
-                        form.find('.list-group').slideUp(250);
-                    }
-
-                },
-                error: function (data) {
-                    form.find('.list-group').slideUp(250);
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+                var val = searchInput.value || "";
+                if (!val) {
+                    return;
                 }
-            })
+                window.location.href = "<?= $this->Url->build(['_name' => 'admin_user_edit']) ?>/" + encodeURIComponent(val);
+            });
 
+            if (!listGroup) {
+                return;
+            }
+
+            searchInput.addEventListener('keyup', function () {
+                var value = searchInput.value || "";
+
+                fetch(baseUrl + '/' + encodeURIComponent(value), {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function (data) {
+                        listGroup.innerHTML = "";
+
+                        if (data.status) {
+                            var users = data.data || [];
+
+                            users.forEach(function (user) {
+                                var link = document.createElement('a');
+                                link.href = "<?= $this->Url->build(['_name' => 'admin_user_edit']) ?>/" + encodeURIComponent(user.id);
+                                link.className = 'list-group-item';
+                                link.textContent = user.pseudo;
+                                listGroup.prepend(link);
+                            });
+
+                            listGroup.style.display = 'block';
+                        } else {
+                            listGroup.style.display = 'none';
+                        }
+                    })
+                    .catch(function () {
+                        listGroup.style.display = 'none';
+                    });
+            });
         });
     });
     <?php } ?>

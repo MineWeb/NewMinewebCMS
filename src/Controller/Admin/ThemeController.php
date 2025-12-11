@@ -158,7 +158,7 @@ class ThemeController extends AppController
 
             return $this->redirect([
                 '_name' => 'admin_theme_custom',
-                'pass' => [$slug],
+                $slug,
             ]);
         }
 

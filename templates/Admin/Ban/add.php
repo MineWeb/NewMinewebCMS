@@ -1,7 +1,5 @@
 <?php
 
-use Cake\Routing\Router;
-
 ?>
 <section class="content">
     <div class="row">
@@ -12,7 +10,7 @@ use Cake\Routing\Router;
                 </div>
                 <div class="card-body">
                     <form method="post" data-ajax="true" data-upload-image="true"
-                          data-redirect-url="<?= Router::url(['controller' => 'ban', 'action' => 'index', 'admin' => 'true']) ?>">
+                          data-redirect-url="<?= $this->Url->build(['_name' => 'admin_ban_index']) ?>">
                         <table class="table table-responsive-sm table-bordered"
                                style="table-layout: fixed;word-wrap: break-word;" id="users">
                             <thead>
@@ -29,13 +27,12 @@ use Cake\Routing\Router;
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label><?= __('BAN__REASON') ?></label>
-                                <input type="text" class="form-control"
-                                       name="reason">
+                                <input type="text" class="form-control" name="reason">
                             </div>
                         </div>
 
                         <div class="float-right">
-                            <a href="<?= Router::url(['controller' => 'ban', 'action' => 'index', 'admin' => true]) ?>"
+                            <a href="<?= $this->Url->build(['_name' => 'admin_ban_index']) ?>"
                                class="btn btn-default"><?= __('GLOBAL__CANCEL') ?></a>
                             <button class="btn btn-primary" type="submit"><?= __('GLOBAL__SUBMIT') ?></button>
                         </div>
@@ -46,76 +43,92 @@ use Cake\Routing\Router;
     </div>
 </section>
 <script type="text/javascript">
-    <?php if($type == '0') { ?>
-    $(document).ready(function () {
-        $('#users').DataTable({
-            "paging": true,
-            "lengthChange": false,
-            "searching": false,
-            "ordering": false,
-            "info": false,
-            "autoWidth": false,
-            'searching': true,
-            "bProcessing": true,
-            "bServerSide": true,
-            "sAjaxSource": "<?= Router::url(['action' => 'get_users_not_ban', 'admin' => true]) ?>",
-            "aoColumns": [
-                {mData: "User.ban", "bSearchable": false},
-                {mData: "User.pseudo", "bSearchable": true},
-                {mData: "User.rank", "bSearchable": false},
-                {mData: "User.ip", "bSearchable": true},
-                {mData: "User.banIp", "bSearchable": false}
+    <?php if ($type == '0') { ?>
+    document.addEventListener("DOMContentLoaded", function () {
+        if (typeof DataTable === "undefined") {
+            return;
+        }
+
+        new DataTable("#users", {
+            paging: true,
+            lengthChange: false,
+            searching: true,
+            ordering: false,
+            info: false,
+            autoWidth: false,
+            processing: true,
+            serverSide: true,
+            ajax: "<?= $this->Url->build(['_name' => 'admin_ban_get_users_not_ban']) ?>",
+            columns: [
+                {data: "User.ban", searchable: false},
+                {data: "User.pseudo", searchable: true},
+                {data: "User.rank", searchable: false},
+                {data: "User.ip", searchable: true},
+                {data: "User.banIp", searchable: false}
             ]
         });
     });
     <?php } else { ?>
-    $('form[method="search"]').each(function (e) {
+    document.addEventListener("DOMContentLoaded", function () {
+        var forms = document.querySelectorAll('form[method="search"]');
 
-        $(this).on('submit', function (e) {
-            e.preventDefault();
-            var val = $(this).find('input[name="search"]').val();
-            window.location = '<?= Router::url(['action' => 'edit']) ?>/' + val;
-        });
+        forms.forEach(function (form) {
+            var searchInput = form.querySelector('input[name="search"]');
+            var listGroup = form.querySelector('.list-group');
+            var baseUrl = form.getAttribute('action');
 
-        var url = $(this).attr('action');
-        var form = $(this);
+            if (!searchInput) {
+                return;
+            }
 
-        $(this).find('input[name="search"]').keyup(function (e) {
-
-            var value = $(this).val();
-
-            $.ajax({
-                url: url + '/' + encodeURI(value),
-                method: 'GET',
-                dataType: 'JSON',
-                success: function (data) {
-
-                    form.find('.list-group').empty();
-
-                    if (data.status) {
-
-                        var users = data.data;
-
-                        for (var i = 0; i < users.length; i++) {
-
-                            console.log(users[i]);
-
-                            form.find('.list-group').prepend('<a href="<?= Router::url(['action' => 'edit']) ?>/' + users[i]['id'] + '" class="list-group-item">' + users[i]['pseudo'] + '</a>')
-
-                        }
-
-                        form.find('.list-group').slideDown(250);
-
-                    } else {
-                        form.find('.list-group').slideUp(250);
-                    }
-
-                },
-                error: function (data) {
-                    form.find('.list-group').slideUp(250);
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+                var val = searchInput.value || "";
+                if (!val) {
+                    return;
                 }
-            })
+                window.location.href = "<?= $this->Url->build(['_name' => 'admin_ban_edit']) ?>/" + encodeURIComponent(val);
+            });
 
+            if (!listGroup) {
+                return;
+            }
+
+            searchInput.addEventListener('keyup', function () {
+                var value = searchInput.value || "";
+
+                fetch(baseUrl + '/' + encodeURIComponent(value), {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function (data) {
+                        listGroup.innerHTML = "";
+
+                        if (data.status) {
+                            var users = data.data || [];
+
+                            users.forEach(function (user) {
+                                var link = document.createElement('a');
+                                link.href = "<?= $this->Url->build(['_name' => 'admin_ban_edit']) ?>/" + encodeURIComponent(user.id);
+                                link.className = 'list-group-item';
+                                link.textContent = user.pseudo;
+                                listGroup.prepend(link);
+                            });
+
+                            listGroup.style.display = 'block';
+                        } else {
+                            listGroup.style.display = 'none';
+                        }
+                    })
+                    .catch(function () {
+                        listGroup.style.display = 'none';
+                    });
+            });
         });
     });
     <?php } ?>

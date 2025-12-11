@@ -1,8 +1,3 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 
 <!DOCTYPE html>
 <html lang="fr">
@@ -54,12 +49,12 @@ use Cake\Routing\Router;
                 <span class="icon-bar"></span>
             </button>
             <a class="navbar-brand"
-               href="<?= Router::url('/') ?>"><?= (isset($website_name)) ? $website_name : 'MineWeb' ?></a>
+               href="<?= $this->Url->build('/') ?>"><?= (isset($website_name)) ? $website_name : 'MineWeb' ?></a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav navbar-right">
                 <li class="li-nav">
-                    <a href="<?= Router::url('/') ?>"><?= __('GLOBAL__HOME') ?></a>
+                    <a href="<?= $this->Url->build('/') ?>"><?= __('GLOBAL__HOME') ?></a>
                 </li>
                 <?php
                 if (!empty($nav)) {
@@ -110,7 +105,7 @@ use Cake\Routing\Router;
                         <ul class="dropdown-menu" role="menu">
                             <?php if ($isConnected) { ?>
                                 <li>
-                                    <a href="<?= Router::url(['_name' => 'user_profile']) ?>"><?= __('USER__PROFILE') ?></a>
+                                    <a href="<?= $this->Url->build(['_name' => 'user_profile']) ?>"><?= __('USER__PROFILE') ?></a>
                                 </li>
                                 <li style="position:relative;">
                                     <a href="#notifications_modal" onclick="notification.markAllAsSeen(2)"
@@ -120,12 +115,12 @@ use Cake\Routing\Router;
                                 <?php if ($Permissions->can('ACCESS_DASHBOARD')) { ?>
                                     <li class="divider"></li>
                                     <li>
-                                        <a href="<?= Router::url(['_name' => 'admin_index']) ?>"><?= __('GLOBAL__ADMIN_PANEL') ?></a>
+                                        <a href="<?= $this->Url->build(['_name' => 'admin_index']) ?>"><?= __('GLOBAL__ADMIN_PANEL') ?></a>
                                     </li>
                                 <?php } ?>
                                 <li class="divider"></li>
                                 <li>
-                                    <a href="<?= Router::url(['_name' => 'user_logout']) ?>"><?= __('USER__LOGOUT') ?></a>
+                                    <a href="<?= $this->Url->build(['_name' => 'user_logout']) ?>"><?= __('USER__LOGOUT') ?></a>
                                 </li>
                             <?php } else { ?>
                                 <li><a href="#" data-toggle="modal"
@@ -172,11 +167,11 @@ if (!empty($flash_messages)) {
     // Notifications
     var notification = new $.Notification({
         'url': {
-            'get': '<?= Router::url(['_name' => 'notifications_get_all']) ?>',
-            'clear': '<?= Router::url(['_name' => 'notifications_clear', 'NOTIF_ID']) ?>',
-            'clearAll': '<?= Router::url(['_name' => 'notifications_clear_all']) ?>',
-            'markAsSeen': '<?= Router::url(['_name' => 'notifications_mark_as_seen', 'NOTIF_ID']) ?>',
-            'markAllAsSeen': '<?= Router::url(['_name' => 'notifications_mark_all_as_seen']) ?>'
+            'get': '<?= $this->Url->build(['_name' => 'notifications_get_all']) ?>',
+            'clear': '<?= $this->Url->build(['_name' => 'notifications_clear', 'NOTIF_ID']) ?>',
+            'clearAll': '<?= $this->Url->build(['_name' => 'notifications_clear_all']) ?>',
+            'markAsSeen': '<?= $this->Url->build(['_name' => 'notifications_mark_as_seen', 'NOTIF_ID']) ?>',
+            'markAllAsSeen': '<?= $this->Url->build(['_name' => 'notifications_mark_all_as_seen']) ?>'
         },
         'messages': {
             'markAsSeen': '<?= __('NOTIFICATION__MARK_AS_SEEN') ?>',
@@ -187,8 +182,8 @@ if (!empty($flash_messages)) {
 
     // Config FORM/APP.JS
 
-    var LIKE_URL = "<?= Router::url(['_name' => 'news_like']) ?>";
-    var DISLIKE_URL = "<?= Router::url(['_name' => 'news_dislike']) ?>";
+    var LIKE_URL = "<?= $this->Url->build(['_name' => 'news_like']) ?>";
+    var DISLIKE_URL = "<?= $this->Url->build(['_name' => 'news_dislike']) ?>";
 
     var LOADING_MSG = "<?= __('GLOBAL__LOADING') ?>";
     var ERROR_MSG = "<?= __('GLOBAL__ERROR') ?>";

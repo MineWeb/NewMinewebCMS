@@ -1,7 +1,5 @@
 <?php
 
-use Cake\Routing\Router;
-
 ?>
 <section class="content">
     <div class="row">
@@ -11,87 +9,132 @@ use Cake\Routing\Router;
                     <h3 class="card-title"><?= __('USER__EDIT_TITLE') ?></h3>
                 </div>
                 <div class="card-body">
-                    <form action="<?= Router::url(['controller' => 'user', 'action' => 'edit_ajax', 'admin' => 'true']) ?>"
-                          method="post" data-ajax="true"
-                          data-redirect-url="<?= Router::url(['controller' => 'user', 'action' => 'index', 'admin' => 'true']) ?>">
+                    <form action="<?= $this->Url->build(['_name' => 'admin_user_edit_ajax']) ?>"
+                          method="post"
+                          data-ajax="true"
+                          data-redirect-url="<?= $this->Url->build(['_name' => 'admin_user_index']) ?>">
 
-                        <input type="hidden" value="<?= $search_user['id'] ?>" name="id">
+                        <input type="hidden" value="<?= $searchUser['id'] ?>" name="id">
 
                         <div class="form-group">
-                            <label><?= __('USER__USERNAME') ?></label>
-                            <input name="pseudo" class="form-control" value="<?= $search_user['pseudo'] ?>" type="text"
+                            <label for="user-username"><?= __('USER__USERNAME') ?></label>
+                            <input id="user-username"
+                                   name="pseudo"
+                                   class="form-control"
+                                   value="<?= $searchUser['pseudo'] ?>"
+                                   type="text"
                                    autocomplete="off">
                         </div>
+
                         <div class="form-group">
-                            <label>UUID</label>
-                            <input name="uuid" class="form-control" value="<?= $search_user['uuid'] ?>" type="text"
+                            <label for="user-uuid">UUID</label>
+                            <input id="user-uuid"
+                                   name="uuid"
+                                   class="form-control"
+                                   value="<?= $searchUser['uuid'] ?>"
+                                   type="text"
                                    autocomplete="off">
                         </div>
 
                         <?php if (!$Configuration->getKey('confirm_mail_signup')) { ?>
                             <div class="form-group">
-                                <label><?= __('USER__EMAIL') ?></label>
-                                <input name="email" class="form-control" value="<?= $search_user['email'] ?>"
-                                       type="email" autocomplete="off">
+                                <label for="user-email"><?= __('USER__EMAIL') ?></label>
+                                <input id="user-email"
+                                       name="email"
+                                       class="form-control"
+                                       value="<?= $searchUser['email'] ?>"
+                                       type="email"
+                                       autocomplete="off">
                             </div>
                         <?php } else { ?>
                             <div class="form-group">
-                                <label><?= __('USER__EMAIL') ?></label>
+                                <label for="user-email"><?= __('USER__EMAIL') ?></label>
                                 <div class="input-group mb-3">
-                                    <input value="<?= $search_user['email'] ?>" type="email" name="email"
+                                    <input id="user-email"
+                                           value="<?= $searchUser['email'] ?>"
+                                           type="email"
+                                           name="email"
                                            class="form-control">
                                     <div class="input-group-append">
-                                        <a class="btn btn-success<?= ($search_user['confirmed']) ? ' disabled' : '' ?>"
-                                           href="<?= ($search_user['confirmed']) ? '#' : Router::url(['action' => 'confirm', $search_user['id']]) ?>"><?= ($search_user['confirmed']) ? __('USER__EMAIL_CONFIRMED') : __('USER__CONFIRM_EMAIL') ?></a>
+                                        <a class="btn btn-success<?= ($searchUser['confirmed']) ? ' disabled' : '' ?>"
+                                           href="<?= ($searchUser['confirmed'])
+                                               ? '#'
+                                               : $this->Url->build(['_name' => 'admin_user_confirm', $searchUser['id']]) ?>">
+                                            <?= ($searchUser['confirmed'])
+                                                ? __('USER__EMAIL_CONFIRMED')
+                                                : __('USER__CONFIRM_EMAIL') ?>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
                         <?php } ?>
 
                         <div class="form-group">
-                            <label><?= __('USER__PASSWORD') ?></label>
-                            <input name="password" class="form-control" type="password">
+                            <label for="user-password"><?= __('USER__PASSWORD') ?></label>
+                            <input id="user-password"
+                                   name="password"
+                                   class="form-control"
+                                   type="password"
+                                   autocomplete="new-password">
                         </div>
 
                         <div class="form-group">
-                            <label><?= __('USER__RANK') ?></label>
-                            <select class="form-control" name="rank">
-                                <?php foreach ($options_ranks as $key => $value) { ?>
-                                    <option value="<?= $key ?>"<?= ($search_user['rank'] == $key) ? ' selected' : '' ?>><?= $value ?></option>
+                            <label for="user-rank"><?= __('USER__RANK') ?></label>
+                            <select id="user-rank" class="form-control" name="rank">
+                                <?php foreach ($optionsRanks as $key => $value) { ?>
+                                    <option value="<?= $key ?>"<?= ($searchUser['rank'] == $key) ? ' selected' : '' ?>>
+                                        <?= $value ?>
+                                    </option>
                                 <?php } ?>
                             </select>
                         </div>
 
                         <?php if ($EyPlugin->isInstalled('eywek.shop')) { ?>
                             <div class="form-group">
-                                <label><?= __('USER__MONEY') ?></label>
-                                <input name="money" class="form-control" value="<?= $search_user['money'] ?>"
+                                <label for="user-money"><?= __('USER__MONEY') ?></label>
+                                <input id="user-money"
+                                       name="money"
+                                       class="form-control"
+                                       value="<?= $searchUser['money'] ?>"
                                        type="text">
                             </div>
                         <?php } ?>
 
                         <div class="form-group">
-                            <label>IP</label>
-                            <input class="form-control" value="<?= $search_user['ip'] ?>" type="text" disabled="">
+                            <label for="user-ip">IP</label>
+                            <input id="user-ip"
+                                   class="form-control"
+                                   value="<?= $searchUser['ip'] ?>"
+                                   type="text"
+                                   disabled>
                         </div>
 
                         <div class="form-group">
-                            <label><?= __('USER__REGISTER_DATE') ?></label>
-                            <input class="form-control" value="<?= $search_user['created'] ?>" type="text" disabled="">
+                            <label for="user-created"><?= __('USER__REGISTER_DATE') ?></label>
+                            <input id="user-created"
+                                   class="form-control"
+                                   value="<?= $searchUser['created'] ?>"
+                                   type="text"
+                                   disabled>
                         </div>
 
                         <?= $Module->loadModules('admin_user_edit_form') ?>
 
                         <div class="float-right">
-                            <a href="<?= Router::url(['controller' => 'user', 'action' => 'index', 'admin' => true]) ?>"
-                               class="btn btn-default"><?= __('GLOBAL__CANCEL') ?></a>
-                            <button class="btn btn-primary" type="submit"><?= __('GLOBAL__SUBMIT') ?></button>
+                            <a href="<?= $this->Url->build(['_name' => 'admin_user_index']) ?>"
+                               class="btn btn-default">
+                                <?= __('GLOBAL__CANCEL') ?>
+                            </a>
+                            <button class="btn btn-primary" type="submit">
+                                <?= __('GLOBAL__SUBMIT') ?>
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+
     <div class="row">
         <div class="col-md-12">
             <div class="card">
@@ -99,16 +142,15 @@ use Cake\Routing\Router;
                     <h3 class="card-title"><?= __('USER__HIS_HISTORIES') ?></h3>
                 </div>
                 <div class="card-body">
-
                     <table class="table table-bordered dataTable">
                         <thead>
                         <tr>
-                            <th>ID</th>
-                            <th><?= __('GLOBAL__ACTIONS') ?></th>
+                            <th scope="col">ID</th>
+                            <th scope="col"><?= __('GLOBAL__ACTIONS') ?></th>
                         </tr>
                         </thead>
                         <tbody>
-                        <?php foreach ($search_user['History'] as $key => $v) { ?>
+                        <?php foreach ($searchUser['History'] as $key => $v) { ?>
                             <tr>
                                 <td><?= $key ?></td>
                                 <td><?= $v ?></td>
@@ -116,10 +158,10 @@ use Cake\Routing\Router;
                         <?php } ?>
                         </tbody>
                     </table>
-
                 </div>
             </div>
         </div>
     </div>
+
     <?= $Module->loadModules('admin_user_edit') ?>
 </section>

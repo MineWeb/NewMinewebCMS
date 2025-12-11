@@ -1,8 +1,3 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <section class="content">
     <div class="row">
         <div class="col-md-12">
@@ -11,238 +6,353 @@ use Cake\Routing\Router;
                     <h3 class="card-title"><?= __('NAVBAR__ADD_LINK') ?></h3>
                 </div>
                 <div class="card-body">
-                    <form method="post" action="<?= Router::url(['action' => 'add_ajax', 'admin' => true]) ?>" data-ajax="true"
-                          data-redirect-url="<?= Router::url(['action' => 'index', 'admin' => true]) ?>"
-                          data-custom-function="formatteData">
+                    <?= $this->Form->create(null, [
+                        'method' => 'post',
+                        'url' => ['_name' => 'admin_navbar_add_ajax'],
+                        'data-ajax' => 'true',
+                        'data-redirect-url' => $this->Url->build(['_name' => 'admin_navbar_index']),
+                        'data-custom-function' => 'formatteData'
+                    ]) ?>
 
-                        <div class="form-group">
-                            <label><?= __('GLOBAL__NAME') ?></label>
-                            <input name="name" class="form-control" type="text">
-                        </div>
+                    <div class="form-group">
+                        <label for="navbar-name"><?= __('GLOBAL__NAME') ?></label>
+                        <input id="navbar-name" name="name" class="form-control" type="text">
+                    </div>
 
-                        <div class="form-group">
-
-                            <label><?= __('NAVBAR__ICON') ?></label>
-                            <p><?= __('NAVBAR__ICON__DESC') ?><a target="_blank"
-                                                                         href="https://fontawesome.com/">https://fontawesome.com/</a>
-                            <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">FA</span>
-                                </div>
-                                <input name="icon" class="form-control" type="text">
+                    <div class="form-group">
+                        <label for="navbar-icon"><?= __('NAVBAR__ICON') ?></label>
+                        <p>
+                            <?= __('NAVBAR__ICON__DESC') ?>
+                            <a target="_blank" href="https://fontawesome.com/">https://fontawesome.com/</a>
+                        </p>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">FA</span>
                             </div>
+                            <input id="navbar-icon" name="icon" class="form-control" type="text">
                         </div>
+                    </div>
 
+                    <div class="form-group">
+                        <label><?= __('GLOBAL__TYPE') ?></label>
+                        <div class="radio">
+                            <input type="radio" id="normal" name="type" value="normal">
+                            <label for="normal"><?= __('NAVBAR__LINK_TYPE_DEFAULT') ?></label>
+                        </div>
+                        <div class="radio">
+                            <input type="radio" id="dropdown" name="type" value="dropdown">
+                            <label for="dropdown"><?= __('NAVBAR__LINK_TYPE_DROPDOWN') ?></label>
+                        </div>
+                    </div>
+
+                    <div id="type-normal" class="d-none">
                         <div class="form-group">
-                            <label><?= __('GLOBAL__TYPE') ?></label>
+                            <label><?= __('URL') ?></label>
                             <div class="radio">
-                                <input type="radio" id="normal" name="type" value="normal">
-                                <label><?= __('NAVBAR__LINK_TYPE_DEFAULT') ?></label>
+                                <input type="radio" id="url-type-plugin" class="type_plugin" name="url_type" value="plugin">
+                                <label for="url-type-plugin"><?= __('NAVBAR__LINK_TYPE_PLUGIN') ?></label>
                             </div>
-                            <div class="radio">
-                                <input type="radio" id="dropdown" name="type" value="dropdown">
-                                <label><?= __('NAVBAR__LINK_TYPE_DROPDOWN') ?></label>
-                            </div>
-                        </div>
-
-                        <div id="type-normal" class="d-none">
-                            <div class="form-group">
-                                <label><?= __('URL') ?></label>
-                                <div class="radio">
-                                    <input type="radio" class="type_plugin" name="url_type" value="plugin">
-                                    <label><?= __('NAVBAR__LINK_TYPE_PLUGIN') ?></label>
-                                </div>
-                                <div class="d-none plugin">
-                                    <select class="form-control" name="url_plugin">
-                                        <?php
-                                        foreach ($url_plugins as $pluginId => $data) {
-                                            echo '<option disabled>' . $data->name . '</option>';
-                                            foreach ($data->routes as $name => $route)
-                                                echo '<option value=\'' . json_encode(['id' => $pluginId, 'route' => $route]) . '\'>' . $name . ' (' . $route . ')</option>';
+                            <div class="d-none plugin">
+                                <select class="form-control" name="url_plugin">
+                                    <?php
+                                    foreach ($url_plugins as $pluginId => $data) {
+                                        echo '<option disabled>' . $data->name . '</option>';
+                                        foreach ($data->routes as $name => $route) {
+                                            echo '<option value=\'' . json_encode(['id' => $pluginId, 'route' => $route]) . '\'>' . $name . ' (' . $route . ')</option>';
                                         }
-                                        ?>
-                                    </select>
-                                </div>
-                                <div class="radio">
-                                    <input type="radio" class="type_page" name="url_type" value="page">
-                                    <label><?= __('NAVBAR__LINK_TYPE_PAGE') ?></label>
-                                </div>
-                                <div class="d-none page">
-                                    <select class="form-control" name="url_page">
-                                        <?php foreach ($url_pages as $key => $value) { ?>
-                                            <option value="<?= $key ?>"><?= $value ?></option>
-                                        <?php } ?>
-                                    </select>
-                                </div>
-                                <div class="radio">
-                                    <input type="radio" class="type_custom" name="url_type" value="custom">
-                                    <label><?= __('NAVBAR__LINK_TYPE_CUSTOM') ?></label>
-                                </div>
-                                </label>
-                                <input type="text" class="form-control d-none custom"
-                                       placeholder="<?= __('NAVBAR__CUSTOM_URL') ?>" name="url_custom">
+                                    }
+                                    ?>
+                                </select>
                             </div>
+                            <div class="radio">
+                                <input type="radio" id="url-type-page" class="type_page" name="url_type" value="page">
+                                <label for="url-type-page"><?= __('NAVBAR__LINK_TYPE_PAGE') ?></label>
+                            </div>
+                            <div class="d-none page">
+                                <select class="form-control" name="url_page">
+                                    <?php foreach ($url_pages as $key => $value) { ?>
+                                        <option value="<?= $key ?>"><?= $value ?></option>
+                                    <?php } ?>
+                                </select>
+                            </div>
+                            <div class="radio">
+                                <input type="radio" id="url-type-custom" class="type_custom" name="url_type" value="custom">
+                                <label for="url-type-custom"><?= __('NAVBAR__LINK_TYPE_CUSTOM') ?></label>
+                            </div>
+                            <input
+                                type="text"
+                                class="form-control d-none custom"
+                                id="url-custom"
+                                placeholder="<?= __('NAVBAR__CUSTOM_URL') ?>"
+                                name="url_custom"
+                            >
                         </div>
+                    </div>
 
-                        <div id="type-dropdown" class="d-none">
-                            <div class="form-group">
-                                <div class="card card-body" id="nav-1">
-                                    <div class="form-group">
-                                        <label><?= __('NAVBAR__LINK_NAME') ?></label>
-                                        <input type="text" class="form-control name_of_nav" name="name_of_nav">
-                                    </div>
-                                    <div class="form-group">
-                                        <label><?= __('URL') ?></label>
-                                        <input type="text" class="form-control url_of_nav"
-                                               placeholder="<?= __('NAVBAR__CUSTOM_URL') ?>" name="url">
-                                    </div>
-                                    <a href="#"
-                                       class="btn btn-danger delete-nav float-right"><?= __('GLOBAL__DELETE') ?></a>
-                                    <br>
-                                </div>
-                            </div>
-                            <div id="add-js" data-number="1"></div>
-                            <div class="control-group">
-                                <a href="#" id="add_nav"
-                                   class="btn btn-success"><?= __('NAVBAR__ADD_LINK') ?></a>
-                            </div>
-                        </div>
-
+                    <div id="type-dropdown" class="d-none">
                         <div class="form-group">
-                            <div class="checkbox">
-                                <input type="checkbox" name="new_tab">
-                                <label><?= __('NAVBAR__OPEN_IN_NEW_TAB') ?></label>
+                            <div class="card card-body" id="nav-1">
+                                <div class="form-group">
+                                    <label for="name-of-nav-1"><?= __('NAVBAR__LINK_NAME') ?></label>
+                                    <input
+                                        type="text"
+                                        class="form-control name_of_nav"
+                                        id="name-of-nav-1"
+                                        name="name_of_nav"
+                                    >
+                                </div>
+                                <div class="form-group">
+                                    <label for="url-of-nav-1"><?= __('URL') ?></label>
+                                    <input
+                                        type="text"
+                                        class="form-control url_of_nav"
+                                        id="url-of-nav-1"
+                                        placeholder="<?= __('NAVBAR__CUSTOM_URL') ?>"
+                                        name="url"
+                                    >
+                                </div>
+                                <a href="#"
+                                   class="btn btn-danger delete-nav float-right"><?= __('GLOBAL__DELETE') ?></a>
+                                <br>
                             </div>
                         </div>
-
-                        <div class="float-right">
-                            <a href="<?= Router::url(['controller' => 'navbar', 'action' => 'admin_index', 'admin' => true]) ?>"
-                               class="btn btn-default"><?= __('GLOBAL__CANCEL') ?></a>
-                            <button class="btn btn-primary" type="submit"><?= __('GLOBAL__SUBMIT') ?></button>
+                        <div id="add-js" data-number="1"></div>
+                        <div class="control-group">
+                            <a href="#" id="add_nav"
+                               class="btn btn-success"><?= __('NAVBAR__ADD_LINK') ?></a>
                         </div>
-                    </form>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox">
+                            <input type="checkbox" id="navbar-new-tab" name="new_tab">
+                            <label for="navbar-new-tab"><?= __('NAVBAR__OPEN_IN_NEW_TAB') ?></label>
+                        </div>
+                    </div>
+
+                    <div class="float-right">
+                        <a href="<?= $this->Url->build(['_name' => 'admin_navbar_index']) ?>"
+                           class="btn btn-default"><?= __('GLOBAL__CANCEL') ?></a>
+                        <button class="btn btn-primary" type="submit"><?= __('GLOBAL__SUBMIT') ?></button>
+                    </div>
+
+                    <?= $this->Form->end() ?>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
 <script type="text/javascript">
-    $('#add_nav').click(function (e) {
-        e.preventDefault();
-        var how = $('#add-js').attr('data-number');
-        how = parseInt(how) + 1;
-        var add = '<div class="form-group"><div class="card card-body" id="nav-' + how + '"><div class="form-group"><label><?= addslashes(__('NAVBAR__LINK_NAME')) ?></label><input type="text" class="form-control name_of_nav" name="name_of_nav"></div><div class="form-group"><label><?= __('URL') ?></label><input type="text" class="form-control url_of_nav" placeholder="<?= __('NAVBAR__CUSTOM_URL') ?>" name="url"></div><a href="#" class="btn btn-danger delete-nav float-right"><?= __('GLOBAL__DELETE') ?></a><br></div></div>';
-        $('#add-js').append(add);
-        $('#add-js').attr('data-number', how);
-        deleteNavEvents();
-    });
-    deleteNavEvents();
+    document.addEventListener('DOMContentLoaded', function () {
+        var normalRadio = document.getElementById('normal');
+        var dropdownRadio = document.getElementById('dropdown');
+        var typeNormalDiv = document.getElementById('type-normal');
+        var typeDropdownDiv = document.getElementById('type-dropdown');
 
-    function deleteNavEvents() {
-        $('.delete-nav').unbind('click');
-        $('.delete-nav').on('click', function (e) {
-            e.preventDefault();
-            var div = $(this).parent();
-            div.slideUp(150, function () {
-                $(this).remove();
-            });
-        });
-    }
-</script>
-<script type="text/javascript">
-    $("#normal").change(function () {
-        if ($("#normal").is(':checked')) {
-            $("#type-normal").removeClass('d-none');
-            $("#type-dropdown").addClass('d-none');
-        } else {
-            $("#type-normal").addClass('d-none');
-            $("#type-dropdown").removeClass('d-none');
-        }
-    });
-    $("#dropdown").change(function () {
-        if ($("dropdown").is(':checked')) {
-            $("#type-dropdown").addClass('d-none');
-            $("#type-normal").removeClass('d-none');
-        } else {
-            $("#type-dropdown").removeClass('d-none');
-            $("#type-normal").addClass('d-none');
-        }
-    });
-
-    $(".type_plugin").change(function () {
-        if ($(".type_plugin").is(':checked')) {
-            $(".page").addClass('d-none');
-            $(".custom").addClass('d-none');
-            $(".plugin").removeClass('d-none');
-        } else {
-            $(".plugin").addClass('d-none');
-        }
-    });
-
-    $(".type_page").change(function () {
-        if ($(".type_page").is(':checked')) {
-            $(".page").removeClass('d-none');
-            $(".custom").addClass('d-none');
-            $(".plugin").addClass('d-none');
-        } else {
-            $(".page").addClass('d-none');
-        }
-    });
-
-    $(".type_custom").change(function () {
-        if ($(".type_custom").is(':checked')) {
-            $(".page").addClass('d-none');
-            $(".custom").removeClass('d-none');
-            $(".plugin").addClass('d-none');
-        } else {
-            $(".custom").addClass('d-none');
-        }
-    });
-</script>
-<script type="text/javascript">
-    function formatteData($form) {
-        var name = $form.find("input[name='name']").val();
-        var icon = $form.find("input[name='icon']").val();
-        var type = $form.find("input[type='radio'][name='type']:checked").val();
-        var url;
-        if (type === "normal") {
-            if ($form.find("input[name='url_type']:checked").val() === "custom")
-                url = '{"type":"custom", "url":"' + $form.find("input[name='url_custom']").val() + '"}';
-            else if ($form.find("input[name='url_type']:checked").val() === "plugin") {
-                var value = $form.find("select[name='url_plugin']").val();
-                value = JSON.parse(value);
-                url = {
-                    type: 'plugin',
-                    id: value.id,
-                    route: value.route
-                };
-                url = JSON.stringify(url);
-            } else if ($form.find("input[name='url_type']:checked").val() === "page")
-                url = '{"type":"page", "id":"' + $form.find("select[name='url_page']").val() + '"}';
-            else
-                url = "undefined";
-        } else {
-            var names = $('.name_of_nav').serialize();
-            names = names.split('&');
-            var urls = $('.url_of_nav').serialize();
-            urls = urls.split('&');
-            url = {};
-            for (var key in test = names) {
-                var l = test[key].split('=');
-                l = l[1];
-                var p = urls[key].split('=');
-                p = p[1];
-                url[l] = p;
+        function updateTypeVisibility() {
+            if (normalRadio && normalRadio.checked) {
+                if (typeNormalDiv) {
+                    typeNormalDiv.classList.remove('d-none');
+                }
+                if (typeDropdownDiv) {
+                    typeDropdownDiv.classList.add('d-none');
+                }
+            } else if (dropdownRadio && dropdownRadio.checked) {
+                if (typeDropdownDiv) {
+                    typeDropdownDiv.classList.remove('d-none');
+                }
+                if (typeNormalDiv) {
+                    typeNormalDiv.classList.add('d-none');
+                }
             }
         }
 
+        if (normalRadio) {
+            normalRadio.addEventListener('change', updateTypeVisibility);
+        }
+        if (dropdownRadio) {
+            dropdownRadio.addEventListener('change', updateTypeVisibility);
+        }
+        updateTypeVisibility();
+
+        var typePlugin = document.querySelector('.type_plugin');
+        var typePage = document.querySelector('.type_page');
+        var typeCustom = document.querySelector('.type_custom');
+        var pluginBlock = document.querySelector('.plugin');
+        var pageBlock = document.querySelector('.page');
+        var customInput = document.querySelector('.custom');
+
+        function updateUrlType() {
+            if (typePlugin && typePlugin.checked) {
+                if (pluginBlock) {
+                    pluginBlock.classList.remove('d-none');
+                }
+                if (pageBlock) {
+                    pageBlock.classList.add('d-none');
+                }
+                if (customInput) {
+                    customInput.classList.add('d-none');
+                }
+            } else if (typePage && typePage.checked) {
+                if (pluginBlock) {
+                    pluginBlock.classList.add('d-none');
+                }
+                if (pageBlock) {
+                    pageBlock.classList.remove('d-none');
+                }
+                if (customInput) {
+                    customInput.classList.add('d-none');
+                }
+            } else if (typeCustom && typeCustom.checked) {
+                if (pluginBlock) {
+                    pluginBlock.classList.add('d-none');
+                }
+                if (pageBlock) {
+                    pageBlock.classList.add('d-none');
+                }
+                if (customInput) {
+                    customInput.classList.remove('d-none');
+                }
+            } else {
+                if (pluginBlock) {
+                    pluginBlock.classList.add('d-none');
+                }
+                if (pageBlock) {
+                    pageBlock.classList.add('d-none');
+                }
+                if (customInput) {
+                    customInput.classList.add('d-none');
+                }
+            }
+        }
+
+        if (typePlugin) {
+            typePlugin.addEventListener('change', updateUrlType);
+        }
+        if (typePage) {
+            typePage.addEventListener('change', updateUrlType);
+        }
+        if (typeCustom) {
+            typeCustom.addEventListener('change', updateUrlType);
+        }
+        updateUrlType();
+
+        var addNavBtn = document.getElementById('add_nav');
+        var addJsContainer = document.getElementById('add-js');
+
+        if (addNavBtn && addJsContainer) {
+            var how = parseInt(addJsContainer.getAttribute('data-number') || '1', 10);
+
+            addNavBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                how += 1;
+                addJsContainer.setAttribute('data-number', String(how));
+
+                var wrapper = document.createElement('div');
+                var nameId = 'name-of-nav-' + how;
+                var urlId = 'url-of-nav-' + how;
+
+                var html = ''
+                    + '<div class="form-group">'
+                    + '<div class="card card-body" id="nav-' + how + '">'
+                    + '<div class="form-group">'
+                    + '<label for="' + nameId + '"><?= addslashes(__('NAVBAR__LINK_NAME')) ?></label>'
+                    + '<input type="text" class="form-control name_of_nav" id="' + nameId + '" name="name_of_nav">'
+                    + '</div>'
+                    + '<div class="form-group">'
+                    + '<label for="' + urlId + '"><?= __('URL') ?></label>'
+                    + '<input type="text" class="form-control url_of_nav" id="' + urlId + '" placeholder="<?= __('NAVBAR__CUSTOM_URL') ?>" name="url">'
+                    + '</div>'
+                    + '<a href="#" class="btn btn-danger delete-nav float-right"><?= __('GLOBAL__DELETE') ?></a>'
+                    + '<br>'
+                    + '</div>'
+                    + '</div>';
+
+                wrapper.innerHTML = html;
+                while (wrapper.firstChild) {
+                    addJsContainer.appendChild(wrapper.firstChild);
+                }
+            });
+        }
+
+        document.addEventListener('click', function (e) {
+            var target = e.target;
+            if (target && target.classList.contains('delete-nav')) {
+                e.preventDefault();
+                var card = target.closest('.card');
+                if (card) {
+                    card.remove();
+                }
+            }
+        });
+    });
+
+    function formatteData(form) {
+        if (form && form.jquery && form[0]) {
+            form = form[0];
+        }
+
+        var nameInput = form.querySelector("input[name='name']");
+        var iconInput = form.querySelector("input[name='icon']");
+        var typeInput = form.querySelector("input[type='radio'][name='type']:checked");
+
+        var name = nameInput ? nameInput.value : '';
+        var icon = iconInput ? iconInput.value : '';
+        var type = typeInput ? typeInput.value : '';
+        var url;
+
+        if (type === 'normal') {
+            var urlTypeInput = form.querySelector("input[name='url_type']:checked");
+            var urlType = urlTypeInput ? urlTypeInput.value : '';
+
+            if (urlType === 'custom') {
+                var customInput = form.querySelector("input[name='url_custom']");
+                var customValue = customInput ? customInput.value : '';
+                url = '{"type":"custom","url":"' + customValue + '"}';
+            } else if (urlType === 'plugin') {
+                var pluginSelect = form.querySelector("select[name='url_plugin']");
+                var value = pluginSelect ? pluginSelect.value : '';
+                try {
+                    var parsed = JSON.parse(value);
+                    url = {
+                        type: 'plugin',
+                        id: parsed.id,
+                        route: parsed.route
+                    };
+                    url = JSON.stringify(url);
+                } catch (e) {
+                    url = 'undefined';
+                }
+            } else if (urlType === 'page') {
+                var pageSelect = form.querySelector("select[name='url_page']");
+                var pageValue = pageSelect ? pageSelect.value : '';
+                url = '{"type":"page","id":"' + pageValue + '"}';
+            } else {
+                url = 'undefined';
+            }
+        } else {
+            var nameInputs = form.querySelectorAll('.name_of_nav');
+            var urlInputs = form.querySelectorAll('.url_of_nav');
+            url = {};
+            for (var i = 0; i < nameInputs.length; i++) {
+                var l = nameInputs[i].value;
+                var p = urlInputs[i] ? urlInputs[i].value : '';
+                if (l !== '') {
+                    url[l] = p;
+                }
+            }
+        }
+
+        var newTabInput = form.querySelector('input[name="new_tab"]');
+        var openNewTab = newTabInput ? newTabInput.checked : false;
+
         var inputs = {};
-        inputs['name'] = name;
-        inputs['icon'] = icon;
-        inputs['type'] = type;
-        inputs['url'] = url;
-        inputs['open_new_tab'] = $('input[name="new_tab"]').is(':checked');
-        inputs['data[_Token][key]'] = '<?= $csrfToken ?>';
+        inputs.name = name;
+        inputs.icon = icon;
+        inputs.type = type;
+        inputs.url = url;
+        inputs.open_new_tab = openNewTab;
 
         return inputs;
     }

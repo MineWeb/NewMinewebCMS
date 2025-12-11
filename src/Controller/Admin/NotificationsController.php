@@ -75,13 +75,13 @@ class NotificationsController extends AppController
             } else {
                 $actions .= '<a class="btn btn-default mark-as-seen" data-seen="' . __('NOTIFICATION__SEEN') . '" href="' . Router::url([
                         '_name' => 'admin_notifications_mark_as_seen_from_user',
-                        'pass' => [$notification['id'], $notification['user_id']],
+                        $notification['id'], $notification['user_id'],
                     ]) . '">' . __('NOTIFICATION__MARK_AS_SEEN') . '</a>';
             }
 
             $actions .= '<a class="btn btn-danger delete-notification" href="' . Router::url([
                     '_name' => 'admin_notifications_clear_from_user',
-                    'pass' => [$notification['id'], $notification['user_id']],
+                    $notification['id'], $notification['user_id'],
                 ]) . '">' . __('GLOBAL__DELETE') . '</a>';
             $actions .= '</div>';
 

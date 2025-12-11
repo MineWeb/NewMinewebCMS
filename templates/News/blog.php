@@ -7,11 +7,11 @@
 </div>
 <div class="container">
     <div class="row">
-        <?php use Cake\Routing\Router;
+        <?php
 
         foreach ($search_news as $news) { ?>
             <div class="well">
-                <a href="<?= Router::url(['controller' => 'blog', 'action' => $news['slug']]) ?>"><h3>
+                <a href="<?= $this->Url->build(['controller' => 'blog', 'action' => $news['slug']]) ?>"><h3>
                         <b><?= $news['title'] ?></b></h3></a>
                 <p><b><?= __('GLOBAL__UPDATED') ?> : </b><?= $this->Lang->date($news['updated']) ?></p>
                 <p><b><?= __('NEWS__COMMENTS_NBR') ?> : </b><?= count($news['comment']) ?></p>

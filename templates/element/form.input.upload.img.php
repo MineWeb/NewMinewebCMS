@@ -1,8 +1,3 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <div class="form-group">
     <label><?= (isset($title)) ? $title : __('FORM__UPLOAD_IMAGE') ?></label><br>
     <div id="image_preview">
@@ -53,7 +48,7 @@ use Cake\Routing\Router;
                     echo '</div>';
                     echo '<div class="col-md-8">';
                     echo '<p>' . $file->getFilename() . '</p>';
-                    echo '<button data-basename="' . $basename . '" data-filename="' . $file->getFilename() . '" data-path="' . Router::url('/') . 'img/uploads/' . $basename . '" class="btn btn-primary choose-from-gallery-img">' . __('GALLERY__CHOOSE') . '</button>';
+                    echo '<button data-basename="' . $basename . '" data-filename="' . $file->getFilename() . '" data-path="' . $this->Url->build('/') . 'img/uploads/' . $basename . '" class="btn btn-primary choose-from-gallery-img">' . __('GALLERY__CHOOSE') . '</button>';
                     echo '</div>';
                     echo '</div>';
                 }

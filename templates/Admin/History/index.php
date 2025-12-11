@@ -1,8 +1,3 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <section class="content">
     <div class="row">
         <div class="col-md-12">
@@ -20,32 +15,37 @@ use Cake\Routing\Router;
                             <th><?= __('GLOBAL__CREATED') ?></th>
                         </tr>
                         </thead>
-                        <tbody>
-                        </tbody>
+                        <tbody></tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
 <script type="text/javascript">
-    $(document).ready(function () {
-        $('table').DataTable({
-            "paging": true,
-            "lengthChange": false,
-            "ordering": false,
-            "info": false,
-            "autoWidth": false,
-            'searching': true,
-            "bProcessing": true,
-            "bServerSide": true,
-            "sAjaxSource": "<?= Router::url(['action' => 'getAll', 'admin' => true]) ?>",
-            "aoColumns": [
-                {mData: "User.pseudo"},
-                {mData: "History.action"},
-                {mData: "History.category"},
-                {mData: "History.created"}
-            ],
+    document.addEventListener('DOMContentLoaded', function () {
+        var table = document.querySelector('table');
+        if (!table) {
+            return;
+        }
+
+        new DataTable(table, {
+            paging: true,
+            lengthChange: false,
+            ordering: false,
+            info: false,
+            autoWidth: false,
+            searching: true,
+            processing: true,
+            serverSide: true,
+            ajax: "<?= $this->Url->build(['_name' => 'admin_history_get_all']) ?>",
+            columns: [
+                { data: "User.pseudo" },
+                { data: "History.action" },
+                { data: "History.category" },
+                { data: "History.created" }
+            ]
         });
-    })
+    });
 </script>

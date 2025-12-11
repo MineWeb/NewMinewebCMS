@@ -1,8 +1,3 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <section class="content">
     <div class="row">
         <div class="col-md-6">
@@ -12,48 +7,57 @@ use Cake\Routing\Router;
                 </div>
                 <div class="card-body">
 
-                    <form action="<?= Router::url(['action' => 'setTo', 'admin' => true]) ?>" method="post" data-ajax="true"
-                          data-callback-function="afterSendNotification">
+                    <?= $this->Form->create(null, [
+                        'url' => ['_name' => 'admin_notifications_set_to'],
+                        'method' => 'post',
+                        'data-ajax' => 'true',
+                        'data-callback-function' => 'afterSendNotification'
+                    ]) ?>
 
-                        <div class="form-group">
-                            <label><?= __('NOTIFICATION__CONTENT') ?></label>
-                            <textarea class="form-control" name="content" maxlength="255"></textarea>
+                    <div class="form-group">
+                        <label for="notification-content"><?= __('NOTIFICATION__CONTENT') ?></label>
+                        <textarea
+                            class="form-control"
+                            id="notification-content"
+                            name="content"
+                            maxlength="255"
+                        ></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox">
+                            <input id="notification-from" name="from" type="checkbox">
+                            <label for="notification-from"><?= __('NOTIFICATION__DISPLAY_FROM') ?></label>
                         </div>
+                    </div>
 
-                        <div class="form-group">
-                            <div class="checkbox">
-                                <input name="from" type="checkbox">
-                                <label><?= __('NOTIFICATION__DISPLAY_FROM') ?></label>
-                            </div>
-                        </div>
+                    <div class="form-group">
+                        <label for="notification-user-id"><?= __('NOTIFICATION__WHO') ?></label>
+                        <select
+                            class="form-control"
+                            id="notification-user-id"
+                            name="user_id"
+                        >
+                            <option value="all"><?= __('NOTIFICATION__ALL') ?></option>
+                            <option value="user"><?= __('NOTIFICATION__USER') ?></option>
+                        </select>
+                    </div>
 
-                        <div class="form-group">
-                            <label><?= __('NOTIFICATION__WHO') ?></label>
-                            <select class="form-control" name="user_id">
-                                <option value="all"><?= __('NOTIFICATION__ALL') ?></option>
-                                <option value="user"><?= __('NOTIFICATION__USER') ?></option>
-                            </select>
-                        </div>
+                    <div class="form-group" style="display:none;" id="userInput">
+                        <label for="notification-user-pseudo"><?= __('NOTIFICATION__WHO_USERNAME') ?></label>
+                        <input
+                            type="text"
+                            id="notification-user-pseudo"
+                            name="user_pseudo"
+                            class="form-control"
+                        >
+                    </div>
 
-                        <script type="text/javascript">
-                            $('select[name="user_id"]').on('change', function (e) {
-                                if ($(this).val() == 'all') {
-                                    $('#userInput').slideUp();
-                                } else {
-                                    $('#userInput').slideDown();
-                                }
-                            });
-                        </script>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-info"><?= __('GLOBAL__SUBMIT') ?></button>
+                    </div>
 
-                        <div class="form-group" style="display:none;" id="userInput">
-                            <label><?= __('NOTIFICATION__WHO_USERNAME') ?></label>
-                            <input type="text" name="user_pseudo" class="form-control">
-                        </div>
-
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-info"><?= __('GLOBAL__SUBMIT') ?></button>
-                        </div>
-                    </form>
+                    <?= $this->Form->end() ?>
 
                 </div>
             </div>
@@ -65,31 +69,40 @@ use Cake\Routing\Router;
                 </div>
                 <div class="card-body">
 
-                    <a href="<?= Router::url(['action' => 'clearAllFromAllUsers', 'admin' => true]) ?>"
+                    <a href="<?= $this->Url->build(['_name' => 'admin_notifications_clear_all_from_all_users']) ?>"
                        class="btn btn-danger btn-block"
                        id="delete-all"><?= __('NOTIFICATION__DELETE_ALL_FROM_ALL_USERS') ?></a>
-                    <a href="<?= Router::url(['action' => 'markAllAsSeenFromAllUsers', 'admin' => true]) ?>"
+                    <a href="<?= $this->Url->build(['_name' => 'admin_notifications_mark_all_as_seen_from_all_users']) ?>"
                        class="btn btn-default btn-block"
                        id="mark-all-as-seen"><?= __('NOTIFICATION__MARK_ALL_AS_SEEN_FROM_ALL_USERS') ?></a>
 
                     <hr>
 
-                    <form method="post" action="<?= Router::url(['action' => 'clearAllFromGroup', 'admin' => true]) ?>"
-                          data-ajax="true" data-callback-function="afterSendNotification">
-                        <div class="input-group">
-                            <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">#</span>
-                                </div>
-                                <input type="text" class="form-control" name="group"
-                                       placeholder="<?= __('NOTIFICATION__DELETE_ALL_FROM_GROUP_INPUT') ?>">
-                                <div class="input-group-append">
-                                    <button class="btn btn-danger"><?= __('NOTIFICATION__DELETE_ALL_FROM_GROUP_BTN') ?></button>
-                                </div>
+                    <?= $this->Form->create(null, [
+                        'url' => ['_name' => 'admin_notifications_clear_all_from_group'],
+                        'method' => 'post',
+                        'data-ajax' => 'true',
+                        'data-callback-function' => 'afterSendNotification'
+                    ]) ?>
+                    <div class="input-group">
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">#</span>
                             </div>
-                            </span>
+                            <input
+                                type="text"
+                                class="form-control"
+                                name="group"
+                                placeholder="<?= __('NOTIFICATION__DELETE_ALL_FROM_GROUP_INPUT') ?>"
+                            >
+                            <div class="input-group-append">
+                                <button class="btn btn-danger">
+                                    <?= __('NOTIFICATION__DELETE_ALL_FROM_GROUP_BTN') ?>
+                                </button>
+                            </div>
                         </div>
-                    </form>
+                    </div>
+                    <?= $this->Form->end() ?>
 
                 </div>
             </div>
@@ -122,139 +135,206 @@ use Cake\Routing\Router;
     </div>
 </section>
 <script type="text/javascript">
-    $(document).ready(function () {
-        $('table').DataTable({
-            "paging": true,
-            "lengthChange": false,
-            "searching": true,
-            "ordering": false,
-            "info": false,
-            "autoWidth": false,
-            "bProcessing": true,
-            "bServerSide": true,
-            "sAjaxSource": "<?= Router::url(['action' => 'getAll', 'admin' => true]) ?>",
-            "aoColumns": [
-                {mData: "User.pseudo"},
-                {mData: "Notification.group"},
-                {mData: "Notification.from", "bSearchable": false},
-                {mData: "Notification.content"},
-                {mData: "Notification.type", "bSearchable": false},
-                {mData: "Notification.created"},
-                {mData: "Notification.actions", "bSearchable": false}
-            ],
-        });
+    document.addEventListener('DOMContentLoaded', function () {
+        var userSelect = document.getElementById('notification-user-id');
+        var userInputDiv = document.getElementById('userInput');
 
-        var table = $('table').DataTable();
-
-        $('table tbody').on('click', '.delete-notification', function (e) {
-
-            e.preventDefault();
-
-            var notification = $(this);
-            var url = notification.attr('href');
-
-            $.ajax({
-                url: url,
-                method: 'GET',
-                dataType: 'JSON',
-                success: function (data) {
-                    if (data.status) {
-                        table
-                            .row(notification.parents('tr'))
-                            .remove()
-                            .draw();
-                    } else {
-                        alert('Error!');
-                        console.log(data);
-                    }
-                },
-                error: function () {
-                    alert('Error!');
+        if (userSelect && userInputDiv) {
+            function updateUserInputVisibility() {
+                if (userSelect.value === 'user') {
+                    userInputDiv.style.display = '';
+                } else {
+                    userInputDiv.style.display = 'none';
                 }
-            });
+            }
 
+            userSelect.addEventListener('change', updateUserInputVisibility);
+            updateUserInputVisibility();
+        }
+
+        var tableElement = document.querySelector('.card-body table.table-responsive-sm.table-bordered');
+        if (!tableElement) {
+            return;
+        }
+
+        var notificationsTable = new DataTable(tableElement, {
+            paging: true,
+            lengthChange: false,
+            searching: true,
+            ordering: false,
+            info: false,
+            autoWidth: false,
+            processing: true,
+            serverSide: true,
+            ajax: "<?= $this->Url->build(['_name' => 'admin_notifications_get_all']) ?>",
+            columns: [
+                { data: "User.pseudo" },
+                { data: "Notification.group" },
+                { data: "Notification.from", searchable: false },
+                { data: "Notification.content" },
+                { data: "Notification.type", searchable: false },
+                { data: "Notification.created" },
+                { data: "Notification.actions", searchable: false }
+            ]
         });
 
-        $('table tbody').on('click', '.mark-as-seen', function (e) {
+        window.notificationsTable = notificationsTable;
 
-            e.preventDefault();
+        tableElement.addEventListener('click', function (e) {
+            var deleteLink = e.target.closest('.delete-notification');
+            var markSeenLink = e.target.closest('.mark-as-seen');
 
-            var btn = $(this);
-            var url = btn.attr('href');
+            if (deleteLink) {
+                e.preventDefault();
 
-            $.ajax({
-                url: url,
-                method: 'GET',
-                dataType: 'JSON',
-                success: function (data) {
-                    if (data.status) {
-                        btn.addClass('disabled').addClass('active').attr('disabled', true).attr('href', '#').html(btn.attr('data-seen'));
-                    } else {
-                        alert('Error!');
-                        console.log(data);
-                    }
-                },
-                error: function () {
-                    alert('Error!');
+                var url = deleteLink.getAttribute('href');
+                if (!url) {
+                    return;
                 }
-            });
 
-        });
-
-        $('#delete-all').on('click', function (e) {
-            e.preventDefault();
-
-            var btn = $(this);
-            var url = btn.attr('href');
-
-            $.ajax({
-                url: url,
-                method: 'GET',
-                dataType: 'JSON',
-                success: function (data) {
-                    if (data.status) {
-                        table.ajax.reload();
-                    } else {
-                        alert('Error!');
-                        console.log(data);
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
-                },
-                error: function () {
-                    alert('Error!');
-                }
-            });
-
-        });
-
-        $('#mark-all-as-seen').on('click', function (e) {
-            e.preventDefault();
-
-            var btn = $(this);
-            var url = btn.attr('href');
-
-            $.ajax({
-                url: url,
-                method: 'GET',
-                dataType: 'JSON',
-                success: function (data) {
-                    if (data.status) {
-                        table.ajax.reload();
-                    } else {
+                })
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function (data) {
+                        if (data && data.status) {
+                            var rowElement = deleteLink.closest('tr');
+                            if (rowElement) {
+                                notificationsTable.row(rowElement).remove().draw();
+                            }
+                        } else {
+                            alert('Error!');
+                            if (window.console) {
+                                console.log(data);
+                            }
+                        }
+                    })
+                    .catch(function () {
                         alert('Error!');
-                        console.log(data);
-                    }
-                },
-                error: function () {
-                    alert('Error!');
-                }
-            });
+                    });
 
+                return;
+            }
+
+            if (markSeenLink) {
+                e.preventDefault();
+
+                var urlSeen = markSeenLink.getAttribute('href');
+                if (!urlSeen) {
+                    return;
+                }
+
+                fetch(urlSeen, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function (data) {
+                        if (data && data.status) {
+                            var seenText = markSeenLink.getAttribute('data-seen') || markSeenLink.textContent;
+                            markSeenLink.classList.add('disabled');
+                            markSeenLink.classList.add('active');
+                            markSeenLink.setAttribute('disabled', 'disabled');
+                            markSeenLink.setAttribute('href', '#');
+                            markSeenLink.textContent = seenText;
+                        } else {
+                            alert('Error!');
+                            if (window.console) {
+                                console.log(data);
+                            }
+                        }
+                    })
+                    .catch(function () {
+                        alert('Error!');
+                    });
+
+                return;
+            }
         });
 
+        var deleteAllBtn = document.getElementById('delete-all');
+        if (deleteAllBtn) {
+            deleteAllBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                var url = deleteAllBtn.getAttribute('href');
+                if (!url) {
+                    return;
+                }
+
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function (data) {
+                        if (data && data.status) {
+                            notificationsTable.ajax.reload();
+                        } else {
+                            alert('Error!');
+                            if (window.console) {
+                                console.log(data);
+                            }
+                        }
+                    })
+                    .catch(function () {
+                        alert('Error!');
+                    });
+            });
+        }
+
+        var markAllSeenBtn = document.getElementById('mark-all-as-seen');
+        if (markAllSeenBtn) {
+            markAllSeenBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                var url = markAllSeenBtn.getAttribute('href');
+                if (!url) {
+                    return;
+                }
+
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function (data) {
+                        if (data && data.status) {
+                            notificationsTable.ajax.reload();
+                        } else {
+                            alert('Error!');
+                            if (window.console) {
+                                console.log(data);
+                            }
+                        }
+                    })
+                    .catch(function () {
+                        alert('Error!');
+                    });
+            });
+        }
     });
 
     function afterSendNotification() {
-        var table = $('table').DataTable();
-        table.ajax.reload();
+        if (window.notificationsTable) {
+            window.notificationsTable.ajax.reload();
+        }
     }
 </script>
