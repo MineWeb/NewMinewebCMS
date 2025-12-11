@@ -118,7 +118,8 @@ class LangComponent extends Component
             $language['messages'] = [];
         }
 
-        $this->EyPlugin = $this->controller->EyPlugin;
+        // TODO : Reactivate that
+        /*$this->EyPlugin = $this->controller->EyPlugin;
         $this->Theme = $this->controller->loadComponent("Theme");
         try {
             $plugins = $this->EyPlugin->getPluginsActive();
@@ -147,6 +148,7 @@ class LangComponent extends Component
                 }
             }
         }
+        */
 
         return $language;
 

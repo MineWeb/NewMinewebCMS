@@ -25,6 +25,7 @@ use Cake\Http\Middleware\BodyParserMiddleware;
 use Cake\Http\Middleware\CsrfProtectionMiddleware;
 use Cake\Http\MiddlewareQueue;
 use Cake\ORM\Locator\TableLocator;
+use Cake\ORM\TableRegistry;
 use Cake\Routing\Middleware\AssetMiddleware;
 use Cake\Routing\Middleware\RoutingMiddleware;
 
@@ -62,6 +63,13 @@ class Application extends BaseApplication
         if (Configure::read('debug')) {
             // Load more plugins here
             $this->addPlugin('DebugKit');
+        }
+
+        $pluginModel = TableRegistry::getTableLocator()->get("Plugin");
+        $plugins = $pluginModel->find(conditions: ['state' => true])->all()->toArray();
+
+        foreach ($plugins as $plugin) {
+            $this->addPlugin($plugin->name);
         }
     }
 

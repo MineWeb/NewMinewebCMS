@@ -18,7 +18,7 @@ class EyPluginComponent extends Component
     public $pluginsInFolder = [];
     public $pluginsInDB = [];
     public string $pluginsFolder;
-    public $pluginsLoaded;
+    public $pluginsLoaded = [];
     private $alreadyCheckValid = [];
     private $reference = 'https://raw.githubusercontent.com/MineWeb/mineweb.org/gh-pages/market/plugins.json';
     private $controller;
@@ -41,6 +41,8 @@ class EyPluginComponent extends Component
             'Permission' => TableRegistry::getTableLocator()->get("Permission")
         ];
 
+        // TODO : Reactive that
+        /*
         // plugins list
         $this->pluginsInFolder = $this->getPluginsInFolder();
         $this->pluginsInDB = $this->getPluginsInDB();
@@ -50,6 +52,7 @@ class EyPluginComponent extends Component
         $this->checkIfNeedToBeDeleted($this->pluginsInFolder['all'], $this->pluginsInDB);
         // load plugins (or unload)
         $this->pluginsLoaded = $this->loadPlugins();
+        */
     }
 
     // init
@@ -94,7 +97,7 @@ class EyPluginComponent extends Component
         }
 
         // REQUIRED FILES
-        $neededFiles = ['Config/routes.php', 'Config/bootstrap.php', 'lang/fr_FR.json', 'lang/en_US.json', 'Controller', /*'Controller/Component',*/
+        $neededFiles = ['lang/fr_FR.json', 'lang/en_US.json', 'Controller', /*'Controller/Component',*/
             'Model', /*'Model/Behavior',*/
             'View', /*'View/Helper',*/
             'View', /*'View/Layouts',*/
@@ -571,11 +574,10 @@ class EyPluginComponent extends Component
         // each db plugins
         $count = 0;
         foreach ($dbPlugins as $plugin) { // On les parcours tous
-            $plugin = $plugin;
             // get config
             $config = $this->getPluginConfig($plugin['name']);
             if (!is_object($config)) { // invalid plugin
-                Plugin::unload($plugin['name']); // ask to cake to unload it (lol)
+                $this->plugin($plugin['name']); // ask to cake to unload it (lol)
                 continue;
             }
             // set config
@@ -890,8 +892,7 @@ class EyPluginComponent extends Component
         unlink($zipFile);
 
         // Delete MacOS hidden files
-        $folder = new Folder($this->pluginsFolder . DS . '__MACOSX');
-        $folder->delete();
+        unlink($this->pluginsFolder . DS . '__MACOSX');
 
         // Return (& install if needed)
         return ($install) ? $this->install($slug, true) : true;
