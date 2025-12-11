@@ -3,36 +3,16 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use Cake\Event\EventInterface;
-use Cake\Http\Response;
-use Exception;
+use Cake\Controller\Controller;
 
-class ErrorController extends AppController
+class ErrorController extends Controller
 {
     public function initialize(): void
     {
         parent::initialize();
-        try {
-            $this->loadComponent('RequestHandler');
-        } catch (Exception) {
 
-        }
-        $this->viewBuilder()->setLayout('error');
-    }
-
-    public function beforeFilter(EventInterface $event): ?Response
-    {
-        return null;
-    }
-
-    public function beforeRender(EventInterface $event): ?Response
-    {
-        $this->viewBuilder()->setTemplatePath('Error');
-        return null;
-    }
-
-    public function afterFilter(EventInterface $event): ?Response
-    {
-        return null;
+        $this->viewBuilder()
+            ->setLayout('error')
+            ->setTemplatePath('Error');
     }
 }

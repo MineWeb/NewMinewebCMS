@@ -35,7 +35,6 @@
         <div class="col-md-12">
             <div id="content">
 
-
                 <?= $this->fetch('content'); ?>
 
             </div>
