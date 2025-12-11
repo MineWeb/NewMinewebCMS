@@ -5,7 +5,6 @@ namespace App\Model\Entity;
 
 use Cake\I18n\DateTime;
 use Cake\ORM\Entity;
-use Cake\ORM\TableRegistry;
 
 class Visit extends Entity
 {
@@ -16,6 +15,12 @@ class Visit extends Entity
         'lang' => true,
         'navigator' => true,
         'page' => true,
+        'user_id' => true,
+        'user' => true,
+    ];
+
+    protected array $_virtual = [
+        'author',
     ];
 
     protected function _getCreated(mixed $created): string
@@ -27,9 +32,12 @@ class Visit extends Entity
 
     protected function _getAuthor(): string
     {
-        $UserTable = TableRegistry::getTableLocator()->get('Users');
-        $searchUser = $UserTable->find('all', conditions: ['id' => $this->user_id])->first();
+        $user = $this->user ?? null;
 
-        return $searchUser != null ? $searchUser['pseudo'] : 'N/A';
+        if ($user && isset($user->pseudo)) {
+            return (string)$user->pseudo;
+        }
+
+        return 'N/A';
     }
 }

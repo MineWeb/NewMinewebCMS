@@ -10,6 +10,8 @@ class VisitsTable extends Table
 {
     public function initialize(array $config): void
     {
+        parent::initialize($config);
+
         $this->setTable('visits');
         $this->setPrimaryKey('id');
 
@@ -19,6 +21,11 @@ class VisitsTable extends Table
                     'created' => 'new',
                 ],
             ],
+        ]);
+
+        $this->belongsTo('Users', [
+            'foreignKey' => 'user_id',
+            'joinType' => 'LEFT',
         ]);
     }
 
@@ -58,6 +65,7 @@ class VisitsTable extends Table
     {
         $query = $this
             ->find()
+            ->contain(['Users'])
             ->orderBy(['id' => $order]);
 
         if ($limit !== false) {
