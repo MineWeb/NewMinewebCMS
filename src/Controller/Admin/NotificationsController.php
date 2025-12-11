@@ -37,7 +37,7 @@ class NotificationsController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        $notificationTable = $this->fetchTable('Notification');
+        $notificationTable = $this->fetchTable('Notifications');
 
         $this->DataTable = $this->loadComponent('DataTable');
         $this->DataTable->setTable($notificationTable);
@@ -140,7 +140,7 @@ class NotificationsController extends AppController
             ]));
         }
 
-        $notificationTable = $this->fetchTable('Notification');
+        $notificationTable = $this->fetchTable('Notifications');
         $from = $fromFlag ? $this->User->getKey('id') : null;
 
         if ($userIdRaw === 'all') {
@@ -173,7 +173,7 @@ class NotificationsController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        $notificationTable = $this->fetchTable('Notification');
+        $notificationTable = $this->fetchTable('Notifications');
         $status = $notificationTable->clearFromUser($id, $user_id);
 
         return $this->response->withStringBody(json_encode(['status' => $status]));
@@ -188,7 +188,7 @@ class NotificationsController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        $notificationTable = $this->fetchTable('Notification');
+        $notificationTable = $this->fetchTable('Notifications');
         $status = $notificationTable->clearAllFromUser($user_id);
 
         return $this->response->withStringBody(json_encode(['status' => $status]));
@@ -203,7 +203,7 @@ class NotificationsController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        $notificationTable = $this->fetchTable('Notification');
+        $notificationTable = $this->fetchTable('Notifications');
         $status = $notificationTable->clearFromAllUsers($id);
 
         return $this->response->withStringBody(json_encode(['status' => $status]));
@@ -218,7 +218,7 @@ class NotificationsController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        $notificationTable = $this->fetchTable('Notification');
+        $notificationTable = $this->fetchTable('Notifications');
         $status = $notificationTable->clearAllFromAllUsers();
 
         return $this->response->withStringBody(json_encode(['status' => $status]));
@@ -233,7 +233,7 @@ class NotificationsController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        $notificationTable = $this->fetchTable('Notification');
+        $notificationTable = $this->fetchTable('Notifications');
         $status = $notificationTable->markAsSeenFromUser($id, $user_id);
 
         return $this->response->withStringBody(json_encode(['status' => $status]));
@@ -248,7 +248,7 @@ class NotificationsController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        $notificationTable = $this->fetchTable('Notification');
+        $notificationTable = $this->fetchTable('Notifications');
         $status = $notificationTable->markAllAsSeenFromUser($user_id);
 
         return $this->response->withStringBody(json_encode(['status' => $status]));
@@ -263,7 +263,7 @@ class NotificationsController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        $notificationTable = $this->fetchTable('Notification');
+        $notificationTable = $this->fetchTable('Notifications');
         $status = $notificationTable->markAsSeenFromAllUsers($id);
 
         return $this->response->withStringBody(json_encode(['status' => $status]));
@@ -278,7 +278,7 @@ class NotificationsController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        $notificationTable = $this->fetchTable('Notification');
+        $notificationTable = $this->fetchTable('Notifications');
         $status = $notificationTable->markAllAsSeenFromAllUsers();
 
         return $this->response->withStringBody(json_encode(['status' => $status]));
@@ -302,7 +302,7 @@ class NotificationsController extends AppController
             ]));
         }
 
-        $notificationTable = $this->fetchTable('Notification');
+        $notificationTable = $this->fetchTable('Notifications');
         $notificationTable->clearAllFromGroup($group);
 
         return $this->response->withStringBody(json_encode([

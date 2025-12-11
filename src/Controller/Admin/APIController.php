@@ -16,10 +16,10 @@ class APIController extends AppController
 
         $this->set('title_for_layout', __('API__LABEL'));
 
-        $apiConfigurationTable = $this->fetchTable('ApiConfiguration');
+        $apiConfigurationTable = $this->fetchTable('ApiConfigurations');
         $config = $apiConfigurationTable->find()->first();
 
-        $serverTable = $this->fetchTable('Server');
+        $serverTable = $this->fetchTable('Servers');
         $get_all_servers = $serverTable->findSelectableServers(false);
 
         $request = $this->getRequest();

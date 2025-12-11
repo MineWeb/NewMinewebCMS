@@ -19,7 +19,7 @@ class SliderController extends AppController
 
         $this->set('title_for_layout', __('SLIDER__ADD'));
 
-        $sliderTable = $this->fetchTable('Slider');
+        $sliderTable = $this->fetchTable('Sliders');
         $sliders = $sliderTable->find()->all();
 
         $this->set(compact('sliders'));
@@ -39,7 +39,7 @@ class SliderController extends AppController
         }
 
         if ($id !== null) {
-            $sliderTable = $this->fetchTable('Slider');
+            $sliderTable = $this->fetchTable('Sliders');
             $slider = $sliderTable
                 ->find()
                 ->where(['id' => $id])
@@ -69,7 +69,7 @@ class SliderController extends AppController
             throw new NotFoundException();
         }
 
-        $sliderTable = $this->fetchTable('Slider');
+        $sliderTable = $this->fetchTable('Sliders');
         $slider = $sliderTable
             ->find()
             ->where(['id' => $id])
@@ -158,7 +158,7 @@ class SliderController extends AppController
             $data['url_img'] = $urlImg;
         }
 
-        $sliderTable = $this->fetchTable('Slider');
+        $sliderTable = $this->fetchTable('Sliders');
         $slider = $sliderTable->get($id);
         $slider->set($data);
         $sliderTable->save($slider);
@@ -243,7 +243,7 @@ class SliderController extends AppController
             $urlImg = Router::url('/') . 'img' . DS . 'uploads' . DS . 'slider' . DS . $time . '.' . $infos['extension'];
         }
 
-        $sliderTable = $this->fetchTable('Slider');
+        $sliderTable = $this->fetchTable('Sliders');
         $slider = $sliderTable->newEntity([
             'title' => $title,
             'subtitle' => $subtitle,

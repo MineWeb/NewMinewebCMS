@@ -33,7 +33,7 @@ class APIComponent extends Component
         if (isset($this->controller->Configuration)) {
             $this->Configuration = $this->controller->Configuration;
         } else {
-            $this->Configuration = TableRegistry::getTableLocator()->get('Configuration');
+            $this->Configuration = TableRegistry::getTableLocator()->get('Configurations');
         }
 
         $locator = TableRegistry::getTableLocator();

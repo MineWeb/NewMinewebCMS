@@ -25,7 +25,7 @@ class SocialController extends AppController
 
         $this->set('title_for_layout', __('SOCIAL__HOME'));
 
-        $socialButtonTable = $this->fetchTable('SocialButton');
+        $socialButtonTable = $this->fetchTable('SocialButtons');
         $buttons = $socialButtonTable
             ->find()
             ->order(['order' => 'ASC']);
@@ -89,7 +89,7 @@ class SocialController extends AppController
             ]));
         }
 
-        $socialButtonTable = $this->fetchTable('SocialButton');
+        $socialButtonTable = $this->fetchTable('SocialButtons');
         $error = false;
 
         foreach ($orderMap as $id => $order) {
@@ -170,7 +170,7 @@ class SocialController extends AppController
             }
         }
 
-        $socialButtonTable = $this->fetchTable('SocialButton');
+        $socialButtonTable = $this->fetchTable('SocialButtons');
 
         $last = $socialButtonTable
             ->find()
@@ -178,7 +178,7 @@ class SocialController extends AppController
             ->limit(1)
             ->first();
 
-        $order = $last ? ((int)$last['order'] + 1) : 1;
+        $order = $last ? (int)$last['order'] + 1 : 1;
 
         $button = $socialButtonTable->newEntity([
             'order' => $order,
@@ -208,7 +208,7 @@ class SocialController extends AppController
             throw new NotFoundException();
         }
 
-        $socialButtonTable = $this->fetchTable('SocialButton');
+        $socialButtonTable = $this->fetchTable('SocialButtons');
 
         $button = $socialButtonTable
             ->find()
@@ -302,7 +302,7 @@ class SocialController extends AppController
         }
 
         if ($id !== null) {
-            $socialButtonTable = $this->fetchTable('SocialButton');
+            $socialButtonTable = $this->fetchTable('SocialButtons');
             $button = $socialButtonTable->get($id);
 
             if ($socialButtonTable->delete($button)) {

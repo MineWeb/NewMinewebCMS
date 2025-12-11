@@ -233,7 +233,7 @@ class ConfigurationsTable extends Table
 
     public function getFirstAdministrator(): ?string
     {
-        $userTable = TableRegistry::getTableLocator()->get('User');
+        $userTable = TableRegistry::getTableLocator()->get('Users');
         $user = $userTable
             ->find()
             ->where(['rank' => '4'])
@@ -244,7 +244,7 @@ class ConfigurationsTable extends Table
 
     public function getInstalledDate(): mixed
     {
-        $userTable = TableRegistry::getTableLocator()->get('User');
+        $userTable = TableRegistry::getTableLocator()->get('Users');
         $user = $userTable
             ->find()
             ->where(['rank' => '4'])

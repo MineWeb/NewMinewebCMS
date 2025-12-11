@@ -17,7 +17,7 @@ class BanController extends AppController
 
         $this->set('title_for_layout', __('BAN__HOME'));
 
-        $banTable = $this->fetchTable('Ban');
+        $banTable = $this->fetchTable('Bans');
         $banned_users = $banTable->find()->all();
 
         $this->viewBuilder()
@@ -58,7 +58,7 @@ class BanController extends AppController
                 ]));
             }
 
-            $banTable = $this->fetchTable('Ban');
+            $banTable = $this->fetchTable('Bans');
             $userTable = $this->User;
 
             foreach ($request->getData() as $key => $value) {
@@ -100,7 +100,7 @@ class BanController extends AppController
             throw new ForbiddenException();
         }
 
-        $banTable = $this->fetchTable('Ban');
+        $banTable = $this->fetchTable('Bans');
         $ban = $banTable->get($id);
         $banTable->delete($ban);
 
@@ -129,7 +129,7 @@ class BanController extends AppController
             4 => ['label' => 'danger', 'name' => __('USER__RANK_ADMINISTRATOR')],
         ];
 
-        $rankTable = $this->fetchTable('Rank');
+        $rankTable = $this->fetchTable('Ranks');
         $custom_ranks = $rankTable->find()->all();
 
         foreach ($custom_ranks as $value) {
@@ -147,7 +147,7 @@ class BanController extends AppController
         $this->DataTable->mDataProp = true;
         $response = $this->DataTable->getResponse();
 
-        $banTable = $this->fetchTable('Ban');
+        $banTable = $this->fetchTable('Bans');
         $users = $response['aaData'] ?? [];
         $data = [];
 
@@ -201,7 +201,7 @@ class BanController extends AppController
         }
 
         $usersTable = $this->User;
-        $banTable = $this->fetchTable('Ban');
+        $banTable = $this->fetchTable('Bans');
 
         $result = $usersTable
             ->find('all', ['conditions' => ['pseudo LIKE' => $query . '%']])

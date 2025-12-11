@@ -91,7 +91,7 @@ class NotificationsTable extends Table
 
         $data = [];
 
-        $UserModel = TableRegistry::getTableLocator()->get('User');
+        $UserModel = TableRegistry::getTableLocator()->get('Users');
         DateTime::$wordFormat = 'd/m/y';
 
         foreach ($query as $notification) {
@@ -143,7 +143,7 @@ class NotificationsTable extends Table
             $group = $this->generateGroup();
         }
 
-        $UserModel = TableRegistry::getTableLocator()->get('User');
+        $UserModel = TableRegistry::getTableLocator()->get('Users');
         $usersToNotify = $UserModel->find()->where(['rank' => $rank_id])->all();
 
         foreach ($usersToNotify as $user) {

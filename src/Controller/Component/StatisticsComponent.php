@@ -34,7 +34,7 @@ class StatisticsComponent extends Component
             return;
         }
 
-        $this->Visit = TableRegistry::getTableLocator()->get('Visit');
+        $this->Visit = TableRegistry::getTableLocator()->get('Visits');
         $this->Util = $this->controller->Util;
 
         $ip = $this->Util->getIP();

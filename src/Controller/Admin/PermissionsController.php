@@ -17,7 +17,7 @@ class PermissionsController extends AppController
 
         $this->set('title_for_layout', __('PERMISSIONS__LABEL'));
 
-        $rankTable = $this->fetchTable('Rank');
+        $rankTable = $this->fetchTable('Ranks');
         $all_ranks = [
             [
                 'rank_id' => 0,
@@ -51,7 +51,7 @@ class PermissionsController extends AppController
                 $permissionsByRank[$rankId][] = $permission;
             }
 
-            $permissionTable = $this->fetchTable('Permission');
+            $permissionTable = $this->fetchTable('Permissions');
 
             foreach ($permissionsByRank as $rankId => $permissions) {
                 $row = $permissionTable
@@ -113,7 +113,7 @@ class PermissionsController extends AppController
             ]));
         }
 
-        $rankTable = $this->fetchTable('Rank');
+        $rankTable = $this->fetchTable('Ranks');
 
         $lastRank = $rankTable
             ->find()
@@ -152,8 +152,8 @@ class PermissionsController extends AppController
         $this->disableAutoRender();
 
         if ($id !== null) {
-            $rankTable = $this->fetchTable('Rank');
-            $permissionTable = $this->fetchTable('Permission');
+            $rankTable = $this->fetchTable('Ranks');
+            $permissionTable = $this->fetchTable('Permissions');
 
             $rank = $rankTable
                 ->find()

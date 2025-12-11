@@ -35,7 +35,7 @@ class HistoryController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        $historyTable = $this->fetchTable('History');
+        $historyTable = $this->fetchTable('Histories');
 
         $this->DataTable = $this->loadComponent('DataTable');
         $this->DataTable->setTable($historyTable);

@@ -91,6 +91,6 @@ class NewsTable extends Table
 
     public function find(string $type = 'all', mixed ...$args): Query
     {
-        return parent::find($type, $args)->contain(['Comment', 'Likes']);
+        return parent::find($type, $args)->contain(['Users', 'Comments', 'Likes']);
     }
 }

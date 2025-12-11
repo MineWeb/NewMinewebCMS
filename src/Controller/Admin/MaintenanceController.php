@@ -18,7 +18,7 @@ class MaintenanceController extends AppController
 
         $this->set('title_for_layout', __('MAINTENANCE__TITLE'));
 
-        $maintenanceTable = $this->fetchTable('Maintenance');
+        $maintenanceTable = $this->fetchTable('Maintenances');
         $pages = $maintenanceTable->find()->all();
 
         $this->set('pages', $pages);
@@ -39,7 +39,7 @@ class MaintenanceController extends AppController
 
         $this->set('title_for_layout', __('MAINTENANCE__TITLE'));
 
-        $maintenanceTable = $this->fetchTable('Maintenance');
+        $maintenanceTable = $this->fetchTable('Maintenances');
 
         if ($this->getRequest()->is('post')) {
             $this->disableAutoRender();
@@ -75,7 +75,7 @@ class MaintenanceController extends AppController
             throw new ForbiddenException();
         }
 
-        $maintenanceTable = $this->fetchTable('Maintenance');
+        $maintenanceTable = $this->fetchTable('Maintenances');
 
         $page = $maintenanceTable
             ->find()
@@ -126,7 +126,7 @@ class MaintenanceController extends AppController
             throw new ForbiddenException();
         }
 
-        $maintenanceTable = $this->fetchTable('Maintenance');
+        $maintenanceTable = $this->fetchTable('Maintenances');
 
         $entity = $maintenanceTable->get($id);
         $entity->set('active', '0');
@@ -147,7 +147,7 @@ class MaintenanceController extends AppController
             throw new ForbiddenException();
         }
 
-        $maintenanceTable = $this->fetchTable('Maintenance');
+        $maintenanceTable = $this->fetchTable('Maintenances');
 
         $entity = $maintenanceTable->get($id);
         $entity->set('active', '1');
@@ -168,7 +168,7 @@ class MaintenanceController extends AppController
             throw new ForbiddenException();
         }
 
-        $maintenanceTable = $this->fetchTable('Maintenance');
+        $maintenanceTable = $this->fetchTable('Maintenances');
         $page = $maintenanceTable->get($id);
         $pageUrl = $page->url;
 

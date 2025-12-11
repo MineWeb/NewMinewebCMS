@@ -22,12 +22,12 @@ class ServerComponent extends Component
     {
         $this->controller = $this->_registry->getController();
         $this->controller->set('Server', $this);
-        $this->configModel = TableRegistry::getTableLocator()->get("Configuration");
+        $this->configModel = TableRegistry::getTableLocator()->get("Configurations");
     }
 
     function getServerIdConnected($username, $type = "BUKKIT")
     {
-        $servers = TableRegistry::getTableLocator()->get("Server")->find('all', conditions: ['type' => 0])->toArray();
+        $servers = TableRegistry::getTableLocator()->get("Servers")->find('all', conditions: ['type' => 0])->toArray();
         foreach ($servers as $srv) {
             $server_id = $srv['id'];
             $server_type = $this->getServerType($server_id);
@@ -169,7 +169,7 @@ class ServerComponent extends Component
             return $this->config[$server_id] = false;
 
         $this->Timeout = $configuration['server_timeout'];
-        $this->Server = TableRegistry::getTableLocator()->get("Server");
+        $this->Server = TableRegistry::getTableLocator()->get("Servers");
         $search = $this->Server->find('all', conditions: ['id' => $server_id])->first();
         if (empty($search))
             return $this->config[$server_id] = false;
@@ -336,7 +336,7 @@ class ServerComponent extends Component
 
     public function getAllServers()
     {
-        $search = TableRegistry::getTableLocator()->get("Server")->find()->toArray();
+        $search = TableRegistry::getTableLocator()->get("Servers")->find()->toArray();
         $return = [];
         foreach ($search as $key => $value) {
             $return[]['server_id'] = $value['id'];
@@ -471,7 +471,7 @@ class ServerComponent extends Component
     public function commands($commands, $server_id = false)
     {
         if (!is_array($commands)) {
-            $this->User = TableRegistry::getTableLocator()->get("User");
+            $this->User = TableRegistry::getTableLocator()->get("Users");
             $commands = str_replace('{PLAYER}', $this->User->getKey('pseudo'), $commands);
             $commands = explode('[{+}]', $commands);
         }
@@ -496,7 +496,7 @@ class ServerComponent extends Component
             $time = $time * 60000 + $serverTimestamp;
 
             // Commands
-            $this->User = TableRegistry::getTableLocator()->get("User");
+            $this->User = TableRegistry::getTableLocator()->get("Users");
             if (!is_array($commands)) {
                 $commands = str_replace('{PLAYER}', $this->User->getKey('pseudo'), $commands);
                 $commands = explode('[{+}]', $commands);

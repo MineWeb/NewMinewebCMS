@@ -39,7 +39,7 @@ class PluginController extends AppController
             throw new NotFoundException();
         }
 
-        $pluginTable = $this->fetchTable('Plugin');
+        $pluginTable = $this->fetchTable('Plugins');
 
         $plugin = $pluginTable
             ->find()
@@ -125,7 +125,7 @@ class PluginController extends AppController
         Configure::write('Cache.disable', true);
         Cache::clearAll();
 
-        $pluginTable = $this->fetchTable('Plugin');
+        $pluginTable = $this->fetchTable('Plugins');
         $pluginTable->cacheQueries(false);
 
         $plugin = $pluginTable

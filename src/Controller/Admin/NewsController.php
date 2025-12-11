@@ -59,7 +59,7 @@ class NewsController extends AppController
 
         $newsTable = $this->fetchTable('News');
         $likesTable = $this->fetchTable('Likes');
-        $commentTable = $this->fetchTable('Comment');
+        $commentTable = $this->fetchTable('Comments');
 
         $entity = $newsTable->get($id);
         if ($newsTable->delete($entity)) {

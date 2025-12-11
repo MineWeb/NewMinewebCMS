@@ -9,6 +9,7 @@ use Cake\Event\EventInterface;
 use Cake\Http\Response;
 use Cake\I18n\I18n;
 use Cake\Routing\Router;
+use Throwable;
 
 define('TIMESTAMP_DEBUT', microtime(true));
 
@@ -61,7 +62,7 @@ class AppController extends BaseController
                 return $this->redirect(['_name' => 'ban_ip']);
             }
 
-            $this->Maintenance = $this->fetchTable('Maintenance');
+            $this->Maintenance = $this->fetchTable('Maintenances');
             if ($this->request->getParam('controller') !== 'Maintenance' && !$this->Permissions->can('BYPASS_MAINTENANCE')) {
                 $maintenance = $this->Maintenance->checkMaintenance($this->getRequest()->getRequestTarget());
                 if ($maintenance) {
@@ -146,7 +147,7 @@ class AppController extends BaseController
 
     protected function __initConfiguration(): void
     {
-        $this->Configuration = $this->fetchTable('Configuration');
+        $this->Configuration = $this->fetchTable('Configurations');
         $this->set('Configuration', $this->Configuration);
 
         $website_name = $this->Configuration->getKey('name');
@@ -170,7 +171,7 @@ class AppController extends BaseController
         $configuration_end_code = $this->Configuration->getKey('end_layout_code');
         $condition = $this->Configuration->getKey('condition');
 
-        $this->SocialButton = $this->fetchTable('Social');
+        $this->SocialButton = $this->fetchTable('SocialButtons');
         $findSocialButtons = $this->SocialButton->find()
             ->orderBy('order')
             ->all();
@@ -206,7 +207,7 @@ class AppController extends BaseController
             'twitter_link',
             'findSocialButtons',
             'google_analytics',
-            'configuration_end_code'
+            'configuration_end_code',
         ));
     }
 
@@ -220,7 +221,7 @@ class AppController extends BaseController
 
     private function __initUser(): void
     {
-        $this->User = $this->fetchTable('User');
+        $this->User = $this->fetchTable('Users');
 
         if (
             !$this->User->isConnected()
@@ -258,7 +259,7 @@ class AppController extends BaseController
 
     public function __initWebsiteInfos(): void
     {
-        $this->Visit = $this->fetchTable('Visit');
+        $this->Visit = $this->fetchTable('Visits');
 
         $users_count = $this->User->find()->count();
         $users_last = $this->User->find()
@@ -281,7 +282,7 @@ class AppController extends BaseController
             'visits_count',
             'visits_count_today',
             'admin_dark_mode',
-            'csrfToken'
+            'csrfToken',
         ));
     }
 
@@ -491,7 +492,7 @@ class AppController extends BaseController
                         'permission' => 'MANAGE_SLIDER',
                         'route' => ['_name' => 'admin_slider_index'],
                     ],
-                ]
+                ],
             );
         }
 
@@ -504,7 +505,7 @@ class AppController extends BaseController
                     'permission' => 'MANAGE_SLIDER',
                     'route' => ['_name' => 'admin_slider_index'],
                 ],
-            ]
+            ],
         );
 
         $plugins = $this->EyPlugin->pluginsLoaded;
@@ -522,14 +523,15 @@ class AppController extends BaseController
 
     public function __initNavbar(): void
     {
-        $this->Navbar = $this->fetchTable('Navbar');
+        $this->Navbar = $this->fetchTable('Navbars');
         $nav = $this->Navbar->find()->orderBy(['Navbar.order_by' => 'ASC'])->toArray();
         if (empty($nav)) {
             $this->set('nav', false);
+
             return;
         }
 
-        $this->Page = $this->fetchTable('Page');
+        $this->Page = $this->fetchTable('Pages');
         $pages = $this->Page->find('all', fields: ['id', 'slug'])->all();
 
         $pages_listed = [];
@@ -590,6 +592,7 @@ class AppController extends BaseController
                 'banner_server' => false,
                 'server_infos' => false,
             ]);
+
             return;
         }
 
@@ -599,11 +602,12 @@ class AppController extends BaseController
             } else {
                 $server_infos = $this->Server->banner_infos();
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->set([
                 'banner_server' => false,
                 'server_infos' => false,
             ]);
+
             return;
         }
 
@@ -616,6 +620,7 @@ class AppController extends BaseController
                 'banner_server' => false,
                 'server_infos' => $server_infos,
             ]);
+
             return;
         }
 
@@ -712,7 +717,7 @@ class AppController extends BaseController
         $seo_config['title'] = str_replace(
             ['{TITLE}', '{WEBSITE_NAME}'],
             [$title_for_layout, $website_name],
-            $seo_config['title']
+            $seo_config['title'],
         );
 
         $seo_config['theme_color'] = !empty($get_page['theme_color'])
@@ -823,7 +828,7 @@ class AppController extends BaseController
 
     public function isIPBan(string $ip): bool
     {
-        $this->Ban = $this->fetchTable('Ban');
+        $this->Ban = $this->fetchTable('Bans');
         $ipIsBan = $this->Ban->find('all', conditions: ['ip' => $ip])->first();
 
         if ($ipIsBan !== null) {

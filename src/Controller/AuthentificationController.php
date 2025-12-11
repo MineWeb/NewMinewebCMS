@@ -49,7 +49,7 @@ class AuthentificationController extends AppController
             ]));
         }
 
-        $this->Authentification = TableRegistry::getTableLocator()->get('Authentification');
+        $this->Authentification = TableRegistry::getTableLocator()->get('UsersTwofactorauth');
         $infos = $this->Authentification
             ->find('all', conditions: ['user_id' => $user['id']])
             ->first();
@@ -164,7 +164,7 @@ class AuthentificationController extends AppController
 
         $this->getRequest()->getSession()->delete('two-factor-auth-secret');
 
-        $this->Authentification = TableRegistry::getTableLocator()->get('Authentification');
+        $this->Authentification = TableRegistry::getTableLocator()->get('UsersTwofactorauth');
 
         $infos = $this->Authentification
             ->find('all', conditions: ['user_id' => $this->User->getKey('id')])
@@ -199,7 +199,7 @@ class AuthentificationController extends AppController
             throw new ForbiddenException('Not logged');
         }
 
-        $this->Authentification = TableRegistry::getTableLocator()->get('Authentification');
+        $this->Authentification = TableRegistry::getTableLocator()->get('UsersTwofactorauth');
 
         $infos = $this->Authentification
             ->find('all', conditions: ['user_id' => $this->User->getKey('id')])

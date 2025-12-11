@@ -188,7 +188,7 @@ class UsersTable extends Table
             return 'USER__ERROR_PSEUDO_ALREADY_REGISTERED';
         }
 
-        $configTable = TableRegistry::getTableLocator()->get('Configuration');
+        $configTable = TableRegistry::getTableLocator()->get('Configurations');
         if ($configTable->getKey('check_uuid') && !empty($search_member_by_uuid)) {
             return 'USER__ERROR_UUID_ALREADY_REGISTERED';
         }
@@ -236,7 +236,7 @@ class UsersTable extends Table
         Controller $controller,
     ): array|string {
         $UtilComponent = $controller->Util;
-        $LoginRetryTable = TableRegistry::getTableLocator()->get('LoginRetry');
+        $LoginRetryTable = TableRegistry::getTableLocator()->get('LoginRetries');
 
         $ip = $UtilComponent->getIP();
 
@@ -393,7 +393,7 @@ class UsersTable extends Table
             return 'ERROR__INTERNAL_ERROR';
         }
 
-        $this->Lostpassword = TableRegistry::getTableLocator()->get('Lostpassword');
+        $this->Lostpassword = TableRegistry::getTableLocator()->get('Lostpasswords');
 
         $Lostpassword = $this->Lostpassword
             ->find('all', conditions: ['email' => $data['email'], 'key' => $data['key'] ?? ''])
@@ -446,7 +446,7 @@ class UsersTable extends Table
 
     public function isBanned(): string|false
     {
-        $BanTable = TableRegistry::getTableLocator()->get('Ban');
+        $BanTable = TableRegistry::getTableLocator()->get('Bans');
 
         $check = $BanTable
             ->find('all', conditions: ['user_id' => $this->getKey('id')])

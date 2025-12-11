@@ -18,7 +18,7 @@ class MotdController extends AppController
 
         $this->set('title_for_layout', __('MOTD__TITLE'));
 
-        $serverTable = $this->fetchTable('Server');
+        $serverTable = $this->fetchTable('Servers');
         $this->ServerComponent = $this->loadComponent('Server');
 
         $servers = $serverTable->findSelectableServers(false);
@@ -61,7 +61,7 @@ class MotdController extends AppController
 
         $this->set('title_for_layout', __('MOTD__EDIT_TITLE'));
 
-        $serverTable = $this->fetchTable('Server');
+        $serverTable = $this->fetchTable('Servers');
         $this->ServerComponent = $this->loadComponent('Server');
 
         $servers = $serverTable->findSelectableServers(false);

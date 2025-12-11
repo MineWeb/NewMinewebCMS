@@ -26,7 +26,7 @@ class AdminController extends AppController
         $newsTable = $this->fetchTable('News');
         $nbr_news = $newsTable->find()->count();
 
-        $commentTable = $this->fetchTable('Comment');
+        $commentTable = $this->fetchTable('Comments');
         $nbr_comments = $commentTable
             ->find('all', conditions: ['created LIKE' => date('Y-m-d') . '%'])
             ->count();
@@ -88,7 +88,7 @@ class AdminController extends AppController
             }
         }
 
-        $serverTable = $this->fetchTable('Server');
+        $serverTable = $this->fetchTable('Servers');
         $servers = $serverTable->find()->all();
 
         if ($this->request->is('ajax') && $this->Permissions->can('SEND_SERVER_COMMAND_FROM_DASHBOARD')) {
@@ -110,7 +110,7 @@ class AdminController extends AppController
             }
         }
 
-        $serverCmdTable = $this->fetchTable('ServerCmd');
+        $serverCmdTable = $this->fetchTable('ServerCmds');
         $search_cmd = $serverCmdTable->find()->all();
 
         $this->set(compact(

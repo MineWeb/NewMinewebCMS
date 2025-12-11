@@ -42,7 +42,7 @@ class UtilComponent extends Component
         $this->dbAvailable = $this->checkDatabaseAvailable();
 
         if ($this->dbAvailable && isset($this->controller->Configuration)) {
-            $this->controller->Configuration = TableRegistry::getTableLocator()->get('Configuration');
+            $this->controller->Configuration = TableRegistry::getTableLocator()->get('Configurations');
         }
     }
 

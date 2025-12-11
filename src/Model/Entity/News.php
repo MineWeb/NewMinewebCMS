@@ -39,7 +39,7 @@ class News extends Entity
 
     protected function _getAuthor(): string
     {
-        $UserTable = TableRegistry::getTableLocator()->get('User');
+        $UserTable = TableRegistry::getTableLocator()->get('Users');
         $searchUser = $UserTable->find('all', conditions: ['id' => $this->user_id])->first();
 
         return $searchUser != null ? $searchUser['pseudo'] : 'N/A';
@@ -48,7 +48,7 @@ class News extends Entity
     protected function _getLiked(): bool
     {
         $LikeTable = TableRegistry::getTableLocator()->get('Likes');
-        $UserTable = TableRegistry::getTableLocator()->get('User');
+        $UserTable = TableRegistry::getTableLocator()->get('Users');
 
         if (!$UserTable->isConnected()) {
             return false;

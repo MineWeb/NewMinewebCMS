@@ -17,7 +17,7 @@ class Ban extends Entity
 
     protected function _getPseudo(): string
     {
-        $UserTable = TableRegistry::getTableLocator()->get('User');
+        $UserTable = TableRegistry::getTableLocator()->get('Users');
         $searchUser = $UserTable->find('all', conditions: ['id' => $this->user_id])->first();
 
         return $searchUser != null ? $searchUser['pseudo'] : 'N/A';

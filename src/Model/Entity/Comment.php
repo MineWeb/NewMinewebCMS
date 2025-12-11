@@ -26,7 +26,7 @@ class Comment extends Entity
 
     protected function _getAuthor(): string
     {
-        $UserTable = TableRegistry::getTableLocator()->get('User');
+        $UserTable = TableRegistry::getTableLocator()->get('Users');
         $searchUser = $UserTable->find('all', conditions: ['id' => $this->user_id])->first();
 
         return $searchUser != null ? $searchUser['pseudo'] : 'N/A';

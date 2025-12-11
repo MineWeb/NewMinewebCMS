@@ -19,7 +19,7 @@ class ServerController extends AppController
 
         $this->set('title_for_layout', __('SERVER__LINK'));
 
-        $serverTable = $this->fetchTable('Server');
+        $serverTable = $this->fetchTable('Servers');
         $servers = $serverTable->find()->all()->toArray();
 
         $banner_server = @unserialize((string)$this->Configuration->getKey('banner_server'));
@@ -57,8 +57,8 @@ class ServerController extends AppController
 
         $this->set('title_for_layout', __('SERVER__CMD'));
 
-        $serverCmdTable = $this->fetchTable('ServerCmd');
-        $serverTable = $this->fetchTable('Server');
+        $serverCmdTable = $this->fetchTable('ServerCmds');
+        $serverTable = $this->fetchTable('Servers');
 
         $search_cmd = $serverCmdTable
             ->find()
@@ -85,7 +85,7 @@ class ServerController extends AppController
             throw new ForbiddenException();
         }
 
-        $serverCmdTable = $this->fetchTable('ServerCmd');
+        $serverCmdTable = $this->fetchTable('ServerCmds');
         $entity = $serverCmdTable->get($id);
         $serverCmdTable->delete($entity);
 
@@ -151,7 +151,7 @@ class ServerController extends AppController
             ]));
         }
 
-        $serverCmdTable = $this->fetchTable('ServerCmd');
+        $serverCmdTable = $this->fetchTable('ServerCmds');
         $entity = $serverCmdTable->newEntity([
             'name' => $name,
             'cmd' => $cmd,
@@ -260,7 +260,7 @@ class ServerController extends AppController
         }
 
         if ($id !== null) {
-            $serverTable = $this->fetchTable('Server');
+            $serverTable = $this->fetchTable('Servers');
             $entity = $serverTable->get($id);
 
             if ($serverTable->delete($entity)) {
@@ -367,7 +367,7 @@ class ServerController extends AppController
             throw new ForbiddenException();
         }
 
-        $serverTable = $this->fetchTable('Server');
+        $serverTable = $this->fetchTable('Servers');
 
         $call = $serverTable->call('GET_BANNED_PLAYERS', $server_id);
         $list = [];
@@ -402,7 +402,7 @@ class ServerController extends AppController
             throw new ForbiddenException();
         }
 
-        $serverTable = $this->fetchTable('Server');
+        $serverTable = $this->fetchTable('Servers');
 
         $call = $serverTable->call('GET_WHITELISTED_PLAYERS', $server_id);
         $list = [];
@@ -437,7 +437,7 @@ class ServerController extends AppController
             throw new ForbiddenException();
         }
 
-        $serverTable = $this->fetchTable('Server');
+        $serverTable = $this->fetchTable('Servers');
 
         $call = $serverTable->call('GET_PLAYER_LIST', $server_id);
         $list = [];
@@ -473,7 +473,7 @@ class ServerController extends AppController
         $msg .= '<br /><br />';
         $msg .= '<i class="fa fa-times"></i> ';
 
-        $serverTable = $this->fetchTable('Server');
+        $serverTable = $this->fetchTable('Servers');
 
         if ($serverTable->ping(['ip' => $host, 'port' => $port, 'udp' => $udp])) {
             $msg .= __('SERVER__SEEMS_USED');
@@ -488,7 +488,7 @@ class ServerController extends AppController
     {
         $msg = '<br /><br />';
 
-        $serverTable = $this->fetchTable('Server');
+        $serverTable = $this->fetchTable('Servers');
 
         $hypixelIp = gethostbyname('mc.hypixel.net');
         if ($serverTable->ping(['ip' => $hypixelIp, 'port' => 25565, 'udp' => false])) {

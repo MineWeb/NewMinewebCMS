@@ -215,7 +215,7 @@ class UserController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        $this->Authentification = TableRegistry::getTableLocator()->get('Authentification');
+        $this->Authentification = TableRegistry::getTableLocator()->get('UsersTwofactorauth');
         $this->request = $this->request->withData('', $this->getRequest()->getData('xss'));
 
         $user_login = $this->User->getAllFromUser($this->getRequest()->getData('pseudo'));
@@ -332,7 +332,7 @@ class UserController extends AppController
 
         $userSession = $find['User']['id'];
 
-        $this->Notification = TableRegistry::getTableLocator()->get('Notification');
+        $this->Notification = TableRegistry::getTableLocator()->get('Notifications');
         $this->Notification->setToUser(__('USER__CONFIRM_NOTIFICATION'), $find['User']['id']);
 
         $this->getRequest()->getSession()->write('user', $userSession);
@@ -381,7 +381,7 @@ class UserController extends AppController
             ]));
         }
 
-        $this->User = TableRegistry::getTableLocator()->get('User');
+        $this->User = TableRegistry::getTableLocator()->get('Users');
         $search = $this->User->find('all', conditions: ['email' => $email])->first();
 
         if (empty($search)) {
@@ -398,7 +398,7 @@ class UserController extends AppController
             ]));
         }
 
-        $this->Lostpassword = TableRegistry::getTableLocator()->get('Lostpassword');
+        $this->Lostpassword = TableRegistry::getTableLocator()->get('Lostpasswords');
         $key = substr(md5((string)rand() . date('sihYdm')), 0, 10);
 
         $subject = __('USER__PASSWORD_RESET_LINK');
@@ -532,7 +532,7 @@ class UserController extends AppController
 
         $username = $this->User->getKey('pseudo');
 
-        $this->ApiConfiguration = TableRegistry::getTableLocator()->get('ApiConfiguration');
+        $this->ApiConfiguration = TableRegistry::getTableLocator()->get('ApiConfigurations');
         $ApiConfiguration = $this->ApiConfiguration->find()->first();
 
         $useSkinRestorer = $ApiConfiguration['use_skin_restorer'];
@@ -615,7 +615,7 @@ class UserController extends AppController
 
         $cape_max_size = 10000000;
 
-        $this->ApiConfiguration = TableRegistry::getTableLocator()->get('ApiConfiguration');
+        $this->ApiConfiguration = TableRegistry::getTableLocator()->get('ApiConfigurations');
         $ApiConfiguration = $this->ApiConfiguration->find()->first();
 
         $target_config = $ApiConfiguration['cape_filename'];
@@ -658,7 +658,7 @@ class UserController extends AppController
             return $this->redirect(['_name' => 'home']);
         }
 
-        $this->Authentification = TableRegistry::getTableLocator()->get('Authentification');
+        $this->Authentification = TableRegistry::getTableLocator()->get('UsersTwofactorauth');
         $infos = $this->Authentification->find(
             'all',
             conditions: [
@@ -696,7 +696,7 @@ class UserController extends AppController
             4 => __('USER__RANK_ADMINISTRATOR'),
         ];
 
-        $this->Rank = TableRegistry::getTableLocator()->get('Rank');
+        $this->Rank = TableRegistry::getTableLocator()->get('Ranks');
         $custom_ranks = $this->Rank->find()->all();
         foreach ($custom_ranks as $value) {
             $available_ranks[$value['rank_id']] = $value['name'];
@@ -706,7 +706,7 @@ class UserController extends AppController
         $this->set('can_cape', $this->API->can_cape());
         $this->set('can_skin', $this->API->can_skin());
 
-        $this->ApiConfiguration = TableRegistry::getTableLocator()->get('ApiConfiguration');
+        $this->ApiConfiguration = TableRegistry::getTableLocator()->get('ApiConfigurations');
         $configAPI = $this->ApiConfiguration->find()->first();
 
         $skin_width_max = $configAPI['skin_width'];

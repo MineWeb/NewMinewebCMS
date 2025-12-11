@@ -150,7 +150,7 @@ class NewsController extends AppController
             return $this->response->withStringBody(json_encode($result));
         }
 
-        $this->Comment = TableRegistry::getTableLocator()->get('Comment');
+        $this->Comment = TableRegistry::getTableLocator()->get('Comments');
         $comment = $this->Comment->newEntity([
             'content' => $this->getRequest()->getData('content'),
             'user_id' => $this->User->getKey('id'),
@@ -287,7 +287,7 @@ class NewsController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('text/plain');
 
-        $this->Comment = TableRegistry::getTableLocator()->get('Comment');
+        $this->Comment = TableRegistry::getTableLocator()->get('Comments');
         $search = $this->Comment->find(
             'all',
             conditions: ['id' => $this->getRequest()->getData('id')]

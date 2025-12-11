@@ -46,9 +46,9 @@ class PermissionsComponent extends Component
     function initialize(array $config): void
     {
         $this->controller = $this->_registry->getController();
-        $this->userModel = TableRegistry::getTableLocator()->get("User");
-        $this->permModel = TableRegistry::getTableLocator()->get("Permission");
-        $this->rankModel = TableRegistry::getTableLocator()->get("Rank");
+        $this->userModel = TableRegistry::getTableLocator()->get("Users");
+        $this->permModel = TableRegistry::getTableLocator()->get("Permissions");
+        $this->rankModel = TableRegistry::getTableLocator()->get("Ranks");
 
         $this->controller->set('Permissions', $this);
     }

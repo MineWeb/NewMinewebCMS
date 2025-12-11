@@ -19,7 +19,7 @@ class PagesController extends AppController
 
         $this->set('title_for_layout', __('PAGE__LIST'));
 
-        $pageTable = $this->fetchTable('Page');
+        $pageTable = $this->fetchTable('Pages');
         $pages = $pageTable->find()->toArray();
 
         foreach ($pages as $index => $page) {
@@ -81,7 +81,7 @@ class PagesController extends AppController
             ]));
         }
 
-        $pageTable = $this->fetchTable('Page');
+        $pageTable = $this->fetchTable('Pages');
 
         $entity = $pageTable->newEntity([
             'title' => $title,
@@ -111,7 +111,7 @@ class PagesController extends AppController
         }
 
         if ($id !== null) {
-            $pageTable = $this->fetchTable('Page');
+            $pageTable = $this->fetchTable('Pages');
             $entity = $pageTable->get($id);
 
             if ($pageTable->delete($entity)) {
@@ -133,7 +133,7 @@ class PagesController extends AppController
             return $this->redirect(['_name' => 'admin_pages_index']);
         }
 
-        $pageTable = $this->fetchTable('Page');
+        $pageTable = $this->fetchTable('Pages');
         $page = $pageTable
             ->find()
             ->where(['id' => $id])
@@ -181,7 +181,7 @@ class PagesController extends AppController
             ]));
         }
 
-        $pageTable = $this->fetchTable('Page');
+        $pageTable = $this->fetchTable('Pages');
         $entity = $pageTable->get($id);
 
         $entity->set([

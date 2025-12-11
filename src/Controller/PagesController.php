@@ -22,7 +22,7 @@ class PagesController extends AppController
         if (isset($parts[1])) {
             $query = explode('_', $parts[1]);
             if (isset($query[0]) && $query[0] === 'resetpasswd' && !empty($query[1])) {
-                $this->Lostpassword = TableRegistry::getTableLocator()->get('Lostpassword');
+                $this->Lostpassword = TableRegistry::getTableLocator()->get('Lostpasswords');
                 $search = $this->Lostpassword->find('all', conditions: ['key' => $query[1]])->first();
                 if (!empty($search)) {
                     $created = strtotime($search['created']);
@@ -37,7 +37,7 @@ class PagesController extends AppController
             }
         }
 
-        $this->Lostpassword = TableRegistry::getTableLocator()->get('Lostpassword');
+        $this->Lostpassword = TableRegistry::getTableLocator()->get('Lostpasswords');
         $search_passwd = $this->Lostpassword->find();
         foreach ($search_passwd as $value) {
             $created = strtotime($value['created']);
@@ -105,7 +105,7 @@ class PagesController extends AppController
         $can_like = (bool)$this->Permissions->can('LIKE_NEWS');
         $this->set(compact('search_news', 'can_like'));
 
-        $this->Slider = TableRegistry::getTableLocator()->get('Slider');
+        $this->Slider = TableRegistry::getTableLocator()->get('Sliders');
         $search_slider = $this->Slider->find()->toArray();
         $this->set(compact('search_slider'));
 
@@ -134,7 +134,7 @@ class PagesController extends AppController
             throw new NotFoundException();
         }
 
-        $this->Page = TableRegistry::getTableLocator()->get('Page');
+        $this->Page = TableRegistry::getTableLocator()->get('Pages');
         $page = $this->Page->find('all', conditions: ['slug' => $slug])->first();
 
         if (empty($page)) {

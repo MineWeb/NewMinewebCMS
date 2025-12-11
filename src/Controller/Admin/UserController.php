@@ -83,7 +83,7 @@ class UserController extends AppController
             4 => ['label' => 'danger', 'name' => __('USER__RANK_ADMINISTRATOR')],
         ];
 
-        $rankTable = TableRegistry::getTableLocator()->get('Rank');
+        $rankTable = TableRegistry::getTableLocator()->get('Ranks');
         $customRanks = $rankTable->find()->all();
 
         foreach ($customRanks as $value) {
@@ -164,7 +164,7 @@ class UserController extends AppController
             throw new NotFoundException();
         }
 
-        $historyTable = TableRegistry::getTableLocator()->get('History');
+        $historyTable = TableRegistry::getTableLocator()->get('Histories');
         $lastHistory = $historyTable->getLastFromUser($searchUser['id']);
         $searchUser['History'] = $historyTable->format($lastHistory);
 
@@ -175,7 +175,7 @@ class UserController extends AppController
             4 => __('USER__RANK_SUPER_ADMINISTRATOR'),
         ];
 
-        $rankTable = TableRegistry::getTableLocator()->get('Rank');
+        $rankTable = TableRegistry::getTableLocator()->get('Ranks');
         $customRanks = $rankTable->find()->all();
 
         foreach ($customRanks as $value) {

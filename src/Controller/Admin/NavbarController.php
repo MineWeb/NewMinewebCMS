@@ -20,13 +20,13 @@ class NavbarController extends AppController
 
         $this->set('title_for_layout', __('NAVBAR__TITLE'));
 
-        $navbarTable = $this->fetchTable('Navbar');
+        $navbarTable = $this->fetchTable('Navbars');
         $navbars = $navbarTable
             ->find()
             ->order(['order_by'])
             ->toArray();
 
-        $pageTable = $this->fetchTable('Page');
+        $pageTable = $this->fetchTable('Pages');
         $pages = $pageTable
             ->find('all')
             ->select(['id', 'slug'])
@@ -137,7 +137,7 @@ class NavbarController extends AppController
             ]));
         }
 
-        $navbarTable = $this->fetchTable('Navbar');
+        $navbarTable = $this->fetchTable('Navbars');
         $error = false;
 
         foreach ($orders as $id => $orderBy) {
@@ -180,7 +180,7 @@ class NavbarController extends AppController
             return $this->redirect(['_name' => 'admin_navbar_index']);
         }
 
-        $navbarTable = $this->fetchTable('Navbar');
+        $navbarTable = $this->fetchTable('Navbars');
 
         try {
             $nav = $navbarTable->get($id);
@@ -204,7 +204,7 @@ class NavbarController extends AppController
 
         $this->set('title_for_layout', __('NAVBAR__ADD_LINK'));
 
-        $pageTable = $this->fetchTable('Page');
+        $pageTable = $this->fetchTable('Pages');
         $pages = $pageTable
             ->find()
             ->select(['id', 'title'])
@@ -254,7 +254,7 @@ class NavbarController extends AppController
             ]));
         }
 
-        $navbarTable = $this->fetchTable('Navbar');
+        $navbarTable = $this->fetchTable('Navbars');
 
         $last = $navbarTable
             ->find()
@@ -297,7 +297,7 @@ class NavbarController extends AppController
             throw new NotFoundException();
         }
 
-        $navbarTable = $this->fetchTable('Navbar');
+        $navbarTable = $this->fetchTable('Navbars');
         $nav = $navbarTable
             ->find()
             ->where(['id' => $id])
@@ -309,7 +309,7 @@ class NavbarController extends AppController
 
         $this->set('title_for_layout', __('NAVBAR__EDIT_TITLE'));
 
-        $pageTable = $this->fetchTable('Page');
+        $pageTable = $this->fetchTable('Pages');
         $pages = $pageTable
             ->find()
             ->select(['id', 'title'])
@@ -362,7 +362,7 @@ class NavbarController extends AppController
 
         $openNewTab = $openNewTabRaw === 'true' ? 1 : 0;
 
-        $navbarTable = $this->fetchTable('Navbar');
+        $navbarTable = $this->fetchTable('Navbars');
         $nav = $navbarTable->get($id);
 
         $data = [

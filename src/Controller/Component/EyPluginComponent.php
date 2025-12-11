@@ -40,8 +40,8 @@ class EyPluginComponent extends Component
         $this->controller->set('EyPlugin', $this);
 
         $this->models = (object)[
-            'Plugin' => TableRegistry::getTableLocator()->get('Plugin'),
-            'Permission' => TableRegistry::getTableLocator()->get('Permission')
+            'Plugin' => TableRegistry::getTableLocator()->get('Plugins'),
+            'Permission' => TableRegistry::getTableLocator()->get('Permissions')
         ];
 
         $this->pluginsInFolder = $this->getPluginsInFolder();

@@ -384,7 +384,7 @@ class InstallController extends BaseController
             ]);
         }
 
-        $userTable = $this->fetchTable('User');
+        $userTable = $this->fetchTable('Users');
         $existingAdmin = $userTable->find()->first();
 
         if ($existingAdmin) {
