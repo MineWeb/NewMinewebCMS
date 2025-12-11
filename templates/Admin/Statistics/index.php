@@ -124,7 +124,7 @@ foreach ($pages as $page => $visitcount) {
 </section>
 <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function () {
-        var url = '<?= $this->Url->build(['_name' => 'admin_statistics_get_visits']) ?>';
+        let url = '<?= $this->Url->build(['_name' => 'admin_statistics_get_visits']) ?>';
 
         fetch(url, {
             method: 'GET',

@@ -84,27 +84,15 @@
         </div>
     </div>
 </section>
-<script type="text/javascript">
+
+<script>
     document.addEventListener('DOMContentLoaded', function () {
         var sortableBody = document.getElementById('sortable');
         var saveButton = document.getElementById('save');
         var ajaxMsg = document.querySelector('.ajax-msg');
-        var draggedRow = null;
 
-        function enableSaveInProgress() {
-            if (!saveButton) {
-                return;
-            }
-            saveButton.disabled = false;
-            saveButton.textContent = '<?= __('SOCIAL__SAVE_IN_PROGRESS') ?>';
-        }
-
-        function setSaveSuccess() {
-            if (!saveButton) {
-                return;
-            }
-            saveButton.disabled = true;
-            saveButton.textContent = '<?= __('SOCIAL__SAVE_SUCCESS') ?>';
+        if (!sortableBody) {
+            return;
         }
 
         function showError(message) {
@@ -112,28 +100,30 @@
                 return;
             }
             ajaxMsg.innerHTML =
-                '<div class="alert alert-danger" style="margin-top:10px;margin-right:10px;margin-left:10px;">' +
-                '<a class="close" data-dismiss="alert">×</a>' +
-                '<i class="icon icon-warning-sign"></i> ' +
+                '<div class="alert alert-danger">' +
                 '<b><?= __('GLOBAL__ERROR') ?> :</b> ' + message +
                 '</div>';
         }
 
-        function buildSerializedOrder() {
-            if (!sortableBody) {
-                return '';
-            }
+        function setButtonLoading() {
+            saveButton.disabled = true;
+            saveButton.textContent = '<?= __('SOCIAL__SAVE_IN_PROGRESS') ?>';
+        }
+
+        function setButtonSuccess() {
+            saveButton.disabled = true;
+            saveButton.textContent = '<?= __('SOCIAL__SAVE_SUCCESS') ?>';
+        }
+
+        function buildOrderString() {
             var items = sortableBody.querySelectorAll('.item');
             var parts = [];
             var regexp = /^(.+)[\-=_](.+)$/;
 
             items.forEach(function (row) {
-                var id = row.id || '';
-                var match = id.match(regexp);
+                var match = row.id.match(regexp);
                 if (match) {
-                    var name = match[1] + '[]';
-                    var value = match[2];
-                    parts.push(encodeURIComponent(name) + '=' + encodeURIComponent(value));
+                    parts.push(match[1] + '[]=' + match[2]);
                 }
             });
 
@@ -141,88 +131,40 @@
         }
 
         function sendOrder() {
-            var url = '<?= $this->Url->build(['_name' => 'admin_social_save_ajax']) ?>';
-            var socialOrder = buildSerializedOrder();
+            setButtonLoading();
 
             var params = new URLSearchParams();
-            params.append('social_button_order', socialOrder);
+            params.append('social_button_order', buildOrderString());
 
-            fetch(url, {
+            fetch('<?= $this->Url->build(['_name' => 'admin_social_save_ajax']) ?>', {
                 method: 'POST',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                    'Content-Type': 'application/x-www-form-urlencoded'
                 },
                 body: params.toString()
             })
-                .then(function (response) {
-                    return response.json();
-                })
+                .then(function (r) { return r.json(); })
                 .then(function (data) {
                     if (data && data.statut) {
-                        setSaveSuccess();
-                    } else if (data && data.statut === false) {
-                        showError(data.msg || '');
+                        setButtonSuccess();
                     } else {
-                        showError('<?= __('ERROR__INTERNAL_ERROR') ?>');
+                        setButtonSuccess();
+                        showError(data.msg || '');
                     }
                 })
                 .catch(function () {
+                    setButtonSuccess();
                     showError('<?= __('ERROR__INTERNAL_ERROR') ?>');
                 });
         }
 
-        function makeSortable() {
-            if (!sortableBody) {
-                return;
+        Sortable.create(sortableBody, {
+            animation: 150,
+            handle: '.item',
+            onEnd: function () {
+                sendOrder();
             }
-
-            var rows = sortableBody.querySelectorAll('.item:not(.fixed)');
-            rows.forEach(function (row) {
-                row.setAttribute('draggable', 'true');
-
-                row.addEventListener('dragstart', function (e) {
-                    draggedRow = row;
-                    row.classList.add('dragging');
-                    e.dataTransfer.effectAllowed = 'move';
-                });
-
-                row.addEventListener('dragend', function () {
-                    row.classList.remove('dragging');
-                    draggedRow = null;
-                });
-
-                row.addEventListener('dragover', function (e) {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
-
-                    var target = row;
-                    if (!draggedRow || draggedRow === target) {
-                        return;
-                    }
-
-                    var bounding = target.getBoundingClientRect();
-                    var offset = e.clientY - bounding.top;
-
-                    if (offset > bounding.height / 2) {
-                        if (target.nextSibling !== draggedRow) {
-                            target.parentNode.insertBefore(draggedRow, target.nextSibling);
-                        }
-                    } else {
-                        if (target !== draggedRow.nextSibling) {
-                            target.parentNode.insertBefore(draggedRow, target);
-                        }
-                    }
-                });
-
-                row.addEventListener('drop', function (e) {
-                    e.preventDefault();
-                    enableSaveInProgress();
-                    sendOrder();
-                });
-            });
-        }
-
-        makeSortable();
+        });
     });
 </script>

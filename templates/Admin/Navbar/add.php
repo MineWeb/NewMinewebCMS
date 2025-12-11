@@ -145,10 +145,10 @@
 
 <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function () {
-        var normalRadio = document.getElementById('normal');
-        var dropdownRadio = document.getElementById('dropdown');
-        var typeNormalDiv = document.getElementById('type-normal');
-        var typeDropdownDiv = document.getElementById('type-dropdown');
+        let normalRadio = document.getElementById('normal');
+        let dropdownRadio = document.getElementById('dropdown');
+        let typeNormalDiv = document.getElementById('type-normal');
+        let typeDropdownDiv = document.getElementById('type-dropdown');
 
         function updateTypeVisibility() {
             if (normalRadio && normalRadio.checked) {
@@ -176,12 +176,12 @@
         }
         updateTypeVisibility();
 
-        var typePlugin = document.querySelector('.type_plugin');
-        var typePage = document.querySelector('.type_page');
-        var typeCustom = document.querySelector('.type_custom');
-        var pluginBlock = document.querySelector('.plugin');
-        var pageBlock = document.querySelector('.page');
-        var customInput = document.querySelector('.custom');
+        let typePlugin = document.querySelector('.type_plugin');
+        let typePage = document.querySelector('.type_page');
+        let typeCustom = document.querySelector('.type_custom');
+        let pluginBlock = document.querySelector('.plugin');
+        let pageBlock = document.querySelector('.page');
+        let customInput = document.querySelector('.custom');
 
         function updateUrlType() {
             if (typePlugin && typePlugin.checked) {
@@ -238,22 +238,22 @@
         }
         updateUrlType();
 
-        var addNavBtn = document.getElementById('add_nav');
-        var addJsContainer = document.getElementById('add-js');
+        let addNavBtn = document.getElementById('add_nav');
+        let addJsContainer = document.getElementById('add-js');
 
         if (addNavBtn && addJsContainer) {
-            var how = parseInt(addJsContainer.getAttribute('data-number') || '1', 10);
+            let how = parseInt(addJsContainer.getAttribute('data-number') || '1', 10);
 
             addNavBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 how += 1;
                 addJsContainer.setAttribute('data-number', String(how));
 
-                var wrapper = document.createElement('div');
-                var nameId = 'name-of-nav-' + how;
-                var urlId = 'url-of-nav-' + how;
+                let wrapper = document.createElement('div');
+                let nameId = 'name-of-nav-' + how;
+                let urlId = 'url-of-nav-' + how;
 
-                var html = ''
+                let html = ''
                     + '<div class="form-group">'
                     + '<div class="card card-body" id="nav-' + how + '">'
                     + '<div class="form-group">'
@@ -277,10 +277,10 @@
         }
 
         document.addEventListener('click', function (e) {
-            var target = e.target;
+            let target = e.target;
             if (target && target.classList.contains('delete-nav')) {
                 e.preventDefault();
-                var card = target.closest('.card');
+                let card = target.closest('.card');
                 if (card) {
                     card.remove();
                 }
@@ -293,28 +293,28 @@
             form = form[0];
         }
 
-        var nameInput = form.querySelector("input[name='name']");
-        var iconInput = form.querySelector("input[name='icon']");
-        var typeInput = form.querySelector("input[type='radio'][name='type']:checked");
+        let nameInput = form.querySelector("input[name='name']");
+        let iconInput = form.querySelector("input[name='icon']");
+        let typeInput = form.querySelector("input[type='radio'][name='type']:checked");
 
-        var name = nameInput ? nameInput.value : '';
-        var icon = iconInput ? iconInput.value : '';
-        var type = typeInput ? typeInput.value : '';
-        var url;
+        let name = nameInput ? nameInput.value : '';
+        let icon = iconInput ? iconInput.value : '';
+        let type = typeInput ? typeInput.value : '';
+        let url;
 
         if (type === 'normal') {
-            var urlTypeInput = form.querySelector("input[name='url_type']:checked");
-            var urlType = urlTypeInput ? urlTypeInput.value : '';
+            let urlTypeInput = form.querySelector("input[name='url_type']:checked");
+            let urlType = urlTypeInput ? urlTypeInput.value : '';
 
             if (urlType === 'custom') {
-                var customInput = form.querySelector("input[name='url_custom']");
-                var customValue = customInput ? customInput.value : '';
+                let customInput = form.querySelector("input[name='url_custom']");
+                let customValue = customInput ? customInput.value : '';
                 url = '{"type":"custom","url":"' + customValue + '"}';
             } else if (urlType === 'plugin') {
-                var pluginSelect = form.querySelector("select[name='url_plugin']");
-                var value = pluginSelect ? pluginSelect.value : '';
+                let pluginSelect = form.querySelector("select[name='url_plugin']");
+                let value = pluginSelect ? pluginSelect.value : '';
                 try {
-                    var parsed = JSON.parse(value);
+                    let parsed = JSON.parse(value);
                     url = {
                         type: 'plugin',
                         id: parsed.id,
@@ -325,29 +325,29 @@
                     url = 'undefined';
                 }
             } else if (urlType === 'page') {
-                var pageSelect = form.querySelector("select[name='url_page']");
-                var pageValue = pageSelect ? pageSelect.value : '';
+                let pageSelect = form.querySelector("select[name='url_page']");
+                let pageValue = pageSelect ? pageSelect.value : '';
                 url = '{"type":"page","id":"' + pageValue + '"}';
             } else {
                 url = 'undefined';
             }
         } else {
-            var nameInputs = form.querySelectorAll('.name_of_nav');
-            var urlInputs = form.querySelectorAll('.url_of_nav');
+            let nameInputs = form.querySelectorAll('.name_of_nav');
+            let urlInputs = form.querySelectorAll('.url_of_nav');
             url = {};
-            for (var i = 0; i < nameInputs.length; i++) {
-                var l = nameInputs[i].value;
-                var p = urlInputs[i] ? urlInputs[i].value : '';
+            for (let i = 0; i < nameInputs.length; i++) {
+                let l = nameInputs[i].value;
+                let p = urlInputs[i] ? urlInputs[i].value : '';
                 if (l !== '') {
                     url[l] = p;
                 }
             }
         }
 
-        var newTabInput = form.querySelector('input[name="new_tab"]');
-        var openNewTab = newTabInput ? newTabInput.checked : false;
+        let newTabInput = form.querySelector('input[name="new_tab"]');
+        let openNewTab = newTabInput ? newTabInput.checked : false;
 
-        var inputs = {};
+        let inputs = {};
         inputs.name = name;
         inputs.icon = icon;
         inputs.type = type;

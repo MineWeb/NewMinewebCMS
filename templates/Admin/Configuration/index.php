@@ -522,24 +522,24 @@
 
 <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function () {
-        var passwordsSaltCheckbox = document.getElementById('passwords-salt-checkbox');
-        var passwordsSaltHidden = document.getElementById('passwords-salt');
+        let passwordsSaltCheckbox = document.getElementById('passwords-salt-checkbox');
+        let passwordsSaltHidden = document.getElementById('passwords-salt');
         if (passwordsSaltCheckbox && passwordsSaltHidden) {
             passwordsSaltCheckbox.addEventListener('change', function () {
                 passwordsSaltHidden.value = passwordsSaltCheckbox.checked ? '1' : '0';
             });
         }
 
-        var checkUuidCheckbox = document.getElementById('check-uuid-checkbox');
-        var checkUuidHidden = document.getElementById('check-uuid');
+        let checkUuidCheckbox = document.getElementById('check-uuid-checkbox');
+        let checkUuidHidden = document.getElementById('check-uuid');
         if (checkUuidCheckbox && checkUuidHidden) {
             checkUuidCheckbox.addEventListener('change', function () {
                 checkUuidHidden.value = checkUuidCheckbox.checked ? '1' : '0';
             });
         }
 
-        var confirmMailRadios = document.querySelectorAll('input[name="confirm_mail_signup"]');
-        var confirmMailBlock = document.getElementById('confirm_mail_signup');
+        let confirmMailRadios = document.querySelectorAll('input[name="confirm_mail_signup"]');
+        let confirmMailBlock = document.getElementById('confirm_mail_signup');
         if (confirmMailRadios.length && confirmMailBlock) {
             confirmMailRadios.forEach(function (radio) {
                 radio.addEventListener('change', function () {
@@ -552,8 +552,8 @@
             });
         }
 
-        var captchaRadios = document.querySelectorAll('input[name="captcha_type"]');
-        var captchaBlock = document.getElementById('captcha');
+        let captchaRadios = document.querySelectorAll('input[name="captcha_type"]');
+        let captchaBlock = document.getElementById('captcha');
         if (captchaRadios.length && captchaBlock) {
             captchaRadios.forEach(function (radio) {
                 radio.addEventListener('change', function () {
@@ -566,8 +566,8 @@
             });
         }
 
-        var emailSendTypeRadios = document.querySelectorAll('input[name="email_send_type"]');
-        var smtpConfigBlock = document.getElementById('smtp-config');
+        let emailSendTypeRadios = document.querySelectorAll('input[name="email_send_type"]');
+        let smtpConfigBlock = document.getElementById('smtp-config');
         if (emailSendTypeRadios.length && smtpConfigBlock) {
             emailSendTypeRadios.forEach(function (radio) {
                 radio.addEventListener('change', function () {

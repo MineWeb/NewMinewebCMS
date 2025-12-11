@@ -23,18 +23,18 @@
                                                   rows="10"><?= $value ?></textarea>
                                     <?php } ?>
                                     <?php if ($key == "GLOBAL__FORMAT_DATE") { ?>
-                                        <small><?= __('CONFIG__LANG_AVAILABLE_VARIABLES') ?> : {%day}, {%month},
+                                        <small><?= __('CONFIG__LANG_AVAILABLE_letIABLES') ?> : {%day}, {%month},
                                             {%year}, {%hour|24}, {%hour|12}, {%minutes}</small>
                                     <?php } ?>
                                     <?php if ($key == "SERVER__STATUS_MESSAGE") { ?>
-                                        <small><?= __('CONFIG__LANG_AVAILABLE_VARIABLES') ?> : {MOTD},
+                                        <small><?= __('CONFIG__LANG_AVAILABLE_letIABLES') ?> : {MOTD},
                                             {VERSION}, {ONLINE}, {ONLINE_LIMIT}</small>
                                     <?php } ?>
                                     <?php if ($key == "VOTE_SUCCESS_SERVER") { ?>
-                                        <small><?= __('CONFIG__LANG_AVAILABLE_VARIABLES') ?> : {PLAYER}.</small>
+                                        <small><?= __('CONFIG__LANG_AVAILABLE_letIABLES') ?> : {PLAYER}.</small>
                                     <?php } ?>
                                     <?php if ($key == "RESET_PASSWORD_MAIL") { ?>
-                                        <small><?= __('CONFIG__LANG_AVAILABLE_VARIABLES') ?> : {EMAIL},
+                                        <small><?= __('CONFIG__LANG_AVAILABLE_letIABLES') ?> : {EMAIL},
                                             {PSEUDO}, {LINK}.</small>
                                     <?php } ?>
                                     <?php if ($key == "COPYRIGHT") { ?>

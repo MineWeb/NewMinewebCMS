@@ -25,7 +25,7 @@
 
 <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function () {
-        var table = document.querySelector('table');
+        let table = document.querySelector('table');
         if (!table) {
             return;
         }

@@ -68,8 +68,8 @@
 
                     <script type="text/javascript">
                         document.addEventListener('DOMContentLoaded', function () {
-                            var checkbox = document.getElementById('sub_url_checkbox');
-                            var hiddenInput = document.getElementById('sub_url');
+                            let checkbox = document.getElementById('sub_url_checkbox');
+                            let hiddenInput = document.getElementById('sub_url');
 
                             checkbox.addEventListener('change', function () {
                                 hiddenInput.value = checkbox.checked ? '1' : '0';

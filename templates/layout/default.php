@@ -165,7 +165,7 @@ if (!empty($flash_messages)) {
 <script>
     <?php if($isConnected) { ?>
     // Notifications
-    var notification = new $.Notification({
+    let notification = new $.Notification({
         'url': {
             'get': '<?= $this->Url->build(['_name' => 'notifications_get_all']) ?>',
             'clear': '<?= $this->Url->build(['_name' => 'notifications_clear', 'NOTIF_ID']) ?>',
@@ -182,16 +182,16 @@ if (!empty($flash_messages)) {
 
     // Config FORM/APP.JS
 
-    var LIKE_URL = "<?= $this->Url->build(['_name' => 'news_like']) ?>";
-    var DISLIKE_URL = "<?= $this->Url->build(['_name' => 'news_dislike']) ?>";
+    let LIKE_URL = "<?= $this->Url->build(['_name' => 'news_like']) ?>";
+    let DISLIKE_URL = "<?= $this->Url->build(['_name' => 'news_dislike']) ?>";
 
-    var LOADING_MSG = "<?= __('GLOBAL__LOADING') ?>";
-    var ERROR_MSG = "<?= __('GLOBAL__ERROR') ?>";
-    var INTERNAL_ERROR_MSG = "<?= __('ERROR__INTERNAL_ERROR') ?>";
-    var FORBIDDEN_ERROR_MSG = "<?= __('ERROR__FORBIDDEN') ?>"
-    var SUCCESS_MSG = "<?= __('GLOBAL__SUCCESS') ?>";
+    let LOADING_MSG = "<?= __('GLOBAL__LOADING') ?>";
+    let ERROR_MSG = "<?= __('GLOBAL__ERROR') ?>";
+    let INTERNAL_ERROR_MSG = "<?= __('ERROR__INTERNAL_ERROR') ?>";
+    let FORBIDDEN_ERROR_MSG = "<?= __('ERROR__FORBIDDEN') ?>"
+    let SUCCESS_MSG = "<?= __('GLOBAL__SUCCESS') ?>";
 
-    var CSRF_TOKEN = "<?= $csrfToken ?>";
+    let CSRF_TOKEN = "<?= $csrfToken ?>";
 
     $(".navbar-collapse").css({maxHeight: ($(window).height() - 130) - $(".navbar-header").height() + "px"});
 </script>

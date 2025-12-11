@@ -202,8 +202,8 @@
         button.addEventListener('click', function(event) {
             event.preventDefault();
 
-            var url = button.dataset.url;
-            var ajaxBox = document.querySelector('.ajax');
+            let url = button.dataset.url;
+            let ajaxBox = document.querySelector('.ajax');
 
             if (!url) {
                 return;

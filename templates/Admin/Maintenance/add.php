@@ -63,8 +63,8 @@
 
                         <script type="text/javascript">
                             document.addEventListener("DOMContentLoaded", function () {
-                                var checkbox = document.querySelector('input[name="sub_url_checkbox"]');
-                                var hiddenInput = document.querySelector('input[name="sub_url"]');
+                                let checkbox = document.querySelector('input[name="sub_url_checkbox"]');
+                                let hiddenInput = document.querySelector('input[name="sub_url"]');
 
                                 if (!checkbox || !hiddenInput) {
                                     return;

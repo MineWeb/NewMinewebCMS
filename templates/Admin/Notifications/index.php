@@ -136,8 +136,8 @@
 </section>
 <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function () {
-        var userSelect = document.getElementById('notification-user-id');
-        var userInputDiv = document.getElementById('userInput');
+        let userSelect = document.getElementById('notification-user-id');
+        let userInputDiv = document.getElementById('userInput');
 
         if (userSelect && userInputDiv) {
             function updateUserInputVisibility() {
@@ -152,12 +152,12 @@
             updateUserInputVisibility();
         }
 
-        var tableElement = document.querySelector('.card-body table.table-responsive-sm.table-bordered');
+        let tableElement = document.querySelector('.card-body table.table-responsive-sm.table-bordered');
         if (!tableElement) {
             return;
         }
 
-        var notificationsTable = new DataTable(tableElement, {
+        let notificationsTable = new DataTable(tableElement, {
             paging: true,
             lengthChange: false,
             searching: true,
@@ -181,13 +181,13 @@
         window.notificationsTable = notificationsTable;
 
         tableElement.addEventListener('click', function (e) {
-            var deleteLink = e.target.closest('.delete-notification');
-            var markSeenLink = e.target.closest('.mark-as-seen');
+            let deleteLink = e.target.closest('.delete-notification');
+            let markSeenLink = e.target.closest('.mark-as-seen');
 
             if (deleteLink) {
                 e.preventDefault();
 
-                var url = deleteLink.getAttribute('href');
+                let url = deleteLink.getAttribute('href');
                 if (!url) {
                     return;
                 }
@@ -203,7 +203,7 @@
                     })
                     .then(function (data) {
                         if (data && data.status) {
-                            var rowElement = deleteLink.closest('tr');
+                            let rowElement = deleteLink.closest('tr');
                             if (rowElement) {
                                 notificationsTable.row(rowElement).remove().draw();
                             }
@@ -224,7 +224,7 @@
             if (markSeenLink) {
                 e.preventDefault();
 
-                var urlSeen = markSeenLink.getAttribute('href');
+                let urlSeen = markSeenLink.getAttribute('href');
                 if (!urlSeen) {
                     return;
                 }
@@ -240,7 +240,7 @@
                     })
                     .then(function (data) {
                         if (data && data.status) {
-                            var seenText = markSeenLink.getAttribute('data-seen') || markSeenLink.textContent;
+                            let seenText = markSeenLink.getAttribute('data-seen') || markSeenLink.textContent;
                             markSeenLink.classList.add('disabled');
                             markSeenLink.classList.add('active');
                             markSeenLink.setAttribute('disabled', 'disabled');
@@ -261,12 +261,12 @@
             }
         });
 
-        var deleteAllBtn = document.getElementById('delete-all');
+        let deleteAllBtn = document.getElementById('delete-all');
         if (deleteAllBtn) {
             deleteAllBtn.addEventListener('click', function (e) {
                 e.preventDefault();
 
-                var url = deleteAllBtn.getAttribute('href');
+                let url = deleteAllBtn.getAttribute('href');
                 if (!url) {
                     return;
                 }
@@ -296,12 +296,12 @@
             });
         }
 
-        var markAllSeenBtn = document.getElementById('mark-all-as-seen');
+        let markAllSeenBtn = document.getElementById('mark-all-as-seen');
         if (markAllSeenBtn) {
             markAllSeenBtn.addEventListener('click', function (e) {
                 e.preventDefault();
 
-                var url = markAllSeenBtn.getAttribute('href');
+                let url = markAllSeenBtn.getAttribute('href');
                 if (!url) {
                     return;
                 }

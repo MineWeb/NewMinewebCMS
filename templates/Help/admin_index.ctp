@@ -105,23 +105,23 @@
     }
 
     document.addEventListener("DOMContentLoaded", function () {
-        var questionsSelect = document.getElementById("questions");
-        var answersContainer = document.getElementById("answers");
-        var placeholder = document.getElementById("answers-placeholder");
+        let questionsSelect = document.getElementById("questions");
+        let answersContainer = document.getElementById("answers");
+        let placeholder = document.getElementById("answers-placeholder");
 
         if (!questionsSelect || !answersContainer) {
             return;
         }
 
         function hideAllAnswers() {
-            var answerBlocks = answersContainer.querySelectorAll("div[data-question-id]");
+            let answerBlocks = answersContainer.querySelectorAll("div[data-question-id]");
             answerBlocks.forEach(function (block) {
                 block.style.display = "none";
             });
         }
 
         function handleQuestionChange() {
-            var selectedId = questionsSelect.value;
+            let selectedId = questionsSelect.value;
             hideAllAnswers();
 
             if (placeholder) {
@@ -132,7 +132,7 @@
                 return;
             }
 
-            var target = answersContainer.querySelector('div[data-question-id="' + selectedId + '"]');
+            let target = answersContainer.querySelector('div[data-question-id="' + selectedId + '"]');
             if (target) {
                 target.style.display = "block";
             }
@@ -156,18 +156,18 @@
 
                 questionsSelect.innerHTML = "";
 
-                var defaultOption = document.createElement("option");
+                let defaultOption = document.createElement("option");
                 defaultOption.value = "";
                 defaultOption.textContent = "<?= addslashes(__('HELP__CHOOSE_QUESTION')) ?>";
                 questionsSelect.appendChild(defaultOption);
 
                 data.forEach(function (item) {
-                    var option = document.createElement("option");
+                    let option = document.createElement("option");
                     option.value = item.id;
                     option.textContent = item.question;
                     questionsSelect.appendChild(option);
 
-                    var answer = document.createElement("div");
+                    let answer = document.createElement("div");
                     answer.setAttribute("data-question-id", item.id);
                     answer.style.display = "none";
                     answer.innerHTML = item.answer;

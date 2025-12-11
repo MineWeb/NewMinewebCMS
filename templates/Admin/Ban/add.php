@@ -70,12 +70,12 @@
     });
     <?php } else { ?>
     document.addEventListener("DOMContentLoaded", function () {
-        var forms = document.querySelectorAll('form[method="search"]');
+        let forms = document.querySelectorAll('form[method="search"]');
 
         forms.forEach(function (form) {
-            var searchInput = form.querySelector('input[name="search"]');
-            var listGroup = form.querySelector('.list-group');
-            var baseUrl = form.getAttribute('action');
+            let searchInput = form.querySelector('input[name="search"]');
+            let listGroup = form.querySelector('.list-group');
+            let baseUrl = form.getAttribute('action');
 
             if (!searchInput) {
                 return;
@@ -83,7 +83,7 @@
 
             form.addEventListener('submit', function (event) {
                 event.preventDefault();
-                var val = searchInput.value || "";
+                let val = searchInput.value || "";
                 if (!val) {
                     return;
                 }
@@ -95,7 +95,7 @@
             }
 
             searchInput.addEventListener('keyup', function () {
-                var value = searchInput.value || "";
+                let value = searchInput.value || "";
 
                 fetch(baseUrl + '/' + encodeURIComponent(value), {
                     method: 'GET',
@@ -110,10 +110,10 @@
                         listGroup.innerHTML = "";
 
                         if (data.status) {
-                            var users = data.data || [];
+                            let users = data.data || [];
 
                             users.forEach(function (user) {
-                                var link = document.createElement('a');
+                                let link = document.createElement('a');
                                 link.href = "<?= $this->Url->build(['_name' => 'admin_ban_edit']) ?>/" + encodeURIComponent(user.id);
                                 link.className = 'list-group-item';
                                 link.textContent = user.pseudo;

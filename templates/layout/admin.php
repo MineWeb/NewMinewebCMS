@@ -1,3 +1,8 @@
+<?php
+
+use Cake\Routing\Router;
+
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -38,20 +43,25 @@
                 </div>
             </li>
             <script>
-                $('.switchAdminDarkMode').change(function (e) {
-                    e.preventDefault();
-
-                    var btn = $(this);
-
-                    if (btn.is(':checked')) {
-                        $('body').addClass("dark-mode");
-                    } else {
-                        $('body').removeClass("dark-mode");
+                document.addEventListener('DOMContentLoaded', function () {
+                    let btn = document.querySelector('.switchAdminDarkMode');
+                    if (!btn) {
+                        return;
                     }
 
-                    $.get('<?= $this->Url->build(['_name' => 'admin_switch_dark_mode']) ?>');
+                    btn.addEventListener('change', function (e) {
+                        e.preventDefault();
 
-                    return false;
+                        if (btn.checked) {
+                            document.body.classList.add('dark-mode');
+                        } else {
+                            document.body.classList.remove('dark-mode');
+                        }
+
+                        fetch('<?= $this->Url->build(['_name' => 'admin_switch_dark_mode']) ?>');
+
+                        return false;
+                    });
                 });
             </script>
             <li class="nav-item dropdown">
@@ -79,7 +89,7 @@
         <?= $this->Html->script('notification') ?>
 
         <script type="text/javascript">
-            var notification = new $.Notification({
+            let notification = new $.Notification({
                 'notification_type': 'admin',
                 'limit': 5,
                 'url': {
@@ -153,8 +163,8 @@
                                 if (isset($v['menu'])) {
                                     return checkCurrent($v['menu']);
                                 }
-                                $route = (isset($value['route']) ? $this->Url->build($value['route']) : '#');
-                                $current = $route == $this->Url->build(null, false);
+                                $route = (isset($value['route']) ? Router::url($value['route']) : '#');
+                                $current = $route == Router::url();
                                 if ($current == $route) {
                                     return true;
                                 }
@@ -174,13 +184,13 @@
                             }
                             $currentMenu = false;
                             if (isset($value['menu'])) {
-                                $currentMenu = checkCurrent($value['menu'], $context) ? "menu-open" : "";
+                                $currentMenu = checkCurrent($value['menu']) ? "menu-open" : "";
                                 echo '<li class="nav-item has-treeview ' . ($currentMenu ? "menu-open" : "") . '">';
                             } else {
                                 echo '<li class="nav-item">';
                             }
-                            $route = (isset($value['route']) ? $this->Url->build($value['route']) : '#');
-                            $current = $route == $this->Url->build(null, false);
+                            $route = (isset($value['route']) ? Router::url($value['route']) : '#');
+                            $current = $route == Router::url();
                             echo '<a class="nav-link' . ($current || $currentMenu ? " active" : "") . '" href="' . $route . '">';
                             echo '<i class="' . (strpos($value['icon'], "fa-") ? $value['icon'] : "fa fa-" . $value['icon']) . ' nav-icon"></i>  <p>' . __($name);
                             if (isset($value['menu'])) {
@@ -249,15 +259,16 @@
 <?= $this->Html->script('adminlte-3/plugins/daterangepicker/daterangepicker'); ?>
 <?= $this->Html->script('adminlte-3/plugins/overlayScrollbars/jquery.overlayScrollbars.min'); ?>
 <?= $this->Html->script('adminlte-3/adminlte') ?>
+<?= $this->Html->script('sortablejs/1.15.6/Sortable.min') ?>
 <?= $this->Html->script('mineweb_admin') ?>
 <?= $this->Html->script('form') ?>
 <script type="text/javascript">
-    var LOADING_MSG = "<?= __('GLOBAL__LOADING') ?>";
-    var ERROR_MSG = "<?= __('GLOBAL__ERROR') ?>";
-    var INTERNAL_ERROR_MSG = "<?= __('ERROR__INTERNAL_ERROR') ?>";
-    var FORBIDDEN_ERROR_MSG = "<?= __('ERROR__FORBIDDEN') ?>";
-    var SUCCESS_MSG = "<?= __('GLOBAL__SUCCESS') ?>";
-    var CSRF_TOKEN = "<?= $csrfToken ?>";
+    let LOADING_MSG = "<?= __('GLOBAL__LOADING') ?>";
+    let ERROR_MSG = "<?= __('GLOBAL__ERROR') ?>";
+    let INTERNAL_ERROR_MSG = "<?= __('ERROR__INTERNAL_ERROR') ?>";
+    let FORBIDDEN_ERROR_MSG = "<?= __('ERROR__FORBIDDEN') ?>";
+    let SUCCESS_MSG = "<?= __('GLOBAL__SUCCESS') ?>";
+    let CSRF_TOKEN = "<?= $csrfToken ?>";
 </script>
 
 <?= $this->element('mineweb_admin_js'); ?>

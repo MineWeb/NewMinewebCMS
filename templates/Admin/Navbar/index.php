@@ -101,140 +101,80 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        var sortable = document.getElementById('sortable');
+        var sortableBody = document.getElementById('sortable');
         var saveButton = document.getElementById('save');
         var ajaxMsg = document.querySelector('.ajax-msg');
-        var draggedRow = null;
 
-        if (!sortable) {
+        if (!sortableBody) {
             return;
         }
 
-        function initDraggableRows() {
-            var rows = sortable.querySelectorAll('tr');
-            rows.forEach(function (row) {
-                row.setAttribute('draggable', 'true');
-
-                row.addEventListener('dragstart', function (event) {
-                    draggedRow = row;
-                    if (event.dataTransfer) {
-                        event.dataTransfer.effectAllowed = 'move';
-                    }
-                });
-
-                row.addEventListener('dragover', function (event) {
-                    event.preventDefault();
-                    if (!draggedRow || draggedRow === row) {
-                        return;
-                    }
-
-                    var rect = row.getBoundingClientRect();
-                    var offset = event.clientY - rect.top;
-                    var middle = rect.height / 2;
-
-                    if (offset > middle) {
-                        sortable.insertBefore(draggedRow, row.nextSibling);
-                    } else {
-                        sortable.insertBefore(draggedRow, row);
-                    }
-                });
-
-                row.addEventListener('drop', function (event) {
-                    event.preventDefault();
-                    draggedRow = null;
-                    saveOrder();
-                });
-
-                row.addEventListener('dragend', function () {
-                    draggedRow = null;
-                });
-            });
-        }
-
-        function buildOrderParams() {
-            var params = new URLSearchParams();
-            var rows = sortable.querySelectorAll('tr');
-
-            rows.forEach(function (row) {
-                var rawId = row.id || '';
-                var idParts = rawId.split('-');
-                var id = idParts[0] || '';
-                if (id) {
-                    params.append('navbar_order[]', id);
-                }
-            });
-
-            return params;
-        }
-
-        function clearAjaxMsg() {
-            if (ajaxMsg) {
-                ajaxMsg.innerHTML = '';
-            }
-        }
-
-        function showAjaxError(message) {
+        function showError(message) {
             if (!ajaxMsg) {
                 return;
             }
-
             ajaxMsg.innerHTML =
                 '<div class="alert alert-danger">' +
-                '<b><?= __('GLOBAL__ERROR') ?> :</b> ' +
-                message +
+                '<b><?= __('GLOBAL__ERROR') ?> :</b> ' + message +
                 '</div>';
         }
 
-        function showAjaxSuccess(message) {
-            if (!ajaxMsg) {
-                return;
-            }
+        function setButtonLoading() {
+            saveButton.disabled = true;
+            saveButton.textContent = '<?= __('NAVBAR__SAVE_IN_PROGRESS') ?>';
+        }
 
-            ajaxMsg.innerHTML =
-                '<div class="alert alert-success">' +
-                '<b><?= __('GLOBAL__SUCCESS') ?> :</b> ' +
-                message +
-                '</div>';
+        function setButtonSuccess() {
+            saveButton.disabled = true;
+            saveButton.textContent = '<?= __('NAVBAR__SAVE_SUCCESS') ?>';
+        }
+
+        function buildOrderString() {
+            var rows = sortableBody.querySelectorAll('tr');
+            var parts = [];
+            rows.forEach(function (row, index) {
+                var rawId = row.id || '';
+                var idParts = rawId.split('-');
+                var id = idParts[0];
+                if (id) {
+                    parts.push(id + '[]=' + (index + 1));
+                }
+            });
+            return parts.join('&');
         }
 
         function saveOrder() {
-            if (!saveButton) {
-                return;
-            }
+            setButtonLoading();
 
-            saveButton.textContent = '<?= __('NAVBAR__SAVE_IN_PROGRESS') ?>';
-
-            var params = buildOrderParams();
+            var params = new URLSearchParams();
+            params.append('navbar_order', buildOrderString());
 
             fetch('<?= $this->Url->build(['_name' => 'admin_navbar_save_ajax']) ?>', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: params.toString()
             })
-                .then(function (response) {
-                    return response.json();
-                })
+                .then(function (r) { return r.json(); })
                 .then(function (data) {
-                    clearAjaxMsg();
-
                     if (data && data.statut) {
-                        saveButton.textContent = '<?= __('NAVBAR__SAVE_SUCCESS') ?>';
-                    } else if (data && data.statut === false) {
-                        saveButton.textContent = '<?= __('NAVBAR__SAVE_SUCCESS') ?>';
-                        showAjaxError(data.msg || '<?= __('ERROR__INTERNAL_ERROR') ?>');
+                        setButtonSuccess();
                     } else {
-                        saveButton.textContent = '<?= __('NAVBAR__SAVE_SUCCESS') ?>';
-                        showAjaxError('<?= __('ERROR__INTERNAL_ERROR') ?>');
+                        setButtonSuccess();
+                        showError(data.msg || '<?= __('ERROR__INTERNAL_ERROR') ?>');
                     }
                 })
                 .catch(function () {
-                    saveButton.textContent = '<?= __('NAVBAR__SAVE_SUCCESS') ?>';
-                    showAjaxError('<?= __('ERROR__INTERNAL_ERROR') ?>');
+                    setButtonSuccess();
+                    showError('<?= __('ERROR__INTERNAL_ERROR') ?>');
                 });
         }
 
-        initDraggableRows();
+        Sortable.create(sortableBody, {
+            animation: 150,
+            onEnd: function () {
+                saveOrder();
+            }
+        });
     });
 </script>
+

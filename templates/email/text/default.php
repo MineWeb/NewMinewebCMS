@@ -11,8 +11,8 @@
  * @link          https://cakephp.org CakePHP(tm) Project
  * @since         0.10.0
  * @license       https://opensource.org/licenses/mit-license.php MIT License
- * @var \App\View\AppView $this
- * @var string $content
+ * @let \App\View\AppView $this
+ * @let string $content
  */
 
 echo $content;

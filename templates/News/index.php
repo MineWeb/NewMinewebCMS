@@ -96,10 +96,10 @@
 <script>
     <?php if (!empty($user)) { ?>
     function addcomment(data) {
-        var d = new Date();
-        var hours = String(d.getHours()).padStart(2, "0");
-        var minutes = String(d.getMinutes()).padStart(2, "0");
-        var comment =
+        let d = new Date();
+        let hours = String(d.getHours()).padStart(2, "0");
+        let minutes = String(d.getMinutes()).padStart(2, "0");
+        let comment =
             '<div class="media">' +
             '<a class="pull-left" href="#">' +
             '<img class="media-object" src="<?= $this->Url->build(['_name' => 'api_get_head_skin', $user['pseudo'], 64]) ?>" alt="">' +
@@ -112,14 +112,14 @@
             '</div>' +
             '</div>';
 
-        var addCommentContainer = document.querySelector(".add-comment");
+        let addCommentContainer = document.querySelector(".add-comment");
         if (addCommentContainer) {
             addCommentContainer.style.display = "none";
             addCommentContainer.innerHTML = comment;
             addCommentContainer.style.display = "block";
         }
 
-        var formFadeOut = document.getElementById("form-comment-fade-out");
+        let formFadeOut = document.getElementById("form-comment-fade-out");
         if (formFadeOut) {
             formFadeOut.style.display = "none";
         }
@@ -127,7 +127,7 @@
     <?php } ?>
 
     function attachCommentDeleteHandlers() {
-        var buttons = document.querySelectorAll(".comment-delete");
+        let buttons = document.querySelectorAll(".comment-delete");
         buttons.forEach(function (button) {
             button.addEventListener("click", function () {
                 comment_delete(this);
@@ -136,8 +136,8 @@
     }
 
     function comment_delete(e) {
-        var id = e.getAttribute("id");
-        var params = new URLSearchParams();
+        let id = e.getAttribute("id");
+        let params = new URLSearchParams();
         params.append("id", id);
         params.append("data[_Token][key]", "<?= $csrfToken ?>");
 
@@ -153,7 +153,7 @@
             })
             .then(function (data) {
                 if (data === "true") {
-                    var comment = document.getElementById("comment-" + id);
+                    let comment = document.getElementById("comment-" + id);
                     if (comment) {
                         comment.style.display = "none";
                     }

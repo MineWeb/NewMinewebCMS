@@ -159,15 +159,15 @@
 </section>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        var selectSocialDefault = document.getElementById('select-social-default');
-        var socialTitle = document.getElementById('social-title');
-        var socialColor = document.getElementById('social-color');
-        var typeImg = document.getElementById('type-is-img');
-        var typeIcon = document.getElementById('type-is-icon');
-        var radioTypes = document.querySelectorAll('input[name="type"]');
-        var typeCancels = document.querySelectorAll('.type-cancel');
-        var resetInputs = document.querySelectorAll('.global-reset-input');
-        var imgOrIconInputs = document.querySelectorAll('.img-or-icon-input');
+        let selectSocialDefault = document.getElementById('select-social-default');
+        let socialTitle = document.getElementById('social-title');
+        let socialColor = document.getElementById('social-color');
+        let typeImg = document.getElementById('type-is-img');
+        let typeIcon = document.getElementById('type-is-icon');
+        let radioTypes = document.querySelectorAll('input[name="type"]');
+        let typeCancels = document.querySelectorAll('.type-cancel');
+        let resetInputs = document.querySelectorAll('.global-reset-input');
+        let imgOrIconInputs = document.querySelectorAll('.img-or-icon-input');
 
         function dispatchData(title, extra, color) {
             if (socialTitle) {
@@ -175,7 +175,7 @@
             }
             if (extra && extra.length > 0) {
                 if (extra.indexOf('fa-') !== -1) {
-                    var radioIcon = document.getElementById('choose-is-icon');
+                    let radioIcon = document.getElementById('choose-is-icon');
                     if (radioIcon) {
                         radioIcon.checked = true;
                     }
@@ -184,19 +184,19 @@
                     }
                     if (typeIcon) {
                         typeIcon.classList.remove('d-none');
-                        var iconInput = document.getElementById('social-icon');
+                        let iconInput = document.getElementById('social-icon');
                         if (iconInput) {
                             iconInput.value = extra;
                         }
                     }
                 } else {
-                    var radioImg = document.getElementById('choose-is-img');
+                    let radioImg = document.getElementById('choose-is-img');
                     if (radioImg) {
                         radioImg.checked = true;
                     }
                     if (typeImg) {
                         typeImg.classList.remove('d-none');
-                        var imgInput = document.getElementById('social-img');
+                        let imgInput = document.getElementById('social-img');
                         if (imgInput) {
                             imgInput.value = extra;
                         }

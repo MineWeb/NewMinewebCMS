@@ -66,7 +66,7 @@
                             value="<?= $bannerMsg ?>"
                         >
                         <small>
-                            <?= __('CONFIG__LANG_AVAILABLE_VARIABLES') ?> : {ONLINE}, {ONLINE_LIMIT}
+                            <?= __('CONFIG__LANG_AVAILABLE_letIABLES') ?> : {ONLINE}, {ONLINE_LIMIT}
                         </small>
                     </div>
 
@@ -223,12 +223,12 @@
 </section>
 <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function () {
-        var switchButtons = document.querySelectorAll('.switchBanner');
+        let switchButtons = document.querySelectorAll('.switchBanner');
         switchButtons.forEach(function (btn) {
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
 
-                var isDanger = btn.classList.contains('btn-danger');
+                let isDanger = btn.classList.contains('btn-danger');
                 if (isDanger) {
                     btn.classList.remove('btn-danger');
                     btn.classList.add('btn-info');
@@ -239,7 +239,7 @@
                     btn.textContent = '<?= __('SERVER__HIDE_BANNER') ?>';
                 }
 
-                var url = btn.getAttribute('data-url');
+                let url = btn.getAttribute('data-url');
                 if (!url) {
                     return;
                 }
@@ -254,27 +254,27 @@
         });
 
         function selectInfos(select, init) {
-            var type = select.value;
+            let type = select.value;
 
-            var existingInfos = select.parentElement.querySelector('.infos-type');
+            let existingInfos = select.parentElement.querySelector('.infos-type');
             if (existingInfos) {
                 existingInfos.remove();
             }
 
-            var form = select.closest('form');
+            let form = select.closest('form');
             if (form) {
-                var rconPortInput = form.querySelector('input[name="server_data[rcon_port]"]');
+                let rconPortInput = form.querySelector('input[name="server_data[rcon_port]"]');
                 if (rconPortInput && rconPortInput.parentElement && type !== '2') {
                     rconPortInput.parentElement.remove();
                 }
 
-                var rconPasswordInput = form.querySelector('input[name="server_data[rcon_password]"]');
+                let rconPasswordInput = form.querySelector('input[name="server_data[rcon_password]"]');
                 if (rconPasswordInput && rconPasswordInput.parentElement && type !== '2') {
                     rconPasswordInput.parentElement.remove();
                 }
             }
 
-            var infos;
+            let infos;
             if (type === '0') {
                 infos = '<div class="alert alert-info"><?= addslashes(__('SERVER__TYPE_DEFAULT_INFOS')) ?></div>';
             } else if (type === '1' || type === '3') {
@@ -282,10 +282,10 @@
             } else if (type === '2') {
                 infos = '<div class="alert alert-info"><?= addslashes(__('SERVER__TYPE_RCON_INFOS')) ?></div>';
                 if (!init && form) {
-                    var buttons = form.querySelectorAll('button');
-                    var insertBeforeElement = buttons.length > 0 ? buttons[0].parentElement || buttons[0] : null;
+                    let buttons = form.querySelectorAll('button');
+                    let insertBeforeElement = buttons.length > 0 ? buttons[0].parentElement || buttons[0] : null;
 
-                    var wrapper = document.createElement('div');
+                    let wrapper = document.createElement('div');
                     wrapper.innerHTML = ''
                         + '<div class="form-group">'
                         + '<label><?= __('SERVER__RCON_PORT') ?></label>'
@@ -307,7 +307,7 @@
             }
 
             if (infos) {
-                var infosDiv = document.createElement('div');
+                let infosDiv = document.createElement('div');
                 infosDiv.className = 'infos-type';
                 infosDiv.innerHTML = '<br>' + infos;
                 select.parentElement.insertAdjacentElement('afterend', infosDiv);
@@ -315,7 +315,7 @@
         }
 
         function initSelectInfos() {
-            var selects = document.querySelectorAll('select[name="type"]');
+            let selects = document.querySelectorAll('select[name="type"]');
             selects.forEach(function (select) {
                 if (select.dataset.initSelectBound === '1') {
                     return;
@@ -332,15 +332,15 @@
 
         initSelectInfos();
 
-        var i = 0;
-        var addServerBtn = document.getElementById('add_server');
+        let i = 0;
+        let addServerBtn = document.getElementById('add_server');
         if (addServerBtn) {
-            var linkAjaxUrl = addServerBtn.getAttribute('data-link-ajax-url') || '';
+            let linkAjaxUrl = addServerBtn.getAttribute('data-link-ajax-url') || '';
 
             addServerBtn.addEventListener('click', function () {
                 i++;
 
-                var newServerHtml = ''
+                let newServerHtml = ''
                     + '<div class="row">'
                     + '<div class="col-md-12">'
                     + '<div class="card">'
@@ -378,12 +378,12 @@
                     + '</div>'
                     + '</div>';
 
-                var container = document.getElementById('add_server_content');
+                let container = document.getElementById('add_server_content');
                 if (!container) {
                     return;
                 }
 
-                var wrapper = document.createElement('div');
+                let wrapper = document.createElement('div');
                 wrapper.innerHTML = newServerHtml;
                 while (wrapper.firstChild) {
                     container.appendChild(wrapper.firstChild);

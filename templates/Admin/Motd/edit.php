@@ -53,10 +53,10 @@
                             >
                         </div>
 
-                        <p><strong><?= __('MOTD__VARIABLES') ?> :</strong></p>
+                        <p><strong><?= __('MOTD__letIABLES') ?> :</strong></p>
 
                         <p>
-                            <em>{PLAYERS}</em> : <?= __('MOTD__VARIABLE_PLAYERS') ?>
+                            <em>{PLAYERS}</em> : <?= __('MOTD__letIABLE_PLAYERS') ?>
                         </p>
                     </div>
 

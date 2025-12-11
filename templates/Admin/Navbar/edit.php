@@ -232,17 +232,17 @@
 </section>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        var radioTypeNormal = document.getElementById('nav-type-normal');
-        var radioTypeDropdown = document.getElementById('nav-type-dropdown');
-        var typeNormal = document.getElementById('type-normal');
-        var typeDropdown = document.getElementById('type-dropdown');
+        let radioTypeNormal = document.getElementById('nav-type-normal');
+        let radioTypeDropdown = document.getElementById('nav-type-dropdown');
+        let typeNormal = document.getElementById('type-normal');
+        let typeDropdown = document.getElementById('type-dropdown');
 
-        var radioUrlPlugin = document.getElementById('url-type-plugin');
-        var radioUrlPage = document.getElementById('url-type-page');
-        var radioUrlCustom = document.getElementById('url-type-custom');
-        var pluginBlocks = document.querySelectorAll('.plugin');
-        var pageBlocks = document.querySelectorAll('.page');
-        var customInputs = document.querySelectorAll('.custom');
+        let radioUrlPlugin = document.getElementById('url-type-plugin');
+        let radioUrlPage = document.getElementById('url-type-page');
+        let radioUrlCustom = document.getElementById('url-type-custom');
+        let pluginBlocks = document.querySelectorAll('.plugin');
+        let pageBlocks = document.querySelectorAll('.page');
+        let customInputs = document.querySelectorAll('.custom');
 
         function showNormal() {
             if (typeNormal) {
@@ -278,9 +278,9 @@
         }
 
         function toggleUrlType() {
-            var pluginChecked = radioUrlPlugin && radioUrlPlugin.checked;
-            var pageChecked = radioUrlPage && radioUrlPage.checked;
-            var customChecked = radioUrlCustom && radioUrlCustom.checked;
+            let pluginChecked = radioUrlPlugin && radioUrlPlugin.checked;
+            let pageChecked = radioUrlPage && radioUrlPage.checked;
+            let customChecked = radioUrlCustom && radioUrlCustom.checked;
 
             pluginBlocks.forEach(function (el) {
                 if (pluginChecked) {
@@ -316,15 +316,15 @@
         }
         toggleUrlType();
 
-        var addJs = document.getElementById('add-js');
-        var addNavBtn = document.getElementById('add_nav');
+        let addJs = document.getElementById('add-js');
+        let addNavBtn = document.getElementById('add_nav');
 
         function attachDeleteHandlers() {
-            var deleteButtons = document.querySelectorAll('.delete-nav');
+            let deleteButtons = document.querySelectorAll('.delete-nav');
             deleteButtons.forEach(function (btn) {
                 btn.onclick = function (e) {
                     e.preventDefault();
-                    var card = btn.closest('.card');
+                    let card = btn.closest('.card');
                     if (card) {
                         card.style.transition = 'opacity 150ms';
                         card.style.opacity = '0';
@@ -342,14 +342,14 @@
             if (!addJs) {
                 return;
             }
-            var current = parseInt(addJs.getAttribute('data-number') || '0', 10);
-            var next = current + 1;
+            let current = parseInt(addJs.getAttribute('data-number') || '0', 10);
+            let next = current + 1;
             addJs.setAttribute('data-number', String(next));
 
-            var nameId = 'name_of_nav_' + next;
-            var urlId = 'url_of_nav_' + next;
+            let nameId = 'name_of_nav_' + next;
+            let urlId = 'url_of_nav_' + next;
 
-            var wrapper = document.createElement('div');
+            let wrapper = document.createElement('div');
             wrapper.className = 'form-group';
             wrapper.innerHTML =
                 '<div class="card card-body nav-item-block" id="nav-' + next + '">' +
@@ -380,33 +380,33 @@
     });
 
     function formatteData(form) {
-        var nameInput = form.querySelector("input[name='name']");
-        var iconInput = form.querySelector("input[name='icon']");
-        var typeInput = form.querySelector("input[type='radio'][name='type']:checked");
+        let nameInput = form.querySelector("input[name='name']");
+        let iconInput = form.querySelector("input[name='icon']");
+        let typeInput = form.querySelector("input[type='radio'][name='type']:checked");
 
-        var name = nameInput ? nameInput.value : '';
-        var icon = iconInput ? iconInput.value : '';
-        var type = typeInput ? typeInput.value : '';
+        let name = nameInput ? nameInput.value : '';
+        let icon = iconInput ? iconInput.value : '';
+        let type = typeInput ? typeInput.value : '';
 
-        var url;
+        let url;
 
         if (type === 'normal') {
-            var urlTypeInput = form.querySelector("input[name='url_type']:checked");
-            var urlType = urlTypeInput ? urlTypeInput.value : '';
+            let urlTypeInput = form.querySelector("input[name='url_type']:checked");
+            let urlType = urlTypeInput ? urlTypeInput.value : '';
 
             if (urlType === 'custom') {
-                var customInput = form.querySelector("input[name='url_custom']");
-                var customValue = customInput ? customInput.value : '';
+                let customInput = form.querySelector("input[name='url_custom']");
+                let customValue = customInput ? customInput.value : '';
                 url = JSON.stringify({
                     type: 'custom',
                     url: customValue
                 });
             } else if (urlType === 'plugin') {
-                var pluginSelect = form.querySelector("select[name='url_plugin']");
-                var pluginValue = pluginSelect ? pluginSelect.value : '';
+                let pluginSelect = form.querySelector("select[name='url_plugin']");
+                let pluginValue = pluginSelect ? pluginSelect.value : '';
                 if (pluginValue) {
                     try {
-                        var parsed = JSON.parse(pluginValue);
+                        let parsed = JSON.parse(pluginValue);
                         url = JSON.stringify({
                             type: 'plugin',
                             id: parsed.id,
@@ -423,8 +423,8 @@
                     });
                 }
             } else if (urlType === 'page') {
-                var pageSelect = form.querySelector("select[name='url_page']");
-                var pageValue = pageSelect ? pageSelect.value : '';
+                let pageSelect = form.querySelector("select[name='url_page']");
+                let pageValue = pageSelect ? pageSelect.value : '';
                 url = JSON.stringify({
                     type: 'page',
                     id: pageValue
@@ -433,14 +433,14 @@
                 url = 'undefined';
             }
         } else {
-            var names = document.querySelectorAll('.name_of_nav');
-            var urls = document.querySelectorAll('.url_of_nav');
-            var urlObject = {};
-            var length = Math.min(names.length, urls.length);
+            let names = document.querySelectorAll('.name_of_nav');
+            let urls = document.querySelectorAll('.url_of_nav');
+            let urlObject = {};
+            let length = Math.min(names.length, urls.length);
 
-            for (var i = 0; i < length; i++) {
-                var n = names[i].value;
-                var u = urls[i].value;
+            for (let i = 0; i < length; i++) {
+                let n = names[i].value;
+                let u = urls[i].value;
                 if (n !== '') {
                     urlObject[n] = u;
                 }
@@ -449,13 +449,13 @@
             url = urlObject;
         }
 
-        var newTabInput = form.querySelector("input[name='new_tab']");
-        var openNewTab = newTabInput ? newTabInput.checked : false;
+        let newTabInput = form.querySelector("input[name='new_tab']");
+        let openNewTab = newTabInput ? newTabInput.checked : false;
 
-        var idInput = form.querySelector("input[name='id']");
-        var id = idInput ? idInput.value : null;
+        let idInput = form.querySelector("input[name='id']");
+        let id = idInput ? idInput.value : null;
 
-        var inputs = {};
+        let inputs = {};
         inputs.name = name;
         inputs.icon = icon;
         inputs.type = type;

@@ -92,19 +92,19 @@
 
             <script type="text/javascript">
                 document.addEventListener('DOMContentLoaded', function () {
-                    var toggleBtn = document.getElementById('toggleTwoFactorAuth');
+                    let toggleBtn = document.getElementById('toggleTwoFactorAuth');
                     if (!toggleBtn) {
                         return;
                     }
-                    var statusInfos = document.getElementById('twoFactorAuthStatusInfos');
-                    var statusBlock = document.getElementById('twoFactorAuthStatus');
-                    var validBlock = document.getElementById('twoFactorAuthValid');
-                    var qrcodeImg = document.getElementById('two-factor-auth-qrcode');
-                    var secretSpan = document.getElementById('two-factor-auth-secret');
+                    let statusInfos = document.getElementById('twoFactorAuthStatusInfos');
+                    let statusBlock = document.getElementById('twoFactorAuthStatus');
+                    let validBlock = document.getElementById('twoFactorAuthValid');
+                    let qrcodeImg = document.getElementById('two-factor-auth-qrcode');
+                    let secretSpan = document.getElementById('two-factor-auth-secret');
 
                     toggleBtn.addEventListener('click', function (e) {
                         e.preventDefault();
-                        var status = parseInt(toggleBtn.getAttribute('data-status') || '0', 10);
+                        let status = parseInt(toggleBtn.getAttribute('data-status') || '0', 10);
                         toggleBtn.innerHTML = '<i class="fa fa-refresh fa-spin"></i>';
                         toggleBtn.classList.add('disabled');
 
@@ -157,10 +157,10 @@
                 });
 
                 function afterValidQrCode(req, res) {
-                    var toggleBtn = document.getElementById('toggleTwoFactorAuth');
-                    var statusInfos = document.getElementById('twoFactorAuthStatusInfos');
-                    var statusBlock = document.getElementById('twoFactorAuthStatus');
-                    var validBlock = document.getElementById('twoFactorAuthValid');
+                    let toggleBtn = document.getElementById('toggleTwoFactorAuth');
+                    let statusInfos = document.getElementById('twoFactorAuthStatusInfos');
+                    let statusBlock = document.getElementById('twoFactorAuthStatus');
+                    let validBlock = document.getElementById('twoFactorAuthValid');
 
                     if (toggleBtn) {
                         toggleBtn.innerHTML = 'Voulez-vous désactiver la double authentification ?';

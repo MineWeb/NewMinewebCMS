@@ -157,12 +157,12 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var defaultValue = "<?= strtolower($social_default[0]['title']) ?>";
-        var selectDefault = document.getElementById('select-social-default');
-        var titleInput = document.getElementById('social-title');
-        var colorInput = document.getElementById('social-color');
-        var typeImg = document.getElementById('type-is-img');
-        var typeIcon = document.getElementById('type-is-icon');
+        let defaultValue = "<?= strtolower($social_default[0]['title']) ?>";
+        let selectDefault = document.getElementById('select-social-default');
+        let titleInput = document.getElementById('social-title');
+        let colorInput = document.getElementById('social-color');
+        let typeImg = document.getElementById('type-is-img');
+        let typeIcon = document.getElementById('type-is-icon');
 
         function hideTypes() {
             typeImg.classList.add('d-none');
@@ -185,20 +185,20 @@
 
             if (extra.length > 0) {
                 if (extra.indexOf('fa-') !== -1) {
-                    var iconRadio = document.getElementById('choose-is-icon');
+                    let iconRadio = document.getElementById('choose-is-icon');
                     iconRadio.checked = true;
                     typeIcon.classList.remove('d-none');
                     typeImg.classList.add('d-none');
-                    var iconInput = document.getElementById('social-icon');
+                    let iconInput = document.getElementById('social-icon');
                     if (iconInput) {
                         iconInput.value = extra;
                     }
                 } else {
-                    var imgRadio = document.getElementById('choose-is-img');
+                    let imgRadio = document.getElementById('choose-is-img');
                     imgRadio.checked = true;
                     typeImg.classList.remove('d-none');
                     typeIcon.classList.add('d-none');
-                    var imgInput = document.getElementById('social-img');
+                    let imgInput = document.getElementById('social-img');
                     if (imgInput) {
                         imgInput.value = extra;
                     }
