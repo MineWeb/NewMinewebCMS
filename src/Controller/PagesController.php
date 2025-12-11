@@ -7,7 +7,6 @@ use Cake\Core\Configure;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
 use Cake\Log\Log;
-use Cake\ORM\TableRegistry;
 use Cake\View\Exception\MissingViewException;
 
 class PagesController extends AppController
@@ -22,10 +21,15 @@ class PagesController extends AppController
         if (isset($parts[1])) {
             $query = explode('_', $parts[1]);
             if (isset($query[0]) && $query[0] === 'resetpasswd' && !empty($query[1])) {
-                $this->Lostpassword = TableRegistry::getTableLocator()->get('Lostpasswords');
-                $search = $this->Lostpassword->find('all', conditions: ['key' => $query[1]])->first();
-                if (!empty($search)) {
-                    $created = strtotime($search['created']);
+                $LostpasswordsTable = $this->fetchTable('Lostpasswords');
+
+                $search = $LostpasswordsTable
+                    ->find()
+                    ->where(['key' => $query[1]])
+                    ->first();
+
+                if ($search !== null) {
+                    $created = strtotime((string)$search['created']);
                     if (strtotime(date('Y-m-d H:i:s', $created) . ' +1 hour') >= time()) {
                         $resetpsswd = [
                             'email' => $search['email'],
@@ -37,12 +41,13 @@ class PagesController extends AppController
             }
         }
 
-        $this->Lostpassword = TableRegistry::getTableLocator()->get('Lostpasswords');
-        $search_passwd = $this->Lostpassword->find();
-        foreach ($search_passwd as $value) {
-            $created = strtotime($value['created']);
+        $LostpasswordsTable = $this->fetchTable('Lostpasswords');
+        $searchPasswd = $LostpasswordsTable->find();
+
+        foreach ($searchPasswd as $value) {
+            $created = strtotime((string)$value['created']);
             if (strtotime(date('Y-m-d H:i:s', $created) . ' +1 hour') < time()) {
-                $this->Lostpassword->delete($this->Lostpassword->get($value['id']));
+                $LostpasswordsTable->delete($value);
             }
         }
 
@@ -71,14 +76,14 @@ class PagesController extends AppController
             }
         }
 
-        $this->News = TableRegistry::getTableLocator()->get('News');
-        $search_news = $this->News->find(
-            'all',
-            recursive: 1,
-            limit: 6,
-            order: 'id desc',
-            conditions: ['published' => 1]
-        )->toArray();
+        $newsTable = $this->fetchTable('News');
+
+        $search_news = $newsTable
+            ->find()
+            ->where(['News.published' => 1])
+            ->order(['News.id' => 'DESC'])
+            ->limit(6)
+            ->toArray();
 
         foreach ($search_news as $key => $model) {
             if ($this->isConnected && isset($model['likes'])) {
@@ -90,6 +95,7 @@ class PagesController extends AppController
                     }
                 }
             }
+
             if (!isset($search_news[$key]['liked'])) {
                 $search_news[$key]['liked'] = false;
             }
@@ -105,8 +111,8 @@ class PagesController extends AppController
         $can_like = (bool)$this->Permissions->can('LIKE_NEWS');
         $this->set(compact('search_news', 'can_like'));
 
-        $this->Slider = TableRegistry::getTableLocator()->get('Sliders');
-        $search_slider = $this->Slider->find()->toArray();
+        $sliderTable = $this->fetchTable('Sliders');
+        $search_slider = $sliderTable->find()->toArray();
         $this->set(compact('search_slider'));
 
         $this->viewBuilder()
@@ -134,10 +140,14 @@ class PagesController extends AppController
             throw new NotFoundException();
         }
 
-        $this->Page = TableRegistry::getTableLocator()->get('Pages');
-        $page = $this->Page->find('all', conditions: ['slug' => $slug])->first();
+        $pageTable = $this->fetchTable('Pages');
 
-        if (empty($page)) {
+        $page = $pageTable
+            ->find()
+            ->where(['slug' => $slug])
+            ->first();
+
+        if ($page === null) {
             throw new NotFoundException();
         }
 
@@ -217,7 +227,12 @@ class PagesController extends AppController
         Log::debug($path);
 
         $normalized = str_replace(['..', '\\'], ['', '/'], $path);
-        $filePath = ROOT . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . 'Themed' . $normalized;
+        $normalized = ltrim($normalized, '/');
+
+        $filePath = ROOT
+            . DIRECTORY_SEPARATOR . 'templates'
+            . DIRECTORY_SEPARATOR . 'Themed'
+            . DIRECTORY_SEPARATOR . $normalized;
 
         if (!is_file($filePath)) {
             throw new NotFoundException();

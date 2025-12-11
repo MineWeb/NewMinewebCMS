@@ -257,7 +257,7 @@ class AppController extends BaseController
         $this->set(compact('user'));
     }
 
-    public function __initWebsiteInfos(): void
+    private function __initWebsiteInfos(): void
     {
         $this->Visit = $this->fetchTable('Visits');
 
@@ -286,7 +286,7 @@ class AppController extends BaseController
         ));
     }
 
-    public function __initAdminNavbar(): void
+    private function __initAdminNavbar(): void
     {
         $nav = [
             'Dashboard' => [
@@ -521,10 +521,10 @@ class AppController extends BaseController
         $this->set('adminNavbar', $nav);
     }
 
-    public function __initNavbar(): void
+    private function __initNavbar(): void
     {
         $this->Navbar = $this->fetchTable('Navbars');
-        $nav = $this->Navbar->find()->orderBy(['Navbar.order_by' => 'ASC'])->toArray();
+        $nav = $this->Navbar->find()->orderBy(['Navbars.order_by' => 'ASC'])->toArray();
         if (empty($nav)) {
             $this->set('nav', false);
 
@@ -575,7 +575,7 @@ class AppController extends BaseController
         $this->set(compact('nav'));
     }
 
-    public function __initServerInfos(): void
+    private function __initServerInfos(): void
     {
         $raw = $this->Configuration->getKey('banner_server');
 
@@ -671,7 +671,7 @@ class AppController extends BaseController
         return null;
     }
 
-    public function __initSeoConfiguration(): void
+    private function __initSeoConfiguration(): void
     {
         if (!Configure::read('Install.dbConfigured')) {
             return;

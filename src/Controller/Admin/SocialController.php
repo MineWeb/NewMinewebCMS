@@ -28,7 +28,7 @@ class SocialController extends AppController
         $socialButtonTable = $this->fetchTable('SocialButtons');
         $buttons = $socialButtonTable
             ->find()
-            ->order(['order' => 'ASC']);
+            ->orderBy(['order' => 'ASC']);
 
         $this->set('social_buttons', $buttons);
 
@@ -174,7 +174,7 @@ class SocialController extends AppController
 
         $last = $socialButtonTable
             ->find()
-            ->order(['order' => 'DESC'])
+            ->orderBy(['order' => 'DESC'])
             ->limit(1)
             ->first();
 
@@ -213,7 +213,7 @@ class SocialController extends AppController
         $button = $socialButtonTable
             ->find()
             ->where(['id' => $id])
-            ->order(['id' => 'DESC'])
+            ->orderBy(['id' => 'DESC'])
             ->first();
 
         if (!$button) {

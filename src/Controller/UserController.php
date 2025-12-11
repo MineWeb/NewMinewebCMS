@@ -10,7 +10,6 @@ use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
 use Cake\I18n\FrozenTime;
-use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use DateTime;
 
@@ -55,21 +54,23 @@ class UserController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        if (!$this->request->is('post')) {
+        if (!$this->getRequest()->is('post')) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
-        $conditionsChecked = !empty($this->getRequest()->getData('condition')) || !$this->Configuration->getKey('condition');
+        $data = $this->getRequest()->getData();
+
+        $conditionsChecked = !empty($data['condition']) || !$this->Configuration->getKey('condition');
 
         if (
-            empty($this->getRequest()->getData('pseudo')) ||
-            empty($this->getRequest()->getData('password')) ||
+            empty($data['pseudo']) ||
+            empty($data['password']) ||
             !$conditionsChecked ||
-            empty($this->getRequest()->getData('password_confirmation')) ||
-            empty($this->getRequest()->getData('email'))
+            empty($data['password_confirmation']) ||
+            empty($data['email'])
         ) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
@@ -77,10 +78,8 @@ class UserController extends AppController
             ]));
         }
 
-        $this->request = $this->getRequest()->withData('', $this->getRequest()->getData('xss'));
-
         if ($this->Configuration->getKey('check_uuid')) {
-            $pseudo = htmlentities((string)$this->getRequest()->getData('pseudo'));
+            $pseudo = htmlentities((string)$data['pseudo']);
             $pseudoToUUID = @file_get_contents('https://api.mojang.com/users/profiles/minecraft/' . $pseudo);
             if (!$pseudoToUUID) {
                 return $this->response->withStringBody(json_encode([
@@ -97,19 +96,19 @@ class UserController extends AppController
                 ]));
             }
 
-            $this->request = $this->getRequest()->withData('uuid', $decoded['id']);
+            $data['uuid'] = $decoded['id'];
         }
 
         if ($this->Configuration->getKey('captcha_type') === '2' || $this->Configuration->getKey('captcha_type') === '3') {
             $validCaptcha = $this->Util->isValidReCaptcha(
-                (string)$this->getRequest()->getData('recaptcha'),
+                (string)($data['recaptcha'] ?? ''),
                 $this->Util->getIP(),
                 (string)$this->Configuration->getKey('captcha_secret'),
                 (int)$this->Configuration->getKey('captcha_type'),
             );
         } else {
             $captcha = $this->getRequest()->getSession()->read('captcha_code');
-            $validCaptcha = (!empty($captcha) && (string)$captcha === (string)$this->getRequest()->getData('captcha'));
+            $validCaptcha = (!empty($captcha) && (string)$captcha === (string)($data['captcha'] ?? ''));
         }
 
         if (!$validCaptcha) {
@@ -119,7 +118,7 @@ class UserController extends AppController
             ]));
         }
 
-        $isValid = $this->User->validRegister($this->getRequest()->getData(), $this->Util);
+        $isValid = $this->User->validRegister($data, $this->Util);
 
         if ($isValid !== true) {
             return $this->response->withStringBody(json_encode([
@@ -128,7 +127,7 @@ class UserController extends AppController
             ]));
         }
 
-        $eventData = $this->getRequest()->getData();
+        $eventData = $data;
         $eventData['password'] = $this->Util->password($eventData['password'], $eventData['pseudo']);
 
         $event = new Event('beforeRegister', $this, ['data' => $eventData]);
@@ -142,10 +141,10 @@ class UserController extends AppController
             return $this->response->withStringBody(json_encode($result));
         }
 
-        $this->request = $this->request->withData('microsoft_user_id', null);
-        $this->request = $this->request->withData('registered_by_microsoft', false);
+        $data['microsoft_user_id'] = null;
+        $data['registered_by_microsoft'] = false;
 
-        $userSession = $this->User->register($this->getRequest()->getData(), $this->Util);
+        $userSession = $this->User->register($data, $this->Util);
 
         if ($this->Configuration->getKey('confirm_mail_signup')) {
             $confirmCode = substr(md5(uniqid('', true)), 0, 12);
@@ -153,13 +152,13 @@ class UserController extends AppController
             $emailMsg = __('EMAIL__CONTENT_CONFIRM_MAIL', [
                 '{LINK}' => $this->Configuration->getKey('website_url') . '/user/confirm/' . $confirmCode,
                 '{IP}' => $this->Util->getIP(),
-                '{USERNAME}' => $this->getRequest()->getData('pseudo'),
+                '{USERNAME}' => $data['pseudo'],
                 '{DATE}' => FrozenTime::now()->i18nFormat('dd/MM/yyyy HH:mm'),
             ]);
 
             $email = $this->Util
                 ->prepareMail(
-                    $this->getRequest()->getData('email'),
+                    $data['email'],
                     __('EMAIL__TITLE_CONFIRM_MAIL'),
                     $emailMsg,
                 )
@@ -198,42 +197,43 @@ class UserController extends AppController
 
     public function ajaxLogin(): Response
     {
-        if (!$this->request->is('post')) {
+        if (!$this->getRequest()->is('post')) {
             throw new BadRequestException();
         }
 
+        $data = $this->getRequest()->getData();
+
         if (
-            empty($this->getRequest()->getData('pseudo')) ||
-            empty($this->getRequest()->getData('password'))
+            empty($data['pseudo']) ||
+            empty($data['password'])
         ) {
-            return $this->sendJSON([
+            return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('ERROR__FILL_ALL_FIELDS'),
-            ]);
+            ]));
         }
 
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        $this->Authentification = TableRegistry::getTableLocator()->get('UsersTwofactorauth');
-        $this->request = $this->request->withData('', $this->getRequest()->getData('xss'));
+        $authTable = $this->fetchTable('UsersTwofactorauth');
 
-        $user_login = $this->User->getAllFromUser($this->getRequest()->getData('pseudo'));
+        $user_login = $this->User->getAllFromUser($data['pseudo']);
 
         if (empty($user_login)) {
-            return $this->sendJSON([
+            return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('USER__ERROR_INVALID_CREDENTIALS'),
-            ]);
+            ]));
         }
 
-        $infos = $this->Authentification->find(
-            'all',
-            conditions: [
+        $infos = $authTable
+            ->find()
+            ->where([
                 'user_id' => $user_login['id'],
                 'enabled' => true,
-            ],
-        )->first();
+            ])
+            ->first();
 
         $confirmEmailIsNeeded = (
             $this->Configuration->getKey('confirm_mail_signup') &&
@@ -242,19 +242,19 @@ class UserController extends AppController
 
         $login = $this->User->login(
             $user_login,
-            $this->getRequest()->getData(),
+            $data,
             $confirmEmailIsNeeded,
             (bool)$this->Configuration->getKey('check_uuid'),
             $this,
         );
 
         if (!isset($login['status']) || $login['status'] !== true) {
-            return $this->sendJSON([
+            return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __($login, [
                     '{URL_RESEND_EMAIL}' => Router::url(['_name' => 'user_resend_confirmation']),
                 ]),
-            ]);
+            ]));
         }
 
         $event = new Event('onLogin', $this, ['user' => $user_login]);
@@ -265,27 +265,27 @@ class UserController extends AppController
                 return $result;
             }
 
-            return $this->sendJSON($result);
+            return $this->response->withStringBody(json_encode($result));
         }
 
         if ($infos) {
             $this->getRequest()->getSession()->write('user_id_two_factor_auth', $user_login['id']);
 
-            return $this->sendJSON([
+            return $this->response->withStringBody(json_encode([
                 'statut' => true,
                 'msg' => __('USER__REGISTER_LOGIN'),
                 'two-factor-auth' => true,
-            ]);
+            ]));
         }
 
-        if ($this->getRequest()->getData('remember_me')) {
+        if (!empty($data['remember_me'])) {
             $cookie = new Cookie(
                 'remember_me',
                 [
-                    'pseudo' => $this->getRequest()->getData('pseudo'),
+                    'pseudo' => $data['pseudo'],
                     'password' => $this->User->getFromUser(
                         'password',
-                        $this->getRequest()->getData('pseudo'),
+                        $data['pseudo'],
                     ),
                 ],
                 new DateTime('+1 weeks'),
@@ -295,10 +295,10 @@ class UserController extends AppController
 
         $this->getRequest()->getSession()->write('user', $login['session']);
 
-        return $this->sendJSON([
+        return $this->response->withStringBody(json_encode([
             'statut' => true,
             'msg' => __('USER__REGISTER_LOGIN'),
-        ]);
+        ]));
     }
 
     public function confirm(?string $code = null): Response
@@ -309,13 +309,16 @@ class UserController extends AppController
             throw new NotFoundException();
         }
 
-        $find = $this->User->find('all', ['conditions' => ['confirmed' => $code]])->first();
+        $user = $this->User
+            ->find()
+            ->where(['confirmed' => $code])
+            ->first();
 
-        if (empty($find)) {
+        if ($user === null) {
             throw new NotFoundException();
         }
 
-        $event = new Event('beforeConfirmAccount', $this, ['user_id' => $find['User']['id']]);
+        $event = new Event('beforeConfirmAccount', $this, ['user_id' => $user['id']]);
         $this->getEventManager()->dispatch($event);
         if ($event->isStopped()) {
             $result = $event->getResult();
@@ -326,14 +329,14 @@ class UserController extends AppController
             return $this->redirect(['_name' => 'user_profile']);
         }
 
-        $user = $this->User->get($find['User']['id']);
-        $user->set(['confirmed' => date('Y-m-d H:i:s')]);
-        $this->User->save($user);
+        $userEntity = $this->User->get($user['id']);
+        $userEntity->set(['confirmed' => date('Y-m-d H:i:s')]);
+        $this->User->save($userEntity);
 
-        $userSession = $find['User']['id'];
+        $userSession = $user['id'];
 
-        $this->Notification = TableRegistry::getTableLocator()->get('Notifications');
-        $this->Notification->setToUser(__('USER__CONFIRM_NOTIFICATION'), $find['User']['id']);
+        $notificationsTable = $this->fetchTable('Notifications');
+        $notificationsTable->setToUser(__('USER__CONFIRM_NOTIFICATION'), $user['id']);
 
         $this->getRequest()->getSession()->write('user', $userSession);
 
@@ -358,21 +361,21 @@ class UserController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        if (!$this->request->is('ajax')) {
+        if (!$this->getRequest()->is('ajax')) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
-        if (empty($this->getRequest()->getData('email'))) {
+        $email = (string)$this->getRequest()->getData('email');
+
+        if ($email === '') {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
-
-        $email = (string)$this->getRequest()->getData('email');
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return $this->response->withStringBody(json_encode([
@@ -381,35 +384,38 @@ class UserController extends AppController
             ]));
         }
 
-        $this->User = TableRegistry::getTableLocator()->get('Users');
-        $search = $this->User->find('all', conditions: ['email' => $email])->first();
+        $userTable = $this->fetchTable('User');
+        $user = $userTable
+            ->find()
+            ->where(['email' => $email])
+            ->first();
 
-        if (empty($search)) {
+        if ($user === null) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('USER__ERROR_NOT_FOUND'),
             ]));
         }
 
-        if ($search['User']['registered_by_microsoft']) {
+        if (!empty($user['registered_by_microsoft'])) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('USER__AUTH_MICROSOFT_CANNOT_RESET_PASSWORD'),
             ]));
         }
 
-        $this->Lostpassword = TableRegistry::getTableLocator()->get('Lostpasswords');
+        $lostPasswordTable = $this->fetchTable('Lostpasswords');
         $key = substr(md5((string)rand() . date('sihYdm')), 0, 10);
 
         $subject = __('USER__PASSWORD_RESET_LINK');
         $message = __('USER__PASSWORD_RESET_EMAIL_CONTENT', [
             '{EMAIL}' => $email,
-            '{PSEUDO}' => $search['User']['pseudo'],
+            '{PSEUDO}' => $user['pseudo'],
             '{LINK}' => $this->Configuration->getKey('website_url') . '/?resetpasswd_' . $key,
         ]);
 
         $event = new Event('beforeSendResetPassMail', $this, [
-            'user_id' => $search['User']['id'],
+            'user_id' => $user['id'],
             'key' => $key,
         ]);
         $this->getEventManager()->dispatch($event);
@@ -425,11 +431,11 @@ class UserController extends AppController
         $mailOk = $this->Util->prepareMail($email, $subject, $message)->sendMail();
 
         if ($mailOk) {
-            $lostPass = $this->Lostpassword->newEntity([
+            $lostPass = $lostPasswordTable->newEntity([
                 'email' => $email,
                 'key' => $key,
             ]);
-            $this->Lostpassword->save($lostPass);
+            $lostPasswordTable->save($lostPass);
 
             return $this->response->withStringBody(json_encode([
                 'statut' => true,
@@ -448,18 +454,20 @@ class UserController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        if (!$this->request->is('ajax')) {
+        if (!$this->getRequest()->is('ajax')) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
+        $data = $this->getRequest()->getData();
+
         if (
-            empty($this->getRequest()->getData('password')) ||
-            empty($this->getRequest()->getData('password2')) ||
-            empty($this->getRequest()->getData('email')) ||
-            empty($this->getRequest()->getData('key'))
+            empty($data['password']) ||
+            empty($data['password2']) ||
+            empty($data['email']) ||
+            empty($data['key'])
         ) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
@@ -467,7 +475,6 @@ class UserController extends AppController
             ]));
         }
 
-        $data = $this->getRequest()->getData('xss') ?: $this->getRequest()->getData();
         $reset = $this->User->resetPass($data, $this);
 
         if (isset($reset['status']) && $reset['status'] === true) {
@@ -523,7 +530,7 @@ class UserController extends AppController
             throw new ForbiddenException();
         }
 
-        if (!$this->request->is('post')) {
+        if (!$this->getRequest()->is('post')) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('ERROR__BAD_REQUEST'),
@@ -532,11 +539,18 @@ class UserController extends AppController
 
         $username = $this->User->getKey('pseudo');
 
-        $this->ApiConfiguration = TableRegistry::getTableLocator()->get('ApiConfigurations');
-        $ApiConfiguration = $this->ApiConfiguration->find()->first();
+        $apiConfigTable = $this->fetchTable('ApiConfigurations');
+        $apiConfig = $apiConfigTable->find()->first();
 
-        $useSkinRestorer = $ApiConfiguration['use_skin_restorer'];
-        $serverSkinRestorerID = $ApiConfiguration['skin_restorer_server_id'];
+        if ($apiConfig === null) {
+            return $this->response->withStringBody(json_encode([
+                'statut' => false,
+                'msg' => __('ERROR__INTERNAL_ERROR'),
+            ]));
+        }
+
+        $useSkinRestorer = $apiConfig['use_skin_restorer'];
+        $serverSkinRestorerID = $apiConfig['skin_restorer_server_id'];
 
         if ($useSkinRestorer && !$this->Server->userIsConnected($username, $serverSkinRestorerID)) {
             return $this->response->withStringBody(json_encode([
@@ -547,7 +561,7 @@ class UserController extends AppController
 
         $skin_max_size = 10000000;
 
-        $target_config = $ApiConfiguration['skin_filename'];
+        $target_config = $apiConfig['skin_filename'];
         $filename = substr($target_config, (int)strrpos($target_config, '/') + 1);
         $filename = str_replace('{PLAYER}', $username, $filename);
         $filename = str_replace('php', '', $filename);
@@ -557,10 +571,10 @@ class UserController extends AppController
         $target = substr($target_config, 0, (int)strrpos($target_config, '/') + 1);
         $target = WWW_ROOT . '/' . $target;
 
-        $width_max = $ApiConfiguration['skin_width'];
-        $height_max = $ApiConfiguration['skin_height'];
+        $width_max = $apiConfig['skin_width'];
+        $height_max = $apiConfig['skin_height'];
 
-        $isValidImg = $this->Util->isValidImage($this->request, ['png'], $width_max, $height_max, $skin_max_size);
+        $isValidImg = $this->Util->isValidImage($this->getRequest(), ['png'], $width_max, $height_max, $skin_max_size);
         if (!$isValidImg['status']) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
@@ -568,7 +582,7 @@ class UserController extends AppController
             ]));
         }
 
-        if (!$this->Util->uploadImage($this->request, $target . $filename)) {
+        if (!$this->Util->uploadImage($this->getRequest(), $target . $filename)) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('FORM__ERROR_WHEN_UPLOAD'),
@@ -576,11 +590,7 @@ class UserController extends AppController
         }
 
         $skinURL = Router::url(
-            [
-                'action' => str_replace('{PLAYER}', $username, $ApiConfiguration['ApiConfiguration']['skin_filename']) . '.png',
-                'controller' => '',
-                'admin' => false,
-            ],
+            str_replace('{PLAYER}', $username, $apiConfig['skin_filename']) . '.png',
             true,
         );
 
@@ -606,7 +616,7 @@ class UserController extends AppController
             throw new ForbiddenException();
         }
 
-        if (!$this->request->is('post')) {
+        if (!$this->getRequest()->is('post')) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('ERROR__BAD_REQUEST'),
@@ -615,10 +625,17 @@ class UserController extends AppController
 
         $cape_max_size = 10000000;
 
-        $this->ApiConfiguration = TableRegistry::getTableLocator()->get('ApiConfigurations');
-        $ApiConfiguration = $this->ApiConfiguration->find()->first();
+        $apiConfigTable = $this->fetchTable('ApiConfigurations');
+        $apiConfig = $apiConfigTable->find()->first();
 
-        $target_config = $ApiConfiguration['cape_filename'];
+        if ($apiConfig === null) {
+            return $this->response->withStringBody(json_encode([
+                'statut' => false,
+                'msg' => __('ERROR__INTERNAL_ERROR'),
+            ]));
+        }
+
+        $target_config = $apiConfig['cape_filename'];
         $filename = substr($target_config, (int)strrpos($target_config, '/') + 1);
         $filename = str_replace('{PLAYER}', $this->User->getKey('pseudo'), $filename);
         $filename = str_replace('php', '', $filename);
@@ -628,10 +645,10 @@ class UserController extends AppController
         $target = substr($target_config, 0, (int)strrpos($target_config, '/') + 1);
         $target = WWW_ROOT . '/' . $target;
 
-        $width_max = $ApiConfiguration['cape_width'];
-        $height_max = $ApiConfiguration['cape_height'];
+        $width_max = $apiConfig['cape_width'];
+        $height_max = $apiConfig['cape_height'];
 
-        $isValidImg = $this->Util->isValidImage($this->request, ['png'], $width_max, $height_max, $cape_max_size);
+        $isValidImg = $this->Util->isValidImage($this->getRequest(), ['png'], $width_max, $height_max, $cape_max_size);
         if (!$isValidImg['status']) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
@@ -639,7 +656,7 @@ class UserController extends AppController
             ]));
         }
 
-        if (!$this->Util->uploadImage($this->request, $target . $filename)) {
+        if (!$this->Util->uploadImage($this->getRequest(), $target . $filename)) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('FORM__ERROR_WHEN_UPLOAD'),
@@ -658,14 +675,14 @@ class UserController extends AppController
             return $this->redirect(['_name' => 'home']);
         }
 
-        $this->Authentification = TableRegistry::getTableLocator()->get('UsersTwofactorauth');
-        $infos = $this->Authentification->find(
-            'all',
-            conditions: [
+        $authTable = $this->fetchTable('UsersTwofactorauth');
+        $infos = $authTable
+            ->find()
+            ->where([
                 'user_id' => $this->User->getKey('id'),
                 'enabled' => true,
-            ],
-        )->first();
+            ])
+            ->first();
 
         $twoFactorAuthStatus = !empty($infos);
         $this->set('twoFactorAuthStatus', $twoFactorAuthStatus);
@@ -675,13 +692,12 @@ class UserController extends AppController
         $this->viewBuilder()->setLayout($this->Configuration->getKey('layout'));
 
         if ($this->EyPlugin->isInstalled('eywek.shop')) {
-            $this->ItemsBuyHistory = TableRegistry::getTableLocator()->get('Shop.ItemsBuyHistory');
-            $histories = $this->ItemsBuyHistory->find(
-                'all',
-                recursive: 1,
-                order: 'ItemsBuyHistory.created DESC',
-                conditions: ['user_id' => $this->User->getKey('id')],
-            )->all();
+            $itemsHistoryTable = $this->fetchTable('Shop.ItemsBuyHistory');
+            $histories = $itemsHistoryTable
+                ->find()
+                ->where(['user_id' => $this->User->getKey('id')])
+                ->order(['ItemsBuyHistory.created' => 'DESC'])
+                ->all();
 
             $this->set(compact('histories'));
             $this->set('shop_active', true);
@@ -696,8 +712,8 @@ class UserController extends AppController
             4 => __('USER__RANK_ADMINISTRATOR'),
         ];
 
-        $this->Rank = TableRegistry::getTableLocator()->get('Ranks');
-        $custom_ranks = $this->Rank->find()->all();
+        $rankTable = $this->fetchTable('Ranks');
+        $custom_ranks = $rankTable->find()->all();
         foreach ($custom_ranks as $value) {
             $available_ranks[$value['rank_id']] = $value['name'];
         }
@@ -706,15 +722,17 @@ class UserController extends AppController
         $this->set('can_cape', $this->API->can_cape());
         $this->set('can_skin', $this->API->can_skin());
 
-        $this->ApiConfiguration = TableRegistry::getTableLocator()->get('ApiConfigurations');
-        $configAPI = $this->ApiConfiguration->find()->first();
+        $apiConfigTable = $this->fetchTable('ApiConfigurations');
+        $configAPI = $apiConfigTable->find()->first();
 
-        $skin_width_max = $configAPI['skin_width'];
-        $skin_height_max = $configAPI['skin_height'];
-        $cape_width_max = $configAPI['cape_width'];
-        $cape_height_max = $configAPI['cape_height'];
+        if ($configAPI !== null) {
+            $skin_width_max = $configAPI['skin_width'];
+            $skin_height_max = $configAPI['skin_height'];
+            $cape_width_max = $configAPI['cape_width'];
+            $cape_height_max = $configAPI['cape_height'];
 
-        $this->set(compact('skin_width_max', 'skin_height_max', 'cape_width_max', 'cape_height_max'));
+            $this->set(compact('skin_width_max', 'skin_height_max', 'cape_width_max', 'cape_height_max'));
+        }
 
         $confirmed = $this->User->getKey('confirmed');
         if (
@@ -753,20 +771,14 @@ class UserController extends AppController
         if ($this->isConnected) {
             $user = $this->User->getAllFromCurrentUser();
         } else {
-            $user = $this->User->find(
-                'all',
-                ['conditions' => ['id' => $this->getRequest()->getSession()->read('email.confirm.user.id')]],
-            )->first();
+            $userId = $this->getRequest()->getSession()->read('email.confirm.user.id');
+            $user = $userId !== null ? $this->User->get((int)$userId) : null;
         }
 
         $this->getRequest()->getSession()->delete('email.confirm.user.id');
 
         if (!$user || empty($user)) {
             throw new NotFoundException();
-        }
-
-        if (isset($user['User'])) {
-            $user = $user['User'];
         }
 
         $confirmed = $user['confirmed'];
@@ -819,16 +831,18 @@ class UserController extends AppController
             ]));
         }
 
-        if (!$this->request->is('ajax')) {
+        if (!$this->getRequest()->is('ajax')) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
+        $data = $this->getRequest()->getData();
+
         if (
-            empty($this->getRequest()->getData('password')) ||
-            empty($this->getRequest()->getData('password_confirmation'))
+            empty($data['password']) ||
+            empty($data['password_confirmation'])
         ) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
@@ -836,15 +850,13 @@ class UserController extends AppController
             ]));
         }
 
-        $this->request = $this->request->withData('', $this->getRequest()->getData('xss'));
-
         $password = $this->Util->password(
-            $this->getRequest()->getData('password'),
+            $data['password'],
             $this->User->getKey('pseudo'),
         );
 
         $password_confirmation = $this->Util->password(
-            $this->getRequest()->getData('password_confirmation'),
+            $data['password_confirmation'],
             $this->User->getKey('pseudo'),
             $password,
         );
@@ -888,16 +900,18 @@ class UserController extends AppController
             throw new ForbiddenException();
         }
 
-        if (!$this->request->is('ajax')) {
+        if (!$this->getRequest()->is('ajax')) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
+        $data = $this->getRequest()->getData();
+
         if (
-            empty($this->getRequest()->getData('email')) ||
-            empty($this->getRequest()->getData('email_confirmation'))
+            empty($data['email']) ||
+            empty($data['email_confirmation'])
         ) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
@@ -905,14 +919,14 @@ class UserController extends AppController
             ]));
         }
 
-        if ($this->getRequest()->getData('email') !== $this->getRequest()->getData('email_confirmation')) {
+        if ($data['email'] !== $data['email_confirmation']) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('USER__ERROR_EMAIL_NOT_SAME'),
             ]));
         }
 
-        if (!filter_var($this->getRequest()->getData('email'), FILTER_VALIDATE_EMAIL)) {
+        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('USER__ERROR_EMAIL_NOT_VALID'),
@@ -921,7 +935,7 @@ class UserController extends AppController
 
         $event = new Event('beforeUpdateEmail', $this, [
             'user' => $this->User->getAllFromCurrentUser(),
-            'new_email' => $this->getRequest()->getData('email_confirmation'),
+            'new_email' => $data['email_confirmation'],
         ]);
         $this->getEventManager()->dispatch($event);
         if ($event->isStopped()) {
@@ -933,7 +947,7 @@ class UserController extends AppController
             return $this->response->withStringBody(json_encode($result));
         }
 
-        $this->User->setKey('email', htmlentities((string)$this->getRequest()->getData('email')));
+        $this->User->setKey('email', htmlentities((string)$data['email']));
 
         return $this->response->withStringBody(json_encode([
             'statut' => true,

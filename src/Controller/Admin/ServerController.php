@@ -62,7 +62,7 @@ class ServerController extends AppController
 
         $search_cmd = $serverCmdTable
             ->find()
-            ->order(['server_id' => 'DESC'])
+            ->orderBy(['server_id' => 'DESC'])
             ->all();
 
         $search_server = $serverTable->find()->all();

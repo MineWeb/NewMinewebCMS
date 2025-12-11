@@ -87,7 +87,7 @@ class NotificationsTable extends Table
     {
         $query = $this->find()
             ->where(['user_id' => $user_id, 'type' => $type])
-            ->order(['id' => 'DESC']);
+            ->orderBy(['id' => 'DESC']);
 
         $data = [];
 

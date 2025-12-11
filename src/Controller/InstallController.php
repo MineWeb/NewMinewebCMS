@@ -164,25 +164,25 @@ class InstallController extends BaseController
     public function install(): Response
     {
         if (!$this->request->is('post')) {
-            return $this->sendJSON([
+            return $this->response->withStringBody(json_encode([
                 'status' => false,
                 'msg' => 'Methode invalide',
-            ]);
+            ]));
         }
 
         if (!InstallState::isDatabaseConfigured()) {
-            return $this->sendJSON([
+            return $this->response->withStringBody(json_encode([
                 'status' => false,
                 'msg' => 'La base de donnees n est pas configuree',
-            ]);
+            ]));
         }
 
         $this->reloadConnectionFromDatabasesJson();
         $this->runMigrations();
 
-        return $this->sendJSON([
+        return $this->response->withStringBody(json_encode([
             'status' => true,
-        ]);
+        ]));
     }
 
     private function handleDatabasePost(): Response
@@ -195,10 +195,10 @@ class InstallController extends BaseController
 
         if ($type === 0) {
             if ($host === '' || $database === '' || $username === '') {
-                return $this->sendJSON([
+                return $this->response->withStringBody(json_encode([
                     'status' => false,
                     'msg' => __('ERROR__FILL_ALL_FIELDS'),
-                ]);
+                ]));
             }
 
             $dsn = 'mysql:host=' . $host . ';dbname=' . $database . ';charset=utf8mb4';
@@ -208,10 +208,10 @@ class InstallController extends BaseController
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 ]);
             } catch (PDOException $e) {
-                return $this->sendJSON([
+                return $this->response->withStringBody(json_encode([
                     'status' => false,
                     'msg' => 'Erreur lors de la connexion MySQL: ' . $e->getMessage(),
-                ]);
+                ]));
             }
 
             $dbData = [
@@ -223,21 +223,21 @@ class InstallController extends BaseController
             ];
 
             if (!InstallState::markDatabaseConfigured($dbData)) {
-                return $this->sendJSON([
+                return $this->response->withStringBody(json_encode([
                     'status' => false,
                     'msg' => 'Impossible d ecrire le fichier databases.json',
-                ]);
+                ]));
             }
 
-            return $this->sendJSON(['status' => true]);
+            return $this->response->withStringBody(json_encode(['status' => true]));
         }
 
         if ($type === 1) {
             if (!in_array('pdo_sqlite', get_loaded_extensions(), true)) {
-                return $this->sendJSON([
+                return $this->response->withStringBody(json_encode([
                     'status' => false,
                     'msg' => 'Vous devez avoir l extension pdo_sqlite',
-                ]);
+                ]));
             }
 
             $dbPath = ROOT . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Data' . DIRECTORY_SEPARATOR . 'database.db';
@@ -248,10 +248,10 @@ class InstallController extends BaseController
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 ]);
             } catch (PDOException $e) {
-                return $this->sendJSON([
+                return $this->response->withStringBody(json_encode([
                     'status' => false,
                     'msg' => 'Erreur lors de la connexion SQLite: ' . $e->getMessage(),
-                ]);
+                ]));
             }
 
             $dbData = [
@@ -263,19 +263,19 @@ class InstallController extends BaseController
             ];
 
             if (!InstallState::markDatabaseConfigured($dbData)) {
-                return $this->sendJSON([
+                return $this->response->withStringBody(json_encode([
                     'status' => false,
                     'msg' => 'Impossible d ecrire le fichier databases.json',
-                ]);
+                ]));
             }
 
-            return $this->sendJSON(['status' => true]);
+            return $this->response->withStringBody(json_encode(['status' => true]));
         }
 
-        return $this->sendJSON([
+        return $this->response->withStringBody(json_encode([
             'status' => false,
             'msg' => 'Type de base de donnees invalide',
-        ]);
+        ]));
     }
 
     private function reloadConnectionFromDatabasesJson(): void
@@ -364,24 +364,24 @@ class InstallController extends BaseController
         $ip = $this->Util->getIP();
 
         if (empty($data['pseudo']) || empty($data['password']) || empty($data['password_confirmation']) || empty($data['email'])) {
-            return $this->sendJSON([
+            return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('ERROR__FILL_ALL_FIELDS'),
-            ]);
+            ]));
         }
 
         if ($data['password'] !== $data['password_confirmation']) {
-            return $this->sendJSON([
+            return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('USER__ERROR_PASSWORDS_NOT_SAME'),
-            ]);
+            ]));
         }
 
         if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            return $this->sendJSON([
+            return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('USER__ERROR_EMAIL_NOT_VALID'),
-            ]);
+            ]));
         }
 
         $userTable = $this->fetchTable('Users');
@@ -390,10 +390,10 @@ class InstallController extends BaseController
         if ($existingAdmin) {
             InstallState::markInstalled();
 
-            return $this->sendJSON([
+            return $this->response->withStringBody(json_encode([
                 'statut' => true,
                 'msg' => __('INSTALL__ADMIN_ALREADY_EXISTS'),
-            ]);
+            ]));
         }
 
         $data['ip'] = $ip;
@@ -404,17 +404,17 @@ class InstallController extends BaseController
         $saved = $userTable->save($user);
 
         if (!$saved) {
-            return $this->sendJSON([
+            return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('ERROR__UNKNOWN'),
-            ]);
+            ]));
         }
 
         InstallState::markInstalled();
 
-        return $this->sendJSON([
+        return $this->response->withStringBody(json_encode([
             'statut' => true,
             'msg' => __('USER__REGISTER_SUCCESS'),
-        ]);
+        ]));
     }
 }

@@ -24,6 +24,9 @@ class ConfigurationController extends AppController
             $data = [];
 
             foreach ($request->getData() as $key => $value) {
+                if ($key === '_csrfToken' || $key === 'xss') {
+                    continue;
+                }
                 $data[$key] = $value === '' ? null : $value;
             }
 
@@ -33,26 +36,23 @@ class ConfigurationController extends AppController
                 ['password_hash IS' => null]
             );
 
-            $xssData = $request->getData('xss') ?? [];
-            $data['end_layout_code'] = $xssData['end_layout_code'] ?? null;
-
             $configEntity = $this->Configuration->get(1);
             $configEntity->set($data);
             $this->Configuration->saveOrFail($configEntity);
 
             $this->History->set('EDIT_CONFIGURATION', 'configuration');
 
-            $this->Configuration->cacheQueries = false;
-            $this->Configuration->dataConfig = null;
+            $this->Configuration->clearCache();
 
             $this->Flash->success(__('CONFIG__EDIT_SUCCESS'));
         }
 
         $config = $this->Configuration->getAll();
-        $this->Configuration->cacheQueries = true;
 
-        $config['lang'] = I18n::getLocale();
-        $config['languages_available'] = $this->getAvailableLocales();
+        if ($config !== null) {
+            $config['lang'] = I18n::getLocale();
+            $config['languages_available'] = $this->getAvailableLocales();
+        }
 
         $this->set('config', $config);
         $this->set('shopIsInstalled', $this->EyPlugin->isInstalled('eywek.shop'));

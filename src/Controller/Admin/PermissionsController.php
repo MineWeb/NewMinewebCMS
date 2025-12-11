@@ -117,7 +117,7 @@ class PermissionsController extends AppController
 
         $lastRank = $rankTable
             ->find()
-            ->order(['rank_id' => 'DESC'])
+            ->orderBy(['rank_id' => 'DESC'])
             ->limit(1)
             ->first();
 

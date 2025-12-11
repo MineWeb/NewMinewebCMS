@@ -12,7 +12,7 @@ use Cake\Validation\Validator;
 
 class ConfigurationsTable extends Table
 {
-    private Configuration|array|null $dataConfig = null;
+    private ?Configuration $dataConfig = null;
 
     public function initialize(array $config): void
     {
@@ -74,7 +74,7 @@ class ConfigurationsTable extends Table
 
         $validator
             ->integer('server_cache')
-            ->notEmptyString('server_cache');
+            ->allowEmptyString('server_cache');
 
         $validator
             ->scalar('server_secretkey')
@@ -188,39 +188,43 @@ class ConfigurationsTable extends Table
         return $validator;
     }
 
-    public function getAll(): Configuration|array
+    public function getAll(): ?Configuration
     {
         return $this->getData();
     }
 
-    private function getData(): Configuration|array
+    private function getData(): ?Configuration
     {
         if ($this->dataConfig === null) {
             $config = $this->find()->first();
-            if ($config === null) {
-                return [];
-            }
-            $this->dataConfig = $config;
+            $this->dataConfig = $config instanceof Configuration ? $config : null;
         }
 
         return $this->dataConfig;
     }
 
+    public function clearCache(): void
+    {
+        $this->dataConfig = null;
+    }
+
     public function getMoneyName(bool $plural = true): string
     {
+        $config = $this->getData();
+        if ($config === null) {
+            return '';
+        }
+
         return $plural
-            ? (string)$this->getData()->get('money_name_plural')
-            : (string)$this->getData()->get('money_name_singular');
+            ? (string)$config->money_name_plural
+            : (string)$config->money_name_singular;
     }
 
     public function getKey(string $key): mixed
     {
-        $data = $this->getData();
-        if (is_array($data)) {
-            return $data[$key] ?? false;
-        }
+        $config = $this->getData();
 
-        return $data->get($key) ?? false;
+        return $config?->get($key) ?? null;
     }
 
     public function setKey(string $key, mixed $value): EntityInterface|false
@@ -228,7 +232,10 @@ class ConfigurationsTable extends Table
         $config = $this->get(1);
         $config->set($key, $value);
 
-        return $this->save($config);
+        $saved = $this->save($config);
+        $this->clearCache();
+
+        return $saved;
     }
 
     public function getFirstAdministrator(): ?string
@@ -236,10 +243,14 @@ class ConfigurationsTable extends Table
         $userTable = TableRegistry::getTableLocator()->get('Users');
         $user = $userTable
             ->find()
-            ->where(['rank' => '4'])
+            ->where(['rank' => 4])
             ->first();
 
-        return $user instanceof User ? $user->get('pseudo') : null;
+        if (!$user instanceof User) {
+            return null;
+        }
+
+        return $user->pseudo;
     }
 
     public function getInstalledDate(): mixed
@@ -247,9 +258,13 @@ class ConfigurationsTable extends Table
         $userTable = TableRegistry::getTableLocator()->get('Users');
         $user = $userTable
             ->find()
-            ->where(['rank' => '4'])
+            ->where(['rank' => 4])
             ->first();
 
-        return $user instanceof User ? $user->get('created') : null;
+        if (!$user instanceof User) {
+            return null;
+        }
+
+        return $user->created;
     }
 }

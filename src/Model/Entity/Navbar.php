@@ -17,7 +17,7 @@ class Navbar extends Entity
         'open_new_tab' => true,
     ];
 
-    protected function _getUrlData(string $url): array
+    protected function _getUrlData(?string $url): array
     {
         if ($this->url == '#') {
             return ['type' => 'submenu'];

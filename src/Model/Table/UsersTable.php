@@ -393,9 +393,9 @@ class UsersTable extends Table
             return 'ERROR__INTERNAL_ERROR';
         }
 
-        $this->Lostpassword = TableRegistry::getTableLocator()->get('Lostpasswords');
+        $this->Lostpasswords = TableRegistry::getTableLocator()->get('Lostpasswords');
 
-        $Lostpassword = $this->Lostpassword
+        $Lostpassword = $this->Lostpasswords
             ->find('all', conditions: ['email' => $data['email'], 'key' => $data['key'] ?? ''])
             ->first();
 
@@ -424,7 +424,7 @@ class UsersTable extends Table
             return $event->getResult();
         }
 
-        $this->Lostpassword->delete($Lostpassword);
+        $this->Lostpasswords->delete($Lostpassword);
 
         $userEntity = $this->get((int)$user['id']);
         $userEntity->set($data_to_save);

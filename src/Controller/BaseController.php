@@ -23,11 +23,4 @@ class BaseController extends Controller
         return parent::__get($name);
     }
 
-    public function sendJSON(mixed $data): Response
-    {
-        $this->disableAutoRender();
-        $response = $this->response->withType('application/json');
-
-        return $response->withStringBody(json_encode($data));
-    }
 }

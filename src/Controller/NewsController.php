@@ -70,8 +70,8 @@ class NewsController extends AppController
         $news = $this->News->find(
             'all',
             recursive: 1,
-            order: 'id desc',
-            conditions: ['slug' => $slug]
+            order: ['News.id' => 'DESC'],
+            conditions: ['News.slug' => $slug],
         )->first();
 
         if (!$news) {
@@ -94,11 +94,12 @@ class NewsController extends AppController
 
         $this->set('title_for_layout', $news['title']);
 
-        $search_news = $this->News->find('all', [
-            'limit' => 4,
-            'order' => 'id desc',
-            'conditions' => ['published' => 1],
-        ])->all();
+        $search_news = $this->News->find(
+            'all',
+            limit: 4,
+            order: ['News.id' => 'DESC'],
+            conditions: ['News.published' => 1],
+        )->all();
 
         $this->set(compact('search_news', 'news'));
 
@@ -190,7 +191,7 @@ class NewsController extends AppController
             conditions: [
                 'news_id' => $this->getRequest()->getData('id'),
                 'user_id' => $this->User->getKey('id'),
-            ]
+            ],
         )->first();
 
         if (!empty($already)) {
@@ -251,7 +252,7 @@ class NewsController extends AppController
             conditions: [
                 'news_id' => $this->getRequest()->getData('id'),
                 'user_id' => $this->User->getKey('id'),
-            ]
+            ],
         )->first();
 
         if (empty($already)) {
@@ -290,7 +291,7 @@ class NewsController extends AppController
         $this->Comment = TableRegistry::getTableLocator()->get('Comments');
         $search = $this->Comment->find(
             'all',
-            conditions: ['id' => $this->getRequest()->getData('id')]
+            conditions: ['id' => $this->getRequest()->getData('id')],
         )->first();
 
         if (
@@ -327,17 +328,14 @@ class NewsController extends AppController
         return $this->response->withStringBody('true');
     }
 
-    /**
-     * @return array
-     */
     public function getNews(): array
     {
         $this->News = TableRegistry::getTableLocator()->get('News');
         $search_news = $this->News->find(
             'all',
             recursive: 1,
-            order: 'id desc',
-            conditions: ['published' => 1]
+            order: ['News.id' => 'DESC'],
+            conditions: ['News.published' => 1],
         )->toArray();
 
         foreach ($search_news as $key => $model) {

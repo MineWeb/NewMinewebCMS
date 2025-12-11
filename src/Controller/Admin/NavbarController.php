@@ -23,7 +23,7 @@ class NavbarController extends AppController
         $navbarTable = $this->fetchTable('Navbars');
         $navbars = $navbarTable
             ->find()
-            ->order(['order_by'])
+            ->orderBy(['order_by'])
             ->toArray();
 
         $pageTable = $this->fetchTable('Pages');
@@ -258,7 +258,7 @@ class NavbarController extends AppController
 
         $last = $navbarTable
             ->find()
-            ->order(['order_by' => 'DESC'])
+            ->orderBy(['order_by' => 'DESC'])
             ->first();
 
         $order = $last === null ? 1 : ((int)$last['order_by'] + 1);
