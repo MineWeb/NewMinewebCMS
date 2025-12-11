@@ -46,4 +46,5 @@ dev.json
 /config/install.txt
 /config/installed.txt
 /config/secure.txt
+/config/install.lock
 /config/bypass_compatibility

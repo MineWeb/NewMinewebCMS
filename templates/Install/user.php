@@ -23,41 +23,72 @@ use Cake\Routing\Router;
 
                 <form id="step3" data-user-url="<?= Router::url(['controller' => 'Install', 'action' => 'user']) ?>">
                     <div class="ajax-msg-step3"></div>
+
                     <div class="form-group">
-                        <label><?= __('USER__USERNAME') ?></label>
-                        <input type="text" class="form-control" name="pseudo"<?php if (!empty($admin_pseudo)) {
-                            echo ' value="' . $admin_pseudo . '"';
-                        } ?> placeholder="<?= __('USER__USERNAME_LABEL') ?>">
+                        <label for="username"><?= __('USER__USERNAME') ?></label>
+                        <input
+                            type="text"
+                            id="username"
+                            class="form-control"
+                            name="pseudo"
+                            <?php if (!empty($admin_pseudo)) {
+                                echo ' value="' . h($admin_pseudo) . '"';
+                            } ?>
+                            placeholder="<?= __('USER__USERNAME_LABEL') ?>"
+                        >
                     </div>
+
                     <div class="form-group">
-                        <label><?= __('USER__PASSWORD') ?></label>
-                        <input type="password" class="form-control" name="password"<?php if (!empty($admin_password)) {
-                            echo ' value="*********"';
-                        } ?> placeholder="<?= __('USER__PASSWORD_LABEL') ?>">
+                        <label for="password"><?= __('USER__PASSWORD') ?></label>
+                        <input
+                            type="password"
+                            id="password"
+                            class="form-control"
+                            name="password"
+                            <?php if (!empty($admin_password)) {
+                                echo ' value="*********"';
+                            } ?>
+                            placeholder="<?= __('USER__PASSWORD_LABEL') ?>"
+                        >
                     </div>
+
                     <div class="form-group">
-                        <label><?= __('USER__PASSWORD_CONFIRM') ?></label>
-                        <input type="password" class="form-control"
-                               name="password_confirmation"<?php if (!empty($admin_password)) {
-                            echo ' value="*********"';
-                        } ?> placeholder="<?= __('USER__PASSWORD_CONFIRM_LABEL') ?>">
+                        <label for="password-confirm"><?= __('USER__PASSWORD_CONFIRM') ?></label>
+                        <input
+                            type="password"
+                            id="password-confirm"
+                            class="form-control"
+                            name="password_confirmation"
+                            <?php if (!empty($admin_password)) {
+                                echo ' value="*********"';
+                            } ?>
+                            placeholder="<?= __('USER__PASSWORD_CONFIRM_LABEL') ?>"
+                        >
                     </div>
+
                     <div class="form-group">
-                        <label><?= __('USER__EMAIL') ?></label>
-                        <input type="email" class="form-control" name="email"<?php if (!empty($admin_email)) {
-                            echo ' value="' . $admin_email . '"';
-                        } ?> placeholder="<?= __('USER__EMAIL_LABEL') ?>">
+                        <label for="email"><?= __('USER__EMAIL') ?></label>
+                        <input
+                            type="email"
+                            id="email"
+                            class="form-control"
+                            name="email"
+                            <?php if (!empty($admin_email)) {
+                                echo ' value="' . h($admin_email) . '"';
+                            } ?>
+                            placeholder="<?= __('USER__EMAIL_LABEL') ?>"
+                        >
                     </div>
+
                     <?php if (!empty($admin_pseudo)) { ?>
                         <input type="hidden" name="step3" value="true">
                     <?php } ?>
+
                     <div id="input"></div>
-                    <li class="next finish hidden" style="display: none;">
-                        <a href="javascript:"><?= __('GLOBAL__END') ?></a>
-                    </li>
+
                     <ul class="pager wizard">
                         <li class="next" style="display: inline;">
-                            <a id="tabsleft-link" href="javascript:"><?= __('GLOBAL__NEXT') ?></a>
+                            <a id="tabsleft-link-step1" href="javascript:"><?= __('GLOBAL__NEXT') ?></a>
                         </li>
                         <li class="next finish hidden" style="display: none;">
                             <a href="javascript:"><?= __('GLOBAL__END') ?></a>
@@ -79,15 +110,16 @@ use Cake\Routing\Router;
                         <a href="javascript:"><?= __('GLOBAL__PREVIOUS') ?></a>
                     </li>
                     <li class="next" style="display: inline;">
-                        <a id="tabsleft-link" href="javascript:"><?= __('GLOBAL__NEXT') ?></a>
+                        <a id="tabsleft-link-step2" href="javascript:"><?= __('GLOBAL__NEXT') ?></a>
                     </li>
                 </ul>
-                </p>
             </div>
 
             <div class="progress">
-                <div class="progress-bar progress-bar-info progress-bar-striped active" role="progressbar"
-                     aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="width: 45%"></div>
+                <div class="progress-bar progress-bar-info progress-bar-striped active"
+                     role="progressbar"
+                     aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"
+                     style="width: 45%"></div>
             </div>
         </div>
     </div>

@@ -1,7 +1,7 @@
 {
-    "name": "cakephp/app",
-    "description": "CakePHP skeleton app",
-    "homepage": "https://cakephp.org",
+    "name": "mineweb/mineweb-cms",
+    "description": "MineWeb CMS - Minecraft website & shop",
+    "homepage": "https://mineweb.org",
     "type": "project",
     "license": "MIT",
     "require": {

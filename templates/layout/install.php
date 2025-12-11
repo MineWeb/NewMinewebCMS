@@ -45,7 +45,8 @@
 <?= $this->Html->script('bootstrap') ?>
 <?= $this->Html->script('jquery.bootstrap.wizard.min') ?>
 <?= $this->Html->script('prettify') ?>
-<?= $this->Html->script('install') ?>
+<?= $this->Html->script('install/install') ?>
+<?= $this->Html->script('install/requirements') ?>
 
 
 </body>
