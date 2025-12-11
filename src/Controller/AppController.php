@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use Cake\Controller\Controller;
 use Cake\Core\Configure;
 use Cake\Event\Event;
 use Cake\Event\EventInterface;
@@ -59,22 +58,14 @@ class AppController extends BaseController
 
         if ($this->request->getParam('controller') !== 'User' && $loginCondition) {
             if ($this->isIPBan($this->Util->getIP()) && $this->request->getParam('controller') !== 'Ban' && !$this->Permissions->can('BYPASS_BAN')) {
-                return $this->redirect([
-                    'controller' => 'Ban',
-                    'action' => 'ip',
-                    'plugin' => false,
-                ]);
+                return $this->redirect(['_name' => 'ban_ip']);
             }
 
             $this->Maintenance = $this->fetchTable('Maintenance');
             if ($this->request->getParam('controller') !== 'Maintenance' && !$this->Permissions->can('BYPASS_MAINTENANCE')) {
                 $maintenance = $this->Maintenance->checkMaintenance($this->getRequest()->getRequestTarget(), $this->Util);
                 if ($maintenance) {
-                    return $this->redirect([
-                        'controller' => 'Maintenance',
-                        'action' => $maintenance['url'],
-                        'plugin' => false,
-                    ]);
+                    return $this->redirect(['_name' => 'maintenance_index', $maintenance['url']]);
                 }
             }
         }
@@ -107,14 +98,20 @@ class AppController extends BaseController
         $requestEvent = new Event('requestPage', $this, $this->request->getData());
         $this->getEventManager()->dispatch($requestEvent);
         if ($requestEvent->isStopped()) {
-            return $requestEvent->getResult();
+            $result = $requestEvent->getResult();
+            if ($result instanceof Response) {
+                return $result;
+            }
         }
 
         if ($this->request->is('post')) {
             $postEvent = new Event('onPostRequest', $this, $this->request->getData());
             $this->getEventManager()->dispatch($postEvent);
             if ($postEvent->isStopped()) {
-                return $postEvent->getResult();
+                $result = $postEvent->getResult();
+                if ($result instanceof Response) {
+                    return $result;
+                }
             }
         }
 
@@ -247,12 +244,7 @@ class AppController extends BaseController
                 && $this->User->isBanned()
                 && $loginCondition
             ) {
-                $this->redirect([
-                    'controller' => 'Ban',
-                    'action' => 'index',
-                    'plugin' => false,
-                    'admin' => false,
-                ]);
+                $this->redirect(['_name' => 'ban_index']);
             }
         }
 
@@ -298,7 +290,7 @@ class AppController extends BaseController
         $nav = [
             'Dashboard' => [
                 'icon' => 'fas fa-tachometer-alt',
-                'route' => ['controller' => 'admin', 'action' => 'index', 'admin' => true, 'plugin' => false],
+                'route' => ['_name' => 'admin_index'],
             ],
             'GLOBAL__ADMIN_GENERAL' => [
                 'icon' => 'cogs',
@@ -306,32 +298,32 @@ class AppController extends BaseController
                     'USER__MEMBERS_REGISTERED' => [
                         'icon' => 'users',
                         'permission' => 'MANAGE_USERS',
-                        'route' => ['controller' => 'user', 'action' => 'index', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_user_index'],
                     ],
                     'BAN__MEMBERS' => [
                         'icon' => 'ban',
                         'permission' => 'MANAGE_BAN',
-                        'route' => ['controller' => 'ban', 'action' => 'index', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_ban_index'],
                     ],
                     'PERMISSIONS__LABEL' => [
                         'icon' => 'user',
                         'permission' => 'MANAGE_PERMISSIONS',
-                        'route' => ['controller' => 'permissions', 'action' => 'index', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_permissions_index'],
                     ],
                     'CONFIG__GENERAL_PREFERENCES' => [
                         'icon' => 'cog',
                         'permission' => 'MANAGE_CONFIGURATION',
-                        'route' => ['controller' => 'configuration', 'action' => 'index', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_configuration_index'],
                     ],
                     'STATS__TITLE' => [
                         'icon' => 'far fa-chart-bar',
                         'permission' => 'VIEW_STATISTICS',
-                        'route' => ['controller' => 'statistics', 'action' => 'index', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_statistics_index'],
                     ],
                     'MAINTENANCE__TITLE' => [
                         'icon' => 'fas fa-hand-paper',
                         'permission' => 'MANAGE_MAINTENANCE',
-                        'route' => ['controller' => 'maintenance', 'action' => 'index', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_maintenance_index'],
                     ],
                 ],
             ],
@@ -341,32 +333,32 @@ class AppController extends BaseController
                     'NEWS__TITLE' => [
                         'icon' => 'fas fa-pencil-ruler',
                         'permission' => 'MANAGE_NEWS',
-                        'route' => ['controller' => 'news', 'action' => 'index', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_news_index'],
                     ],
                     'PAGE__TITLE' => [
                         'icon' => 'fas fa-file-alt',
                         'permission' => 'MANAGE_PAGE',
-                        'route' => ['controller' => 'pages', 'action' => 'index', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_pages_index'],
                     ],
                     'NAVBAR__TITLE' => [
                         'icon' => 'fas fa-bars',
                         'permission' => 'MANAGE_NAV',
-                        'route' => ['controller' => 'navbar', 'action' => 'index', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_navbar_index'],
                     ],
                     'SEO__TITLE' => [
                         'icon' => 'fab fa-google',
                         'permission' => 'MANAGE_SEO',
-                        'route' => ['controller' => 'seo', 'action' => 'index', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_seo_index'],
                     ],
                     'SOCIAL__TITLE' => [
                         'icon' => 'fas fa-share-alt',
                         'permission' => 'MANAGE_SOCIAL',
-                        'route' => ['controller' => 'social', 'action' => 'index', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_social_index'],
                     ],
                     'MOTD__TITLE' => [
                         'icon' => 'fas fa-sort-amount-up-alt',
                         'permission' => 'MANAGE_MOTD',
-                        'route' => ['controller' => 'motd', 'action' => 'index', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_motd_index'],
                     ],
                 ],
             ],
@@ -377,27 +369,27 @@ class AppController extends BaseController
                     'SERVER__LINK' => [
                         'icon' => 'fas fa-arrows-alt-h',
                         'permission' => 'MANAGE_SERVERS',
-                        'route' => ['controller' => 'server', 'action' => 'link', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_server_link'],
                     ],
                     'SERVER__BANLIST' => [
                         'icon' => 'ban',
                         'permission' => 'MANAGE_SERVERS',
-                        'route' => ['controller' => 'server', 'action' => 'banlist', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_server_banlist'],
                     ],
                     'SERVER__WHITELIST' => [
                         'icon' => 'list',
                         'permission' => 'MANAGE_SERVERS',
-                        'route' => ['controller' => 'server', 'action' => 'whitelist', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_server_whitelist'],
                     ],
                     'SERVER__ONLINE_PLAYERS' => [
                         'icon' => 'list-ul',
                         'permission' => 'MANAGE_SERVERS',
-                        'route' => ['controller' => 'server', 'action' => 'online', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_server_online'],
                     ],
                     'SERVER__CMD' => [
                         'icon' => 'key',
                         'permission' => 'MANAGE_SERVERS',
-                        'route' => ['controller' => 'server', 'action' => 'cmd', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_server_cmd'],
                     ],
                 ],
             ],
@@ -410,12 +402,12 @@ class AppController extends BaseController
                     'LOG__VIEW_ERROR' => [
                         'icon' => 'exclamation-circle',
                         'permission' => 'VIEW_WEBSITE_LOGS',
-                        'route' => ['controller' => 'log', 'action' => 'error', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_log_error'],
                     ],
                     'LOG__VIEW_DEBUG' => [
                         'icon' => 'exclamation-triangle',
                         'permission' => 'VIEW_WEBSITE_LOGS',
-                        'route' => ['controller' => 'log', 'action' => 'debug', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_log_debug'],
                     ],
                 ],
             ],
@@ -425,34 +417,34 @@ class AppController extends BaseController
                     'PLUGIN__TITLE' => [
                         'icon' => 'plus',
                         'permission' => 'MANAGE_PLUGINS',
-                        'route' => ['controller' => 'plugin', 'action' => 'index', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_plugin_index'],
                     ],
                     'THEME__TITLE' => [
                         'icon' => 'mobile',
                         'permission' => 'MANAGE_THEMES',
-                        'route' => ['controller' => 'theme', 'action' => 'index', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_theme_index'],
                     ],
                     'API__LABEL' => [
                         'icon' => 'sitemap',
                         'permission' => 'MANAGE_API',
-                        'route' => ['controller' => 'api', 'action' => 'index', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_api_index'],
                     ],
                     'NOTIFICATION__TITLE' => [
                         'icon' => 'flag',
                         'permission' => 'MANAGE_NOTIFICATIONS',
-                        'route' => ['controller' => 'notifications', 'action' => 'index', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_notifications_index'],
                     ],
                     'HISTORY__VIEW_GLOBAL' => [
                         'icon' => 'table',
                         'permission' => 'VIEW_WEBSITE_HISTORY',
-                        'route' => ['controller' => 'history', 'action' => 'index', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_history_index'],
                     ],
                 ],
             ],
             'GLOBAL__UPDATE' => [
                 'icon' => 'wrench',
                 'permission' => 'MANAGE_UPDATE',
-                'route' => ['controller' => 'update', 'action' => 'index', 'admin' => true, 'plugin' => false],
+                'route' => ['_name' => 'admin_update_index'],
             ],
         ];
 
@@ -497,7 +489,7 @@ class AppController extends BaseController
                     'SLIDER__TITLE' => [
                         'icon' => 'far fa-image',
                         'permission' => 'MANAGE_SLIDER',
-                        'route' => ['controller' => 'slider', 'action' => 'index', 'admin' => true, 'plugin' => false],
+                        'route' => ['_name' => 'admin_slider_index'],
                     ],
                 ]
             );
@@ -510,7 +502,7 @@ class AppController extends BaseController
                 'SLIDER__TITLE' => [
                     'icon' => 'far fa-image',
                     'permission' => 'MANAGE_SLIDER',
-                    'route' => ['controller' => 'slider', 'action' => 'index', 'admin' => true, 'plugin' => false],
+                    'route' => ['_name' => 'admin_slider_index'],
                 ],
             ]
         );
@@ -566,7 +558,10 @@ class AppController extends BaseController
                 }
             } elseif ($value['urlData']['type'] === 'page') {
                 if (isset($pages_listed[$value['urlData']['id']])) {
-                    $nav[$key]['url'] = Router::url('/p/' . $pages_listed[$value['urlData']['id']]);
+                    $nav[$key]['url'] = Router::url([
+                        '_name' => 'pages_index',
+                        $pages_listed[$value['urlData']['id']],
+                    ]);
                 } else {
                     $nav[$key]['url'] = '#';
                 }
@@ -635,7 +630,7 @@ class AppController extends BaseController
         ]);
     }
 
-    public function beforeRender(EventInterface $event): Response|null
+    public function beforeRender(EventInterface $event): ?Response
     {
         $response = parent::beforeRender($event);
         if ($response instanceof Response) {
@@ -648,15 +643,21 @@ class AppController extends BaseController
         $this->getEventManager()->dispatch($pageEvent);
         if ($pageEvent->isStopped()) {
             $this->__setTheme();
-            return $pageEvent->getResult();
+            $result = $pageEvent->getResult();
+            if ($result instanceof Response) {
+                return $result;
+            }
         }
 
-        if ($this->getRequest()->getParam('prefix') === 'admin') {
+        if ($this->getRequest()->getParam('prefix') === 'Admin') {
             $adminEvent = new Event('onLoadAdminPanel', $this, $this->request->getData());
             $this->getEventManager()->dispatch($adminEvent);
             if ($adminEvent->isStopped()) {
                 $this->__setTheme();
-                return $adminEvent->getResult();
+                $result = $adminEvent->getResult();
+                if ($result instanceof Response) {
+                    return $result;
+                }
             }
         }
 
@@ -724,7 +725,7 @@ class AppController extends BaseController
         $this->set(compact('seo_config'));
     }
 
-    public function afterFilter(EventInterface $event): Response|null
+    public function afterFilter(EventInterface $event): ?Response
     {
         $response = parent::afterFilter($event);
         if ($response instanceof Response) {
@@ -735,7 +736,10 @@ class AppController extends BaseController
         $this->getEventManager()->dispatch($afterEvent);
         if ($afterEvent->isStopped()) {
             $this->__setTheme();
-            return $afterEvent->getResult();
+            $result = $afterEvent->getResult();
+            if ($result instanceof Response) {
+                return $result;
+            }
         }
 
         return null;

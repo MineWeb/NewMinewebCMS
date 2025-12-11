@@ -51,7 +51,7 @@ class ThemeComponent extends Component
                         . __('UPDATE__AVAILABLE') . ' '
                         . __('UPDATE__THEME')
                         . '<a href="'
-                        . Router::url(['prefix' => 'Admin', 'controller' => 'Theme', 'action' => 'index'])
+                        . Router::url(['_name' => 'admin_theme_index'])
                         . '" style="margin-top: -6px;" class="btn float-right">'
                         . __('GLOBAL__UPDATE_LOOK')
                         . '</a></div>';

@@ -1,111 +1,183 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
 use Cake\Http\Exception\ForbiddenException;
+use Cake\Http\Exception\NotFoundException;
+use Cake\Http\Response;
 
-class MaintenanceController extends AppController {
-    function index()
+class MaintenanceController extends AppController
+{
+    public function index(): ?Response
     {
-        if (!$this->isConnected and !$this->Permissions->can('MANAGE_MAINTENANCE'))
+        if (!$this->isConnected || !$this->Permissions->can('MANAGE_MAINTENANCE')) {
             throw new ForbiddenException();
+        }
 
         $this->set('title_for_layout', __('MAINTENANCE__TITLE'));
 
-        $pagesInMaintenance = $this->Maintenance->find()->all();
-        $this->set("pages", $pagesInMaintenance);
+        $maintenanceTable = $this->fetchTable('Maintenance');
+        $pages = $maintenanceTable->find()->all();
+
+        $this->set('pages', $pages);
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Maintenance')
+            ->setTemplate('index');
+
+        return null;
     }
 
-    function add()
+    public function add(): ?Response
     {
-        if (!$this->isConnected and !$this->Permissions->can('MANAGE_MAINTENANCE'))
+        if (!$this->isConnected || !$this->Permissions->can('MANAGE_MAINTENANCE')) {
             throw new ForbiddenException();
+        }
 
         $this->set('title_for_layout', __('MAINTENANCE__TITLE'));
 
-        if ($this->request->is("post")) {
+        $maintenanceTable = $this->fetchTable('Maintenance');
+
+        if ($this->getRequest()->is('post')) {
             $this->disableAutoRender();
             $this->response = $this->response->withType('application/json');
 
-            if ($this->getRequest()->getData('reason') == null)
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('MAINTENANCE__ADD_REASON_EMPTY')]));
+            if (!$this->getRequest()->getData('reason')) {
+                return $this->response->withStringBody(json_encode([
+                    'statut' => false,
+                    'msg' => __('MAINTENANCE__ADD_REASON_EMPTY'),
+                ]));
+            }
 
-            $maintenance = $this->Maintenance->newEntity($this->getRequest()->getData());
-            $this->Maintenance->save($maintenance);
+            $entity = $maintenanceTable->newEntity($this->getRequest()->getData());
+            $maintenanceTable->saveOrFail($entity);
 
-            return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('MAINTENANCE__ADD_SUCCESS')]));
+            return $this->response->withStringBody(json_encode([
+                'statut' => true,
+                'msg' => __('MAINTENANCE__ADD_SUCCESS'),
+            ]));
         }
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Maintenance')
+            ->setTemplate('add');
+
+        return null;
     }
 
-    function edit($id = false)
+    public function edit(int|string|null $id = null): ?Response
     {
-        if (!$this->isConnected and !$this->Permissions->can('MANAGE_MAINTENANCE') | !$id)
+        if (!$this->isConnected || !$this->Permissions->can('MANAGE_MAINTENANCE') || !$id) {
             throw new ForbiddenException();
+        }
+
+        $maintenanceTable = $this->fetchTable('Maintenance');
+
+        $page = $maintenanceTable
+            ->find()
+            ->where(['id' => $id])
+            ->first();
+
+        if (!$page) {
+            throw new NotFoundException();
+        }
 
         $this->set('title_for_layout', __('MAINTENANCE__TITLE'));
+        $this->set('page', $page);
 
-        $page = $this->Maintenance->find("all", ["conditions" => ["id" => $id]])->first();
-        $this->set("page", $page);
-
-        if ($this->request->is("post")) {
+        if ($this->getRequest()->is('post')) {
             $this->disableAutoRender();
             $this->response = $this->response->withType('application/json');
 
-            if ($this->getRequest()->getData('reason') == null)
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('MAINTENANCE__ADD_REASON_EMPTY')]));
+            if (!$this->getRequest()->getData('reason')) {
+                return $this->response->withStringBody(json_encode([
+                    'statut' => false,
+                    'msg' => __('MAINTENANCE__ADD_REASON_EMPTY'),
+                ]));
+            }
 
-            $maintenance = $this->Maintenance->get($id);
-            $maintenance->set($this->getRequest()->getData());
-            $this->Maintenance->save($maintenance);
+            $page = $maintenanceTable->get($id);
+            $page->set($this->getRequest()->getData());
+            $maintenanceTable->saveOrFail($page);
 
-            return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('MAINTENANCE__EDIT_SUCCESS')]));
+            return $this->response->withStringBody(json_encode([
+                'statut' => true,
+                'msg' => __('MAINTENANCE__EDIT_SUCCESS'),
+            ]));
         }
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Maintenance')
+            ->setTemplate('edit');
+
+        return null;
     }
 
-    function disable($id = false)
+    public function disable(int|string|null $id = null): Response
     {
-        $this->autoRender = false;
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_MAINTENANCE') || !$id)
-            throw new ForbiddenException();
+        $this->disableAutoRender();
 
-        $maintenance = $this->Maintenance->get($id);
-        $maintenance->set(["active" => "0"]);
-        $this->Maintenance->save($maintenance);
+        if (!$this->isConnected || !$this->Permissions->can('MANAGE_MAINTENANCE') || !$id) {
+            throw new ForbiddenException();
+        }
+
+        $maintenanceTable = $this->fetchTable('Maintenance');
+
+        $entity = $maintenanceTable->get($id);
+        $entity->set('active', '0');
+        $maintenanceTable->saveOrFail($entity);
 
         $this->Flash->success(__('MAINTENANCE__DISABLED_PAGE', [
-            '{PAGE}' => $maintenance['url'],
+            '{PAGE}' => $entity->url,
         ]));
-        $this->redirect(['controller' => 'maintenance', 'action' => 'index', 'admin' => true]);
+
+        return $this->redirect(['_name' => 'admin_maintenance_index']);
     }
 
-    function enable($id = false)
+    public function enable(int|string|null $id = null): Response
     {
-        $this->autoRender = false;
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_MAINTENANCE') || !$id)
-            throw new ForbiddenException();
+        $this->disableAutoRender();
 
-        $maintenance = $this->Maintenance->get($id);
-        $maintenance->set(["active" => "1"]);
-        $this->Maintenance->save($maintenance);
+        if (!$this->isConnected || !$this->Permissions->can('MANAGE_MAINTENANCE') || !$id) {
+            throw new ForbiddenException();
+        }
+
+        $maintenanceTable = $this->fetchTable('Maintenance');
+
+        $entity = $maintenanceTable->get($id);
+        $entity->set('active', '1');
+        $maintenanceTable->saveOrFail($entity);
 
         $this->Flash->success(__('MAINTENANCE__ENABLED_PAGE', [
-            '{PAGE}' => $maintenance['url'],
+            '{PAGE}' => $entity->url,
         ]));
-        $this->redirect(['controller' => 'maintenance', 'action' => 'index', 'admin' => true]);
+
+        return $this->redirect(['_name' => 'admin_maintenance_index']);
     }
 
-    function delete($id = false)
+    public function delete(int|string|null $id = null): Response
     {
-        $this->autoRender = false;
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_MAINTENANCE') || !$id)
-            throw new ForbiddenException();
+        $this->disableAutoRender();
 
-        $pageUrl = $this->Maintenance->find('all', ["conditions" => ['id' => $id]])->first()["url"];
-        $this->Maintenance->delete($this->Maintenance->get($id));
+        if (!$this->isConnected || !$this->Permissions->can('MANAGE_MAINTENANCE') || !$id) {
+            throw new ForbiddenException();
+        }
+
+        $maintenanceTable = $this->fetchTable('Maintenance');
+        $page = $maintenanceTable->get($id);
+        $pageUrl = $page->url;
+
+        $maintenanceTable->delete($page);
 
         $this->Flash->success(__('MAINTENANCE__DELETED_PAGE', [
             '{PAGE}' => $pageUrl,
         ]));
-        $this->redirect(['controller' => 'maintenance', 'action' => 'index', 'admin' => true]);
+
+        return $this->redirect(['_name' => 'admin_maintenance_index']);
     }
 }

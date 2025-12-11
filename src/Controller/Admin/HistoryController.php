@@ -1,38 +1,59 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
 use App\Utility\LangService;
 use Cake\Http\Exception\ForbiddenException;
-use Cake\ORM\TableRegistry;
+use Cake\Http\Response;
 
 class HistoryController extends AppController
 {
-    public function index()
-    {
-        if (!$this->Permissions->can('VIEW_WEBSITE_HISTORY'))
-            throw new ForbiddenException();
-        $this->set('title_for_layout', __('HISTORY__VIEW_GLOBAL'));
-    }
-
-    public function getAll()
+    public function index(): ?Response
     {
         if (!$this->Permissions->can('VIEW_WEBSITE_HISTORY')) {
             throw new ForbiddenException();
         }
+
+        $this->set('title_for_layout', __('HISTORY__VIEW_GLOBAL'));
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/History')
+            ->setTemplate('index');
+
+        return null;
+    }
+
+    public function getAll(): Response
+    {
+        if (!$this->Permissions->can('VIEW_WEBSITE_HISTORY')) {
+            throw new ForbiddenException();
+        }
+
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        $this->History = TableRegistry::getTableLocator()->get('History');
+        $historyTable = $this->fetchTable('History');
 
         $this->DataTable = $this->loadComponent('DataTable');
-        $this->DataTable->setTable($this->History);
+        $this->DataTable->setTable($historyTable);
+
         $this->paginate = [
             'contain' => ['User'],
-            'fields' => ['History.id', 'User.pseudo', 'History.action', 'History.user_id', 'History.category', 'History.created'],
+            'fields' => [
+                'History.id',
+                'User.pseudo',
+                'History.action',
+                'History.user_id',
+                'History.category',
+                'History.created',
+            ],
             'order' => 'History.id DESC',
-            'recursive' => 1
+            'recursive' => 1,
         ];
+
         $this->DataTable->mDataProp = true;
         $response = $this->DataTable->getResponse();
 
@@ -42,13 +63,14 @@ class HistoryController extends AppController
                 'History' => [
                     'action' => LangService::history($history['action']),
                     'category' => $history['category'],
-                    'created' => LangService::date($history['created'])
+                    'created' => LangService::date($history['created']),
                 ],
-                'User' => $history['user']
+                'User' => $history['user'],
             ];
         }
 
         $response['aaData'] = $data;
+
         return $this->response->withStringBody(json_encode($response));
     }
 }

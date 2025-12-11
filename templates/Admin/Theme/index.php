@@ -42,17 +42,17 @@ use Cake\Routing\Router;
                             </td>
                             <td>
                                 <?php if ('default' != $Configuration->getKey('theme')) { ?>
-                                    <a href="<?= Router::url(['controller' => 'theme', 'action' => 'enable', 'default', 'admin' => true]) ?>"
+                                    <a href="<?= Router::url(['_name' => 'admin_theme_enable', 'pass' => ['default']]) ?>"
                                        class="btn btn-success"><?= __('GLOBAL__ENABLE') ?></a>
                                 <?php } ?>
-                                <a href="<?= Router::url(['controller' => 'theme', 'action' => 'custom', 'default', 'admin' => true]) ?>"
+                                <a href="<?= Router::url(['_name' => 'admin_theme_custom', 'pass' => ['default']]) ?>"
                                    class="btn btn-info"><?= __('THEME__CUSTOMIZATION') ?></a>
-                                <a href="<?= Router::url(['controller' => 'theme', 'action' => 'custom_files', 'default', 'admin' => true]) ?>"
+                                <a href="<?= Router::url(['_name' => 'admin_theme_custom_files', 'pass' => ['default']]) ?>"
                                    class="btn btn-primary"><?= __('THEME__CUSTOM_FILES') ?></a>
                             </td>
                         </tr>
-                        <?php if (!empty($themesInstalled)) {?>
-                            <?php foreach ($themesInstalled as $key => $value) {?>
+                        <?php if (!empty($themesInstalled)) { ?>
+                            <?php foreach ($themesInstalled as $key => $value) { ?>
                                 <tr>
                                     <td><?= $value->name ?></td>
                                     <td><?= $value->author ?></td>
@@ -78,22 +78,22 @@ use Cake\Routing\Router;
                                     </td>
                                     <td>
                                         <?php if ($value->slug != $Configuration->getKey('theme') && $value->valid) { ?>
-                                            <a href="<?= Router::url(['controller' => 'theme', 'action' => 'enable', $value->slug, 'admin' => true]) ?>"
+                                            <a href="<?= Router::url(['_name' => 'admin_theme_enable', 'pass' => [$value->slug]]) ?>"
                                                class="btn btn-success"><?= __('GLOBAL__ENABLE') ?></a>
                                         <?php } ?>
-                                        <a onClick="confirmDel('<?= Router::url(['controller' => 'theme', 'action' => 'delete', $value->slug, 'admin' => true]) ?>')"
+                                        <a onClick="confirmDel('<?= Router::url(['_name' => 'admin_theme_delete', 'pass' => [$value->slug]]) ?>')"
                                            class="btn btn-danger"><?= __('GLOBAL__DELETE') ?></a>
                                         <?php if (file_exists(ROOT . '/templates/Themed/' . $value->slug . '/Config/view.php')) { ?>
-                                            <a href="<?= Router::url(['controller' => 'theme', 'action' => 'custom', $value->slug, 'admin' => true]) ?>"
+                                            <a href="<?= Router::url(['_name' => 'admin_theme_custom', 'pass' => [$value->slug]]) ?>"
                                                class="btn btn-info"><?= __('THEME__CUSTOMIZATION') ?></a>
                                         <?php } ?>
-                                        <a href="<?= Router::url(['controller' => 'theme', 'action' => 'custom_files', $value->slug, 'admin' => true]) ?>"
+                                        <a href="<?= Router::url(['_name' => 'admin_theme_custom_files', 'pass' => [$value->slug]]) ?>"
                                            class="btn btn-primary"><?= __('THEME__CUSTOM_FILES') ?></a>
                                         <?php if (isset($value->lastVersion)) { ?>
                                             <?php if ($value->version !== $value->lastVersion) { ?>
                                                 <a <?= (explode('.', $value->lastVersion)[0] > explode('.', $value->version)[0] ? 'data-warning-update' : '') ?>
-                                                        href="<?= Router::url(['controller' => 'theme', 'action' => 'update', 'admin' => true, $value->slug]) ?>"
-                                                        class="btn btn-warning"><?= __('GLOBAL__UPDATE') ?></a>
+                                                    href="<?= Router::url(['_name' => 'admin_theme_update', 'pass' => [$value->slug]]) ?>"
+                                                    class="btn btn-warning"><?= __('GLOBAL__UPDATE') ?></a>
                                             <?php } ?>
                                         <?php } ?>
                                     </td>
@@ -115,7 +115,7 @@ use Cake\Routing\Router;
                 </div>
                 <div class="card-body">
 
-                    <?php if (!empty($themesAvailable)) {?>
+                    <?php if (!empty($themesAvailable)) { ?>
                         <table class="table table-bordered">
                             <thead>
                             <tr>
@@ -132,7 +132,7 @@ use Cake\Routing\Router;
                                     <td>
                                         <?php if ($value['free']) {
                                             echo isset($value['author']) ? $value['author'] : '';
-                                        } else { // display contact
+                                        } else {
                                             foreach ($value['contact'] as $contact) {
                                                 if ($contact['type'] == 'discord') {
                                                     echo '<button class="btn btn-info" style="background-color: #7289da;border-color: #7289da;">Discord - ' . $contact['value'] . '</button>';
@@ -149,7 +149,7 @@ use Cake\Routing\Router;
                                     <td><?= isset($value['version']) ? $value['version'] : __('THEME__NEED_PURCHASE') ?></td>
                                     <td>
                                         <?php if ($value['free']): ?>
-                                            <a href="<?= Router::url(['controller' => 'theme', 'action' => 'install', 'admin' => true, $value['slug']]) ?>"
+                                            <a href="<?= Router::url(['_name' => 'admin_theme_install', 'pass' => [$value['slug']]]) ?>"
                                                class="btn btn-success"><?= __('INSTALL__INSTALL') ?></a>
                                         <?php endif; ?>
                                     </td>
@@ -168,9 +168,22 @@ use Cake\Routing\Router;
     </div>
 </section>
 <script type="text/javascript">
-    $('a[data-warning-update]').on('click', function (e) {
-        e.preventDefault();
-        if (confirm("<?= __('UPDATE__MAJOR_WARNING_EXTENSION') ?>"))
-            window.location = $(this).attr('href');
-    });
+    document.addEventListener('DOMContentLoaded', function () {
+        let links = document.querySelectorAll('a[data-warning-update]')
+        if (!links.length) {
+            return
+        }
+        for (let i = 0; i < links.length; i++) {
+            links[i].addEventListener('click', function (e) {
+                e.preventDefault()
+                let href = this.getAttribute('href')
+                if (!href) {
+                    return
+                }
+                if (confirm("<?= __('UPDATE__MAJOR_WARNING_EXTENSION') ?>")) {
+                    window.location.href = href
+                }
+            })
+        }
+    })
 </script>

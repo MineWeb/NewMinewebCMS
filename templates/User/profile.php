@@ -49,7 +49,7 @@ use Cake\Routing\Router;
                         <a id="toggleTwoFactorAuth"
                            data-status="<?= (isset($twoFactorAuthStatus) && $twoFactorAuthStatus) ? '1' : '0' ?>"
                            class="btn btn-info">Voulez-vous <span
-                                    id="twoFactorAuthStatusInfos"><?= (isset($twoFactorAuthStatus) && $twoFactorAuthStatus) ? 'désactiver' : 'activer' ?></span>
+                                id="twoFactorAuthStatusInfos"><?= (isset($twoFactorAuthStatus) && $twoFactorAuthStatus) ? 'désactiver' : 'activer' ?></span>
                             la double authentification ?</a>
                     </div>
                 </div>
@@ -61,7 +61,7 @@ use Cake\Routing\Router;
                 </p>
 
                 <form class="form-horizontal" method="POST" data-ajax="true"
-                      action="<?= Router::url(['admin' => false, 'controller' => 'Authentification', 'action' => 'validEnable']) ?>"
+                      action="<?= Router::url(['_name' => 'authentification_valid_enable']) ?>"
                       data-callback-function="afterValidQrCode">
                     <div class="ajax-msg"></div>
 
@@ -77,37 +77,93 @@ use Cake\Routing\Router;
                 </form>
             </div>
             <script type="text/javascript">
-                $('#toggleTwoFactorAuth').on('click', function (e) {
-                    e.preventDefault()
-                    var btn = $(this)
-                    var status = parseInt(btn.attr('data-status'))
-                    // disable
-                    btn.html('<i class="fa fa-refresh fa-spin"></i>').addClass('disabled')
-                    // request to server
-                    if (!status) { // enable
-                        $.get('<?= Router::url(['controller' => 'Authentification', 'action' => 'generateSecret']) ?>', function (data) {
-                            // add qrcode
-                            $('#two-factor-auth-qrcode').attr('src', data.qrcode_url)
-                            $('#two-factor-auth-secret').html(data.secret)
-                            // edit display
-                            $('#twoFactorAuthStatus').slideUp(150)
-                            $('#twoFactorAuthValid').slideDown(150)
-                        })
-                    } else { // disable
-                        $.get('<?= Router::url(['controller' => 'Authentification', 'action' => 'disable']) ?>', function (data) {
-                            // edit display
-                            $('#toggleTwoFactorAuth').html('Voulez-vous activer la double authentification ?').removeClass('disabled').removeClass('btn-primary').addClass('btn-primary').attr('data-status', 0)
-                            $('#twoFactorAuthStatusInfos').html('activer')
-                        })
+                document.addEventListener('DOMContentLoaded', function () {
+                    var toggleBtn = document.getElementById('toggleTwoFactorAuth')
+                    if (!toggleBtn) {
+                        return
                     }
+                    var statusInfos = document.getElementById('twoFactorAuthStatusInfos')
+                    var statusBlock = document.getElementById('twoFactorAuthStatus')
+                    var validBlock = document.getElementById('twoFactorAuthValid')
+                    var qrcodeImg = document.getElementById('two-factor-auth-qrcode')
+                    var secretSpan = document.getElementById('two-factor-auth-secret')
+
+                    toggleBtn.addEventListener('click', function (e) {
+                        e.preventDefault()
+                        var status = parseInt(toggleBtn.getAttribute('data-status') || '0')
+                        toggleBtn.innerHTML = '<i class="fa fa-refresh fa-spin"></i>'
+                        toggleBtn.classList.add('disabled')
+
+                        if (!status) {
+                            fetch('<?= Router::url(['_name' => 'authentification_generate_secret']) ?>', {
+                                method: 'GET',
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            })
+                                .then(function (response) {
+                                    return response.json()
+                                })
+                                .then(function (data) {
+                                    if (qrcodeImg && data.qrcode_url) {
+                                        qrcodeImg.setAttribute('src', data.qrcode_url)
+                                    }
+                                    if (secretSpan && data.secret) {
+                                        secretSpan.textContent = data.secret
+                                    }
+                                    if (statusBlock) {
+                                        statusBlock.style.display = 'none'
+                                    }
+                                    if (validBlock) {
+                                        validBlock.style.display = 'block'
+                                    }
+                                })
+                                .finally(function () {
+                                    toggleBtn.classList.remove('disabled')
+                                })
+                        } else {
+                            fetch('<?= Router::url(['_name' => 'authentification_disable']) ?>', {
+                                method: 'GET',
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            })
+                                .then(function () {
+                                    toggleBtn.innerHTML = 'Voulez-vous activer la double authentification ?'
+                                    toggleBtn.classList.remove('disabled')
+                                    toggleBtn.classList.remove('btn-primary')
+                                    toggleBtn.classList.add('btn-primary')
+                                    toggleBtn.setAttribute('data-status', '0')
+                                    if (statusInfos) {
+                                        statusInfos.textContent = 'activer'
+                                    }
+                                })
+                        }
+                    })
                 })
 
                 function afterValidQrCode(req, res) {
-                    // edit display
-                    $('#toggleTwoFactorAuth').html('Voulez-vous désactiver la double authentification ?').removeClass('disabled').removeClass('btn-primary').addClass('btn-primary').attr('data-status', 1)
-                    $('#twoFactorAuthStatusInfos').html('désactiver')
-                    $('#twoFactorAuthValid').slideUp(150)
-                    $('#twoFactorAuthStatus').slideDown(150)
+                    var toggleBtn = document.getElementById('toggleTwoFactorAuth')
+                    var statusInfos = document.getElementById('twoFactorAuthStatusInfos')
+                    var statusBlock = document.getElementById('twoFactorAuthStatus')
+                    var validBlock = document.getElementById('twoFactorAuthValid')
+
+                    if (toggleBtn) {
+                        toggleBtn.innerHTML = 'Voulez-vous désactiver la double authentification ?'
+                        toggleBtn.classList.remove('disabled')
+                        toggleBtn.classList.remove('btn-primary')
+                        toggleBtn.classList.add('btn-primary')
+                        toggleBtn.setAttribute('data-status', '1')
+                    }
+                    if (statusInfos) {
+                        statusInfos.textContent = 'désactiver'
+                    }
+                    if (validBlock) {
+                        validBlock.style.display = 'none'
+                    }
+                    if (statusBlock) {
+                        statusBlock.style.display = 'block'
+                    }
                 }
             </script>
             <hr>
@@ -115,7 +171,7 @@ use Cake\Routing\Router;
             <h3><?= __('USER__UPDATE_PASSWORD') ?></h3>
 
             <form method="post" class="form-inline" data-ajax="true"
-                  action="<?= Router::url(['plugin' => null, 'controller' => 'user', 'action' => 'change_pw']) ?>">
+                  action="<?= Router::url(['_name' => 'user_change_pw']) ?>">
                 <div class="form-group">
                     <input type="password" class="form-control" name="password"
                            placeholder="<?= __('USER__PASSWORD') ?>">
@@ -136,7 +192,7 @@ use Cake\Routing\Router;
                 <h3><?= __('USER__UPDATE_EMAIL') ?></h3>
 
                 <form method="post" class="form-inline" data-ajax="true"
-                      action="<?= Router::url(['plugin' => null, 'controller' => 'user', 'action' => 'change_email']) ?>">
+                      action="<?= Router::url(['_name' => 'user_change_email']) ?>">
                     <div class="form-group">
                         <input type="email" class="form-control" name="email"
                                placeholder="<?= __('USER__EMAIL') ?>">
@@ -182,7 +238,7 @@ use Cake\Routing\Router;
                 <h3><?= __('API__SKIN_LABEL') ?></h3>
 
                 <form class="form-inline" method="post" id="skin" data-ajax="true"
-                      data-upload-image="true" action="<?= Router::url(['action' => 'uploadSkin']) ?>">
+                      data-upload-image="true" action="<?= Router::url(['_name' => 'user_upload_skin']) ?>">
                     <div class="form-group">
                         <label><?= __('FORM__BROWSE') ?></label>
                         <input name="image" type="file">
@@ -207,7 +263,7 @@ use Cake\Routing\Router;
                 <h3><?= __('API__CAPE_LABEL') ?></h3>
 
                 <form class="form-inline" id="cape" method="post" data-ajax="true"
-                      data-upload-image="true" action="<?= Router::url(['action' => 'uploadCape', 'crsf' => true]) ?>">
+                      data-upload-image="true" action="<?= Router::url(['_name' => 'user_upload_cape', '?' => ['crsf' => true]]) ?>">
                     <div class="form-group">
                         <label><?= __('FORM__BROWSE') ?></label>
                         <input name="image" type="file">

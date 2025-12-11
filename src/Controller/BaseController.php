@@ -25,7 +25,7 @@ class BaseController extends Controller
 
     public function sendJSON(mixed $data): Response
     {
-        $this->autoRender = false;
+        $this->disableAutoRender();
         $response = $this->response->withType('application/json');
 
         return $response->withStringBody(json_encode($data));

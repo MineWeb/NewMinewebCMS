@@ -1,137 +1,204 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
-use Cake\ORM\TableRegistry;
+use Cake\Http\Response;
 use Cake\Utility\Text;
 
-class PagesController extends AppController {
-    public function index()
+class PagesController extends AppController
+{
+    public function index(): ?Response
     {
-        if ($this->isConnected and $this->Permissions->can('MANAGE_PAGE')) {
-
-            $this->set('title_for_layout', __('PAGE__LIST'));
-            $this->layout = 'admin';
-            $this->Page = TableRegistry::getTableLocator()->get('Page');
-            $pages = $this->Page->find()->toArray();
-            foreach ($pages as $pageid => $page) {
-                $pages[$pageid]['author'] = $this->User->getFromUser('pseudo', $page['user_id']);
-            }
-            $this->set(compact('pages'));
-        } else {
-            $this->redirect('/');
+        if (!($this->isConnected && $this->Permissions->can('MANAGE_PAGE'))) {
+            return $this->redirect('/');
         }
+
+        $this->set('title_for_layout', __('PAGE__LIST'));
+
+        $pageTable = $this->fetchTable('Page');
+        $pages = $pageTable->find()->toArray();
+
+        foreach ($pages as $index => $page) {
+            $pages[$index]['author'] = $this->User->getFromUser('pseudo', $page['user_id']);
+        }
+
+        $this->set('pages', $pages);
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Pages')
+            ->setTemplate('index');
+
+        return null;
     }
 
-    public function add()
+    public function add(): ?Response
     {
-        if ($this->isConnected and $this->Permissions->can('MANAGE_PAGE')) {
-
-            $this->set('title_for_layout', __('PAGE__ADD'));
-            $this->layout = 'admin';
-        } else {
-            $this->redirect('/');
+        if (!($this->isConnected && $this->Permissions->can('MANAGE_PAGE'))) {
+            return $this->redirect('/');
         }
+
+        $this->set('title_for_layout', __('PAGE__ADD'));
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Pages')
+            ->setTemplate('add');
+
+        return null;
     }
 
-    public function addAjax()
+    public function addAjax(): Response
     {
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
-        if ($this->isConnected and $this->Permissions->can('MANAGE_PAGE')) {
-            if ($this->request->is('post')) {
-                if (!empty($this->request->getData('title')) and !empty($this->request->getData('slug')) and !empty($this->request->getData('content'))) {
-                    $this->Page = TableRegistry::getTableLocator()->get('Page');
-                    $newPage = $this->Page->newEntity([
-                        'title' => $this->request->getData('title'),
-                        'content' => $this->request->getData('content'),
-                        'user_id' => $this->User->getKey('id'),
-                        'slug' => Text::slug($this->request->getData('slug')),
-                        'updated' => date('Y-m-d H:i:s'),
-                    ]);
-                    $this->Page->save($newPage);
-                    $this->History->set('ADD_PAGE', 'page');
-                    $this->Flash->success(__('PAGE__ADD_SUCCESS'));
-                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('PAGE__ADD_SUCCESS')]));
-                } else {
-                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]));
-                }
-            } else {
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__BAD_REQUEST')]));
-            }
-        } else {
+
+        if (!($this->isConnected && $this->Permissions->can('MANAGE_PAGE'))) {
             throw new ForbiddenException();
         }
+
+        $request = $this->getRequest();
+
+        if (!$request->is('post')) {
+            return $this->response->withStringBody(json_encode([
+                'statut' => false,
+                'msg' => __('ERROR__BAD_REQUEST'),
+            ]));
+        }
+
+        $title = (string)$request->getData('title', '');
+        $slugRaw = (string)$request->getData('slug', '');
+        $content = (string)$request->getData('content', '');
+
+        if ($title === '' || $slugRaw === '' || $content === '') {
+            return $this->response->withStringBody(json_encode([
+                'statut' => false,
+                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+            ]));
+        }
+
+        $pageTable = $this->fetchTable('Page');
+
+        $entity = $pageTable->newEntity([
+            'title' => $title,
+            'content' => $content,
+            'user_id' => $this->User->getKey('id'),
+            'slug' => Text::slug($slugRaw),
+            'updated' => date('Y-m-d H:i:s'),
+        ]);
+
+        $pageTable->save($entity);
+
+        $this->History->set('ADD_PAGE', 'page');
+        $this->Flash->success(__('PAGE__ADD_SUCCESS'));
+
+        return $this->response->withStringBody(json_encode([
+            'statut' => true,
+            'msg' => __('PAGE__ADD_SUCCESS'),
+        ]));
     }
 
-    public function delete($id = false)
+    public function delete(int|string|null $id = null): Response
     {
         $this->disableAutoRender();
-        if ($this->isConnected and $this->Permissions->can('MANAGE_PAGE')) {
-            if ($id) {
-                $this->Page = TableRegistry::getTableLocator()->get('Page');
-                if ($this->Page->delete($this->Page->get($id))) {
-                    $this->History->set('DELETE_PAGE', 'page');
-                    $this->Flash->success(__('PAGE__DELETE_SUCCESS'));
-                }
-            }
 
-            $this->redirect(['controller' => 'pages', 'action' => 'index', 'admin' => true]);
-        } else {
-            $this->redirect('/admin/pages');
+        if (!($this->isConnected && $this->Permissions->can('MANAGE_PAGE'))) {
+            return $this->redirect(['_name' => 'admin_pages_index']);
         }
+
+        if ($id !== null) {
+            $pageTable = $this->fetchTable('Page');
+            $entity = $pageTable->get($id);
+
+            if ($pageTable->delete($entity)) {
+                $this->History->set('DELETE_PAGE', 'page');
+                $this->Flash->success(__('PAGE__DELETE_SUCCESS'));
+            }
+        }
+
+        return $this->redirect(['_name' => 'admin_pages_index']);
     }
 
-    public function edit($id = false)
+    public function edit(int|string|null $id = null): ?Response
     {
-        if ($this->isConnected and $this->Permissions->can('MANAGE_PAGE')) {
-            if ($id) {
-                $this->set('title_for_layout', __('PAGE__EDIT'));
-                $this->layout = 'admin';
-                $this->Page = TableRegistry::getTableLocator()->get('Page');
-                $page = $this->Page->find('all', conditions: ['id' => $id])->first();
-                if (!empty($page)) {
-                    $this->set(compact('page'));
-                } else {
-                    $this->redirect('/admin/pages');
-                }
-            } else {
-                $this->redirect('/admin/pages');
-            }
-        } else {
-            $this->redirect('/');
+        if (!($this->isConnected && $this->Permissions->can('MANAGE_PAGE'))) {
+            return $this->redirect('/');
         }
+
+        if ($id === null) {
+            return $this->redirect(['_name' => 'admin_pages_index']);
+        }
+
+        $pageTable = $this->fetchTable('Page');
+        $page = $pageTable
+            ->find()
+            ->where(['id' => $id])
+            ->first();
+
+        if ($page === null) {
+            return $this->redirect(['_name' => 'admin_pages_index']);
+        }
+
+        $this->set('title_for_layout', __('PAGE__EDIT'));
+        $this->set('page', $page);
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Pages')
+            ->setTemplate('edit');
+
+        return null;
     }
 
-    public function editAjax()
+    public function editAjax(): Response
     {
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
-        if ($this->isConnected and $this->Permissions->can('MANAGE_PAGE')) {
-            if ($this->request->is('post')) {
-                if (!empty($this->request->getData('id')) and !empty($this->request->getData('title')) and !empty($this->request->getData('slug')) and !empty($this->request->getData('content'))) {
-                    $this->Page = TableRegistry::getTableLocator()->get('Page');
-                    $page = $this->Page->get($this->request->getData('id'));
-                    $page->set([
-                        'title' => $this->request->getData('title'),
-                        'content' => $this->request->getData('content'),
-                        'slug' => Text::slug($this->request->getData('slug')),
-                        'updated' => date('Y-m-d H:i:s'),
-                    ]);
-                    $this->Page->save($page);
-                    $this->History->set('EDIT_PAGE', 'page');
-                    $this->Flash->success(__('PAGE__EDIT_SUCCESS'));
-                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('PAGE__EDIT_SUCCESS')]));
-                } else {
-                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]));
-                }
-            } else {
-                throw new NotFoundException();
-            }
-        } else {
+
+        if (!($this->isConnected && $this->Permissions->can('MANAGE_PAGE'))) {
             throw new ForbiddenException();
         }
+
+        $request = $this->getRequest();
+
+        if (!$request->is('post')) {
+            throw new NotFoundException();
+        }
+
+        $id = $request->getData('id');
+        $title = (string)$request->getData('title', '');
+        $slugRaw = (string)$request->getData('slug', '');
+        $content = (string)$request->getData('content', '');
+
+        if ($id === null || $title === '' || $slugRaw === '' || $content === '') {
+            return $this->response->withStringBody(json_encode([
+                'statut' => false,
+                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+            ]));
+        }
+
+        $pageTable = $this->fetchTable('Page');
+        $entity = $pageTable->get($id);
+
+        $entity->set([
+            'title' => $title,
+            'content' => $content,
+            'slug' => Text::slug($slugRaw),
+            'updated' => date('Y-m-d H:i:s'),
+        ]);
+
+        $pageTable->save($entity);
+
+        $this->History->set('EDIT_PAGE', 'page');
+        $this->Flash->success(__('PAGE__EDIT_SUCCESS'));
+
+        return $this->response->withStringBody(json_encode([
+            'statut' => true,
+            'msg' => __('PAGE__EDIT_SUCCESS'),
+        ]));
     }
 }

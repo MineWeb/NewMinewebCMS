@@ -89,7 +89,7 @@ class UpdateComponent extends Component
     public function available(): string
     {
         if (version_compare($this->cmsVersion, $this->lastVersion, '<')) {
-            $url = Router::url(['controller' => 'update', 'action' => 'index', 'admin' => true]);
+            $url = Router::url(['_name' => 'admin_update_index']);
             return "<div class='alert alert-secondary'>"
                 . __('UPDATE__AVAILABLE_TYPE_CMS') . ' '
                 . __('UPDATE__AVAILABLE') . ' '

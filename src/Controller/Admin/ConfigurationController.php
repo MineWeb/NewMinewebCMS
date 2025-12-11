@@ -1,13 +1,16 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
-use Cake\I18n\I18n;
 use App\Utility\LangService;
+use Cake\Http\Response;
+use Cake\I18n\I18n;
 
 class ConfigurationController extends AppController
 {
-    public function index()
+    public function index(): ?Response
     {
         if (!$this->isConnected || !$this->Permissions->can('MANAGE_CONFIGURATION')) {
             return $this->redirect('/');
@@ -15,20 +18,27 @@ class ConfigurationController extends AppController
 
         $this->set('title_for_layout', __('CONFIG__GENERAL_PREFERENCES'));
 
-        if ($this->request->is('post')) {
+        $request = $this->getRequest();
+
+        if ($request->is('post')) {
             $data = [];
-            foreach ($this->getRequest()->getData() as $k => $v) {
-                $data[$k] = $v === '' ? null : $v;
+
+            foreach ($request->getData() as $key => $value) {
+                $data[$key] = $value === '' ? null : $value;
             }
 
-            $hash = $this->Configuration->getKey('passwords_hash');
-            $this->User->updateAll(['password_hash' => "'$hash'"], ['password_hash IS NULL']);
+            $hash = (string)$this->Configuration->getKey('passwords_hash');
+            $this->User->updateAll(
+                ['password_hash' => $hash],
+                ['password_hash IS' => null]
+            );
 
-            $data['end_layout_code'] = $this->getRequest()->getData('xss')['end_layout_code'] ?? null;
+            $xssData = $request->getData('xss') ?? [];
+            $data['end_layout_code'] = $xssData['end_layout_code'] ?? null;
 
-            $config = $this->Configuration->get(1);
-            $config->set($data);
-            $this->Configuration->save($config);
+            $configEntity = $this->Configuration->get(1);
+            $configEntity->set($data);
+            $this->Configuration->saveOrFail($configEntity);
 
             $this->History->set('EDIT_CONFIGURATION', 'configuration');
 
@@ -46,34 +56,51 @@ class ConfigurationController extends AppController
 
         $this->set('config', $config);
         $this->set('shopIsInstalled', $this->EyPlugin->isInstalled('eywek.shop'));
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Configuration')
+            ->setTemplate('index');
+
+        return null;
     }
 
-    public function editLang()
+    public function editLang(): ?Response
     {
         if (!$this->isConnected || !$this->Permissions->can('MANAGE_CONFIGURATION')) {
             return $this->redirect('/');
         }
 
-        if ($this->request->is('post')) {
-            $footer = $this->request->getData('GLOBAL__FOOTER');
+        $request = $this->getRequest();
 
-            if (stripos((string)$footer, '<a href="http://mineweb.org">mineweb.org</a>') === false) {
+        if ($request->is('post')) {
+            $footer = (string)($request->getData('GLOBAL__FOOTER') ?? '');
+
+            if (stripos($footer, '<a href="http://mineweb.org">mineweb.org</a>') === false) {
                 $this->Flash->error(__('CONFIG__ERROR_SAVE_LANG'));
             } else {
-                LangService::saveMany($this->request->getData());
+                LangService::saveMany($request->getData());
                 $this->History->set('EDIT_LANG', 'lang');
                 $this->Flash->success(__('CONFIG__EDIT_LANG_SUCCESS'));
             }
         }
 
         $messages = LangService::loadCurrentMessages();
+
         $this->set('messages', $messages);
         $this->set('title_for_layout', __('CONFIG__LANG_LABEL'));
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Configuration')
+            ->setTemplate('edit_lang');
+
+        return null;
     }
 
     private function getAvailableLocales(): array
     {
-        $path = ROOT . '/resources/locales';
+        $path = ROOT . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'locales';
 
         if (!is_dir($path)) {
             return [];
@@ -85,10 +112,16 @@ class ConfigurationController extends AppController
         }
 
         $available = [];
-        foreach ($dirs as $d) {
-            if ($d === '.' || $d === '..') continue;
-            if (is_dir($path . '/' . $d)) {
-                $available[$d] = $d;
+
+        foreach ($dirs as $dir) {
+            if ($dir === '.' || $dir === '..') {
+                continue;
+            }
+
+            $fullPath = $path . DIRECTORY_SEPARATOR . $dir;
+
+            if (is_dir($fullPath)) {
+                $available[$dir] = $dir;
             }
         }
 

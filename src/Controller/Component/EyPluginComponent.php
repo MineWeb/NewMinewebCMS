@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controller\Component;
 
 use Cake\Cache\Cache;
@@ -8,11 +9,12 @@ use Cake\Core\App;
 use Cake\Core\Plugin;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\TableRegistry;
+use Cake\Routing\Router;
+use Exception;
+use PDOException;
 use PharIo\Version\Version;
 use PharIo\Version\VersionConstraintParser;
 use ZipArchive;
-use PDOException;
-use Exception;
 
 class EyPluginComponent extends Component
 {
@@ -635,7 +637,13 @@ class EyPluginComponent extends Component
             foreach ($pluginList as $value) {
                 $lastVersion = isset($versions[$value->slug]) ? $versions[$value->slug] : false;
                 if ($lastVersion && $value->version !== $lastVersion) {
-                    return '<div class="alert alert-secondary">' . __('UPDATE__AVAILABLE_TYPE_PLUGIN') . ' ' . __('UPDATE__AVAILABLE') . ' ' . __('UPDATE__PLUGIN') . ' <a href="' . Router::url(['controller' => 'plugin', 'action' => 'index', 'admin' => true]) . '" style="margin-top: -6px;" class="btn float-right">' . __('GLOBAL__UPDATE_LOOK') . '</a></div>';
+                    return '<div class="alert alert-secondary">'
+                        . __('UPDATE__AVAILABLE_TYPE_PLUGIN') . ' '
+                        . __('UPDATE__AVAILABLE') . ' '
+                        . __('UPDATE__PLUGIN')
+                        . ' <a href="' . Router::url(['_name' => 'admin_plugin_index']) . '" style="margin-top: -6px;" class="btn float-right">'
+                        . __('GLOBAL__UPDATE_LOOK')
+                        . '</a></div>';
                 }
             }
         }

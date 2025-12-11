@@ -1,24 +1,34 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
 use Cake\Http\Exception\ForbiddenException;
+use Cake\Http\Response;
+use FilesystemIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
-use FilesystemIterator;
 
 class UpdateController extends AppController
 {
-    public function index()
+    public function index(): ?Response
     {
         if (!$this->isConnected || !$this->User->isAdmin()) {
             throw new ForbiddenException();
         }
 
         $this->set('title_for_layout', __('GLOBAL__UPDATE'));
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Update')
+            ->setTemplate('index');
+
+        return null;
     }
 
-    public function clearCache()
+    public function clearCache(): Response
     {
         if (!$this->isConnected || !$this->User->isAdmin()) {
             throw new ForbiddenException();
@@ -29,7 +39,7 @@ class UpdateController extends AppController
         $cachePath = ROOT . DIRECTORY_SEPARATOR . 'tmp' . DIRECTORY_SEPARATOR . 'cache';
         $this->deleteDirectory($cachePath);
 
-        $this->redirect(['action' => 'index', 'admin' => true]);
+        return $this->redirect(['_name' => 'admin_update_index']);
     }
 
     private function deleteDirectory(string $path): void
@@ -53,14 +63,14 @@ class UpdateController extends AppController
         @rmdir($path);
     }
 
-    public function update(string $componentUpdated = '0')
+    public function update(string $componentUpdated = '0'): Response
     {
         if (!$this->isConnected || !$this->User->isAdmin()) {
             throw new ForbiddenException();
         }
 
-        $this->response = $this->response->withType('application/json');
         $this->disableAutoRender();
+        $this->response = $this->response->withType('application/json');
 
         $isComponentUpdated = $componentUpdated === '1';
 
@@ -84,7 +94,7 @@ class UpdateController extends AppController
         ]));
     }
 
-    public function check()
+    public function check(): Response
     {
         if (!$this->isConnected || !$this->User->isAdmin()) {
             throw new ForbiddenException();
@@ -97,6 +107,6 @@ class UpdateController extends AppController
             @unlink($file);
         }
 
-        $this->redirect(['action' => 'index', 'admin' => true]);
+        return $this->redirect(['_name' => 'admin_update_index']);
     }
 }

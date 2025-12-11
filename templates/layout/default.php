@@ -110,7 +110,7 @@ use Cake\Routing\Router;
                         <ul class="dropdown-menu" role="menu">
                             <?php if ($isConnected) { ?>
                                 <li>
-                                    <a href="<?= Router::url(['controller' => 'profile', 'action' => 'index', 'plugin' => false]) ?>"><?= __('USER__PROFILE') ?></a>
+                                    <a href="<?= Router::url(['_name' => 'user_profile']) ?>"><?= __('USER__PROFILE') ?></a>
                                 </li>
                                 <li style="position:relative;">
                                     <a href="#notifications_modal" onclick="notification.markAllAsSeen(2)"
@@ -120,12 +120,12 @@ use Cake\Routing\Router;
                                 <?php if ($Permissions->can('ACCESS_DASHBOARD')) { ?>
                                     <li class="divider"></li>
                                     <li>
-                                        <a href="<?= Router::url(['controller' => 'admin', 'action' => 'index', 'plugin' => false, 'admin' => true]) ?>"><?= __('GLOBAL__ADMIN_PANEL') ?></a>
+                                        <a href="<?= Router::url(['_name' => 'admin_index']) ?>"><?= __('GLOBAL__ADMIN_PANEL') ?></a>
                                     </li>
                                 <?php } ?>
                                 <li class="divider"></li>
                                 <li>
-                                    <a href="<?= Router::url(['controller' => 'user', 'action' => 'logout', 'plugin' => false]) ?>"><?= __('USER__LOGOUT') ?></a>
+                                    <a href="<?= Router::url(['_name' => 'user_logout']) ?>"><?= __('USER__LOGOUT') ?></a>
                                 </li>
                             <?php } else { ?>
                                 <li><a href="#" data-toggle="modal"
@@ -172,11 +172,11 @@ if (!empty($flash_messages)) {
     // Notifications
     var notification = new $.Notification({
         'url': {
-            'get': '<?= Router::url(['plugin' => false, 'controller' => 'notifications', 'action' => 'getAll']) ?>',
-            'clear': '<?= Router::url(['plugin' => false, 'controller' => 'notifications', 'action' => 'clear', 'NOTIF_ID']) ?>',
-            'clearAll': '<?= Router::url(['plugin' => false, 'controller' => 'notifications', 'action' => 'clearAll']) ?>',
-            'markAsSeen': '<?= Router::url(['plugin' => false, 'controller' => 'notifications', 'action' => 'markAsSeen', 'NOTIF_ID']) ?>',
-            'markAllAsSeen': '<?= Router::url(['plugin' => false, 'controller' => 'notifications', 'action' => 'markAllAsSeen', 'admin' => false]) ?>'
+            'get': '<?= Router::url(['_name' => 'notifications_get_all']) ?>',
+            'clear': '<?= Router::url(['_name' => 'notifications_clear', 'NOTIF_ID']) ?>',
+            'clearAll': '<?= Router::url(['_name' => 'notifications_clear_all']) ?>',
+            'markAsSeen': '<?= Router::url(['_name' => 'notifications_mark_as_seen', 'NOTIF_ID']) ?>',
+            'markAllAsSeen': '<?= Router::url(['_name' => 'notifications_mark_all_as_seen']) ?>'
         },
         'messages': {
             'markAsSeen': '<?= __('NOTIFICATION__MARK_AS_SEEN') ?>',
@@ -187,8 +187,8 @@ if (!empty($flash_messages)) {
 
     // Config FORM/APP.JS
 
-    var LIKE_URL = "<?= Router::url(['controller' => 'news', 'action' => 'like']) ?>";
-    var DISLIKE_URL = "<?= Router::url(['controller' => 'news', 'action' => 'dislike']) ?>";
+    var LIKE_URL = "<?= Router::url(['_name' => 'news_like']) ?>";
+    var DISLIKE_URL = "<?= Router::url(['_name' => 'news_dislike']) ?>";
 
     var LOADING_MSG = "<?= __('GLOBAL__LOADING') ?>";
     var ERROR_MSG = "<?= __('GLOBAL__ERROR') ?>";

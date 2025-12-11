@@ -1,202 +1,262 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
-use Cake\ORM\TableRegistry;
+use Cake\Http\Response;
 use Cake\Routing\Router;
 
 class SliderController extends AppController
 {
-    public function index()
+    public function index(): ?Response
     {
-        if ($this->isConnected and $this->Permissions->can('MANAGE_SLIDER')) {
-            $this->set('title_for_layout', __('SLIDER__ADD'));
-            $this->Slider = TableRegistry::getTableLocator()->get('Slider');
-            $sliders = $this->Slider->find()->all();
-            $this->set(compact('sliders'));
-        } else {
-            $this->redirect('/');
+        if (!($this->isConnected && $this->Permissions->can('MANAGE_SLIDER'))) {
+            return $this->redirect('/');
         }
+
+        $this->set('title_for_layout', __('SLIDER__ADD'));
+
+        $sliderTable = $this->fetchTable('Slider');
+        $sliders = $sliderTable->find()->all();
+
+        $this->set(compact('sliders'));
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Slider')
+            ->setTemplate('index');
+
+        return null;
     }
 
-    public function delete($id = false)
+    public function delete(int|string|null $id = null): Response
     {
-        if ($this->isConnected and $this->Permissions->can('MANAGE_SLIDER')) {
-            if ($id) {
-                $this->Slider = TableRegistry::getTableLocator()->get('Slider');
-                $find = $this->Slider->find('all', conditions: ['id' => $id])->first();
-                if ($find !== null) {
-                    $this->Slider->delete($find);
-                    $this->History->set('DELETE_SLIDER', 'slider');
-                    $this->Flash->success(__('SLIDER__DELETE_SUCCESS'));
-                } else {
-                    $this->Flash->error(__('UNKNONW_ID'));
-                }
-            }
-            $this->redirect(['controller' => 'slider', 'action' => 'index', 'admin' => true]);
-        } else {
-            $this->redirect('/');
+        if (!($this->isConnected && $this->Permissions->can('MANAGE_SLIDER'))) {
+            return $this->redirect('/');
         }
-    }
 
-    public function edit($id = false)
-    {
-        if ($this->isConnected and $this->Permissions->can('MANAGE_SLIDER')) {
-            if ($id) {
-                $this->Slider = TableRegistry::getTableLocator()->get('Slider');
-                $slider = $this->Slider->find('all', conditions: ['id' => $id])->first();
-                if (isset($slider)) {
-                    $slider['filename'] = explode('/', $slider['url_img']);
-                    $slider['filename'] = end($slider['filename']);
+        if ($id !== null) {
+            $sliderTable = $this->fetchTable('Slider');
+            $slider = $sliderTable
+                ->find()
+                ->where(['id' => $id])
+                ->first();
 
-                    $this->set('title_for_layout', __('SLIDER__EDIT'));
-                    $this->set(compact('slider'));
-                } else {
-                    throw new NotFoundException();
-                }
+            if ($slider) {
+                $sliderTable->delete($slider);
+                $this->History->set('DELETE_SLIDER', 'slider');
+                $this->Flash->success(__('SLIDER__DELETE_SUCCESS'));
             } else {
-                throw new NotFoundException();
+                $this->Flash->error(__('UNKNONW_ID'));
             }
-        } else {
-            $this->redirect('/');
         }
+
+        return $this->redirect([
+            '_name' => 'admin_slider_index',
+        ]);
     }
 
-    public function editAjax()
+    public function edit(int|string|null $id = null): Response
     {
-        $this->disableAutoRender();
-        $this->response = $this->response->withType('application/json');
-        if ($this->isConnected and $this->Permissions->can('MANAGE_SLIDER')) {
-            if ($this->request->is('post')) {
-                if (!empty($this->getRequest()->getData('title')) and !empty($this->getRequest()->getData('subtitle')) and !empty($this->getRequest()->getData('id'))) {
+        if (!($this->isConnected && $this->Permissions->can('MANAGE_SLIDER'))) {
+            return $this->redirect('/');
+        }
 
-                    if (!$this->getRequest()->getData('img_edit') !== null) {
-                        $checkIfImageAlreadyUploaded = $this->getRequest()->getData('img-uploaded') !== null;
-                        if ($checkIfImageAlreadyUploaded) {
+        if ($id === null) {
+            throw new NotFoundException();
+        }
 
-                            $url_img = Router::url('/') . 'img' . DS . 'uploads' . $this->getRequest()->getData('img-uploaded');
+        $sliderTable = $this->fetchTable('Slider');
+        $slider = $sliderTable
+            ->find()
+            ->where(['id' => $id])
+            ->first();
 
-                        } else {
-                            $isValidImg = $this->Util->isValidImage($this->request, ['png', 'jpg', 'jpeg']);
+        if (!$slider) {
+            throw new NotFoundException();
+        }
 
-                            if (!$isValidImg['status']) {
-                                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $isValidImg['msg']]));
-                            } else {
-                                $infos = $isValidImg['infos'];
-                            }
+        $parts = explode('/', (string)$slider['url_img']);
+        $slider['filename'] = end($parts);
 
-                            $time = date('Y-m-d_His');
+        $this->set('title_for_layout', __('SLIDER__EDIT'));
+        $this->set('slider', $slider);
 
-                            $url_img = WWW_ROOT . 'img' . DS . 'uploads' . DS . 'slider' . DS . $time . '.' . $infos['extension'];
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Slider')
+            ->setTemplate('edit');
 
-                            if (!$this->Util->uploadImage($this->request, $url_img)) {
-                                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('FORM__ERROR_WHEN_UPLOAD')]));
-                            }
+        return new Response();
+    }
 
-                            $url_img = Router::url('/') . 'img' . DS . 'uploads' . DS . 'slider' . DS . $time . '.' . $infos['extension'];
-
-                        }
-
-                        $data = [
-                            'title' => $this->getRequest()->getData('title'),
-                            'subtitle' => $this->getRequest()->getData('subtitle'),
-                            'url_img' => $url_img
-                        ];
-
-                    } else {
-
-                        $data = [
-                            'title' => $this->getRequest()->getData('title'),
-                            'subtitle' => $this->getRequest()->getData('subtitle'),
-                        ];
-
-                    }
-
-                    $this->Slider = TableRegistry::getTableLocator()->get('Slider');
-                    $slider = $this->Slider->get($this->request->getData('id'));
-                    $slider->set($data);
-                    $this->Slider->save($slider);
-                    $this->History->set('EDIT_SLIDER', 'slider');
-                    $this->Flash->success(__('SLIDER__EDIT_SUCCESS'));
-                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('SLIDER__EDIT_SUCCESS')]));
-                } else {
-                    $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]));
-                }
-            } else {
-                $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__BAD_REQUEST')]));
-            }
-        } else {
+    public function editAjax(): Response
+    {
+        if (!($this->isConnected && $this->Permissions->can('MANAGE_SLIDER'))) {
             throw new ForbiddenException();
         }
-    }
 
-    public function add()
-    {
-        if ($this->isConnected and $this->Permissions->can('MANAGE_SLIDER')) {
-            $this->set('title_for_layout', __('SLIDER__ADD'));
-        } else {
-            $this->redirect('/');
-        }
-    }
-
-    public function addAjax()
-    {
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
-        if ($this->isConnected and $this->Permissions->can('MANAGE_SLIDER')) {
+        $request = $this->getRequest();
 
-            if ($this->request->is('post')) {
-
-                if (!empty($this->getRequest()->getData('title')) and !empty($this->getRequest()->getData('subtitle'))) {
-
-                    $checkIfImageAlreadyUploaded = $this->getRequest()->getData('img-uploaded') !== null;
-                    if ($checkIfImageAlreadyUploaded) {
-
-                        $url_img = Router::url('/') . 'img' . DS . 'uploads' . $this->getRequest()->getData('img-uploaded');
-
-                    } else {
-                        $isValidImg = $this->Util->isValidImage($this->request, ['png', 'jpg', 'jpeg']);
-
-                        if (!$isValidImg['status']) {
-                            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $isValidImg['msg']]));
-                        } else {
-                            $infos = $isValidImg['infos'];
-                        }
-
-                        $time = date('Y-m-d_His');
-
-                        $url_img = WWW_ROOT . 'img' . DS . 'uploads' . DS . 'slider' . DS . $time . '.' . $infos['extension'];
-
-                        if (!$this->Util->uploadImage($this->request, $url_img)) {
-                            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('FORM__ERROR_WHEN_UPLOAD')]));
-                        }
-
-                        $url_img = Router::url('/') . 'img' . DS . 'uploads' . DS . 'slider' . DS . $time . '.' . $infos['extension'];
-                    }
-
-                    $this->Slider = TableRegistry::getTableLocator()->get('Slider');
-                    $slider = $this->Slider->newEntity([
-                        'title' => $this->getRequest()->getData('title'),
-                        'subtitle' => $this->getRequest()->getData('subtitle'),
-                        'url_img' => $url_img
-                    ]);
-                    $this->Slider->save($slider);
-
-                    $this->History->set('ADD_SLIDER', 'slider');
-
-                    $this->Flash->success(__('SLIDER__ADD_SUCCESS'));
-                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => __('SLIDER__ADD_SUCCESS')]));
-                } else {
-                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')]));
-                }
-            } else {
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => __('NOT_POST')]));
-            }
-        } else {
-            throw new ForbiddenException();
+        if (!$request->is('post')) {
+            return $this->response->withStringBody(json_encode([
+                'statut' => false,
+                'msg' => __('ERROR__BAD_REQUEST'),
+            ]));
         }
+
+        $id = $request->getData('id');
+        $title = (string)$request->getData('title', '');
+        $subtitle = (string)$request->getData('subtitle', '');
+        $imgEdit = $request->getData('img_edit');
+
+        if ($id === null || $title === '' || $subtitle === '') {
+            return $this->response->withStringBody(json_encode([
+                'statut' => false,
+                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+            ]));
+        }
+
+        $data = [
+            'title' => $title,
+            'subtitle' => $subtitle,
+        ];
+
+        if (!$imgEdit) {
+            $alreadyUploaded = $request->getData('img-uploaded') !== null;
+            if ($alreadyUploaded) {
+                $urlImg = Router::url('/') . 'img' . DS . 'uploads' . $request->getData('img-uploaded');
+            } else {
+                $isValidImg = $this->Util->isValidImage($request, ['png', 'jpg', 'jpeg']);
+                if (!$isValidImg['status']) {
+                    return $this->response->withStringBody(json_encode([
+                        'statut' => false,
+                        'msg' => $isValidImg['msg'],
+                    ]));
+                }
+
+                $infos = $isValidImg['infos'];
+                $time = date('Y-m-d_His');
+
+                $filePath = WWW_ROOT . 'img' . DS . 'uploads' . DS . 'slider' . DS . $time . '.' . $infos['extension'];
+
+                if (!$this->Util->uploadImage($request, $filePath)) {
+                    return $this->response->withStringBody(json_encode([
+                        'statut' => false,
+                        'msg' => __('FORM__ERROR_WHEN_UPLOAD'),
+                    ]));
+                }
+
+                $urlImg = Router::url('/') . 'img' . DS . 'uploads' . DS . 'slider' . DS . $time . '.' . $infos['extension'];
+            }
+
+            $data['url_img'] = $urlImg;
+        }
+
+        $sliderTable = $this->fetchTable('Slider');
+        $slider = $sliderTable->get($id);
+        $slider->set($data);
+        $sliderTable->save($slider);
+
+        $this->History->set('EDIT_SLIDER', 'slider');
+        $this->Flash->success(__('SLIDER__EDIT_SUCCESS'));
+
+        return $this->response->withStringBody(json_encode([
+            'statut' => true,
+            'msg' => __('SLIDER__EDIT_SUCCESS'),
+        ]));
     }
 
+    public function add(): ?Response
+    {
+        if (!($this->isConnected && $this->Permissions->can('MANAGE_SLIDER'))) {
+            return $this->redirect('/');
+        }
+
+        $this->set('title_for_layout', __('SLIDER__ADD'));
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Slider')
+            ->setTemplate('add');
+
+        return null;
+    }
+
+    public function addAjax(): Response
+    {
+        if (!($this->isConnected && $this->Permissions->can('MANAGE_SLIDER'))) {
+            throw new ForbiddenException();
+        }
+
+        $this->disableAutoRender();
+        $this->response = $this->response->withType('application/json');
+        $request = $this->getRequest();
+
+        if (!$request->is('post')) {
+            return $this->response->withStringBody(json_encode([
+                'statut' => false,
+                'msg' => __('NOT_POST'),
+            ]));
+        }
+
+        $title = (string)$request->getData('title', '');
+        $subtitle = (string)$request->getData('subtitle', '');
+
+        if ($title === '' || $subtitle === '') {
+            return $this->response->withStringBody(json_encode([
+                'statut' => false,
+                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+            ]));
+        }
+
+        $alreadyUploaded = $request->getData('img-uploaded') !== null;
+
+        if ($alreadyUploaded) {
+            $urlImg = Router::url('/') . 'img' . DS . 'uploads' . $request->getData('img-uploaded');
+        } else {
+            $isValidImg = $this->Util->isValidImage($request, ['png', 'jpg', 'jpeg']);
+            if (!$isValidImg['status']) {
+                return $this->response->withStringBody(json_encode([
+                    'statut' => false,
+                    'msg' => $isValidImg['msg'],
+                ]));
+            }
+
+            $infos = $isValidImg['infos'];
+            $time = date('Y-m-d_His');
+
+            $filePath = WWW_ROOT . 'img' . DS . 'uploads' . DS . 'slider' . DS . $time . '.' . $infos['extension'];
+
+            if (!$this->Util->uploadImage($request, $filePath)) {
+                return $this->response->withStringBody(json_encode([
+                    'statut' => false,
+                    'msg' => __('FORM__ERROR_WHEN_UPLOAD'),
+                ]));
+            }
+
+            $urlImg = Router::url('/') . 'img' . DS . 'uploads' . DS . 'slider' . DS . $time . '.' . $infos['extension'];
+        }
+
+        $sliderTable = $this->fetchTable('Slider');
+        $slider = $sliderTable->newEntity([
+            'title' => $title,
+            'subtitle' => $subtitle,
+            'url_img' => $urlImg,
+        ]);
+        $sliderTable->save($slider);
+
+        $this->History->set('ADD_SLIDER', 'slider');
+        $this->Flash->success(__('SLIDER__ADD_SUCCESS'));
+
+        return $this->response->withStringBody(json_encode([
+            'statut' => true,
+            'msg' => __('SLIDER__ADD_SUCCESS'),
+        ]));
+    }
 }

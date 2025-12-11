@@ -8,7 +8,6 @@ use Cake\Datasource\ConnectionManager;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
 use Cake\Log\Log;
-use Cake\ORM\TableRegistry;
 use Migrations\Migrations;
 use PDO;
 use PDOException;
@@ -21,7 +20,6 @@ class InstallController extends BaseController
         parent::initialize();
 
         $this->loadComponent('Util');
-
         $this->viewBuilder()->setLayout('install');
     }
 
@@ -30,7 +28,7 @@ class InstallController extends BaseController
         parent::beforeFilter($event);
 
         if (InstallState::isInstalled()) {
-            return $this->redirect('/');
+            return $this->redirect(['_name' => 'home']);
         }
 
         return null;
@@ -39,13 +37,13 @@ class InstallController extends BaseController
     public function index(): Response
     {
         if (!InstallState::isDatabaseConfigured()) {
-            return $this->redirect(['action' => 'database']);
+            return $this->redirect(['_name' => 'install_database']);
         }
 
-        return $this->redirect(['action' => 'user']);
+        return $this->redirect(['_name' => 'install_user']);
     }
 
-    public function database(): ?Response
+    public function database(): Response
     {
         if ($this->request->is('post')) {
             return $this->handleDatabasePost();
@@ -75,25 +73,25 @@ class InstallController extends BaseController
             $help['chmod'] = '';
 
             if (!is_writable(ROOT . DIRECTORY_SEPARATOR . 'config')) {
-                $help['chmod'] .= "Le dossier /config ne peut pas etre ecrit.<br /><br />";
+                $help['chmod'] .= 'Le dossier /config ne peut pas etre ecrit.<br /><br />';
             }
 
             if (!is_writable(ROOT . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Data')) {
-                $help['chmod'] .= "Le dossier /src/Data ne peut pas etre ecrit.<br /><br />";
+                $help['chmod'] .= 'Le dossier /src/Data ne peut pas etre ecrit.<br /><br />';
             }
 
             if (!is_writable(ROOT . DIRECTORY_SEPARATOR . 'plugins')) {
-                $help['chmod'] .= "Le dossier /plugins ne peut pas etre ecrit.<br /><br />";
+                $help['chmod'] .= 'Le dossier /plugins ne peut pas etre ecrit.<br /><br />';
             }
 
             if (!file_exists(ROOT . DIRECTORY_SEPARATOR . 'tmp')) {
-                $help['chmod'] .= "Le dossier /tmp n existe pas.<br /><br />";
+                $help['chmod'] .= 'Le dossier /tmp n existe pas.<br /><br />';
             } elseif (!is_writable(ROOT . DIRECTORY_SEPARATOR . 'tmp')) {
-                $help['chmod'] .= "Le dossier /tmp ne peut pas etre ecrit.<br /><br />";
+                $help['chmod'] .= 'Le dossier /tmp ne peut pas etre ecrit.<br /><br />';
             }
 
             if (!is_writable(ROOT . DIRECTORY_SEPARATOR . 'webroot' . DIRECTORY_SEPARATOR . 'js')) {
-                $help['chmod'] .= "Le dossier /webroot/js ne peut pas etre ecrit.<br /><br />";
+                $help['chmod'] .= 'Le dossier /webroot/js ne peut pas etre ecrit.<br /><br />';
             }
         }
 
@@ -104,19 +102,19 @@ class InstallController extends BaseController
         $compatible['openSSL'] = function_exists('openssl_pkey_new');
 
         if (!$compatible['pdo']) {
-            $help['pdo'] = "L extension pdo_mysql n est pas activee.";
+            $help['pdo'] = 'L extension pdo_mysql n est pas activee.';
         }
 
         if (!$compatible['curl']) {
-            $help['curl'] = "L extension curl n est pas activee.";
+            $help['curl'] = 'L extension curl n est pas activee.';
         }
 
         if (!$compatible['gd2']) {
-            $help['gd2'] = "L extension GD2 n est pas activee.";
+            $help['gd2'] = 'L extension GD2 n est pas activee.';
         }
 
         if (!$compatible['openZip']) {
-            $help['openZip'] = "L extension zip n est pas activee.";
+            $help['openZip'] = 'L extension zip n est pas activee.';
         }
 
         $compatible['rewriteUrl'] = true;
@@ -156,20 +154,24 @@ class InstallController extends BaseController
             'dbConfigured'
         ));
 
-        return null;
+        $this->viewBuilder()
+            ->setTemplatePath('Install')
+            ->setTemplate('database');
+
+        return $this->render();
     }
 
     public function install(): Response
     {
         if (!$this->request->is('post')) {
-            return $this->sendJson([
+            return $this->sendJSON([
                 'status' => false,
                 'msg' => 'Methode invalide',
             ]);
         }
 
         if (!InstallState::isDatabaseConfigured()) {
-            return $this->sendJson([
+            return $this->sendJSON([
                 'status' => false,
                 'msg' => 'La base de donnees n est pas configuree',
             ]);
@@ -178,7 +180,7 @@ class InstallController extends BaseController
         $this->reloadConnectionFromDatabasesJson();
         $this->runMigrations();
 
-        return $this->sendJson([
+        return $this->sendJSON([
             'status' => true,
         ]);
     }
@@ -193,7 +195,7 @@ class InstallController extends BaseController
 
         if ($type === 0) {
             if ($host === '' || $database === '' || $username === '') {
-                return $this->sendJson([
+                return $this->sendJSON([
                     'status' => false,
                     'msg' => __('ERROR__FILL_ALL_FIELDS'),
                 ]);
@@ -206,7 +208,7 @@ class InstallController extends BaseController
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 ]);
             } catch (PDOException $e) {
-                return $this->sendJson([
+                return $this->sendJSON([
                     'status' => false,
                     'msg' => 'Erreur lors de la connexion MySQL: ' . $e->getMessage(),
                 ]);
@@ -221,20 +223,20 @@ class InstallController extends BaseController
             ];
 
             if (!InstallState::markDatabaseConfigured($dbData)) {
-                return $this->sendJson([
+                return $this->sendJSON([
                     'status' => false,
                     'msg' => 'Impossible d ecrire le fichier databases.json',
                 ]);
             }
 
-            return $this->sendJson(['status' => true]);
+            return $this->sendJSON(['status' => true]);
         }
 
         if ($type === 1) {
             if (!in_array('pdo_sqlite', get_loaded_extensions(), true)) {
-                return $this->sendJson([
+                return $this->sendJSON([
                     'status' => false,
-                    'msg' => "Vous devez avoir l extension pdo_sqlite",
+                    'msg' => 'Vous devez avoir l extension pdo_sqlite',
                 ]);
             }
 
@@ -246,7 +248,7 @@ class InstallController extends BaseController
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 ]);
             } catch (PDOException $e) {
-                return $this->sendJson([
+                return $this->sendJSON([
                     'status' => false,
                     'msg' => 'Erreur lors de la connexion SQLite: ' . $e->getMessage(),
                 ]);
@@ -261,16 +263,16 @@ class InstallController extends BaseController
             ];
 
             if (!InstallState::markDatabaseConfigured($dbData)) {
-                return $this->sendJson([
+                return $this->sendJSON([
                     'status' => false,
                     'msg' => 'Impossible d ecrire le fichier databases.json',
                 ]);
             }
 
-            return $this->sendJson(['status' => true]);
+            return $this->sendJSON(['status' => true]);
         }
 
-        return $this->sendJson([
+        return $this->sendJSON([
             'status' => false,
             'msg' => 'Type de base de donnees invalide',
         ]);
@@ -331,10 +333,10 @@ class InstallController extends BaseController
         }
     }
 
-    public function user(): ?Response
+    public function user(): Response
     {
         if (!InstallState::isDatabaseConfigured()) {
-            return $this->redirect(['action' => 'database']);
+            return $this->redirect(['_name' => 'install_database']);
         }
 
         $titleKey = 'INSTALL__ADMIN_CONFIG';
@@ -348,7 +350,11 @@ class InstallController extends BaseController
             return $this->handleUserPost();
         }
 
-        return null;
+        $this->viewBuilder()
+            ->setTemplatePath('Install')
+            ->setTemplate('user');
+
+        return $this->render();
     }
 
     private function handleUserPost(): Response
@@ -358,33 +364,33 @@ class InstallController extends BaseController
         $ip = $this->Util->getIP();
 
         if (empty($data['pseudo']) || empty($data['password']) || empty($data['password_confirmation']) || empty($data['email'])) {
-            return $this->sendJson([
+            return $this->sendJSON([
                 'statut' => false,
                 'msg' => __('ERROR__FILL_ALL_FIELDS'),
             ]);
         }
 
         if ($data['password'] !== $data['password_confirmation']) {
-            return $this->sendJson([
+            return $this->sendJSON([
                 'statut' => false,
                 'msg' => __('USER__ERROR_PASSWORDS_NOT_SAME'),
             ]);
         }
 
         if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            return $this->sendJson([
+            return $this->sendJSON([
                 'statut' => false,
                 'msg' => __('USER__ERROR_EMAIL_NOT_VALID'),
             ]);
         }
 
-        $userTable = TableRegistry::getTableLocator()->get('User');
+        $userTable = $this->fetchTable('User');
         $existingAdmin = $userTable->find()->first();
 
         if ($existingAdmin) {
             InstallState::markInstalled();
 
-            return $this->sendJson([
+            return $this->sendJSON([
                 'statut' => true,
                 'msg' => __('INSTALL__ADMIN_ALREADY_EXISTS'),
             ]);
@@ -398,7 +404,7 @@ class InstallController extends BaseController
         $saved = $userTable->save($user);
 
         if (!$saved) {
-            return $this->sendJson([
+            return $this->sendJSON([
                 'statut' => false,
                 'msg' => __('ERROR__UNKNOWN'),
             ]);
@@ -406,11 +412,9 @@ class InstallController extends BaseController
 
         InstallState::markInstalled();
 
-        return $this->sendJson([
+        return $this->sendJSON([
             'statut' => true,
             'msg' => __('USER__REGISTER_SUCCESS'),
         ]);
     }
-
-
 }

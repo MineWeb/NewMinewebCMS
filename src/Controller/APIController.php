@@ -19,9 +19,14 @@ class APIController extends AppController
 
         $argsArray = [];
         if ($args !== null && $args !== '') {
-            $argsArray = array_values(array_filter(array_map('trim', explode(',', $args)), static function (string $v): bool {
-                return $v !== '';
-            }));
+            $argsArray = array_values(
+                array_filter(
+                    array_map('trim', explode(',', $args)),
+                    static function (string $v): bool {
+                        return $v !== '';
+                    }
+                )
+            );
         }
 
         $payload = $this->API->get($username, $password, $argsArray);

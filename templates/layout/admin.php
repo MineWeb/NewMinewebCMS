@@ -11,27 +11,16 @@ use Cake\Routing\Router;
     <title><?= $title_for_layout ?> | Admin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="<?= $seo_config['favicon_url'] ?>"/>
-    <!-- Font Awesome 5 -->
     <?= $this->Html->css('fontawesome-5/css/all'); ?>
-    <!-- Tempusdominus Bbootstrap 4 -->
     <?= $this->Html->css('bootstrap-4/plugins/tempusdominus/tempusdominus-bootstrap-4.min'); ?>
-    <!-- iCheck -->
     <?= $this->Html->css('bootstrap-4/plugins/icheck/icheck-bootstrap.min'); ?>
-    <!-- Theme style -->
     <?= $this->Html->css('adminlte-3/adminlte.min'); ?>
     <?= $this->Html->css('adminlte-3/plugins/datatables-bs4/dataTables.bootstrap4.min') ?>
-
     <?= $this->Html->css('admin'); ?>
-
-    <!-- overlayScrollbars -->
     <?= $this->Html->css('adminlte-3/plugins/overlayScrollbars/OverlayScrollbars.min'); ?>
-    <!-- Daterange picker -->
     <?= $this->Html->css('adminlte-3/plugins/daterangepicker/daterangepicker'); ?>
-    <!-- jQuery -->
     <?= $this->Html->script('adminlte-3/plugins/jquery/jquery.min') ?>
-    <!-- ChartJS -->
     <?= $this->Html->script('chart.js/Chart.min') ?>
-    <!-- Google Font: Source Sans Pro -->
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
 </head>
 <body class="hold-transition sidebar-mini layout-fixed <?= $admin_dark_mode ? "dark-mode" : "" ?> ">
@@ -45,7 +34,6 @@ use Cake\Routing\Router;
         </ul>
         <ul class="navbar-nav ml-auto">
             <li class="nav-item">
-
                 <div class="nav-link custom-control custom-switch custom-switch-off-danger custom-switch-on-success"
                      data-children-count="1">
                     <input type="checkbox" class="custom-control-input switchAdminDarkMode"
@@ -62,11 +50,10 @@ use Cake\Routing\Router;
                     if (btn.is(':checked')) {
                         $('body').addClass("dark-mode");
                     } else {
-
                         $('body').removeClass("dark-mode");
                     }
 
-                    $.get('<?= Router::url(['action' => 'switchAdminDarkMode', 'controller' => 'admin', 'admin' => true]) ?>');
+                    $.get('<?= Router::url(['_name' => 'admin_switch_dark_mode']) ?>');
 
                     return false;
                 });
@@ -88,8 +75,8 @@ use Cake\Routing\Router;
 
             <li class="nav-item">
                 <a class="nav-link"
-                   href="<?= $this->Url->build(['controller' => 'user', 'action' => 'logout', 'admin' => false, 'plugin' => false]); ?>"><i
-                            class="fa fa-power-off"></i> <?= __('USER__LOGOUT') ?></a>
+                   href="<?= $this->Url->build(['_name' => 'user_logout']); ?>"><i
+                        class="fa fa-power-off"></i> <?= __('USER__LOGOUT') ?></a>
             </li>
         </ul>
 
@@ -100,11 +87,11 @@ use Cake\Routing\Router;
                 'notification_type': 'admin',
                 'limit': 5,
                 'url': {
-                    'get': '<?= $this->Url->build(['plugin' => false, 'admin' => false, 'controller' => 'notifications', 'action' => 'getAll']) ?>',
-                    'clear': '<?= $this->Url->build(['plugin' => false, 'admin' => false, 'controller' => 'notifications', 'action' => 'clear', 'NOTIF_ID']) ?>',
-                    'clearAll': '<?= $this->Url->build(['plugin' => false, 'admin' => false, 'controller' => 'notifications', 'action' => 'clearAll']) ?>',
-                    'markAsSeen': '<?= $this->Url->build(['plugin' => false, 'admin' => false, 'controller' => 'notifications', 'action' => 'markAsSeen', 'NOTIF_ID']) ?>',
-                    'markAllAsSeen': '<?= $this->Url->build(['plugin' => false, 'admin' => false, 'controller' => 'notifications', 'action' => 'markAllAsSeen']) ?>'
+                    'get': '<?= $this->Url->build(['_name' => 'notifications_get_all']) ?>',
+                    'clear': '<?= $this->Url->build(['_name' => 'notifications_clear', 'NOTIF_ID']) ?>',
+                    'clearAll': '<?= $this->Url->build(['_name' => 'notifications_clear_all']) ?>',
+                    'markAsSeen': '<?= $this->Url->build(['_name' => 'notifications_mark_as_seen', 'NOTIF_ID']) ?>',
+                    'markAllAsSeen': '<?= $this->Url->build(['_name' => 'notifications_mark_all_as_seen']) ?>'
                 },
                 'messages': {
                     'markAsSeen': '<?= __('NOTIFICATION__MARK_AS_SEEN') ?>',
@@ -143,7 +130,7 @@ use Cake\Routing\Router;
                                 'element': '.mark-as-seen',
                                 'style': '',
                                 'class': 'hidden',
-                                'attr': [{'onclick': ''}],
+                                'attr': [{'onclick': ''}]
                             }
                         }
                     }
@@ -153,7 +140,7 @@ use Cake\Routing\Router;
     </nav>
 
     <aside class="main-sidebar sidebar-dark-lightblue elevation-4">
-        <a href="<?= Router::url('/') ?>" class="brand-link navbar-lightblue text-center text-white">
+        <a href="<?= Router::url(['_name' => 'home']) ?>" class="brand-link navbar-lightblue text-center text-white">
             <span class="brand-text font-weight-light"><?= __('GLOBAL__ADMINISTRATION'); ?></span>
         </a>
         <div class="sidebar">
@@ -161,45 +148,50 @@ use Cake\Routing\Router;
                 <ul class="nav nav-pills nav-sidebar flex-column nav-flat nav-child-indent" data-widget="treeview"
                     role="menu"
                     data-accordion="false">
-
-
                     <?php
 
                     function checkCurrent($nav)
                     {
-                        if (is_array($nav))
+                        if (is_array($nav)) {
                             foreach ($nav as $value) {
-                                if (isset($v['menu']))
+                                if (isset($v['menu'])) {
                                     return checkCurrent($v['menu']);
+                                }
                                 $route = (isset($value['route']) ? Router::url($value['route']) : '#');
                                 $current = $route == Router::url(null, false);
-                                if ($current == $route)
+                                if ($current == $route) {
                                     return true;
+                                }
                             }
+                        }
                         return false;
                     }
 
                     function displayNav($nav, $context)
                     {
                         foreach ($nav as $name => $value) {
-                            if (!isset($value['menu']) && !isset($value['route']))
+                            if (!isset($value['menu']) && !isset($value['route'])) {
                                 continue;
-                            if (!isset($value['menu']) && isset($value['permission']) && !$context->Permissions->can($value['permission'])) // Check perms
+                            }
+                            if (!isset($value['menu']) && isset($value['permission']) && !$context->Permissions->can($value['permission'])) {
                                 continue;
+                            }
                             $currentMenu = false;
                             if (isset($value['menu'])) {
                                 $currentMenu = checkCurrent($value['menu'], $context) ? "menu-open" : "";
                                 echo '<li class="nav-item has-treeview ' . ($currentMenu ? "menu-open" : "") . '">';
-                            } else
+                            } else {
                                 echo '<li class="nav-item">';
-                            // Link
+                            }
                             $route = (isset($value['route']) ? Router::url($value['route']) : '#');
                             $current = $route == Router::url(null, false);
                             echo '<a class="nav-link' . ($current || $currentMenu ? " active" : "") . '" href="' . $route . '">';
                             echo '<i class="' . (strpos($value['icon'], "fa-") ? $value['icon'] : "fa fa-" . $value['icon']) . ' nav-icon"></i>  <p>' . __($name);
-                            if (isset($value['menu']))
+                            if (isset($value['menu'])) {
                                 echo '<i class="fas fa-angle-left right"></i></p>';
-                            else echo '</p>';
+                            } else {
+                                echo '</p>';
+                            }
                             echo '</a>';
                             if (isset($value['menu'])) {
                                 echo '<ul class="nav nav-treeview">';
@@ -239,52 +231,33 @@ use Cake\Routing\Router;
         }
     </style>
 
-    <!-- Control Sidebar -->
     <aside class="control-sidebar control-sidebar-dark">
-        <!-- Control sidebar content goes here -->
     </aside>
-    <!-- /.control-sidebar -->
 </div>
-<!-- ./wrapper -->
 
-<!-- jQuery -->
 <?= $this->Html->script('adminlte-3/plugins/jquery/jquery.min') ?>
-<!-- jQuery UI 1.11.4 -->
 <?= $this->Html->script('adminlte-3/plugins/jquery-ui/jquery-ui.min') ?>
-<!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
 <script>
     $.widget.bridge('uibutton', $.ui.button)
 </script>
-<!-- Bootstrap 4 -->
 <?= $this->Html->script('bootstrap-4/bootstrap.bundle.min') ?>
-
 <?= $this->Html->script('adminlte-3/plugins/datatables/jquery.dataTables.min') ?>
 <?= $this->Html->script('adminlte-3/plugins/datatables-bs4/dataTables.bootstrap4.min') ?>
-<!-- Sparkline -->
 <?= $this->Html->script('adminlte-3/plugins/sparklines/sparkline') ?>
-<!-- jQuery Knob Chart -->
 <?= $this->Html->script('adminlte-3/plugins/jquery-knob/jquery.knob.min') ?>
-<!-- daterangepicker -->
 <?= $this->Html->script('bootstrap-4/plugins/moment/moment.min') ?>
-<!-- Tempusdominus Bootstrap 4 -->
 <?= $this->Html->script('bootstrap-4/plugins/tempusdominus/tempusdominus-bootstrap-4.min') ?>
 <?= $this->Html->script('adminlte-3/plugins/daterangepicker/daterangepicker'); ?>
-
-<!-- overlayScrollbars -->
 <?= $this->Html->script('adminlte-3/plugins/overlayScrollbars/jquery.overlayScrollbars.min'); ?>
-<!-- AdminLTE App -->
 <?= $this->Html->script('adminlte-3/adminlte') ?>
-
 <?= $this->Html->script('mineweb_admin') ?>
-
 <?= $this->Html->script('form') ?>
 <script type="text/javascript">
     var LOADING_MSG = "<?= __('GLOBAL__LOADING') ?>";
     var ERROR_MSG = "<?= __('GLOBAL__ERROR') ?>";
     var INTERNAL_ERROR_MSG = "<?= __('ERROR__INTERNAL_ERROR') ?>";
-    var FORBIDDEN_ERROR_MSG = "<?= __('ERROR__FORBIDDEN') ?>"
+    var FORBIDDEN_ERROR_MSG = "<?= __('ERROR__FORBIDDEN') ?>";
     var SUCCESS_MSG = "<?= __('GLOBAL__SUCCESS') ?>";
-
     var CSRF_TOKEN = "<?= $csrfToken ?>";
 </script>
 

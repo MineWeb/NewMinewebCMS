@@ -1,25 +1,43 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller;
+
+use Cake\Http\Response;
 
 class BanController extends AppController
 {
-    function index() {
+    public function index(): ?Response
+    {
         if (!$this->isConnected || !$this->isBanned) {
-            $this->redirect("/");
-            return;
+            return $this->redirect('/');
         }
 
-        $this->set('title_for_layout', __("BAN__BAN"));
+        $this->viewBuilder()
+            ->setLayout('default')
+            ->setTemplatePath('Ban')
+            ->setTemplate('index');
+
+        $this->set('title_for_layout', __('BAN__BAN'));
         $this->set('reason', $this->isBanned);
+
+        return null;
     }
 
-    function ip() {
+    public function ip(): ?Response
+    {
         if (!$this->isBanned) {
-            $this->redirect("/");
-            return;
+            return $this->redirect('/');
         }
 
-        $this->set('title_for_layout', __("BAN__BAN"));
+        $this->viewBuilder()
+            ->setLayout('default')
+            ->setTemplatePath('Ban')
+            ->setTemplate('ip');
+
+        $this->set('title_for_layout', __('BAN__BAN'));
         $this->set('reason', $this->isBanned);
+
+        return null;
     }
 }

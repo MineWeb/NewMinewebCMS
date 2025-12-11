@@ -3,9 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use Cake\Controller\Controller;
-
-class ErrorController extends Controller
+class ErrorController extends BaseController
 {
     public function initialize(): void
     {
