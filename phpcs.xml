@@ -1,6 +1,11 @@
 <?xml version="1.0"?>
 <ruleset name="App">
-    <rule ref="CakePHP"/>
+    <rule ref="CakePHP">
+        <exclude name="CakePHP.Commenting.FunctionComment.Missing"/>
+        <exclude name="Generic.Files.LineLength"/>
+        <exclude name="Generic.PHP.NoSilencedErrors"/>
+    </rule>
+
     <rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint">
         <exclude-pattern>*/src/Controller/*</exclude-pattern>
     </rule>

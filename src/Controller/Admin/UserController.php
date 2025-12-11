@@ -157,7 +157,7 @@ class UserController extends AppController
         $this->set('title_for_layout', __('USER__EDIT_TITLE'));
 
         $searchUser = $this->User
-            ->find('all', ['conditions' => $this->User->__makeCondition($search)])
+            ->find('all', ['conditions' => $this->User->makeCondition($search)])
             ->first();
 
         if ($searchUser === null) {

@@ -1,27 +1,71 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Model\Table;
 
-use Cake\Database\Schema\TableSchema;
-use Cake\Log\Log;
 use Cake\ORM\Table;
+use Cake\Validation\Validator;
 
-class VisitTable extends Table
+class VisitsTable extends Table
 {
     public function initialize(array $config): void
     {
-        $this->setTable("visits");
+        $this->setTable('visits');
+        $this->setPrimaryKey('id');
+
+        $this->addBehavior('Timestamp', [
+            'events' => [
+                'Model.beforeSave' => [
+                    'created' => 'new',
+                ],
+            ],
+        ]);
     }
 
-    function getVisits($limit = false, $order = 'DESC')
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator
+            ->scalar('ip')
+            ->maxLength('ip', 50)
+            ->requirePresence('ip', 'create')
+            ->notEmptyString('ip');
+
+        $validator
+            ->dateTime('created')
+            ->notEmptyDateTime('created');
+
+        $validator
+            ->scalar('referer')
+            ->allowEmptyString('referer');
+
+        $validator
+            ->scalar('lang')
+            ->maxLength('lang', 4)
+            ->allowEmptyString('lang');
+
+        $validator
+            ->scalar('navigator')
+            ->allowEmptyString('navigator');
+
+        $validator
+            ->scalar('page')
+            ->allowEmptyString('page');
+
+        return $validator;
+    }
+
+    function getVisits($limit = false, string $order = 'DESC')
     {
         $query = $this->find('all')
             ->orderBy(['id' => $order]);
 
-        if ($limit)
+        if ($limit) {
             $query = $query->limit($limit);
+        }
 
         $data = $query->toArray();
         $data['count'] = count($data);
+
         return $data;
     }
 
@@ -30,8 +74,9 @@ class VisitTable extends Table
         $query = $this->find('all')
             ->orderBy(['id' => $order]);
 
-        if ($limit)
+        if ($limit) {
             $query = $query->limit($limit);
+        }
 
         return $query->count();
     }
@@ -55,9 +100,11 @@ class VisitTable extends Table
     }
 
     function getVisitsByDay($day)
-    { // $day au format : date('Y-m-d')
+    {
+ // $day au format : date('Y-m-d')
         $data = $this->find('all', conditions: ['created LIKE' => $day . '%'])->toArray();
         $data['count'] = count($data);
+
         return $data;
     }
 
@@ -76,7 +123,6 @@ class VisitTable extends Table
             if ($value['count'] >= 5) {
                 $data[$value[$groupBy]] = $value['count'];
             }
-
         }
 
         return $data;

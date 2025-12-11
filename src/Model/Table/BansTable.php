@@ -1,0 +1,48 @@
+<?php
+declare(strict_types=1);
+
+namespace App\Model\Table;
+
+use Cake\ORM\RulesChecker;
+use Cake\ORM\Table;
+use Cake\Validation\Validator;
+
+class BansTable extends Table
+{
+    public function initialize(array $config): void
+    {
+        $this->setTable('bans');
+        $this->setPrimaryKey('id');
+
+        $this->belongsTo('Users', [
+            'foreignKey' => 'user_id',
+        ]);
+    }
+
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator
+            ->integer('user_id')
+            ->requirePresence('user_id', 'create')
+            ->notEmptyString('user_id');
+
+        $validator
+            ->scalar('reason')
+            ->requirePresence('reason', 'create')
+            ->notEmptyString('reason');
+
+        $validator
+            ->scalar('ip')
+            ->maxLength('ip', 50)
+            ->allowEmptyString('ip');
+
+        return $validator;
+    }
+
+    public function buildRules(RulesChecker $rules): RulesChecker
+    {
+        $rules->add($rules->existsIn(['user_id'], 'Users'));
+
+        return $rules;
+    }
+}

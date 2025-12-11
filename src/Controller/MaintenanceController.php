@@ -12,7 +12,7 @@ class MaintenanceController extends AppController
         $this->set('title_for_layout', __('MAINTENANCE__TITLE'));
 
         $this->Maintenance = $this->fetchTable('Maintenance');
-        $check = $this->Maintenance->checkMaintenance('/' . ltrim($url, '/'), $this->Util);
+        $check = $this->Maintenance->checkMaintenance('/' . ltrim($url, '/'));
 
         if ($this->Permissions->can('BYPASS_MAINTENANCE') || !$check) {
             return $this->redirect('/');

@@ -1,16 +1,26 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Model\Entity;
 
-use Cake\I18n\FrozenTime;
-use Cake\Log\Log;
+use Cake\I18n\DateTime;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 
 class Comment extends Entity
 {
-    protected function _getCreated($created): string
+    protected array $_accessible = [
+        'content' => true,
+        'created' => true,
+        'user_id' => true,
+        'news_id' => true,
+        'user' => true,
+        'news' => true,
+    ];
+    protected function _getCreated(mixed $created): string
     {
-        $created = new \Cake\I18n\DateTime($created);
+        $created = new DateTime($created);
+
         return $created->toDateTimeString();
     }
 

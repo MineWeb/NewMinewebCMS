@@ -63,7 +63,7 @@ class AppController extends BaseController
 
             $this->Maintenance = $this->fetchTable('Maintenance');
             if ($this->request->getParam('controller') !== 'Maintenance' && !$this->Permissions->can('BYPASS_MAINTENANCE')) {
-                $maintenance = $this->Maintenance->checkMaintenance($this->getRequest()->getRequestTarget(), $this->Util);
+                $maintenance = $this->Maintenance->checkMaintenance($this->getRequest()->getRequestTarget());
                 if ($maintenance) {
                     return $this->redirect(['_name' => 'maintenance_index', $maintenance['url']]);
                 }

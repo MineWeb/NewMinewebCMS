@@ -1,6 +1,6 @@
 <?php
 
-use Migrations\AbstractMigration;
+use Phinx\Migration\AbstractMigration;
 
 class CreateNotification extends AbstractMigration
 {

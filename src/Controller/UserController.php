@@ -105,7 +105,7 @@ class UserController extends AppController
                 (string)$this->getRequest()->getData('recaptcha'),
                 $this->Util->getIP(),
                 (string)$this->Configuration->getKey('captcha_secret'),
-                (int)$this->Configuration->getKey('captcha_type')
+                (int)$this->Configuration->getKey('captcha_type'),
             );
         } else {
             $captcha = $this->getRequest()->getSession()->read('captcha_code');
@@ -161,7 +161,7 @@ class UserController extends AppController
                 ->prepareMail(
                     $this->getRequest()->getData('email'),
                     __('EMAIL__TITLE_CONFIRM_MAIL'),
-                    $emailMsg
+                    $emailMsg,
                 )
                 ->sendMail();
 
@@ -232,7 +232,7 @@ class UserController extends AppController
             conditions: [
                 'user_id' => $user_login['id'],
                 'enabled' => true,
-            ]
+            ],
         )->first();
 
         $confirmEmailIsNeeded = (
@@ -244,8 +244,8 @@ class UserController extends AppController
             $user_login,
             $this->getRequest()->getData(),
             $confirmEmailIsNeeded,
-            $this->Configuration->getKey('check_uuid'),
-            $this
+            (bool)$this->Configuration->getKey('check_uuid'),
+            $this,
         );
 
         if (!isset($login['status']) || $login['status'] !== true) {
@@ -285,10 +285,10 @@ class UserController extends AppController
                     'pseudo' => $this->getRequest()->getData('pseudo'),
                     'password' => $this->User->getFromUser(
                         'password',
-                        $this->getRequest()->getData('pseudo')
+                        $this->getRequest()->getData('pseudo'),
                     ),
                 ],
-                new DateTime('+1 weeks')
+                new DateTime('+1 weeks'),
             );
             $this->response = $this->getResponse()->withCookie($cookie);
         }
@@ -581,13 +581,13 @@ class UserController extends AppController
                 'controller' => '',
                 'admin' => false,
             ],
-            true
+            true,
         );
 
         $skinRestorerCommand = str_replace(
             ['{PLAYER}', '{URL}'],
             [$username, $skinURL],
-            'skin set {PLAYER} {URL}'
+            'skin set {PLAYER} {URL}',
         );
         $this->Server->commands($skinRestorerCommand, $serverSkinRestorerID);
 
@@ -664,7 +664,7 @@ class UserController extends AppController
             conditions: [
                 'user_id' => $this->User->getKey('id'),
                 'enabled' => true,
-            ]
+            ],
         )->first();
 
         $twoFactorAuthStatus = !empty($infos);
@@ -680,7 +680,7 @@ class UserController extends AppController
                 'all',
                 recursive: 1,
                 order: 'ItemsBuyHistory.created DESC',
-                conditions: ['user_id' => $this->User->getKey('id')]
+                conditions: ['user_id' => $this->User->getKey('id')],
             )->all();
 
             $this->set(compact('histories'));
@@ -755,7 +755,7 @@ class UserController extends AppController
         } else {
             $user = $this->User->find(
                 'all',
-                ['conditions' => ['id' => $this->getRequest()->getSession()->read('email.confirm.user.id')]]
+                ['conditions' => ['id' => $this->getRequest()->getSession()->read('email.confirm.user.id')]],
             )->first();
         }
 
@@ -790,7 +790,7 @@ class UserController extends AppController
             ->prepareMail(
                 $user['email'],
                 __('EMAIL__TITLE_CONFIRM_MAIL'),
-                $emailMsg
+                $emailMsg,
             )
             ->sendMail();
 
@@ -840,13 +840,13 @@ class UserController extends AppController
 
         $password = $this->Util->password(
             $this->getRequest()->getData('password'),
-            $this->User->getKey('pseudo')
+            $this->User->getKey('pseudo'),
         );
 
         $password_confirmation = $this->Util->password(
             $this->getRequest()->getData('password_confirmation'),
             $this->User->getKey('pseudo'),
-            $password
+            $password,
         );
 
         if ($password !== $password_confirmation) {

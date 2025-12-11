@@ -1,6 +1,6 @@
 <?php
 
-use Migrations\AbstractMigration;
+use Phinx\Migration\AbstractMigration;
 
 class CreateRank extends AbstractMigration
 {

@@ -1,21 +1,39 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Model\Entity;
 
-use Cake\I18n\FrozenTime;
+use Cake\I18n\DateTime;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 
 class News extends Entity
 {
-    protected function _getCreated($created): string
+    protected array $_accessible = [
+        'title' => true,
+        'content' => true,
+        'user_id' => true,
+        'created' => true,
+        'updated' => true,
+        'img' => true,
+        'slug' => true,
+        'published' => true,
+        'user' => true,
+        'comments' => true,
+        'likes' => true,
+    ];
+
+    protected function _getCreated(mixed $created): string
     {
-        $created = new \Cake\I18n\DateTime($created);
+        $created = new DateTime($created);
+
         return $created->toDateTimeString();
     }
 
-    protected function _getUpdated($updated): string
+    protected function _getUpdated(mixed $updated): string
     {
-        $updated = new \Cake\I18n\DateTime($updated);
+        $updated = new DateTime($updated);
+
         return $updated->toDateTimeString();
     }
 
@@ -32,9 +50,10 @@ class News extends Entity
         $LikeTable = TableRegistry::getTableLocator()->get('Likes');
         $UserTable = TableRegistry::getTableLocator()->get('User');
 
-        if (!$UserTable->isConnected())
+        if (!$UserTable->isConnected()) {
             return false;
+        }
 
         return !empty($LikeTable->find('all', conditions: ['user_id' => $UserTable->getKey('id')])->first());
     }
- }
+}
