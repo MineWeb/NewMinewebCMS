@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
@@ -54,12 +55,13 @@ class VisitsTable extends Table
         return $validator;
     }
 
-    function getVisits($limit = false, string $order = 'DESC')
+    public function getVisits(int|false $limit = false, string $order = 'DESC'): array
     {
-        $query = $this->find('all')
+        $query = $this
+            ->find()
             ->orderBy(['id' => $order]);
 
-        if ($limit) {
+        if ($limit !== false) {
             $query = $query->limit($limit);
         }
 
@@ -69,59 +71,65 @@ class VisitsTable extends Table
         return $data;
     }
 
-    function getVisitsCount($limit = false, $order = 'DESC')
+    public function getVisitsCount(int|false $limit = false, string $order = 'DESC'): int
     {
-        $query = $this->find('all')
+        $query = $this
+            ->find()
             ->orderBy(['id' => $order]);
 
-        if ($limit) {
+        if ($limit !== false) {
             $query = $query->limit($limit);
         }
 
         return $query->count();
     }
 
-    function getVisitRange($limit)
+    public function getVisitRange(int $limit): array
     {
         $data = [];
 
-        $search = $this->find()
+        $search = $this
+            ->find()
             ->select(['created' => 'DATE(created)', 'count' => 'COUNT(*)'])
-            ->group('DATE(created)')
-            ->orderBy('id DESC')
+            ->groupBy('DATE(created)')
+            ->orderBy(['id' => 'DESC'])
             ->limit($limit)
             ->all();
 
         foreach ($search as $value) {
-            $data[$value['created']] = $value['count'];
+            $data[$value['created']] = (int)$value['count'];
         }
 
         return $data;
     }
 
-    function getVisitsByDay($day)
+    public function getVisitsByDay(string $day): array
     {
- // $day au format : date('Y-m-d')
-        $data = $this->find('all', conditions: ['created LIKE' => $day . '%'])->toArray();
+        $data = $this
+            ->find(conditions: ['created LIKE' => $day . '%'])
+            ->toArray();
+
         $data['count'] = count($data);
 
         return $data;
     }
 
-    function getGrouped($groupBy, $limit = false, $order = 'DESC')
+    public function getGrouped(string $groupBy, int|false $limit = false, string $order = 'DESC'): array
     {
         $data = [];
 
-        $search = $this->find()
+        $search = $this
+            ->find()
             ->select([$groupBy, 'count' => 'COUNT(*)'])
-            ->group($groupBy)
-            ->orderBy('COUNT(*) ' . $order)
+            ->groupBy($groupBy)
+            ->orderBy(['COUNT(*)' => $order])
             ->limit($limit)
             ->all();
 
         foreach ($search as $value) {
-            if ($value['count'] >= 5) {
-                $data[$value[$groupBy]] = $value['count'];
+            $count = (int)$value['count'];
+            if ($count >= 5) {
+                $data[$value[$groupBy]] = $count;
             }
         }
 
