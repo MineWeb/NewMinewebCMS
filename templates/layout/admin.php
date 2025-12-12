@@ -270,7 +270,7 @@ use Cake\Routing\Router;
 <?= $this->Html->script('adminlte-3/plugins/overlayScrollbars/jquery.overlayScrollbars.min'); ?>
 <?= $this->Html->script('adminlte-3/adminlte') ?>
 <?= $this->Html->script('sortablejs/1.15.6/Sortable.min') ?>
-<?= $this->Html->script('mineweb_admin') ?>
+<?= $this->Html->script('admin/app') ?>
 <?= $this->Html->script('form') ?>
 <script type="text/javascript">
     let LOADING_MSG = "<?= __('GLOBAL__LOADING') ?>";
@@ -278,9 +278,15 @@ use Cake\Routing\Router;
     let INTERNAL_ERROR_MSG = "<?= __('ERROR__INTERNAL_ERROR') ?>";
     let FORBIDDEN_ERROR_MSG = "<?= __('ERROR__FORBIDDEN') ?>";
     let SUCCESS_MSG = "<?= __('GLOBAL__SUCCESS') ?>";
-    let CSRF_TOKEN = "<?= $csrfToken ?>";
 </script>
 
-<?= $this->element('mineweb_admin_js'); ?>
+<script type="text/javascript">
+    function confirmDel(url) {
+        if (confirm("<?= __('GLOBAL__CONFIRM_DELETE') ?>"))
+            window.location.href = '' + url + '';
+        else
+            return false;
+    }
+</script>
 </body>
 </html>
