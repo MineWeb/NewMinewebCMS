@@ -101,7 +101,7 @@ class NotificationsController extends AppController
                     'from' => $from,
                     'content' => $notification['content'],
                     'type' => $type,
-                    'created' => LangService::date($notification['created']),
+                    'created_at' => LangService::date($notification['created_at']),
                     'actions' => $actions,
                 ],
                 'User' => $notification['user'],

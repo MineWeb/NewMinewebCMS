@@ -20,14 +20,6 @@ class UsersTable extends Table
         $this->setPrimaryKey('id');
         $this->setDisplayField('pseudo');
 
-        $this->addBehavior('Timestamp', [
-            'events' => [
-                'Model.beforeSave' => [
-                    'created' => 'new',
-                ],
-            ],
-        ]);
-
         $this->belongsTo('Ranks', [
             'foreignKey' => 'rank',
             'bindingKey' => 'rank_id',
@@ -49,6 +41,15 @@ class UsersTable extends Table
 
         $this->hasOne('UsersTwofactorauth', [
             'foreignKey' => 'user_id',
+        ]);
+
+        $this->addBehavior('Timestamp', [
+            'events' => [
+                'Model.beforeSave' => [
+                    'created_at' => 'new',
+                    'updated_at' => 'always',
+                ],
+            ],
         ]);
     }
 
@@ -100,10 +101,6 @@ class UsersTable extends Table
         $validator
             ->integer('cape')
             ->allowEmptyString('cape');
-
-        $validator
-            ->dateTime('created')
-            ->allowEmptyDateTime('created');
 
         $validator
             ->scalar('confirmed')

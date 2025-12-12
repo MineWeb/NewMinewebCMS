@@ -10,6 +10,8 @@ use Cake\ORM\Entity;
  * @property int $user_id
  * @property string $secret
  * @property bool|int $enabled
+ * @property \Cake\I18n\FrozenTime|null $created_at
+ * @property \Cake\I18n\FrozenTime|null $updated_at
  *
  * @property \App\Model\Entity\User|null $user
  */
@@ -20,6 +22,8 @@ class UsersTwofactorauth extends Entity
         'secret' => true,
         'enabled' => true,
         'user' => true,
+        'created_at' => false,
+        'updated_at' => false,
     ];
 
     protected array $_hidden = [

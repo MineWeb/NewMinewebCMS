@@ -15,17 +15,17 @@ class VisitsTable extends Table
         $this->setTable('visits');
         $this->setPrimaryKey('id');
 
-        $this->addBehavior('Timestamp', [
-            'events' => [
-                'Model.beforeSave' => [
-                    'created' => 'new',
-                ],
-            ],
-        ]);
-
         $this->belongsTo('Users', [
             'foreignKey' => 'user_id',
             'joinType' => 'LEFT',
+        ]);
+        $this->addBehavior('Timestamp', [
+            'events' => [
+                'Model.beforeSave' => [
+                    'created_at' => 'new',
+                    'updated_at' => 'always',
+                ],
+            ],
         ]);
     }
 
@@ -36,10 +36,6 @@ class VisitsTable extends Table
             ->maxLength('ip', 50)
             ->requirePresence('ip', 'create')
             ->notEmptyString('ip');
-
-        $validator
-            ->dateTime('created')
-            ->notEmptyDateTime('created');
 
         $validator
             ->scalar('referer')
@@ -97,14 +93,14 @@ class VisitsTable extends Table
 
         $search = $this
             ->find()
-            ->select(['created' => 'DATE(created)', 'count' => 'COUNT(*)'])
+            ->select(['created_at' => 'DATE(created)', 'count' => 'COUNT(*)'])
             ->groupBy('DATE(created)')
             ->orderBy(['id' => 'DESC'])
             ->limit($limit)
             ->all();
 
         foreach ($search as $value) {
-            $data[$value['created']] = (int)$value['count'];
+            $data[$value['created_at']] = (int)$value['count'];
         }
 
         return $data;

@@ -10,6 +10,8 @@ use Cake\ORM\Entity;
  * @property int $user_id
  * @property string $reason
  * @property string|null $ip
+ * @property \Cake\I18n\FrozenTime|null $created_at
+ * @property \Cake\I18n\FrozenTime|null $updated_at
  *
  * @property \App\Model\Entity\User|null $user
  * @property string $pseudo
@@ -21,6 +23,8 @@ class Ban extends Entity
         'reason' => true,
         'ip' => true,
         'user' => true,
+        'created_at' => false,
+        'updated_at' => false,
     ];
 
     protected array $_virtual = [
@@ -32,7 +36,7 @@ class Ban extends Entity
         $user = $this->user ?? null;
 
         if ($user && isset($user->pseudo)) {
-            return (string)$user->pseudo;
+            return $user->pseudo;
         }
 
         return 'N/A';

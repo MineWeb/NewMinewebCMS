@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Entity;
 
-use Cake\I18n\DateTime;
+use Cake\I18n\FrozenTime;
 use Cake\ORM\Entity;
 
 /**
@@ -11,15 +11,16 @@ use Cake\ORM\Entity;
  * @property string $pseudo
  * @property string|null $uuid
  * @property string $password
- * @property string $password_hash
+ * @property string|null $password_hash
  * @property string $email
- * @property string|int|null $rank
- * @property int|float|string|null $money
+ * @property int|null $rank
+ * @property float|null $money
  * @property string|null $ip
- * @property string|null $skin
- * @property string|null $cape
- * @property \Cake\I18n\DateTime $created
- * @property bool|int|null $confirmed
+ * @property int|null $skin
+ * @property int|null $cape
+ * @property string|null $confirmed
+ * @property \Cake\I18n\FrozenTime|null $created_at
+ * @property \Cake\I18n\FrozenTime|null $updated_at
  */
 class User extends Entity
 {
@@ -34,8 +35,9 @@ class User extends Entity
         'ip' => true,
         'skin' => true,
         'cape' => true,
-        'created' => true,
         'confirmed' => true,
+        'created_at' => false,
+        'updated_at' => false,
     ];
 
     protected array $_hidden = [
@@ -43,10 +45,18 @@ class User extends Entity
         'password_hash',
     ];
 
-    protected function _getCreated(mixed $created): string
+    protected function _getCreatedAt(mixed $createdAt): ?string
     {
-        $created = new DateTime($created);
+        if ($createdAt === null) {
+            return null;
+        }
 
-        return $created->toDateTimeString();
+        if ($createdAt instanceof FrozenTime) {
+            return $createdAt->toDateTimeString();
+        }
+
+        $time = FrozenTime::parse((string)$createdAt);
+
+        return $time->toDateTimeString();
     }
 }

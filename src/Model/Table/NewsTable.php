@@ -18,15 +18,6 @@ class NewsTable extends Table
         $this->setPrimaryKey('id');
         $this->setDisplayField('title');
 
-        $this->addBehavior('Timestamp', [
-            'events' => [
-                'Model.beforeSave' => [
-                    'created' => 'new',
-                    'updated' => 'always',
-                ],
-            ],
-        ]);
-
         $this->belongsTo('Users', [
             'foreignKey' => 'user_id',
             'joinType' => 'LEFT',
@@ -40,6 +31,14 @@ class NewsTable extends Table
         $this->hasMany('Likes', [
             'foreignKey' => 'news_id',
             'dependent' => true,
+        ]);
+        $this->addBehavior('Timestamp', [
+            'events' => [
+                'Model.beforeSave' => [
+                    'created_at' => 'new',
+                    'updated_at' => 'always',
+                ],
+            ],
         ]);
     }
 
@@ -60,14 +59,6 @@ class NewsTable extends Table
             ->integer('user_id')
             ->requirePresence('user_id', 'create')
             ->notEmptyString('user_id');
-
-        $validator
-            ->dateTime('created')
-            ->notEmptyDateTime('created');
-
-        $validator
-            ->dateTime('updated')
-            ->notEmptyDateTime('updated');
 
         $validator
             ->scalar('img')

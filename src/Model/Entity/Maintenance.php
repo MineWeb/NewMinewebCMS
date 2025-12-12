@@ -11,6 +11,8 @@ use Cake\ORM\Entity;
  * @property string|null $url
  * @property string|null $reason
  * @property bool $active
+ * @property \Cake\I18n\FrozenTime|null $created_at
+ * @property \Cake\I18n\FrozenTime|null $updated_at
  */
 class Maintenance extends Entity
 {
@@ -19,5 +21,7 @@ class Maintenance extends Entity
         'url' => true,
         'reason' => true,
         'active' => true,
+        'created_at' => false,
+        'updated_at' => false,
     ];
 }

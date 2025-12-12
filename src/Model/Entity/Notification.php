@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Entity;
 
-use Cake\I18n\DateTime;
+use Cake\I18n\FrozenTime;
 use Cake\ORM\Entity;
 
 /**
@@ -14,7 +14,8 @@ use Cake\ORM\Entity;
  * @property string $content
  * @property string|null $type
  * @property bool $seen
- * @property \Cake\I18n\DateTime $created
+ * @property \Cake\I18n\FrozenTime|null $created_at
+ * @property \Cake\I18n\FrozenTime|null $updated_at
  *
  * @property \App\Model\Entity\User|null $user
  * @property \App\Model\Entity\User|null $from_user
@@ -28,15 +29,24 @@ class Notification extends Entity
         'content' => true,
         'type' => true,
         'seen' => true,
-        'created' => true,
         'user' => true,
         'from_user' => true,
+        'created_at' => false,
+        'updated_at' => false,
     ];
 
-    protected function _getCreated(mixed $created): string
+    protected function _getCreatedAt(mixed $createdAt): ?string
     {
-        $created = new DateTime($created);
+        if ($createdAt === null) {
+            return null;
+        }
 
-        return $created->toDateTimeString();
+        if ($createdAt instanceof FrozenTime) {
+            return $createdAt->toDateTimeString();
+        }
+
+        $time = FrozenTime::parse((string)$createdAt);
+
+        return $time->toDateTimeString();
     }
 }

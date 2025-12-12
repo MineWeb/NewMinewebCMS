@@ -12,6 +12,8 @@ use Cake\ORM\Entity;
  * @property int $port
  * @property string|null $type
  * @property string|null $data
+ * @property \Cake\I18n\FrozenTime|null $created_at
+ * @property \Cake\I18n\FrozenTime|null $updated_at
  *
  * @property iterable<\App\Model\Entity\ServerCmd>|\Cake\Collection\CollectionInterface|null $server_cmds
  * @property iterable<\App\Model\Entity\ApiConfiguration>|\Cake\Collection\CollectionInterface|null $api_configurations
@@ -26,5 +28,7 @@ class Server extends Entity
         'data' => true,
         'server_cmds' => true,
         'api_configurations' => true,
+        'created_at' => false,
+        'updated_at' => false,
     ];
 }

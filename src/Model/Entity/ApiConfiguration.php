@@ -20,6 +20,8 @@ use Cake\ORM\Entity;
  * @property bool $get_premium_skins
  * @property bool $use_skin_restorer
  * @property int|null $skin_restorer_server_id
+ * @property \Cake\I18n\FrozenTime|null $created_at
+ * @property \Cake\I18n\FrozenTime|null $updated_at
  *
  * @property \App\Model\Entity\Server|null $server
  */
@@ -40,5 +42,7 @@ class ApiConfiguration extends Entity
         'use_skin_restorer' => true,
         'skin_restorer_server_id' => true,
         'server' => true,
+        'created_at' => false,
+        'updated_at' => false,
     ];
 }

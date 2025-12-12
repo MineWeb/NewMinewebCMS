@@ -88,7 +88,7 @@ class PagesController extends AppController
             'content' => $content,
             'user_id' => $this->User->get('id'),
             'slug' => Text::slug($slugRaw),
-            'updated' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
         ]);
 
         $pageTable->save($entity);
@@ -188,7 +188,7 @@ class PagesController extends AppController
             'title' => $title,
             'content' => $content,
             'slug' => Text::slug($slugRaw),
-            'updated' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
         ]);
 
         $pageTable->save($entity);

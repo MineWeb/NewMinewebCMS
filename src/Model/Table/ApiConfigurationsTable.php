@@ -17,6 +17,14 @@ class ApiConfigurationsTable extends Table
         $this->belongsTo('Servers', [
             'foreignKey' => 'skin_restorer_server_id',
         ]);
+        $this->addBehavior('Timestamp', [
+            'events' => [
+                'Model.beforeSave' => [
+                    'created_at' => 'new',
+                    'updated_at' => 'always',
+                ],
+            ],
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator

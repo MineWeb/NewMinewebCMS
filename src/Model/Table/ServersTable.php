@@ -21,6 +21,14 @@ class ServersTable extends Table
         $this->hasMany('ApiConfigurations', [
             'foreignKey' => 'skin_restorer_server_id',
         ]);
+        $this->addBehavior('Timestamp', [
+            'events' => [
+                'Model.beforeSave' => [
+                    'created_at' => 'new',
+                    'updated_at' => 'always',
+                ],
+            ],
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator

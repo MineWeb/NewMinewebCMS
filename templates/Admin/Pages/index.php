@@ -32,8 +32,8 @@
                             <tr>
                                 <td><?= h($value['title']) ?></td>
                                 <td><?= h($value['author']) ?></td>
-                                <td><?= $this->Lang->date($value['created']) ?></td>
-                                <td><?= $this->Lang->date($value['updated']) ?></td>
+                                <td><?= $this->Lang->date($value['created_at']) ?></td>
+                                <td><?= $this->Lang->date($value['updated_at']) ?></td>
 
                                 <td>
                                     <a

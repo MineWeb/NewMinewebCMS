@@ -21,14 +21,6 @@ class CommentsTable extends Table
         $this->setTable('comments');
         $this->setPrimaryKey('id');
 
-        $this->addBehavior('Timestamp', [
-            'events' => [
-                'Model.beforeSave' => [
-                    'created' => 'new',
-                ],
-            ],
-        ]);
-
         $this->belongsTo('Users', [
             'foreignKey' => 'user_id',
             'joinType' => 'LEFT',
@@ -37,6 +29,14 @@ class CommentsTable extends Table
         $this->belongsTo('News', [
             'foreignKey' => 'news_id',
             'joinType' => 'INNER',
+        ]);
+        $this->addBehavior('Timestamp', [
+            'events' => [
+                'Model.beforeSave' => [
+                    'created_at' => 'new',
+                    'updated_at' => 'always',
+                ],
+            ],
         ]);
     }
 
@@ -47,9 +47,6 @@ class CommentsTable extends Table
             ->requirePresence('content', 'create')
             ->notEmptyString('content');
 
-        $validator
-            ->dateTime('created')
-            ->notEmptyDateTime('created');
 
         $validator
             ->integer('user_id')

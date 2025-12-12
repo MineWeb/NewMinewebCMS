@@ -19,17 +19,17 @@ class HistoriesTable extends Table
         $this->setTable('histories');
         $this->setPrimaryKey('id');
 
-        $this->addBehavior('Timestamp', [
-            'events' => [
-                'Model.beforeSave' => [
-                    'created' => 'new',
-                ],
-            ],
-        ]);
-
         $this->belongsTo('Users', [
             'foreignKey' => 'user_id',
             'joinType' => 'LEFT',
+        ]);
+        $this->addBehavior('Timestamp', [
+            'events' => [
+                'Model.beforeSave' => [
+                    'created_at' => 'new',
+                    'updated_at' => 'always',
+                ],
+            ],
         ]);
     }
 
@@ -45,10 +45,6 @@ class HistoriesTable extends Table
             ->maxLength('category', 50)
             ->requirePresence('category', 'create')
             ->notEmptyString('category');
-
-        $validator
-            ->dateTime('created')
-            ->notEmptyDateTime('created');
 
         $validator
             ->integer('user_id')
@@ -96,7 +92,7 @@ class HistoriesTable extends Table
             $categoryRaw = (string)($value['category'] ?? '');
             $actionRaw = (string)($value['action'] ?? '');
             $otherRaw = (string)($value['other'] ?? '');
-            $createdRaw = $value['created'] ?? null;
+            $createdRaw = $value['created_at'] ?? null;
 
             $categoryKey = 'HISTORY__CATEGORY_' . strtoupper($categoryRaw);
             $category = __($categoryKey) !== $categoryKey ? __($categoryKey) : $categoryRaw;

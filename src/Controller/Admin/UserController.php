@@ -134,7 +134,7 @@ class UserController extends AppController
 
         foreach ($users as $value) {
             $username = (string)$value['pseudo'];
-            $date = 'Le ' . LangService::date($value['created']);
+            $date = 'Le ' . LangService::date($value['created_at']);
 
             $rankId = (int)($value['rank'] ?? 0);
             $rankLabel = $availableRanks[$rankId]['label'] ?? $availableRanks[0]['label'];
@@ -159,7 +159,7 @@ class UserController extends AppController
                 'User' => [
                     'pseudo' => $username,
                     'email' => (string)$value['email'],
-                    'created' => $date,
+                    'created_at' => $date,
                     'rank' => $rankHtml,
                 ],
                 'actions' => $btns,

@@ -13,6 +13,14 @@ class NavbarsTable extends Table
         $this->setTable('navbars');
         $this->setPrimaryKey('id');
         $this->setDisplayField('name');
+        $this->addBehavior('Timestamp', [
+            'events' => [
+                'Model.beforeSave' => [
+                    'created_at' => 'new',
+                    'updated_at' => 'always',
+                ],
+            ],
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator

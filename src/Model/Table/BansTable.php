@@ -20,6 +20,14 @@ class BansTable extends Table
             'foreignKey' => 'user_id',
             'joinType' => 'LEFT',
         ]);
+        $this->addBehavior('Timestamp', [
+            'events' => [
+                'Model.beforeSave' => [
+                    'created_at' => 'new',
+                    'updated_at' => 'always',
+                ],
+            ],
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator

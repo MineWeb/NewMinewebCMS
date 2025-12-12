@@ -142,7 +142,7 @@ class NewsController extends AppController
             'title' => $title,
             'content' => $content,
             'user_id' => $this->User->get('id'),
-            'updated' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
             'comments' => 0,
             'likes' => 0,
             'img' => 0,
@@ -247,7 +247,7 @@ class NewsController extends AppController
         $entity->set([
             'title' => $title,
             'content' => $content,
-            'updated' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
             'slug' => Text::slug($slugRaw, '-'),
             'published' => $published,
         ]);

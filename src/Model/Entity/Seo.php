@@ -14,6 +14,8 @@ use Cake\ORM\Entity;
  * @property string|null $theme_color
  * @property string|null $twitter_site
  * @property string|null $page
+ * @property \Cake\I18n\FrozenTime|null $created_at
+ * @property \Cake\I18n\FrozenTime|null $updated_at
  */
 class Seo extends Entity
 {
@@ -25,5 +27,7 @@ class Seo extends Entity
         'theme_color' => true,
         'twitter_site' => true,
         'page' => true,
+        'created_at' => false,
+        'updated_at' => false,
     ];
 }

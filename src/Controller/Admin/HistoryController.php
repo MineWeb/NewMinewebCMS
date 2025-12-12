@@ -63,7 +63,7 @@ class HistoryController extends AppController
                 'History' => [
                     'action' => LangService::history($history['action']),
                     'category' => $history['category'],
-                    'created' => LangService::date($history['created']),
+                    'created_at' => LangService::date($history['created_at']),
                 ],
                 'User' => $history['user'],
             ];

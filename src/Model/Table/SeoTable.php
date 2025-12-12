@@ -13,6 +13,14 @@ class SeoTable extends Table
         $this->setTable('seo');
         $this->setPrimaryKey('id');
         $this->setDisplayField('page');
+        $this->addBehavior('Timestamp', [
+            'events' => [
+                'Model.beforeSave' => [
+                    'created_at' => 'new',
+                    'updated_at' => 'always',
+                ],
+            ],
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator

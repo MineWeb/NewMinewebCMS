@@ -250,7 +250,7 @@
                             <tr>
                                 <td><?= $this->Lang->history($v['action']) ?></td>
                                 <td><?= $v['category'] ?></td>
-                                <td><?= $this->Lang->date($v['created']) ?></td>
+                                <td><?= $this->Lang->date($v['created_at']) ?></td>
                                 <td><?= $v['author'] ?></td>
                             </tr>
                         <?php } ?>

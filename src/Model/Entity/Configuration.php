@@ -41,6 +41,8 @@ use Cake\ORM\Entity;
  * @property string|null $session_type
  * @property string|null $microsoft_client_id
  * @property string|null $microsoft_client_secret
+ * @property \Cake\I18n\FrozenTime|null $created_at
+ * @property \Cake\I18n\FrozenTime|null $updated_at
  */
 class Configuration extends Entity
 {
@@ -79,5 +81,7 @@ class Configuration extends Entity
         'session_type' => true,
         'microsoft_client_id' => true,
         'microsoft_client_secret' => true,
+        'created_at' => false,
+        'updated_at' => false,
     ];
 }

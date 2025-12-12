@@ -7,19 +7,21 @@ use Cake\ORM\Entity;
 
 /**
  * @property int $id
- * @property \Cake\I18n\DateTime $created
  * @property string $name
  * @property string|null $author
  * @property string|null $version
  * @property string|null $state
+ * @property \Cake\I18n\FrozenTime|null $created_at
+ * @property \Cake\I18n\FrozenTime|null $updated_at
  */
 class Plugin extends Entity
 {
     protected array $_accessible = [
-        'created' => true,
         'name' => true,
         'author' => true,
         'version' => true,
         'state' => true,
+        'created_at' => false,
+        'updated_at' => false,
     ];
 }

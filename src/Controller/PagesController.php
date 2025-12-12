@@ -27,7 +27,7 @@ class PagesController extends AppController
 
         if (isset($parts[1])) {
             $query = explode('_', $parts[1]);
-            if (isset($query[0]) && $query[0] === 'resetpasswd' && !empty($query[1])) {
+            if (($query[0] ?? null) === 'resetpasswd' && !empty($query[1])) {
                 $LostpasswordsTable = $this->fetchTable('Lostpasswords');
 
                 $search = $LostpasswordsTable
@@ -36,11 +36,11 @@ class PagesController extends AppController
                     ->first();
 
                 if ($search !== null) {
-                    $created = strtotime((string)$search['created']);
-                    if (strtotime(date('Y-m-d H:i:s', $created) . ' +1 hour') >= time()) {
+                    $createdAt = $search->get('created_at');
+                    if ($createdAt && $createdAt->addHour()->isFuture()) {
                         $resetpsswd = [
-                            'email' => $search['email'],
-                            'key' => $search['key'],
+                            'email' => $search->get('email'),
+                            'key' => $search->get('key'),
                         ];
                         $this->set(compact('resetpsswd'));
                     }
@@ -49,11 +49,11 @@ class PagesController extends AppController
         }
 
         $LostpasswordsTable = $this->fetchTable('Lostpasswords');
-        $searchPasswd = $LostpasswordsTable->find();
+        $searchPasswd = $LostpasswordsTable->find()->all();
 
         foreach ($searchPasswd as $value) {
-            $created = strtotime((string)$value['created']);
-            if (strtotime(date('Y-m-d H:i:s', $created) . ' +1 hour') < time()) {
+            $createdAt = $value->get('created_at');
+            if ($createdAt && $createdAt->addHour()->isPast()) {
                 $LostpasswordsTable->delete($value);
             }
         }
@@ -87,8 +87,9 @@ class PagesController extends AppController
 
         $search_news = $newsTable
             ->find()
+            ->contain(['Comments', 'Likes'])
             ->where(['News.published' => 1])
-            ->order(['News.id' => 'DESC'])
+            ->orderBy(['News.id' => 'DESC'])
             ->limit(6)
             ->toArray();
 
@@ -103,13 +104,11 @@ class PagesController extends AppController
         }
 
         foreach ($search_news as $key => $model) {
-            if ($userId !== null && isset($model['likes'])) {
-                foreach ($model['likes'] as $value) {
-                    foreach ($value as $v) {
-                        if ((int)$v === $userId) {
-                            $search_news[$key]['liked'] = true;
-                            break 2;
-                        }
+            if ($userId !== null && is_iterable($model->likes ?? null)) {
+                foreach ($model->likes as $like) {
+                    if ((int)($like->user_id ?? 0) === $userId) {
+                        $search_news[$key]['liked'] = true;
+                        break;
                     }
                 }
             }
@@ -118,11 +117,12 @@ class PagesController extends AppController
                 $search_news[$key]['liked'] = false;
             }
 
-            $search_news[$key]['count_comments'] = isset($search_news[$key]['comment'])
-                ? count($search_news[$key]['comment'])
+            $search_news[$key]['count_comments'] = is_iterable($model->comments ?? null)
+                ? count($model->comments)
                 : 0;
-            $search_news[$key]['count_likes'] = isset($search_news[$key]['likes'])
-                ? count($search_news[$key]['likes'])
+
+            $search_news[$key]['count_likes'] = is_iterable($model->likes ?? null)
+                ? count($model->likes)
                 : 0;
         }
 
@@ -171,7 +171,7 @@ class PagesController extends AppController
 
         $this->viewBuilder()->setLayout((string)$this->config->get('layout'));
 
-        $page['author'] = $this->User->getFromUser('pseudo', $page['user_id']);
+        $page['author'] = $this->User->getFromUser('pseudo', (int)$page['user_id']);
 
         $username = '';
         if ($this->Auth->isConnected()) {
@@ -184,7 +184,7 @@ class PagesController extends AppController
             }
         }
 
-        $page['content'] = str_replace('{username}', $username, $page['content']);
+        $page['content'] = str_replace('{username}', $username, (string)$page['content']);
 
         $count = (int)(mb_substr_count($page['content'], '{%') / 2);
 

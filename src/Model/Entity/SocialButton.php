@@ -12,6 +12,8 @@ use Cake\ORM\Entity;
  * @property string|null $extra
  * @property string|null $color
  * @property string $url
+ * @property \Cake\I18n\FrozenTime|null $created_at
+ * @property \Cake\I18n\FrozenTime|null $updated_at
  */
 class SocialButton extends Entity
 {
@@ -21,5 +23,7 @@ class SocialButton extends Entity
         'extra' => true,
         'color' => true,
         'url' => true,
+        'created_at' => false,
+        'updated_at' => false,
     ];
 }

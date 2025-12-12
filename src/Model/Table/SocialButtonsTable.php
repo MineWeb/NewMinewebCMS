@@ -13,6 +13,14 @@ class SocialButtonsTable extends Table
         $this->setTable('social_buttons');
         $this->setPrimaryKey('id');
         $this->setDisplayField('title');
+        $this->addBehavior('Timestamp', [
+            'events' => [
+                'Model.beforeSave' => [
+                    'created_at' => 'new',
+                    'updated_at' => 'always',
+                ],
+            ],
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator

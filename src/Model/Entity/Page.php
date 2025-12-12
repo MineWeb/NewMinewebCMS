@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Model\Entity;
 
 use Cake\I18n\DateTime;
+use Cake\I18n\FrozenTime;
 use Cake\ORM\Entity;
 
 /**
@@ -12,8 +13,8 @@ use Cake\ORM\Entity;
  * @property string $content
  * @property string $slug
  * @property int $user_id
- * @property \Cake\I18n\DateTime $created
- * @property \Cake\I18n\DateTime $updated
+ * @property \Cake\I18n\FrozenTime|null $created_at
+ * @property \Cake\I18n\FrozenTime|null $updated_at
  *
  * @property \App\Model\Entity\User|null $user
  */
@@ -24,22 +25,38 @@ class Page extends Entity
         'content' => true,
         'slug' => true,
         'user_id' => true,
-        'created' => true,
-        'updated' => true,
         'user' => true,
+        'created_at' => false,
+        'updated_at' => false,
     ];
 
-    protected function _getCreated(mixed $created): string
+    protected function _getCreatedAt(mixed $createdAt): ?string
     {
-        $created = new DateTime($created);
+        if ($createdAt === null) {
+            return null;
+        }
 
-        return $created->toDateTimeString();
+        if ($createdAt instanceof FrozenTime) {
+            return $createdAt->toDateTimeString();
+        }
+
+        $time = FrozenTime::parse((string)$createdAt);
+
+        return $time->toDateTimeString();
     }
 
-    protected function _getUpdated(mixed $updated): string
+    protected function _getUpdatedAt(mixed $updatedAt): ?string
     {
-        $updated = new DateTime($updated);
+        if ($updatedAt === null) {
+            return null;
+        }
 
-        return $updated->toDateTimeString();
+        if ($updatedAt instanceof FrozenTime) {
+            return $updatedAt->toDateTimeString();
+        }
+
+        $time = FrozenTime::parse((string)$updatedAt);
+
+        return $time->toDateTimeString();
     }
 }

@@ -146,7 +146,7 @@ class PluginController extends AppController
                 'name' => $plugin['name'],
                 'DBid' => $plugin['id'],
                 'author' => $plugin['author'],
-                'dateformatted' => LangService::date($plugin['created']),
+                'dateformatted' => LangService::date($plugin['created_at']),
                 'version' => $plugin['version'],
             ],
         ]));

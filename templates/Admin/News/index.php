@@ -43,7 +43,7 @@
                                     <?php endif; ?>
                                 </td>
 
-                                <td><?= $this->Lang->date($v['created']) ?></td>
+                                <td><?= $this->Lang->date($v['created_at']) ?></td>
                                 <td><?= count($v['comment']) ?> <?= __('NEWS__COMMENTS_TITLE') ?></td>
                                 <td><?= count($v['likes']) ?> <?= __('NEWS__LIKES') ?></td>
 

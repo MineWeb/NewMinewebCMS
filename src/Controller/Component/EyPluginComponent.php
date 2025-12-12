@@ -684,7 +684,7 @@ class EyPluginComponent extends Component
             $pluginList->$id->slug = $name;
             $pluginList->$id->slugLower = strtolower($name);
             $pluginList->$id->DBid = (int)$plugin->get('id');
-            $pluginList->$id->DBinstall = $plugin->get('created');
+            $pluginList->$id->DBinstall = $plugin->get('created_at');
             $pluginList->$id->active = (bool)$plugin->get('state');
             $pluginList->$id->isValid = $this->isValid($pluginList->$id->slug);
             $pluginList->$id->loaded = in_array($name, $loadedCakePlugins, true);

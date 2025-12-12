@@ -17,7 +17,8 @@ class PluginsTable extends Table
         $this->addBehavior('Timestamp', [
             'events' => [
                 'Model.beforeSave' => [
-                    'created' => 'new',
+                    'created_at' => 'new',
+                    'updated_at' => 'always',
                 ],
             ],
         ]);
@@ -25,9 +26,6 @@ class PluginsTable extends Table
 
     public function validationDefault(Validator $validator): Validator
     {
-        $validator
-            ->dateTime('created')
-            ->notEmptyDateTime('created');
 
         $validator
             ->scalar('name')

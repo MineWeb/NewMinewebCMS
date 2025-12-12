@@ -13,7 +13,14 @@ class LoginRetriesTable extends Table
         $this->setTable('login_retries');
         $this->setPrimaryKey('id');
 
-        $this->addBehavior('Timestamp');
+        $this->addBehavior('Timestamp', [
+            'events' => [
+                'Model.beforeSave' => [
+                    'created_at' => 'new',
+                    'updated_at' => 'always',
+                ],
+            ],
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -29,13 +36,6 @@ class LoginRetriesTable extends Table
             ->requirePresence('count', 'create')
             ->notEmptyString('count');
 
-        $validator
-            ->dateTime('created')
-            ->notEmptyDateTime('created');
-
-        $validator
-            ->dateTime('modified')
-            ->notEmptyDateTime('modified');
 
         return $validator;
     }

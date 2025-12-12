@@ -12,7 +12,7 @@
                 <div class="panel-body">
                     <?= $page['content'] ?>
                     <small class="pull-right"><?= __('GLOBAL__UPDATED') ?>
-                        : <?= $this->Lang->date($page['updated']) ?>
+                        : <?= $this->Lang->date($page['updated_at']) ?>
                     </small><br>
                     <small class="pull-right"><?= __('GLOBAL__AUTHOR') ?> : <?= $page['author'] ?></small>
                 </div>

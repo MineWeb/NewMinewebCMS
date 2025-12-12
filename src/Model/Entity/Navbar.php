@@ -14,6 +14,8 @@ use Cake\ORM\Entity;
  * @property string $url
  * @property string|null $submenu
  * @property bool|null $open_new_tab
+ * @property \Cake\I18n\FrozenTime|null $created_at
+ * @property \Cake\I18n\FrozenTime|null $updated_at
  *
  * @property array $url_data
  */
@@ -27,6 +29,8 @@ class Navbar extends Entity
         'url' => true,
         'submenu' => true,
         'open_new_tab' => true,
+        'created_at' => false,
+        'updated_at' => false,
     ];
 
     protected array $_virtual = [

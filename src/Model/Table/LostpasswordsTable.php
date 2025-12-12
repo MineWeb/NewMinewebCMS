@@ -16,7 +16,8 @@ class LostpasswordsTable extends Table
         $this->addBehavior('Timestamp', [
             'events' => [
                 'Model.beforeSave' => [
-                    'created' => 'new',
+                    'created_at' => 'new',
+                    'updated_at' => 'always',
                 ],
             ],
         ]);
@@ -36,9 +37,6 @@ class LostpasswordsTable extends Table
             ->requirePresence('key', 'create')
             ->notEmptyString('key');
 
-        $validator
-            ->dateTime('created')
-            ->notEmptyDateTime('created');
 
         return $validator;
     }

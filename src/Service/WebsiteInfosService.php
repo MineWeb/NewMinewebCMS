@@ -28,7 +28,7 @@ final class WebsiteInfosService
     {
         $user = $this->fetchTable('Users')
             ->find()
-            ->orderByDesc('created')
+            ->orderByDesc('created_at')
             ->first();
 
         return $user ? $user->toArray() : null;

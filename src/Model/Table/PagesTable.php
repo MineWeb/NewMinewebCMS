@@ -15,17 +15,16 @@ class PagesTable extends Table
         $this->setPrimaryKey('id');
         $this->setDisplayField('title');
 
+        $this->belongsTo('Users', [
+            'foreignKey' => 'user_id',
+        ]);
         $this->addBehavior('Timestamp', [
             'events' => [
                 'Model.beforeSave' => [
-                    'created' => 'new',
-                    'updated' => 'always',
+                    'created_at' => 'new',
+                    'updated_at' => 'always',
                 ],
             ],
-        ]);
-
-        $this->belongsTo('Users', [
-            'foreignKey' => 'user_id',
         ]);
     }
 
@@ -53,13 +52,6 @@ class PagesTable extends Table
             ->requirePresence('user_id', 'create')
             ->notEmptyString('user_id');
 
-        $validator
-            ->dateTime('created')
-            ->notEmptyDateTime('created');
-
-        $validator
-            ->dateTime('updated')
-            ->notEmptyDateTime('updated');
 
         return $validator;
     }

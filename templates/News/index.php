@@ -9,7 +9,7 @@
 
             <hr>
             <p>
-                <span class="glyphicon glyphicon-time"></span> <?= __('NEWS__POSTED_ON') . ' ' . $this->Lang->date($news['created']); ?>
+                <span class="glyphicon glyphicon-time"></span> <?= __('NEWS__POSTED_ON') . ' ' . $this->Lang->date($news['created_at']); ?>
             </p>
 
             <hr>
@@ -49,7 +49,7 @@
                     <div class="media-body">
                         <h4 class="media-heading">
                             <?= $v['author'] ?>
-                            <small><?= $this->Lang->date($v['created']); ?></small>
+                            <small><?= $this->Lang->date($v['created_at']); ?></small>
                         </h4>
                         <?= before_display($v['content']) ?>
                     </div>
@@ -85,7 +85,7 @@
             </div>
             <div class="well">
                 <h4><?= __('GLOBAL__INFORMATIONS') ?></h4>
-                <p><b><?= __('GLOBAL__UPDATED') ?> : </b><?= $this->Lang->date($news['updated']) ?></p>
+                <p><b><?= __('GLOBAL__UPDATED') ?> : </b><?= $this->Lang->date($news['updated_at']) ?></p>
                 <p><b><?= __('NEWS__COMMENTS_NBR') ?> : </b><?= count($news['comment']) ?></p>
                 <p><b><?= __('NEWS__LIKES_NBR') ?> : </b><?= count($news['likes']) ?></p>
             </div>

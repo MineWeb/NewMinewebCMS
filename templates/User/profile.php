@@ -37,7 +37,7 @@
             </div>
 
             <div class="section">
-                <p><b><?= __('GLOBAL__CREATED') ?> :</b> <?= $this->Lang->date($user['created']) ?></p>
+                <p><b><?= __('GLOBAL__CREATED') ?> :</b> <?= $this->Lang->date($user['created_at']) ?></p>
             </div>
 
             <div class="callout" id="twoFactorAuthStatus">

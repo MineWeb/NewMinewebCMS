@@ -17,7 +17,10 @@ final class UserAuthService
     private function configurationKey(string $key): mixed
     {
         try {
-            return $this->fetchTable('Configurations')->get($key);
+            $Configurations = $this->fetchTable('Configurations');
+            $config = $Configurations->find()->select([$key])->first();
+
+            return $config?->get($key);
         } catch (Throwable) {
             return null;
         }
@@ -35,15 +38,13 @@ final class UserAuthService
         $type = $this->getPasswordHashType();
 
         if ($type === 'bcrypt' || $type === 'blowfish') {
-            $hashed = password_hash($password, PASSWORD_BCRYPT);
-
-            return is_string($hashed) ? $hashed : '';
+            return password_hash($password, PASSWORD_BCRYPT);
         }
 
         $salt = $this->configurationKey('passwords_salt');
         $saltValue = is_string($salt) && $salt !== '' ? $salt : false;
 
-        return (string)Security::hash($password, $type, $saltValue);
+        return Security::hash($password, $type, $saltValue);
     }
 
     public function verifyPassword(string $password, string $storedHash, ?string $storedType): bool
@@ -61,7 +62,7 @@ final class UserAuthService
         $salt = $this->configurationKey('passwords_salt');
         $saltValue = is_string($salt) && $salt !== '' ? $salt : false;
 
-        $computed = (string)Security::hash($password, $type, $saltValue);
+        $computed = Security::hash($password, $type, $saltValue);
 
         return hash_equals($storedHash, $computed);
     }
@@ -125,26 +126,32 @@ final class UserAuthService
         $LoginRetries = $this->fetchTable('LoginRetries');
         $Users = $this->fetchTable('Users');
 
-        $modifiedDate = FrozenTime::now()->subMinutes(10);
+        $windowStart = FrozenTime::now()->subMinutes(10);
 
         $findRetryWithIP = $LoginRetries->find()
             ->where([
                 'ip' => $ip,
-                'modified >=' => $modifiedDate->toDateTimeString(),
+                'updated_at >=' => $windowStart,
             ])
-            ->orderByDesc('created')
+            ->orderByDesc('updated_at')
             ->first();
 
-        $date = FrozenTime::now()->toDateTimeString();
+        $now = FrozenTime::now();
 
         if (!$findRetryWithIP) {
-            $loginRetry = $LoginRetries->newEntity(['ip' => $ip, 'count' => 1]);
+            $loginRetry = $LoginRetries->newEntity([
+                'ip' => $ip,
+                'count' => 1,
+            ]);
             $LoginRetries->save($loginRetry);
         } else {
             $expr = new QueryExpression('count + 1');
             $LoginRetries->updateAll(
-                ['count' => $expr, 'modified' => $date],
-                ['ip' => $ip]
+                [
+                    'count' => $expr,
+                    'updated_at' => $now->toDateTimeString(),
+                ],
+                ['ip' => $ip],
             );
         }
 
@@ -249,8 +256,10 @@ final class UserAuthService
             return 'USER__PASSWORD_RESET_INVALID_KEY';
         }
 
-        $created = $lost['created'] ?? null;
-        if (empty($created) || strtotime('+1 hour', strtotime((string)$created)) < time()) {
+        $createdAt = $lost->get('created_at');
+        $createdTime = $createdAt instanceof FrozenTime ? $createdAt : FrozenTime::parse((string)$createdAt);
+
+        if (!$createdTime || $createdTime->addHours(1)->isPast()) {
             return 'USER__PASSWORD_RESET_INVALID_KEY';
         }
 
@@ -258,13 +267,13 @@ final class UserAuthService
 
         $newPassword = (string)($data['password'] ?? '');
 
-        $userEntity = $Users->get((int)$user['id']);
+        $userEntity = $Users->get((int)$user->get('id'));
         $userEntity->set([
             'password' => $this->hashPassword($newPassword),
             'password_hash' => $this->getPasswordHashType(),
         ]);
         $Users->save($userEntity);
 
-        return ['status' => true, 'session' => (int)$user['id']];
+        return ['status' => true, 'session' => (int)$user->get('id')];
     }
 }

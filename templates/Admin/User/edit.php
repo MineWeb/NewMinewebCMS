@@ -113,7 +113,7 @@
                             <label for="user-created"><?= __('USER__REGISTER_DATE') ?></label>
                             <input id="user-created"
                                    class="form-control"
-                                   value="<?= $searchUser['created'] ?>"
+                                   value="<?= $searchUser['created_at'] ?>"
                                    type="text"
                                    disabled>
                         </div>

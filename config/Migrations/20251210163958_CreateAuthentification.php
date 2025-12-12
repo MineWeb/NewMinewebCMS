@@ -1,16 +1,23 @@
 <?php
+declare(strict_types=1);
 
 use Phinx\Migration\AbstractMigration;
 
-class CreateAuthentification extends AbstractMigration
+final class CreateAuthentification extends AbstractMigration
 {
     public function change(): void
     {
-        $table = $this->table('users__twofactorauth', ['encoding' => 'latin1', 'collation' => 'latin1_swedish_ci', 'engine' => 'InnoDB']);
+        $table = $this->table('users__twofactorauth', [
+            'encoding' => 'latin1',
+            'collation' => 'latin1_swedish_ci',
+            'engine' => 'InnoDB',
+        ]);
+
         $table
             ->addColumn('user_id', 'integer', ['null' => false, 'signed' => false])
             ->addColumn('secret', 'string', ['null' => false])
             ->addColumn('enabled', 'boolean', ['null' => false, 'default' => 1])
+            ->addTimestamps()
             ->addIndex(['user_id'])
             ->create();
 

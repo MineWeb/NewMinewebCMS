@@ -5,7 +5,7 @@ namespace App\Model\Table;
 
 use App\Model\Entity\Notification;
 use App\Model\Entity\User;
-use Cake\I18n\DateTime;
+use Cake\I18n\FrozenTime;
 use Cake\ORM\Entity;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
@@ -16,13 +16,16 @@ class NotificationsTable extends Table
 {
     public function initialize(array $config): void
     {
+        parent::initialize($config);
+
         $this->setTable('notifications');
         $this->setPrimaryKey('id');
 
         $this->addBehavior('Timestamp', [
             'events' => [
                 'Model.beforeSave' => [
-                    'created' => 'new',
+                    'created_at' => 'new',
+                    'updated_at' => 'always',
                 ],
             ],
         ]);
@@ -68,10 +71,6 @@ class NotificationsTable extends Table
             ->integer('seen')
             ->notEmptyString('seen');
 
-        $validator
-            ->dateTime('created')
-            ->notEmptyDateTime('created');
-
         return $validator;
     }
 
@@ -86,33 +85,39 @@ class NotificationsTable extends Table
     public function getFromUser(int $user_id, string $type): array
     {
         $query = $this->find()
-            ->where(['user_id' => $user_id, 'type' => $type])
-            ->orderBy(['id' => 'DESC']);
+            ->contain(['FromUsers'])
+            ->where(['Notifications.user_id' => $user_id, 'Notifications.type' => $type])
+            ->orderBy(['Notifications.id' => 'DESC']);
 
         $data = [];
-
-        $UserModel = TableRegistry::getTableLocator()->get('Users');
-        DateTime::$wordFormat = 'd/m/y';
 
         foreach ($query as $notification) {
             if (!$notification instanceof Notification) {
                 continue;
             }
 
-            $from = null;
-
-            if ($notification->get('from') !== null) {
-                $from = $UserModel->getFromUser('pseudo', $notification->get('from'));
+            $fromName = null;
+            $fromUser = $notification->get('from_user');
+            if ($fromUser instanceof User) {
+                $fromName = (string)($fromUser->get('pseudo') ?? '');
+                if ($fromName === '') {
+                    $fromName = null;
+                }
             }
 
-            $created = $notification->get('created');
+            $createdAt = $notification->get('created_at');
+            if ($createdAt instanceof FrozenTime) {
+                $timeAgo = $createdAt->timeAgoInWords();
+            } else {
+                $parsed = FrozenTime::parse((string)$createdAt);
+                $timeAgo = $parsed ? $parsed->timeAgoInWords() : '';
+            }
+
             $data[] = [
                 'id' => (int)$notification->get('id'),
-                'from' => $from,
+                'from' => $fromName,
                 'content' => (string)$notification->get('content'),
-                'time' => $created instanceof DateTime
-                    ? $created->timeAgoInWords()
-                    : DateTime::parse($created)->timeAgoInWords(),
+                'time' => $timeAgo,
                 'seen' => (bool)$notification->get('seen'),
             ];
         }
@@ -174,6 +179,7 @@ class NotificationsTable extends Table
             'user_id' => $user_id,
             'from' => $from,
             'type' => $type,
+            'seen' => 0,
         ]);
 
         return $this->save($notification);
@@ -186,17 +192,22 @@ class NotificationsTable extends Table
         }
 
         $group = $this->generateGroup();
-        $content = addslashes($content);
 
         $this->getConnection()->execute(
-            "INSERT INTO notifications (`group`, `user_id`, `from`, `content`, `type`, `created`)
-             SELECT '$group', id, $from, '$content', 'user', '" . date('Y-m-d H:i:s') . "' FROM users",
+            "INSERT INTO notifications (`group`, `user_id`, `from`, `content`, `type`, `created_at`, `updated_at`)
+             SELECT :group, id, :from, :content, 'user', :now, :now FROM users",
+            [
+                'group' => $group,
+                'from' => $from,
+                'content' => $content,
+                'now' => date('Y-m-d H:i:s'),
+            ],
         );
     }
 
     public function clearFromUser(int $id, int $user_id): int
     {
-        return $this->deleteAll(['user_id' => $user_id, 'Notification.id' => $id]);
+        return $this->deleteAll(['user_id' => $user_id, 'Notifications.id' => $id]);
     }
 
     public function clearAllFromUser(int $user_id): int
@@ -206,7 +217,7 @@ class NotificationsTable extends Table
 
     public function markAsSeenFromUser(int $id, int $user_id): int
     {
-        return $this->updateAll(['seen' => 1], ['user_id' => $user_id, 'Notification.id' => $id]);
+        return $this->updateAll(['seen' => 1], ['user_id' => $user_id, 'Notifications.id' => $id]);
     }
 
     public function markAllAsSeenFromUser(int $user_id): int
@@ -221,7 +232,7 @@ class NotificationsTable extends Table
 
     public function markAsSeenFromAllUsers(int $id): int
     {
-        return $this->updateAll(['seen' => 1], ['Notification.id' => $id]);
+        return $this->updateAll(['seen' => 1], ['Notifications.id' => $id]);
     }
 
     public function clearAllFromGroup(string $group): int
