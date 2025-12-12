@@ -86,7 +86,7 @@ class PagesController extends AppController
         $entity = $pageTable->newEntity([
             'title' => $title,
             'content' => $content,
-            'user_id' => $this->User->getKey('id'),
+            'user_id' => $this->User->get('id'),
             'slug' => Text::slug($slugRaw),
             'updated' => date('Y-m-d H:i:s'),
         ]);

@@ -381,7 +381,7 @@ class ThemeComponent extends Component
 
     public function getCurrentTheme(): array
     {
-        $configuredTheme = $this->controller->Configuration->getKey('theme');
+        $configuredTheme = $this->controller->Configuration->get('theme');
         foreach ($this->getThemesInstalled(false) as $theme) {
             if ($configuredTheme === $theme->slug && $theme->valid) {
                 return [$theme->slug, (array)$theme->configurations];

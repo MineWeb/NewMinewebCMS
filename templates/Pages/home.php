@@ -87,6 +87,7 @@ if (!isset($theme_config['slider']) || $theme_config['slider'] == "true") { ?>
     </div>
     <div class="row btn-socials text-center">
         <?php
+        $findSocialButtons = $this->SocialButton->all();
         $howManyBtns = count($findSocialButtons);
 
         $maxBtnsByLine = 4;

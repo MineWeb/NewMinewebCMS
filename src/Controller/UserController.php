@@ -78,14 +78,14 @@ class UserController extends AppController
         $this->set('twoFactorAuthStatus', !empty($infos));
         $this->set('title_for_layout', $pseudo);
 
-        $this->viewBuilder()->setLayout($this->Configuration->getKey('layout'));
+        $this->viewBuilder()->setLayout($this->config->get('layout'));
 
         if ($this->EyPlugin->isInstalled('eywek.shop')) {
             $itemsHistoryTable = $this->fetchTable('Shop.ItemsBuyHistory');
             $histories = $itemsHistoryTable
                 ->find()
                 ->where(['user_id' => $userId])
-                ->order(['ItemsBuyHistory.created' => 'DESC'])
+                ->orderBy(['ItemsBuyHistory.created' => 'DESC'])
                 ->all();
 
             $this->set(compact('histories'));
@@ -131,7 +131,7 @@ class UserController extends AppController
         }
 
         if (
-            (bool)$this->Configuration->getKey('confirm_mail_signup') &&
+            (bool)$this->config->get('confirm_mail_signup') &&
             $confirmed !== '' &&
             date('Y-m-d H:i:s', strtotime($confirmed)) !== $confirmed
         ) {

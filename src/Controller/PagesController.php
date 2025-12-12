@@ -20,7 +20,7 @@ class PagesController extends AppController
 {
     public function display(string ...$path): Response
     {
-        $this->viewBuilder()->setLayout($this->Configuration->getKey('layout'));
+        $this->viewBuilder()->setLayout((string)$this->config->get('layout'));
 
         $requestUri = (string)$this->getRequest()->getEnv('REQUEST_URI');
         $parts = explode('?', $requestUri);
@@ -169,7 +169,7 @@ class PagesController extends AppController
             throw new NotFoundException();
         }
 
-        $this->viewBuilder()->setLayout($this->Configuration->getKey('layout'));
+        $this->viewBuilder()->setLayout((string)$this->config->get('layout'));
 
         $page['author'] = $this->User->getFromUser('pseudo', $page['user_id']);
 

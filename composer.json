@@ -15,6 +15,7 @@
         "ext-json": "*",
         "ext-pdo": "*",
         "ext-zip": "*",
+        "ext-openssl": "*",
         "htmlawed/htmlawed": "1.2.6",
         "robthree/twofactorauth": "1.8.2",
         "symfony/service-contracts": "^3.6.1",

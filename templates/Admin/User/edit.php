@@ -36,7 +36,7 @@
                                    autocomplete="off">
                         </div>
 
-                        <?php if (!$Configuration->getKey('confirm_mail_signup')) { ?>
+                        <?php if (!$this->Config->get('confirm_mail_signup')) { ?>
                             <div class="form-group">
                                 <label for="user-email"><?= __('USER__EMAIL') ?></label>
                                 <input id="user-email"

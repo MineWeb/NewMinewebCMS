@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Component;
 
+use App\Model\Entity\User;
 use App\Service\AuthService;
 use Cake\Controller\Component;
 
@@ -27,12 +28,12 @@ final class AuthComponent extends Component
         $this->service->require($this->getController()->getRequest(), $perm);
     }
 
-    public function identity(): mixed
+    public function identity(): ?User
     {
         return $this->service->identity($this->getController()->getRequest());
     }
 
-    public function user(): mixed
+    public function user(): ?User
     {
         return $this->service->user($this->getController()->getRequest());
     }

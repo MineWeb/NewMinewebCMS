@@ -220,13 +220,6 @@ class ConfigurationsTable extends Table
             : (string)$config->money_name_singular;
     }
 
-    public function getKey(string $key): mixed
-    {
-        $config = $this->getData();
-
-        return $config?->get($key) ?? null;
-    }
-
     public function setKey(string $key, mixed $value): EntityInterface|false
     {
         $config = $this->get(1);

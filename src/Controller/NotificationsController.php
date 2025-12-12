@@ -15,12 +15,9 @@ class NotificationsController extends AppController
 {
     private Table $Notifications;
 
-    public function beforeFilter(EventInterface $event): ?Response
+    public function beforeFilter(EventInterface $event): void
     {
-        $response = parent::beforeFilter($event);
-        if ($response instanceof Response) {
-            return $response;
-        }
+        parent::beforeFilter($event);
 
         $this->Notifications = $this->fetchTable('Notifications');
 
@@ -28,15 +25,17 @@ class NotificationsController extends AppController
         $isAdminRequest = (bool)$request->getParam('admin');
         $action = (string)$request->getParam('action');
 
-        if (!$isAdminRequest || ($isAdminRequest && $action !== 'index')) {
+        if (!$isAdminRequest || ($action !== 'index')) {
             $this->disableAutoRender();
-            $this->response = $this->response->withType('application/json');
-            $this->response = $this->response->withStringBody(json_encode([]));
 
-            return $this->response;
+            $response = $this->response
+                ->withType('application/json')
+                ->withStringBody(json_encode([]));
+
+            $this->setResponse($response);
+
+            $event->stopPropagation();
         }
-
-        return null;
     }
 
     public function getAll(string $type = 'user'): Response
@@ -44,7 +43,8 @@ class NotificationsController extends AppController
         $this->response = $this->response->withType('application/json');
 
         if ($this->Auth->isConnected()) {
-            $notifications = $this->Notifications->getFromUser($this->User->getKey('id'), $type);
+            $notifications = $this->Notifications->getFromUser((int)$this->Auth->identity()?->get('id'), $type);
+
             return $this->response->withStringBody(json_encode($notifications));
         }
 
@@ -56,7 +56,8 @@ class NotificationsController extends AppController
         $this->response = $this->response->withType('application/json');
 
         if ($this->Auth->isConnected()) {
-            $status = $this->Notifications->clearFromUser($id, $this->User->getKey('id'));
+            $status = $this->Notifications->clearFromUser($id, (int)$this->User->get('id'));
+
             return $this->response->withStringBody(json_encode(['status' => $status]));
         }
 
@@ -68,7 +69,8 @@ class NotificationsController extends AppController
         $this->response = $this->response->withType('application/json');
 
         if ($this->Auth->isConnected()) {
-            $status = $this->Notifications->clearAllFromUser($this->User->getKey('id'));
+            $status = $this->Notifications->clearAllFromUser((int)$this->User->get('id'));
+
             return $this->response->withStringBody(json_encode(['status' => $status]));
         }
 
@@ -80,7 +82,8 @@ class NotificationsController extends AppController
         $this->response = $this->response->withType('application/json');
 
         if ($this->Auth->isConnected()) {
-            $status = $this->Notifications->markAsSeenFromUser($id, $this->User->getKey('id'));
+            $status = $this->Notifications->markAsSeenFromUser($id, (int)$this->User->get('id'));
+
             return $this->response->withStringBody(json_encode(['status' => $status]));
         }
 
@@ -92,7 +95,8 @@ class NotificationsController extends AppController
         $this->response = $this->response->withType('application/json');
 
         if ($this->Auth->isConnected()) {
-            $status = $this->Notifications->markAllAsSeenFromUser($this->User->getKey('id'));
+            $status = $this->Notifications->markAllAsSeenFromUser((int)$this->User->get('id'));
+
             return $this->response->withStringBody(json_encode(['status' => $status]));
         }
 

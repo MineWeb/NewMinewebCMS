@@ -94,7 +94,7 @@ class UtilComponent extends Component
             return $this->Configurations;
         }
 
-        if (method_exists($table, 'getKey')) {
+        if (method_exists($table, 'get')) {
             $this->Configurations = $table;
 
             return $this->Configurations;
@@ -110,7 +110,7 @@ class UtilComponent extends Component
             return null;
         }
 
-        return $table->getKey($key);
+        return $table->get($key);
     }
 
     public function getIP(): string

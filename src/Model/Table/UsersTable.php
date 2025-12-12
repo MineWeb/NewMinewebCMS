@@ -151,7 +151,7 @@ class UsersTable extends Table
         }
 
         $configTable = TableRegistry::getTableLocator()->get('Configurations');
-        if ($configTable->getKey('check_uuid') && $search_member_by_uuid) {
+        if ($configTable->get('check_uuid') && $search_member_by_uuid) {
             return 'USER__ERROR_UUID_ALREADY_REGISTERED';
         }
 

@@ -79,10 +79,12 @@ Security::setSalt((string)Configure::consume('Security.salt'));
 
 ServerRequest::addDetector('mobile', function () {
     $detector = new MobileDetect();
+
     return $detector->isMobile();
 });
 ServerRequest::addDetector('tablet', function () {
     $detector = new MobileDetect();
+
     return $detector->isTablet();
 });
 
@@ -110,7 +112,7 @@ if (is_readable($dbConfigFile)) {
                 'encoding' => 'utf8mb4',
                 'timezone' => 'UTC',
                 'cacheMetadata' => true,
-                'quoteIdentifiers' => true
+                'quoteIdentifiers' => true,
             ]);
         }
     }
@@ -160,3 +162,4 @@ I18n::config('_fallback', function (string $domain, string $locale) {
 });
 
 Configure::write('Permissions.list', require CONFIG . 'permissions.php');
+Configure::write('AdminNav', require CONFIG . 'admin_nav.php');

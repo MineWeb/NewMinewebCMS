@@ -54,7 +54,7 @@
                         <?= before_display($v['content']) ?>
                     </div>
                     <div class="pull-right">
-                        <?php if ($this->Auth->can('DELETE_COMMENT') or $this->Auth->can('DELETE_HIS_COMMENT') and $user['pseudo'] == $v['author']) { ?>
+                        <?php if ($this->Auth->can('DELETE_COMMENT') or $this->Auth->can('DELETE_HIS_COMMENT') and h($this->Auth->username()) == $v['author']) { ?>
                             <p>
                                 <a id="<?= $v['id'] ?>" title="<?= __('GLOBAL__DELETE') ?>"
                                    class="comment-delete btn btn-danger btn-sm">
@@ -102,10 +102,10 @@
         let comment =
             '<div class="media">' +
             '<a class="pull-left" href="#">' +
-            '<img class="media-object" src="<?= $this->Url->build(['_name' => 'api_get_head_skin', $user['pseudo'], 64]) ?>" alt="">' +
+            '<img class="media-object" src="<?= $this->Url->build(['_name' => 'api_get_head_skin', h($this->Auth->username()), 64]) ?>" alt="">' +
             '</a>' +
             '<div class="media-body">' +
-            '<h4 class="media-heading"><?= $user['pseudo'] ?> ' +
+            '<h4 class="media-heading"><?= h($this->Auth->username()) ?> ' +
             '<small>' + hours + 'h' + minutes + '</small>' +
             '</h4>' +
             data["content"] +

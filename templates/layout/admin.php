@@ -25,7 +25,7 @@ use Cake\Routing\Router;
     <?= $this->Html->script('chart.js/Chart.min') ?>
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
 </head>
-<body class="hold-transition sidebar-mini layout-fixed <?= $admin_dark_mode ? "dark-mode" : "" ?> ">
+<body class="hold-transition sidebar-mini layout-fixed <?= h($this->AdminUi->bodyClass()) ?> ">
 <div class="wrapper">
 
     <nav class="main-header navbar navbar-expand navbar-dark navbar-lightblue">
@@ -39,7 +39,7 @@ use Cake\Routing\Router;
                 <div class="nav-link custom-control custom-switch custom-switch-off-danger custom-switch-on-success"
                      data-children-count="1">
                     <input type="checkbox" class="custom-control-input switchAdminDarkMode"
-                           id="customSwitch3" <?= (isset($admin_dark_mode) && $admin_dark_mode) ? 'checked' : '' ?>>
+                           id="customSwitch3" <?= $this->AdminUi->darkModeEnabled() ? 'checked' : '' ?>>
                     <label class="custom-control-label" for="customSwitch3">Dark-Mode</label>
                 </div>
             </li>
@@ -76,7 +76,7 @@ use Cake\Routing\Router;
 
             <li class="nav-item">
                 <a class="nav-link" href="#">
-                    <span class="hidden-xs"><?= $user['pseudo'] ?></span>
+                    <span class="hidden-xs"><?= h($this->Auth->username()) ?></span>
                 </a>
             </li>
 
@@ -146,85 +146,8 @@ use Cake\Routing\Router;
         </script>
     </nav>
 
-    <aside class="main-sidebar sidebar-dark-lightblue elevation-4">
-        <a href="<?= $this->Url->build(['_name' => 'home']) ?>" class="brand-link navbar-lightblue text-center text-white">
-            <span class="brand-text font-weight-light"><?= __('GLOBAL__ADMINISTRATION'); ?></span>
-        </a>
-        <div class="sidebar">
-            <nav class="mt-2">
-                <ul class="nav nav-pills nav-sidebar flex-column nav-flat nav-child-indent" data-widget="treeview"
-                    role="menu"
-                    data-accordion="false">
-                    <?php
+    <?= $this->cell('AdminNavbar') ?>
 
-                    function checkCurrent(array $nav, $context): bool
-                    {
-                        foreach ($nav as $value) {
-                            if (isset($value['menu']) && is_array($value['menu'])) {
-                                if (checkCurrent($value['menu'])) {
-                                    return true;
-                                }
-                            }
-
-                            $route = isset($value['route']) ? $context->Url->build($value['route']) : '#';
-                            if ($route === $context->Url->build()) {
-                                return true;
-                            }
-                        }
-
-                        return false;
-                    }
-
-                    function displayNav(array $nav, $context): void
-                    {
-                        foreach ($nav as $name => $value) {
-                            if (!isset($value['menu']) && !isset($value['route'])) {
-                                continue;
-                            }
-
-                            if (!isset($value['menu']) && isset($value['permission']) && !$context->Auth->can($value['permission'])) {
-                                continue;
-                            }
-
-                            $currentMenu = false;
-
-                            if (isset($value['menu'])) {
-                                $currentMenu = checkCurrent($value['menu'], $context) ? "menu-open" : "";
-                                echo '<li class="nav-item has-treeview ' . ($currentMenu ? "menu-open" : "") . '">';
-                            } else {
-                                echo '<li class="nav-item">';
-                            }
-
-                            $route = isset($value['route']) ? $context->Url->build($value['route']) : '#';
-                            $current = $route === $context->Url->build();
-
-                            echo '<a class="nav-link' . ($current || $currentMenu ? " active" : "") . '" href="' . $route . '">';
-                            echo '<i class="' . (strpos($value['icon'], "fa-") !== false ? $value['icon'] : "fa fa-" . $value['icon']) . ' nav-icon"></i>  <p>' . __($name);
-
-                            if (isset($value['menu'])) {
-                                echo '<i class="fas fa-angle-left right"></i></p>';
-                            } else {
-                                echo '</p>';
-                            }
-
-                            echo '</a>';
-
-                            if (isset($value['menu'])) {
-                                echo '<ul class="nav nav-treeview">';
-                                displayNav($value['menu'], $context);
-                                echo '</ul>';
-                            }
-
-                            echo '</li>';
-                        }
-                    }
-
-                    displayNav($adminNavbar, $this);
-                    ?>
-                </ul>
-            </nav>
-        </div>
-    </aside>
     <div class="content-wrapper">
         <section class="content-header">
             <?= $Update->available() ?>

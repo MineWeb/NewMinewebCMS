@@ -42,7 +42,7 @@ class ThemeController extends AppController
             throw new NotFoundException();
         }
 
-        $this->Configuration->setKey('theme', $slug);
+        $this->config->setKey('theme', $slug);
         $this->History->set('SET_THEME', 'theme');
         $this->Flash->success(__('THEME__ENABLED_SUCCESS'));
 
@@ -61,7 +61,7 @@ class ThemeController extends AppController
             throw new NotFoundException();
         }
 
-        $current = (string)$this->Configuration->getKey('theme');
+        $current = (string)$this->config->get('theme');
 
         if ($current === $slug) {
             $this->Flash->error(__('THEME__CANT_DELETE_IF_ACTIVE'));

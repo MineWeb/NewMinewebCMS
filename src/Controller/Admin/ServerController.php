@@ -22,7 +22,7 @@ class ServerController extends AppController
         $serverTable = $this->fetchTable('Servers');
         $servers = $serverTable->find()->all()->toArray();
 
-        $banner_server = @unserialize((string)$this->Configuration->getKey('banner_server'));
+        $banner_server = @unserialize((string)$this->config->get('banner_server'));
 
         if (is_array($banner_server)) {
             foreach ($servers as $key => $value) {
@@ -37,9 +37,9 @@ class ServerController extends AppController
         $bannerMsg = __('SERVER__STATUS_MESSAGE');
 
         $this->set(compact('servers', 'bannerMsg'));
-        $this->set('isEnabled', $this->Configuration->getKey('server_state'));
-        $this->set('isCacheEnabled', $this->Configuration->getKey('server_cache'));
-        $this->set('timeout', $this->Configuration->getKey('server_timeout'));
+        $this->set('isEnabled', $this->config->get('server_state'));
+        $this->set('isCacheEnabled', $this->config->get('server_cache'));
+        $this->set('timeout', $this->config->get('server_timeout'));
 
         $this->viewBuilder()
             ->setLayout('admin')
@@ -196,8 +196,8 @@ class ServerController extends AppController
 
         $this->disableAutoRender();
 
-        $current = (bool)$this->Configuration->getKey('server_state');
-        $this->Configuration->setKey('server_state', $current ? 0 : 1);
+        $current = (bool)$this->config->get('server_state');
+        $this->config->setKey('server_state', $current ? 0 : 1);
 
         $this->Flash->success(__('SERVER__SUCCESS_SWITCH'));
 
@@ -212,8 +212,8 @@ class ServerController extends AppController
 
         $this->disableAutoRender();
 
-        $current = (bool)$this->Configuration->getKey('server_cache');
-        $this->Configuration->setKey('server_cache', $current ? 0 : 1);
+        $current = (bool)$this->config->get('server_cache');
+        $this->config->setKey('server_cache', $current ? 0 : 1);
 
         $this->Flash->success(__('SERVER__SUCCESS_CACHE_SWITCH'));
 
@@ -229,7 +229,7 @@ class ServerController extends AppController
         }
 
         if ($id !== null) {
-            $banner = @unserialize((string)$this->Configuration->getKey('banner_server'));
+            $banner = @unserialize((string)$this->config->get('banner_server'));
 
             if (!is_array($banner)) {
                 $banner = [$id];
@@ -245,7 +245,7 @@ class ServerController extends AppController
                 $banner = array_values($banner);
             }
 
-            $this->Configuration->setKey('banner_server', serialize($banner));
+            $this->config->setKey('banner_server', serialize($banner));
         }
 
         return $this->redirect(['_name' => 'admin_server_link']);
@@ -264,7 +264,7 @@ class ServerController extends AppController
             $entity = $serverTable->get($id);
 
             if ($serverTable->delete($entity)) {
-                $banner = @unserialize((string)$this->Configuration->getKey('banner_server'));
+                $banner = @unserialize((string)$this->config->get('banner_server'));
 
                 if (is_array($banner) && in_array($id, $banner, true)) {
                     $index = array_search($id, $banner, true);
@@ -272,7 +272,7 @@ class ServerController extends AppController
                         unset($banner[$index]);
                     }
                     $banner = array_values($banner);
-                    $this->Configuration->setKey('banner_server', serialize($banner));
+                    $this->config->setKey('banner_server', serialize($banner));
                 }
 
                 $this->Flash->success(__('SERVER__DELETE_SERVER_SUCCESS'));
@@ -317,7 +317,7 @@ class ServerController extends AppController
             ]));
         }
 
-        $this->Configuration->setKey('server_timeout', $timeoutRaw);
+        $this->config->setKey('server_timeout', $timeoutRaw);
 
         return $this->response->withStringBody(json_encode([
             'statut' => true,

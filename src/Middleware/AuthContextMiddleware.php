@@ -73,8 +73,6 @@ final class AuthContextMiddleware implements MiddlewareInterface
             Log::error($e->getTraceAsString());
         }
 
-        Log::info('AuthContextMiddleware: User ID ' . ($userId ?? 'null') . ', isConnected=' . ($isConnected ? 'true' : 'false') . ', isAdmin=' . ($isAdmin ? 'true' : 'false'));
-
         $request = $request
             ->withAttribute('auth.identity', $identity)
             ->withAttribute('auth.isConnected', $isConnected)

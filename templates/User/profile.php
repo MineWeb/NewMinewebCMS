@@ -10,7 +10,7 @@
             <?= $Module->loadModules('user_profile_messages') ?>
 
             <div class="section">
-                <p><b><?= __('USER__USERNAME') ?> :</b> <?= h($user['pseudo']) ?></p>
+                <p><b><?= __('USER__USERNAME') ?> :</b> <?= h($this->Auth->username()) ?></p>
             </div>
             <div class="section">
                 <p><b><?= __('USER__EMAIL') ?> :</b> <span id="email"><?= h($user['email']) ?></span></p>

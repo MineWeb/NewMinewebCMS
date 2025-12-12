@@ -3,17 +3,18 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Model\Entity\User;
 use Cake\Http\Exception\ForbiddenException;
 use Psr\Http\Message\ServerRequestInterface;
 
 final class AuthService
 {
-    public function identity(ServerRequestInterface $request): mixed
+    public function identity(ServerRequestInterface $request): ?User
     {
         return $request->getAttribute('auth.identity');
     }
 
-    public function user(ServerRequestInterface $request): mixed
+    public function user(ServerRequestInterface $request): ?User
     {
         return $this->identity($request);
     }

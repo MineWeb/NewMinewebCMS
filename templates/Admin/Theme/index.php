@@ -25,7 +25,7 @@
                             <td>N/A</td>
                             <td>
                                 <?php
-                                if ('default' == $Configuration->getKey('theme')) {
+                                if ($this->Config->themeName() == 'default') {
                                     echo '<span class="label label-success">' . __('GLOBAL__ENABLED') . '</span>';
                                 } else {
                                     echo '<span class="label label-danger">' . __('GLOBAL__DISABLED') . '</span>';
@@ -36,7 +36,7 @@
                                 <span class="label label-success"><?= __('GLOBAL__YES') ?></span>
                             </td>
                             <td>
-                                <?php if ('default' != $Configuration->getKey('theme')) { ?>
+                                <?php if ($this->Config->themeName() != 'default') { ?>
                                     <a href="<?= $this->Url->build(['_name' => 'admin_theme_enable', 'default']) ?>"
                                        class="btn btn-success"><?= __('GLOBAL__ENABLE') ?></a>
                                 <?php } ?>
@@ -54,7 +54,7 @@
                                     <td><?= $value->version ?></td>
                                     <td>
                                         <?php
-                                        if ($value->slug == $Configuration->getKey('theme')) {
+                                        if ($value->slug == $this->Config->themeName()) {
                                             echo '<span class="label label-success">' . __('GLOBAL__ENABLED') . '</span>';
                                         } else {
                                             echo '<span class="label label-danger">' . __('GLOBAL__DISABLED') . '</span>';
@@ -72,7 +72,7 @@
                                         ?>
                                     </td>
                                     <td>
-                                        <?php if ($value->slug != $Configuration->getKey('theme') && $value->valid) { ?>
+                                        <?php if ($value->slug != $this->Config->themeName() && $value->valid) { ?>
                                             <a href="<?= $this->Url->build(['_name' => 'admin_theme_enable', $value->slug]) ?>"
                                                class="btn btn-success"><?= __('GLOBAL__ENABLE') ?></a>
                                         <?php } ?>
@@ -126,12 +126,12 @@
                                     <td><?= $value['name'] ?></td>
                                     <td>
                                         <?php if ($value['free']) {
-                                            echo isset($value['author']) ? $value['author'] : '';
+                                            echo $value['author'] ?? '';
                                         } else {
                                             foreach ($value['contact'] as $contact) {
                                                 if ($contact['type'] == 'discord') {
                                                     echo '<button class="btn btn-info" style="background-color: #7289da;border-color: #7289da;">Discord - ' . $contact['value'] . '</button>';
-                                                } else if ($contact['type'] === 'email') {
+                                                } elseif ($contact['type'] === 'email') {
                                                     echo '<button class="btn btn-info">Email - ' . $contact['value'] . '</button>';
                                                 } else {
                                                     echo '<button class="btn btn-warn">' . $contact['value'] . '</button>';
@@ -141,9 +141,9 @@
                                         }
                                         ?>
                                     </td>
-                                    <td><?= isset($value['version']) ? $value['version'] : __('THEME__NEED_PURCHASE') ?></td>
+                                    <td><?= $value['version'] ?? __('THEME__NEED_PURCHASE') ?></td>
                                     <td>
-                                        <?php if ($value['free']): ?>
+                                        <?php if ($value['free']) : ?>
                                             <a href="<?= $this->Url->build(['_name' => 'admin_theme_install', $value['slug']]) ?>"
                                                class="btn btn-success"><?= __('INSTALL__INSTALL') ?></a>
                                         <?php endif; ?>

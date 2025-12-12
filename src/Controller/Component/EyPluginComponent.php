@@ -1,47 +1,66 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Controller\Component;
 
+use AppSchema;
 use Cake\Cache\Cache;
 use Cake\Controller\Component;
 use Cake\Controller\ComponentRegistry;
 use Cake\Core\App;
 use Cake\Core\Plugin;
 use Cake\Datasource\ConnectionManager;
-use Cake\ORM\TableRegistry;
+use Cake\ORM\Locator\LocatorAwareTrait;
 use Cake\Routing\Router;
+use CakeSchema;
 use Exception;
+use FilesystemIterator;
+use MainComponent;
 use PDOException;
 use PharIo\Version\Version;
 use PharIo\Version\VersionConstraintParser;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use ZipArchive;
 
 class EyPluginComponent extends Component
 {
-    public $pluginsInFolder = [];
-    public $pluginsInDB = [];
-    public string $pluginsFolder;
-    public $pluginsLoaded;
-    private $alreadyCheckValid = [];
-    private $reference = 'https://raw.githubusercontent.com/MineWeb/mineweb.org/gh-pages/market/plugins.json';
-    private $controller;
+    use LocatorAwareTrait;
 
-    private $CmsSqlTables = [];
+    public array $pluginsInFolder = [];
+    public array $pluginsInDB = [];
+    public string $pluginsFolder;
+    public object $pluginsLoaded;
+
+    private array $alreadyCheckValid = [];
+    private string $reference = 'https://raw.githubusercontent.com/MineWeb/mineweb.org/gh-pages/market/plugins.json';
+
+    private mixed $controller = null;
+
+    private array $CmsSqlTables = [];
+
+    private object $models;
+
+    private mixed $Schema = null;
+    private mixed $Main = null;
 
     public function __construct(ComponentRegistry $registry, array $config = [])
     {
         $this->pluginsFolder = ROOT . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'Addons';
+        $this->pluginsLoaded = (object)[];
         parent::__construct($registry, $config);
     }
 
-    function initialize(array $config): void
+    public function initialize(array $config): void
     {
+        parent::initialize($config);
+
         $this->controller = $this->_registry->getController();
         $this->controller->set('EyPlugin', $this);
 
         $this->models = (object)[
-            'Plugin' => TableRegistry::getTableLocator()->get('Plugins'),
-            'Permission' => TableRegistry::getTableLocator()->get('Permissions')
+            'Plugin' => $this->fetchTable('Plugins'),
+            'Permission' => $this->fetchTable('Permissions'),
         ];
 
         $this->pluginsInFolder = $this->getPluginsInFolder();
@@ -51,14 +70,16 @@ class EyPluginComponent extends Component
         $this->pluginsLoaded = $this->loadPlugins();
     }
 
-    private function getPluginsInFolder()
+    private function getPluginsInFolder(): array
     {
         $dir = $this->pluginsFolder;
-        $plugins = scandir($dir);
+        $plugins = @scandir($dir);
         if ($plugins === false) {
             $this->log('Unable to scan plugins folder.');
+
             return ['all' => [], 'onlyValid' => []];
         }
+
         $bypassedFiles = ['.', '..', '.DS_Store', '__MACOSX', '.gitkeep'];
         $pluginsList = ['all' => [], 'onlyValid' => []];
 
@@ -71,26 +92,30 @@ class EyPluginComponent extends Component
                 $pluginsList['onlyValid'][] = $value;
             }
         }
+
         return $pluginsList;
     }
 
-    private function isValid($slug)
+    private function isValid(string $slug): bool
     {
         $slug = ucfirst($slug);
         $file = $this->pluginsFolder . DIRECTORY_SEPARATOR . $slug;
 
         if (isset($this->alreadyCheckValid[$slug])) {
-            return $this->alreadyCheckValid[$slug];
+            return (bool)$this->alreadyCheckValid[$slug];
         }
 
         if (!file_exists($file)) {
             $this->log('Plugins folder : ' . $file . ' doesn\'t exist! Plugin not valid!');
+
             return $this->alreadyCheckValid[$slug] = false;
         }
+
         if (!is_dir($file)) {
             if (strstr($file, '.gitkeep') === false) {
                 $this->log('File : ' . $file . ' is not a folder! Plugin not valid! Please remove this file from the plugin folder.');
             }
+
             return $this->alreadyCheckValid[$slug] = false;
         }
 
@@ -103,11 +128,13 @@ class EyPluginComponent extends Component
             'Model',
             'View',
             'config.json',
-            'SQL/schema.php'
+            'SQL/schema.php',
         ];
+
         foreach ($neededFiles as $value) {
             if (!file_exists($file . DIRECTORY_SEPARATOR . $value)) {
                 $this->log('Plugin "' . $slug . '" not valid! The file or folder "' . $file . DIRECTORY_SEPARATOR . $value . '" doesn\'t exist! Please verify documentation for more informations.');
+
                 return $this->alreadyCheckValid[$slug] = false;
             }
         }
@@ -118,11 +145,18 @@ class EyPluginComponent extends Component
             $json = json_decode((string)$content);
             if ($json === false || $json === null) {
                 $this->log('Plugin "' . $slug . '" not valid! The file "' . $file . DIRECTORY_SEPARATOR . $value . '" is not at JSON format! Please verify documentation for more informations.');
+
                 return $this->alreadyCheckValid[$slug] = false;
             }
         }
 
         $config = json_decode((string)file_get_contents($file . DIRECTORY_SEPARATOR . 'config.json'), true);
+        if (!is_array($config)) {
+            $this->log('File : ' . $slug . ' is not a valid plugin! The config is not readable.');
+
+            return $this->alreadyCheckValid[$slug] = false;
+        }
+
         $needConfigKey = [
             'name' => 'string',
             'author' => 'string',
@@ -131,11 +165,13 @@ class EyPluginComponent extends Component
             'permissions' => 'array',
             'permissions-available' => 'array',
             'permissions-default' => 'array',
-            'requirements' => 'array'
+            'requirements' => 'array',
         ];
+
         foreach ($needConfigKey as $key => $value) {
             $keyParts = explode('-', $key);
-            if (is_array($keyParts) && count($keyParts) > 1) {
+
+            if (count($keyParts) > 1) {
                 $configKey = $config;
                 $multi = true;
                 foreach ($keyParts as $v) {
@@ -154,28 +190,32 @@ class EyPluginComponent extends Component
             $exists = ($multi === true) || ($multi === null && $configKey !== null);
             if ($exists) {
                 $function = 'is_' . $value;
-                if (!$function($configKey)) {
-                    $label = is_array($keyParts) ? '["' . implode('"]["', $keyParts) . '"]' : $key;
+                if (!function_exists($function) || !$function($configKey)) {
+                    $label = '["' . implode('"]["', $keyParts) . '"]';
                     $this->log('File : ' . $slug . ' is not a valid plugin! The config is not complete! ' . $label . ' is not a good type (' . $value . ' required).');
+
                     return $this->alreadyCheckValid[$slug] = false;
                 }
             } else {
-                $label = is_array($keyParts) ? '["' . implode('"]["', $keyParts) . '"]' : $key;
+                $label = '["' . implode('"]["', $keyParts) . '"]';
                 $this->log('File : ' . $slug . ' is not a valid plugin! The config is not complete! ' . $label . ' is not defined.');
+
                 return $this->alreadyCheckValid[$slug] = false;
             }
         }
 
         try {
-            new Version($config['version']);
-        } catch (Exception $e) {
+            new Version((string)$config['version']);
+        } catch (Exception) {
             $this->log('File : ' . $slug . ' is not a valid plugin! The version configured is not at good format !');
+
             return $this->alreadyCheckValid[$slug] = false;
         }
 
         $filenameTables = $file . DIRECTORY_SEPARATOR . 'SQL' . DIRECTORY_SEPARATOR . 'schema.php';
         if (!file_exists($filenameTables)) {
             $this->log('File : ' . $slug . ' is not a valid plugin! SQL Schema is not created!');
+
             return $this->alreadyCheckValid[$slug] = false;
         }
 
@@ -185,17 +225,21 @@ class EyPluginComponent extends Component
         }
         if (!class_exists($nameClass)) {
             $this->log('File : ' . $slug . ' is not a valid plugin! SQL Schema is not created!');
+
             return $this->alreadyCheckValid[$slug] = false;
         }
+
         $class = new $nameClass();
 
         if (!method_exists($class, 'before') || !method_exists($class, 'after')) {
             $this->log('File : ' . $slug . ' is not a valid plugin! SQL Schema class is not valid!');
+
             return $this->alreadyCheckValid[$slug] = false;
         }
 
-        $tables = get_class_vars(get_class($class));
+        $tables = get_class_vars($class::class);
         $ignoredVars = ['name', 'path', 'file', 'connection', 'plugin', 'tables'];
+
         foreach ($tables as $key => $value) {
             if (!in_array($key, $ignoredVars, true)) {
                 $CmsSqlTables = $this->getCmsSqlTables();
@@ -204,6 +248,7 @@ class EyPluginComponent extends Component
                     if (count($valueExploded) <= 1 || $valueExploded[0] !== strtolower($slug)) {
                         $this->log('File : ' . $slug . ' is not a valid plugin! SQL tables need to be prefixed by slug.');
                         $this->alreadyCheckValid[$slug] = false;
+
                         return false;
                     }
                 }
@@ -213,39 +258,52 @@ class EyPluginComponent extends Component
         return $this->alreadyCheckValid[$slug] = true;
     }
 
-    private function getCmsSqlTables()
+    private function getCmsSqlTables(): array
     {
         if (empty($this->CmsSqlTables)) {
-            require_once ROOT . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . 'Schema' . DIRECTORY_SEPARATOR . 'schema.php';
+            $schemaPath = ROOT . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . 'Schema' . DIRECTORY_SEPARATOR . 'schema.php';
+            if (!file_exists($schemaPath)) {
+                return [];
+            }
+
+            require_once $schemaPath;
             if (!class_exists('AppSchema')) {
                 return [];
             }
-            $class = new \AppSchema();
-            $tables = get_class_vars(get_class($class));
+
+            $class = new AppSchema();
+            $tables = get_class_vars($class::class);
             $ignoredVars = ['name', 'path', 'file', 'connection', 'plugin', 'tables'];
+
             foreach ($tables as $key => $value) {
                 if (!in_array($key, $ignoredVars, true)) {
                     $this->CmsSqlTables[] = $key;
                 }
             }
         }
+
         return $this->CmsSqlTables;
     }
 
-    private function getPluginsInDB()
+    private function getPluginsInDB(): array
     {
-        $search = $this->models->Plugin->find()->toArray();
-        if (empty($search)) {
+        $rows = $this->models->Plugin->find()->all()->toArray();
+        if (empty($rows)) {
             return [];
         }
+
         $pluginsList = [];
-        foreach ($search as $value) {
-            $pluginsList[] = $value['name'];
+        foreach ($rows as $row) {
+            $name = $row->get('name');
+            if (is_string($name) && $name !== '') {
+                $pluginsList[] = $name;
+            }
         }
+
         return $pluginsList;
     }
 
-    private function checkIfNeedToBeInstalled($pluginsInFolder, $pluginsInDB)
+    private function checkIfNeedToBeInstalled(array $pluginsInFolder, array $pluginsInDB): bool
     {
         if (empty($pluginsInFolder)) {
             return false;
@@ -257,59 +315,65 @@ class EyPluginComponent extends Component
         }
 
         foreach ($diff as $value) {
-            $this->install($value);
+            $this->install((string)$value);
         }
 
         return true;
     }
 
-    public function install($slug, $downloaded = false)
+    public function install(string $slug, bool $downloaded = false): mixed
     {
         if (!$this->isValid($slug)) {
             if ($downloaded) {
                 clearDir($this->pluginsFolder . DIRECTORY_SEPARATOR . $slug);
             }
             Plugin::unload($slug);
+
             return 'ERROR__PLUGIN_NOT_VALID';
         }
 
         $addTables = $this->editDatabaseWithSchema($slug, 'CREATE');
-        if ($addTables['status']) {
-            $tablesName = $addTables['tables'];
-        } else {
+        if (!is_array($addTables) || empty($addTables['status'])) {
             return 'ERROR__PLUGIN_SQL_INSTALLATION';
         }
 
         $config = json_decode((string)file_get_contents($this->pluginsFolder . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'config.json'));
-
-        $this->addPermissions($config->permissions);
-
-        $id = null;
-        if (($findPlugin = $this->models->Plugin->find('first', ['conditions' => ['name' => $config->name]]))) {
-            $id = $findPlugin['id'];
+        if (!is_object($config)) {
+            return 'ERROR__PLUGIN_NOT_VALID';
         }
-        $pl = $this->models->Plugin->get($id);
-        $pl->set([
-            'name' => $slug,
-            'author' => $config->author,
-            'version' => $config->version
-        ]);
-        $this->models->Plugin->save($pl);
 
-        if (file_exists($this->pluginsFolder . $slug . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component' . DIRECTORY_SEPARATOR . 'MainComponent.php')) {
+        $this->addPermissions($config->permissions ?? null);
+
+        $existing = $this->models->Plugin->find()->where(['name' => (string)$config->name])->first();
+        $entity = $existing ?: $this->models->Plugin->newEmptyEntity();
+
+        $entity->set([
+            'name' => $slug,
+            'author' => (string)($config->author ?? ''),
+            'version' => (string)($config->version ?? ''),
+        ]);
+
+        $this->models->Plugin->save($entity);
+
+        $mainPath = $this->pluginsFolder . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component' . DIRECTORY_SEPARATOR . 'MainComponent.php';
+        if (file_exists($mainPath)) {
             App::uses('MainComponent', 'Plugin' . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component');
-            $this->Main = new \MainComponent();
+            $this->Main = new MainComponent();
             $this->Main->onEnable();
         }
 
-        $this->controller->addPlugin();
+        if (method_exists($this->controller, 'addPlugin')) {
+            $this->controller->addPlugin();
+        }
+
         Plugin::load([$slug => ['routes' => true, 'bootstrap' => true]]);
+
         return true;
     }
 
-    private function editDatabaseWithSchema($slug, $type, $update = false)
+    private function editDatabaseWithSchema(string $slug, string $type, bool $update = false): array|false
     {
-        if (!$slug || !in_array($type, ['CREATE', 'DROP'], true)) {
+        if ($slug === '' || !in_array($type, ['CREATE', 'DROP'], true)) {
             return false;
         }
 
@@ -321,21 +385,30 @@ class EyPluginComponent extends Component
             'file' => 'schemaUpdate.php',
             'plugin' => null,
             'connection' => 'default',
-            'models' => false
+            'models' => false,
         ];
 
-        $get_new_file = file_get_contents($options['path'] . DIRECTORY_SEPARATOR . 'schema.php');
-        $replace_class_name = str_replace('AppSchema', 'AppUpdateSchema', $get_new_file);
+        $sourceSchema = @file_get_contents($options['path'] . DIRECTORY_SEPARATOR . 'schema.php');
+        if (!is_string($sourceSchema) || $sourceSchema === '') {
+            return ['status' => false, 'error' => ['schema.php unreadable']];
+        }
+
+        $replace_class_name = str_replace('AppSchema', 'AppUpdateSchema', $sourceSchema);
         file_put_contents($options['path'] . DIRECTORY_SEPARATOR . $options['file'], $replace_class_name);
-        $this->Schema = new \CakeSchema($options);
+
+        $this->Schema = new CakeSchema($options);
 
         $db = ConnectionManager::get('default');
-        $db->cacheSources = false;
+        if (property_exists($db, 'cacheSources')) {
+            $db->cacheSources = false;
+        }
 
         $currentSchema = $this->Schema->read($options);
         $pluginSchema = $this->Schema->load($options);
         $compare = $this->Schema->compare($currentSchema, $pluginSchema);
-        unlink($options['path'] . DIRECTORY_SEPARATOR . $options['file']);
+
+        @unlink($options['path'] . DIRECTORY_SEPARATOR . $options['file']);
+
         $pluginTables = [];
         $contents = [];
 
@@ -346,9 +419,9 @@ class EyPluginComponent extends Component
                 }
 
                 if (isset($changes['add'])) {
-                    if (explode('__', $table)[0] !== strtolower($slug)) {
+                    if (explode('__', (string)$table)[0] !== strtolower($slug)) {
                         foreach ($changes['add'] as $column => $structure) {
-                            if (explode('-', $column)[0] !== strtolower($slug)) {
+                            if (explode('-', (string)$column)[0] !== strtolower($slug)) {
                                 unset($compare[$table]['add'][$column]);
                             }
                         }
@@ -357,7 +430,7 @@ class EyPluginComponent extends Component
 
                 if (isset($compare[$table]['drop'])) {
                     foreach ($compare[$table]['drop'] as $column => $structure) {
-                        if (explode('-', $column)[0] !== strtolower($slug) && explode('__', $table)[0] !== strtolower($slug)) {
+                        if (explode('-', (string)$column)[0] !== strtolower($slug) && explode('__', (string)$table)[0] !== strtolower($slug)) {
                             unset($compare[$table]['drop'][$column]);
                         }
                     }
@@ -371,29 +444,31 @@ class EyPluginComponent extends Component
                 }
 
                 if (isset($compare[$table]) && count($compare[$table]) > 0) {
-                    $contents[$table] = $db->alterSchema([$table => $compare[$table]], $table);
+                    $contents[$table] = $db->alterSchema([$table => $compare[$table]], (string)$table);
                 }
             }
 
             foreach ($compare as $table => $changes) {
                 if (isset($changes['create'])) {
-                    $contents[$table] = $db->createSchema($pluginSchema, $table);
-                    $pluginTables[] = $table;
+                    $contents[$table] = $db->createSchema($pluginSchema, (string)$table);
+                    $pluginTables[] = (string)$table;
                 }
             }
-        } elseif ($type === 'DROP') {
-            foreach ($currentSchema['tables'] as $table => $columns) {
-                if (explode('__', $table)[0] === strtolower($slug)) {
+        }
+
+        if ($type === 'DROP') {
+            foreach (($currentSchema['tables'] ?? []) as $table => $columns) {
+                if (explode('__', (string)$table)[0] === strtolower($slug)) {
                     try {
-                        $db->query('DROP TABLE IF EXISTS ' . $table);
+                        $db->execute('DROP TABLE IF EXISTS ' . $table);
                     } catch (Exception $e) {
                         $this->log('Error when delete plugin ' . $slug . ' : ' . $e->getMessage());
                     }
                 } else {
-                    foreach ($columns as $name => $structure) {
-                        if (explode('-', $name)[0] === strtolower($slug)) {
+                    foreach ((array)$columns as $name => $structure) {
+                        if (explode('-', (string)$name)[0] === strtolower($slug)) {
                             try {
-                                $db->query('ALTER TABLE `' . $table . '` DROP COLUMN `' . $name . '`;');
+                                $db->execute('ALTER TABLE `' . $table . '` DROP COLUMN `' . $name . '`;');
                             } catch (Exception $e) {
                                 $this->log('Error when delete plugin ' . $slug . ' : ' . $e->getMessage());
                             }
@@ -410,7 +485,7 @@ class EyPluginComponent extends Component
                     continue;
                 }
                 try {
-                    $db->execute($query);
+                    $db->execute((string)$query);
                 } catch (PDOException $e) {
                     $error[] = $table . ': ' . $e->getMessage();
                     $this->log('MYSQL Schema update for "' . $slug . '" plugin (' . $type . ') : ' . $e->getMessage());
@@ -420,14 +495,16 @@ class EyPluginComponent extends Component
 
         if ($type === 'CREATE') {
             $updateEntries = [];
-            if (file_exists($this->pluginsFolder . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Schema' . DIRECTORY_SEPARATOR . 'update-entries.php')) {
-                include $this->pluginsFolder . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Schema' . DIRECTORY_SEPARATOR . 'update-entries.php';
+            $updateEntriesFile = $this->pluginsFolder . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Schema' . DIRECTORY_SEPARATOR . 'update-entries.php';
+            if (file_exists($updateEntriesFile)) {
+                include $updateEntriesFile;
             }
+
             $this->Schema->after([], !$update, $updateEntries);
 
             if (!empty($error)) {
                 foreach ($error as $key => $value) {
-                    if (strpos($value, 'Base table or view already exists') !== false) {
+                    if (strpos((string)$value, 'Base table or view already exists') !== false) {
                         unset($error[$key]);
                     }
                 }
@@ -440,22 +517,23 @@ class EyPluginComponent extends Component
         if (empty($error) && $type === 'DROP') {
             return ['status' => true];
         }
+
         return ['status' => false, 'error' => $error];
     }
 
-    private function addPermissions($permissionConfig)
+    private function addPermissions(mixed $permissionConfig): void
     {
-        if (!isset($permissionConfig->default) || empty($permissionConfig->default)) {
+        if (!is_object($permissionConfig) || !isset($permissionConfig->default) || empty($permissionConfig->default)) {
             return;
         }
 
         foreach ($permissionConfig->default as $rank => $permissions) {
-            $searchRank = $this->models->Permission->find('first', ['conditions' => ['rank' => $rank]]);
-            if (empty($searchRank)) {
+            $rankEntity = $this->models->Permission->find()->where(['rank' => $rank])->first();
+            if (!$rankEntity) {
                 continue;
             }
 
-            $raw = $searchRank['Permission']['permissions'] ?? null;
+            $raw = $rankEntity->get('permissions');
             $rankPermissions = [];
             if (is_string($raw) && $raw !== '') {
                 $tmp = @unserialize($raw);
@@ -464,19 +542,18 @@ class EyPluginComponent extends Component
                 }
             }
 
-            foreach ($permissions as $perm) {
+            foreach ((array)$permissions as $perm) {
                 if (!in_array($perm, $rankPermissions, true)) {
                     $rankPermissions[] = $perm;
                 }
             }
 
-            $this->models->Permission->read(null, $searchRank['Permission']['id']);
-            $this->models->Permission->set(['permissions' => serialize($rankPermissions)]);
-            $this->models->Permission->save();
+            $rankEntity->set('permissions', serialize($rankPermissions));
+            $this->models->Permission->save($rankEntity);
         }
     }
 
-    private function checkIfNeedToBeDeleted($pluginsInFolder, $pluginsInDB)
+    private function checkIfNeedToBeDeleted(array $pluginsInFolder, array $pluginsInDB): bool
     {
         if (empty($pluginsInFolder)) {
             return false;
@@ -488,32 +565,33 @@ class EyPluginComponent extends Component
         }
 
         foreach ($diff as $value) {
-            $this->delete($value, true);
+            $this->delete((string)$value);
         }
 
         $this->refreshPermissions();
-        this->clearCakeCache();
+        $this->clearCakeCache();
 
         return true;
     }
 
-    public function delete($slug)
+    public function delete(string $slug): bool
     {
-        if (empty($slug)) {
+        if ($slug === '') {
             return false;
         }
 
-        if (file_exists($this->pluginsFolder . $slug . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component' . DIRECTORY_SEPARATOR . 'MainComponent.php')) {
+        $mainPath = $this->pluginsFolder . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component' . DIRECTORY_SEPARATOR . 'MainComponent.php';
+        if (file_exists($mainPath)) {
             App::uses('MainComponent', 'Plugin' . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component');
-            $this->Main = new \MainComponent();
+            $this->Main = new MainComponent();
             $this->Main->onDisable();
         }
 
         $this->editDatabaseWithSchema($slug, 'DROP');
 
-        $plugin = $this->models->Plugin->find('first', ['conditions' => ['name' => $slug]]);
-        if (!empty($plugin)) {
-            $this->models->Plugin->delete($plugin['id']);
+        $pluginEntity = $this->models->Plugin->find()->where(['name' => $slug])->first();
+        if ($pluginEntity) {
+            $this->models->Plugin->delete($pluginEntity);
         }
 
         clearDir($this->pluginsFolder . DIRECTORY_SEPARATOR . $slug);
@@ -523,29 +601,32 @@ class EyPluginComponent extends Component
         return true;
     }
 
-    public function clearCakeCache()
+    public function clearCakeCache(): void
     {
         Cache::clearAll();
     }
 
-    private function refreshPermissions()
+    private function refreshPermissions(): void
     {
-        $defaultPermissions = $this->controller->Permissions->permissions;
-        $pluginsPermissions = [];
+        $defaultPermissions = $this->controller->Permissions->permissions ?? [];
+        if (!is_array($defaultPermissions)) {
+            $defaultPermissions = [];
+        }
 
-        foreach ($this->loadPlugins() as $data) {
+        $pluginsPermissions = [];
+        foreach ((array)$this->loadPlugins() as $data) {
             if (!isset($data->permissions->available)) {
                 continue;
             }
-            foreach ($data->permissions->available as $permission) {
+            foreach ((array)$data->permissions->available as $permission) {
                 $pluginsPermissions[] = $permission;
             }
         }
 
-        $searchPermissions = $this->models->Permission->find('all');
+        $ranks = $this->models->Permission->find()->all();
 
-        foreach ($searchPermissions as $rank) {
-            $raw = $rank['Permission']['permissions'] ?? null;
+        foreach ($ranks as $rankEntity) {
+            $raw = $rankEntity->get('permissions');
             $permissions = [];
             if (is_string($raw) && $raw !== '') {
                 $tmp = @unserialize($raw);
@@ -559,6 +640,7 @@ class EyPluginComponent extends Component
 
             foreach ($permissions as $key => $perm) {
                 $shouldRemove = false;
+
                 if (!in_array($perm, $defaultPermissions, true) && !in_array($perm, $pluginsPermissions, true)) {
                     $shouldRemove = true;
                 }
@@ -574,40 +656,38 @@ class EyPluginComponent extends Component
             }
 
             if (count($permissions) !== count($permissionsBeforeCheck)) {
-                $permission = $this->models->Permission->get($rank['Permission']['id']);
-                $permission->set(['permissions' => serialize(array_values($permissions))]);
-                $this->models->Permission->save($permission);
+                $rankEntity->set('permissions', serialize(array_values($permissions)));
+                $this->models->Permission->save($rankEntity);
             }
         }
     }
 
-    public function loadPlugins()
+    public function loadPlugins(): object
     {
-        $dbPlugins = $this->models->Plugin->find('all');
+        $dbPlugins = $this->models->Plugin->find()->all();
         $pluginList = (object)[];
         $loadedCakePlugins = Plugin::loaded();
 
         foreach ($dbPlugins as $plugin) {
-            $config = $this->getPluginConfig($plugin['name']);
+            $name = (string)$plugin->get('name');
+            $config = $this->getPluginConfig($name);
             if (!is_object($config)) {
-                Plugin::unload($plugin['name']);
+                Plugin::unload($name);
                 continue;
             }
 
-            $id = strtolower($plugin['author'] . '.' . $plugin['name']);
+            $author = (string)$plugin->get('author');
+            $id = strtolower($author . '.' . $name);
+
             $pluginList->$id = $config;
             $pluginList->$id->id = $id;
-            $pluginList->$id->slug = $plugin['name'];
-            $pluginList->$id->slugLower = strtolower($plugin['name']);
-            $pluginList->$id->DBid = $plugin['id'];
-            $pluginList->$id->DBinstall = $plugin['created'];
-            $pluginList->$id->active = $plugin['state'];
+            $pluginList->$id->slug = $name;
+            $pluginList->$id->slugLower = strtolower($name);
+            $pluginList->$id->DBid = (int)$plugin->get('id');
+            $pluginList->$id->DBinstall = $plugin->get('created');
+            $pluginList->$id->active = (bool)$plugin->get('state');
             $pluginList->$id->isValid = $this->isValid($pluginList->$id->slug);
-            $pluginList->$id->loaded = false;
-
-            if (in_array($plugin['name'], $loadedCakePlugins, true)) {
-                $pluginList->$id->loaded = true;
-            }
+            $pluginList->$id->loaded = in_array($name, $loadedCakePlugins, true);
 
             if (!$pluginList->$id->isValid || !$pluginList->$id->active) {
                 $pluginList->$id->loaded = false;
@@ -618,24 +698,25 @@ class EyPluginComponent extends Component
         return $pluginList;
     }
 
-    public function getPluginConfig($slug, $array = false)
+    public function getPluginConfig(string $slug, bool $array = false): mixed
     {
-        $config = @json_decode(@file_get_contents($this->pluginsFolder . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'config.json'), $array);
-        if (!$config) {
-            return false;
-        }
-        return $config;
+        $path = $this->pluginsFolder . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'config.json';
+        $config = @json_decode((string)@file_get_contents($path), $array);
+
+        return $config ?: false;
     }
 
-    public function displayAvailableUpdate()
+    public function displayAvailableUpdate(): ?string
     {
         $pluginList = $this->pluginsLoaded;
-        if (!empty($pluginList)) {
-            $versions = $this->getPluginsLastVersion(array_map(function ($plugin) {
+
+        if (!empty((array)$pluginList)) {
+            $versions = $this->getPluginsLastVersion(array_map(static function ($plugin) {
                 return $plugin->slug;
             }, (array)$pluginList));
+
             foreach ($pluginList as $value) {
-                $lastVersion = isset($versions[$value->slug]) ? $versions[$value->slug] : false;
+                $lastVersion = $versions[$value->slug] ?? false;
                 if ($lastVersion && $value->version !== $lastVersion) {
                     return '<div class="alert alert-secondary">'
                         . __('UPDATE__AVAILABLE_TYPE_PLUGIN') . ' '
@@ -647,22 +728,26 @@ class EyPluginComponent extends Component
                 }
             }
         }
+
+        return null;
     }
 
-    public function getPluginsLastVersion(array $slug)
+    public function getPluginsLastVersion(array $slug): array|false
     {
         $plugins = $this->getPluginsFromAPI($slug);
         if ($plugins === false) {
             return false;
         }
+
         $versions = [];
         foreach ($plugins as $plugin) {
             $versions[$plugin->slug] = $plugin->version;
         }
+
         return $versions;
     }
 
-    public function getPluginsFromAPI(array $slugs)
+    public function getPluginsFromAPI(array $slugs): array|false
     {
         $plugins = $this->getFreePlugins(true);
         if ($plugins === false) {
@@ -678,23 +763,25 @@ class EyPluginComponent extends Component
                 }
             }
         }
+
         return $pluginsToFind;
     }
 
-    public function getFreePlugins($all = false, $removeInstalledPlugins = false)
+    public function getFreePlugins(bool $all = false, bool $removeInstalledPlugins = false): array|false
     {
-        $pluginsList = @json_decode($this->controller->sendGetRequest($this->reference), true);
+        $pluginsList = @json_decode((string)$this->controller->sendGetRequest($this->reference), true);
 
         $plugins = [];
         if ($pluginsList) {
             $free_plugins = [];
             foreach ($pluginsList as $plugin) {
-                if ($plugin['free']) {
+                if (!empty($plugin['free'])) {
                     $free_plugins[] = $plugin;
                 } elseif ($all) {
                     $plugins[] = $plugin;
                 }
             }
+
             $plu = $this->getPluginsFromRepoNames(array_column($free_plugins, 'repo'));
             if ($plu) {
                 $i = 0;
@@ -709,7 +796,7 @@ class EyPluginComponent extends Component
 
         if ($removeInstalledPlugins) {
             $installedPlugins = [];
-            foreach ($this->pluginsLoaded as $config) {
+            foreach ((array)$this->pluginsLoaded as $config) {
                 $installedPlugins[] = $config->slug;
             }
             foreach ($plugins as $key => $plugin) {
@@ -722,28 +809,22 @@ class EyPluginComponent extends Component
         return $plugins;
     }
 
-    private function getPluginFromRepoName($repo)
-    {
-        $configUrl = 'https://raw.githubusercontent.com/' . $repo . '/master/config.json';
-        $config = @json_decode($this->controller->sendGetRequest($configUrl), true);
-        if (!$config) {
-            return false;
-        }
-        $config['repo'] = $repo;
-        return $config;
-    }
-
-    private function getPluginsFromRepoNames($repos)
+    private function getPluginsFromRepoNames(array $repos): array|false
     {
         $urls = [];
         foreach ($repos as $repo) {
             $urls[] = 'https://raw.githubusercontent.com/' . $repo . '/master/config.json';
         }
+
         $result = $this->controller->sendMultipleGetRequests($urls);
+        if (!is_array($result)) {
+            return false;
+        }
+
         $results = [];
         $i = 0;
         foreach ($result as $val) {
-            $json = json_decode($val, true);
+            $json = json_decode((string)$val, true);
             if (!$json) {
                 $i++;
                 continue;
@@ -752,124 +833,72 @@ class EyPluginComponent extends Component
             $results[] = $json;
             $i++;
         }
+
         return $results;
     }
 
-    public function initEventsListeners($controller)
+    public function initEventsListeners($controller): void
     {
-        foreach ($this->pluginsLoaded as $plugin) {
-            if (!$plugin->useEvents || !$plugin->loaded) {
+        foreach ((array)$this->pluginsLoaded as $plugin) {
+            if (empty($plugin->useEvents) || empty($plugin->loaded)) {
                 continue;
             }
+
             $slugFormated = ucfirst(strtolower($plugin->slug));
             $eventFolder = $this->pluginsFolder . DIRECTORY_SEPARATOR . $plugin->slug . DIRECTORY_SEPARATOR . 'Event';
             $path = $eventFolder . DIRECTORY_SEPARATOR . $slugFormated . '*EventListener.php';
 
-            foreach (glob($path) as $eventFile) {
-                $className = str_replace('.php', '', basename($eventFile));
-
+            foreach (glob($path) ?: [] as $eventFile) {
+                $className = str_replace('.php', '', basename((string)$eventFile));
                 App::uses($className, 'Plugin' . DIRECTORY_SEPARATOR . $plugin->slug . DIRECTORY_SEPARATOR . 'Event');
                 $controller->getEventManager()->attach(new $className($controller->request, $controller->response, $controller));
             }
         }
     }
 
-    public function getPluginsActive()
+    public function getPluginsActive(): object
     {
-        $plugins = $this->pluginsLoaded;
         $pluginList = (object)[];
 
-        foreach ($plugins as $key => $value) {
-            if ($value->loaded) {
+        foreach ((array)$this->pluginsLoaded as $key => $value) {
+            if (!empty($value->loaded)) {
                 $pluginList->$key = $value;
             }
         }
+
         return $pluginList;
     }
 
-    public function update($slug)
-    {
-        $config = $this->getPluginFromAPI($slug);
-        if (!$config || empty($config)) {
-            return 'ERROR__PLUGIN_REQUIREMENTS';
-        }
-
-        $dl = $this->download($slug);
-        if ($dl !== true) {
-            return $dl;
-        }
-
-        Plugin::unload($slug);
-        $pluginConfig = json_decode((string)file_get_contents($this->pluginsFolder . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'config.json'), true);
-        $pluginVersion = $pluginConfig['version'];
-
-        $searchPlugin = $this->models->Plugin->find('first', ['conditions' => ['name' => $slug]]);
-        $pluginDBID = $searchPlugin['id'];
-
-        if (file_exists($this->pluginsFolder . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Update' . DIRECTORY_SEPARATOR . 'beforeSchema.php')) {
-            try {
-                include $this->pluginsFolder . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Update' . DIRECTORY_SEPARATOR . 'beforeSchema.php';
-            } catch (Exception $e) {
-                $this->log('Error on plugin update (' . $slug . ') - ' . $e->getMessage());
-            }
-            unlink($this->pluginsFolder . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Update' . DIRECTORY_SEPARATOR . 'beforeSchema.php');
-        }
-
-        $addTables = $this->editDatabaseWithSchema($slug, 'CREATE', true);
-        if ($addTables['status']) {
-            $pluginTables = $addTables['tables'];
-        } else {
-            return 'ERROR__PLUGIN_SQL_INSTALLATION';
-        }
-
-        if (file_exists($this->pluginsFolder . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Update' . DIRECTORY_SEPARATOR . 'afterSchema.php')) {
-            try {
-                include $this->pluginsFolder . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Update' . DIRECTORY_SEPARATOR . 'afterSchema.php';
-            } catch (Exception $e) {
-                $this->log('Error on plugin update (' . $slug . ') - ' . $e->getMessage());
-            }
-            unlink($this->pluginsFolder . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Update' . DIRECTORY_SEPARATOR . 'afterSchema.php');
-        }
-
-        $this->models->Plugin->read(null, $pluginDBID);
-        $this->models->Plugin->set(['version' => $pluginVersion, 'tables' => serialize($pluginTables)]);
-        $this->models->Plugin->save();
-        $this->refreshPermissions();
-
-        $this->clearCakeCache();
-        Plugin::load([$slug => ['routes' => true, 'bootstrap' => true]]);
-
-        return true;
-    }
-
-    public function getPluginFromAPI($slug)
+    public function getPluginFromAPI(string $slug): mixed
     {
         $plugins = $this->getPluginsFromAPI([$slug]);
         if (!$plugins || !isset($plugins[$slug])) {
             return false;
         }
+
         return $plugins[$slug];
     }
 
-    public function download($slug, $install = false)
+    public function download(string $slug, bool $install = false): mixed
     {
         $config = $this->getPluginFromAPI($slug);
         if (!$this->requirements($slug, $config)) {
             return 'ERROR__PLUGIN_REQUIREMENTS';
         }
 
-        $zip = $this->controller->sendGetRequest('https://github.com/MineWeb/Plugin-' . $slug . '/archive/master.zip');
-        if (!$zip) {
+        $zipContent = $this->controller->sendGetRequest('https://github.com/MineWeb/Plugin-' . $slug . '/archive/master.zip');
+        if (!$zipContent) {
             return 'ERROR__PLUGIN_CANT_BE_DOWNLOADED';
         }
 
         $zipFile = ROOT . DIRECTORY_SEPARATOR . 'tmp' . DIRECTORY_SEPARATOR . 'plugin-' . $slug . '.zip';
         $file = fopen($zipFile, 'w+');
-        if (!$file || fwrite($file, $zip) === false) {
+        if (!$file || fwrite($file, $zipContent) === false) {
             if ($file) {
                 fclose($file);
             }
             $this->log('Error when downloading plugin, save files failed.');
+
             return 'ERROR__PLUGIN_PERMISSIONS';
         }
         fclose($file);
@@ -878,36 +907,45 @@ class EyPluginComponent extends Component
         $res = $zip->open($zipFile);
         if ($res !== true) {
             $this->log('Error when downloading plugin, unable to open zip. (CODE: ' . $res . ')');
+
             return 'ERROR__PLUGIN_PERMISSIONS';
         }
+
         $pluginDir = ROOT . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . $slug;
         if (!file_exists($pluginDir) && !mkdir($pluginDir, 0755, true) && !is_dir($pluginDir)) {
             return 'ERROR__PLUGIN_PERMISSIONS';
         }
+
         for ($i = 0; $i < $zip->numFiles; $i++) {
-            $filename = $zip->getNameIndex($i);
+            $filename = (string)$zip->getNameIndex($i);
             $fileinfo = pathinfo($filename);
             $stat = $zip->statIndex($i);
-            if ($fileinfo['basename'] === 'Plugin-' . $slug . '-master') {
+
+            if (($fileinfo['basename'] ?? '') === 'Plugin-' . $slug . '-master') {
                 continue;
             }
 
             $target = 'zip://' . $zipFile . '#' . $filename;
             $dest = $pluginDir . substr($filename, strlen('Plugin-' . $slug . '-master'));
-            if ($stat['size'] === 0 && !str_contains($filename, '.')) {
-                if (!file_exists($dest) && !mkdir($dest, 0755, true) && !is_dir($dest)) {
+
+            if (!empty($stat['size']) || $stat['size'] !== 0) {
+                if (!copy($target, $dest)) {
+                    $zip->close();
+
                     return 'ERROR__PLUGIN_PERMISSIONS';
                 }
                 continue;
             }
-            if (!copy($target, $dest)) {
-                $zip->close();
-                return 'ERROR__PLUGIN_PERMISSIONS';
+
+            if (!str_contains($filename, '.')) {
+                if (!file_exists($dest) && !mkdir($dest, 0755, true) && !is_dir($dest)) {
+                    return 'ERROR__PLUGIN_PERMISSIONS';
+                }
             }
         }
-        $zip->close();
 
-        unlink($zipFile);
+        $zip->close();
+        @unlink($zipFile);
 
         $macPath = $this->pluginsFolder . DIRECTORY_SEPARATOR . '__MACOSX';
         $this->deleteDirectoryIfExists($macPath);
@@ -921,8 +959,9 @@ class EyPluginComponent extends Component
             return;
         }
 
-        $iterator = new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS);
-        $files = new \RecursiveIteratorIterator($iterator, \RecursiveIteratorIterator::CHILD_FIRST);
+        $iterator = new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS);
+        $files = new RecursiveIteratorIterator($iterator, RecursiveIteratorIterator::CHILD_FIRST);
+
         foreach ($files as $file) {
             if ($file->isDir()) {
                 @rmdir($file->getPathname());
@@ -930,19 +969,20 @@ class EyPluginComponent extends Component
                 @unlink($file->getPathname());
             }
         }
+
         @rmdir($dir);
     }
 
-    private function requirements($name, $config = false)
+    private function requirements(string $name, mixed $config = false): bool
     {
         if (!$config) {
             $config = $this->getPluginConfig($name);
         }
 
         if (is_object($config)) {
-            $requirements = isset($config->requirements) && !empty($config->requirements) ? $config->requirements : null;
+            $requirements = !empty($config->requirements) ? $config->requirements : null;
         } else {
-            $requirements = isset($config['requirements']) && !empty($config['requirements']) ? $config['requirements'] : null;
+            $requirements = !empty($config['requirements']) ? $config['requirements'] : null;
         }
 
         if (empty($requirements)) {
@@ -954,22 +994,25 @@ class EyPluginComponent extends Component
         foreach ($requirements as $type => $version) {
             if ($type === 'CMS') {
                 $versionToCompare = trim((string)@file_get_contents(ROOT . DIRECTORY_SEPARATOR . 'VERSION'));
-            } elseif (count(explode('--', $type)) === 2) {
-                $typeExploded = explode('--', $type);
-                $kind = $typeExploded[0];
-                $id = $typeExploded[1];
+            } elseif (count(explode('--', (string)$type)) === 2) {
+                $typeExploded = explode('--', (string)$type);
+                $kind = $typeExploded[0] ?? '';
+                $id = $typeExploded[1] ?? '';
 
                 if ($kind === 'plugin') {
                     $search = $this->findPlugin('id', $id);
                     if (empty($search)) {
                         $this->log('Plugin : ' . $name . ' can\'t be installed, plugin ' . $id . ' is missing !');
+
                         return false;
                     }
-                    $versionToCompare = $this->getPluginConfig($search->slug)->version;
+                    $pluginCfg = $this->getPluginConfig($search->slug);
+                    $versionToCompare = is_object($pluginCfg) ? (string)$pluginCfg->version : '';
                 } elseif ($kind === 'theme') {
                     $findThemeVersion = $this->__findThemeVersion($id);
                     if (!$findThemeVersion) {
                         $this->log('Plugin : ' . $name . ' can\'t be installed, theme ' . $id . ' is missing !');
+
                         return false;
                     }
                     $versionToCompare = $findThemeVersion;
@@ -981,14 +1024,16 @@ class EyPluginComponent extends Component
             }
 
             try {
-                $neededVersion = $versionParser->parse($version);
+                $neededVersion = $versionParser->parse((string)$version);
             } catch (Exception $e) {
                 $this->log('Plugin: Version exception: ' . $e->getMessage());
+
                 return false;
             }
 
-            if (!$neededVersion->complies(new Version($versionToCompare))) {
+            if (!$neededVersion->complies(new Version((string)$versionToCompare))) {
                 $this->log('Plugin : ' . $name . ' can\'t be installed, requirements not fulfilled (' . $type . ' ' . $version . ') !');
+
                 return false;
             }
         }
@@ -996,20 +1041,21 @@ class EyPluginComponent extends Component
         return true;
     }
 
-    public function findPlugin($key, $value)
+    public function findPlugin(string $key, mixed $value): mixed
     {
-        foreach ($this->pluginsLoaded as $data) {
+        foreach ((array)$this->pluginsLoaded as $data) {
             if (isset($data->$key) && $data->$key == $value) {
                 return $data;
             }
         }
+
         return null;
     }
 
-    private function __findThemeVersion($id)
+    private function __findThemeVersion(string $id): string|false
     {
         $themeFolder = ROOT . DIRECTORY_SEPARATOR . 'View' . DIRECTORY_SEPARATOR . 'Themed';
-        $themeFolderContent = scandir($themeFolder);
+        $themeFolderContent = @scandir($themeFolder);
         if ($themeFolderContent === false) {
             return false;
         }
@@ -1020,51 +1066,54 @@ class EyPluginComponent extends Component
             if (in_array($value, $bypassedFiles, true)) {
                 continue;
             }
+
             $configPath = $themeFolder . $value;
-            $themeConfig = json_decode((string)file_get_contents($configPath), true);
+            $themeConfig = json_decode((string)@file_get_contents($configPath), true);
             if (!$themeConfig) {
                 continue;
             }
-            $themeId = $themeConfig['author'] . '.' . $value;
 
+            $themeId = ($themeConfig['author'] ?? '') . '.' . $value;
             if ($themeId === $id) {
-                return $themeConfig['version'];
+                return (string)($themeConfig['version'] ?? '');
             }
         }
 
         return false;
     }
 
-    public function isInstalled($id)
+    public function isInstalled(string $id): bool
     {
         $find = $this->findPlugin('id', $id);
-        return (!empty($find) && $find->loaded);
+
+        return !empty($find) && !empty($find->loaded);
     }
 
-    public function findPluginsLinks()
+    public function findPluginsLinks(): array
     {
         $plugins = [];
-        foreach ($this->pluginsLoaded as $data) {
+        foreach ((array)$this->pluginsLoaded as $data) {
             if (isset($data->navbar_routes)) {
                 $plugins[$data->slug] = (object)['name' => $data->name, 'routes' => $data->navbar_routes];
             }
         }
+
         return $plugins;
     }
 
-    public function enable($dbID)
+    public function enable(int $dbID): bool
     {
-        $this->models->Plugin->read(null, $dbID);
-        $this->models->Plugin->set(['state' => 1]);
-        $this->models->Plugin->save();
+        $entity = $this->models->Plugin->get($dbID);
+        $entity->set('state', 1);
+        $this->models->Plugin->save($entity);
 
-        $plugin = $this->models->Plugin->find('first', ['id' => $dbID]);
-        $pluginName = $plugin['name'];
+        $pluginName = (string)$entity->get('name');
 
-        if (file_exists($this->pluginsFolder . DIRECTORY_SEPARATOR . $pluginName . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component' . DIRECTORY_SEPARATOR . 'MainComponent.php')) {
+        $mainPath = $this->pluginsFolder . DIRECTORY_SEPARATOR . $pluginName . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component' . DIRECTORY_SEPARATOR . 'MainComponent.php';
+        if (file_exists($mainPath)) {
             App::uses('MainComponent', $this->pluginsFolder . DIRECTORY_SEPARATOR . $pluginName . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component');
             if (class_exists('MainComponent')) {
-                $this->Main = new \MainComponent();
+                $this->Main = new MainComponent();
                 $this->Main->onEnable();
             }
         }
@@ -1074,19 +1123,19 @@ class EyPluginComponent extends Component
         return true;
     }
 
-    public function disable($dbID)
+    public function disable(int $dbID): bool
     {
-        $this->models->Plugin->read(null, $dbID);
-        $this->models->Plugin->set(['state' => 0]);
-        $this->models->Plugin->save();
+        $entity = $this->models->Plugin->get($dbID);
+        $entity->set('state', 0);
+        $this->models->Plugin->save($entity);
 
-        $plugin = $this->models->Plugin->find('first', ['id' => $dbID]);
-        $pluginName = $plugin['name'];
+        $pluginName = (string)$entity->get('name');
 
-        if (file_exists($this->pluginsFolder . DIRECTORY_SEPARATOR . $pluginName . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component' . DIRECTORY_SEPARATOR . 'MainComponent.php')) {
+        $mainPath = $this->pluginsFolder . DIRECTORY_SEPARATOR . $pluginName . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component' . DIRECTORY_SEPARATOR . 'MainComponent.php';
+        if (file_exists($mainPath)) {
             App::uses('MainComponent', $this->pluginsFolder . DIRECTORY_SEPARATOR . $pluginName . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component');
             if (class_exists('MainComponent')) {
-                $this->Main = new \MainComponent();
+                $this->Main = new MainComponent();
                 $this->Main->onDisable();
             }
         }
@@ -1097,12 +1146,13 @@ class EyPluginComponent extends Component
         return true;
     }
 
-    public function getPluginLastVersion($slug)
+    public function getPluginLastVersion(string $slug): bool
     {
         $plugin = $this->getPluginFromAPI($slug);
         if (!$plugin) {
             return false;
         }
+
         return $plugin->version;
     }
 }

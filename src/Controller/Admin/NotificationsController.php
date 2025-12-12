@@ -141,7 +141,7 @@ class NotificationsController extends AppController
         }
 
         $notificationsTable = $this->fetchTable('Notifications');
-        $from = $fromFlag ? $this->User->getKey('id') : null;
+        $from = $fromFlag ? $this->User->get('id') : null;
 
         if ($userIdRaw === 'all') {
             $notificationsTable->setToAll($content, $from);

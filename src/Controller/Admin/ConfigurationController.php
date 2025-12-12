@@ -30,24 +30,24 @@ class ConfigurationController extends AppController
                 $data[$key] = $value === '' ? null : $value;
             }
 
-            $hash = (string)$this->Configuration->getKey('passwords_hash');
+            $hash = (string)$this->config->get('passwords_hash');
             $this->User->updateAll(
                 ['password_hash' => $hash],
                 ['password_hash IS' => null]
             );
 
-            $configEntity = $this->Configuration->get(1);
+            $configEntity = $this->config->get(1);
             $configEntity->set($data);
-            $this->Configuration->saveOrFail($configEntity);
+            $this->config->saveOrFail($configEntity);
 
             $this->History->set('EDIT_CONFIGURATION', 'configuration');
 
-            $this->Configuration->clearCache();
+            $this->config->clearCache();
 
             $this->Flash->success(__('CONFIG__EDIT_SUCCESS'));
         }
 
-        $config = $this->Configuration->getAll();
+        $config = $this->config->getAll();
 
         if ($config !== null) {
             $config['lang'] = I18n::getLocale();

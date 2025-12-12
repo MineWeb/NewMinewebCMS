@@ -41,16 +41,16 @@ class HistoryController extends AppController
         $this->DataTable->setTable($historyTable);
 
         $this->paginate = [
-            'contain' => ['User'],
+            'contain' => ['Users'],
             'fields' => [
-                'History.id',
-                'User.pseudo',
-                'History.action',
-                'History.user_id',
-                'History.category',
-                'History.created',
+                'Histories.id',
+                'Users.pseudo',
+                'Histories.action',
+                'Histories.user_id',
+                'Histories.category',
+                'Histories.created',
             ],
-            'order' => 'History.id DESC',
+            'order' => 'Histories.id DESC',
             'recursive' => 1,
         ];
 

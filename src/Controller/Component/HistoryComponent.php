@@ -30,7 +30,7 @@ class HistoryComponent extends Component
         // j'inclue le fichier lang
         $this->User = TableRegistry::getTableLocator()->get('Users');
 
-        $user_id = empty($user_id) ? $this->User->getKey('id') : $user_id;
+        $user_id = empty($user_id) ? $this->User->get('id') : $user_id;
 
         $this->History = TableRegistry::getTableLocator()->get('Histories'); // le model history
         $history = $this->History->newEntity([

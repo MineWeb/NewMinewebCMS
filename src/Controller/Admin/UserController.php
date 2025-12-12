@@ -4,24 +4,49 @@ declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
+use App\Service\ConfigurationService;
+use App\Service\UserAuthService;
 use App\Utility\LangService;
 use Cake\Event\Event;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
-use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 
+/**
+ * @property \App\Controller\Component\AuthComponent $Auth
+ * @property \App\Controller\Component\FlashComponent $Flash
+ * @property \App\Controller\Component\EyPluginComponent $EyPlugin
+ * @property \App\Controller\Component\HistoryComponent $History
+ * @property \App\Controller\Component\DataTableComponent $DataTable
+ * @property \App\Model\Table\UsersTable $Users
+ * @property \App\Model\Table\HistoriesTable $Histories
+ */
 class UserController extends AppController
 {
+    private UserAuthService $userAuth;
+
+    public function initialize(): void
+    {
+        parent::initialize();
+
+        $this->Users = $this->fetchTable('Users');
+        $this->Histories = $this->fetchTable('Histories');
+
+        $this->userAuth = new UserAuthService();
+
+        $this->loadComponent('DataTable');
+    }
+
     public function index(): ?Response
     {
         if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_USERS'))) {
             return $this->redirect('/');
         }
 
+        $config = new ConfigurationService();
         $this->set('title_for_layout', __('USER__TITLE'));
-        $this->set('type', $this->Configuration->getKey('member_page_type'));
+        $this->set('type', (string)$config->get('member_page_type'));
 
         $this->viewBuilder()
             ->setLayout('admin')
@@ -44,19 +69,21 @@ class UserController extends AppController
             return $this->response->withStringBody(json_encode(['status' => false]));
         }
 
-        $result = $this->User
-            ->find('all', ['conditions' => ['pseudo LIKE' => $query . '%']])
+        $result = $this->Users
+            ->find()
+            ->select(['id', 'pseudo'])
+            ->where(['Users.pseudo LIKE' => $query . '%'])
             ->all();
 
         $users = [];
-        foreach ($result as $value) {
+        foreach ($result as $entity) {
             $users[] = [
-                'pseudo' => $value['pseudo'],
-                'id' => $value['id'],
+                'pseudo' => (string)$entity->get('pseudo'),
+                'id' => (int)$entity->get('id'),
             ];
         }
 
-        $response = empty($result)
+        $response = empty($users)
             ? ['status' => false]
             : ['status' => true, 'data' => $users];
 
@@ -72,7 +99,7 @@ class UserController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        if (!$this->request->is('ajax')) {
+        if (!$this->getRequest()->is('ajax')) {
             return $this->response->withStringBody(json_encode([]));
         }
 
@@ -83,18 +110,17 @@ class UserController extends AppController
             4 => ['label' => 'danger', 'name' => __('USER__RANK_ADMINISTRATOR')],
         ];
 
-        $rankTable = TableRegistry::getTableLocator()->get('Ranks');
+        $rankTable = $this->fetchTable('Ranks');
         $customRanks = $rankTable->find()->all();
 
         foreach ($customRanks as $value) {
-            $availableRanks[$value['rank_id']] = [
+            $availableRanks[(int)$value->get('rank_id')] = [
                 'label' => 'info',
-                'name' => $value['name'],
+                'name' => (string)$value->get('name'),
             ];
         }
 
-        $this->DataTable = $this->loadComponent('DataTable');
-        $this->DataTable->setTable($this->User);
+        $this->DataTable->setTable($this->Users);
 
         $this->paginate = [
             'fields' => ['Users.id', 'Users.pseudo', 'Users.email', 'Users.created', 'Users.rank'],
@@ -103,26 +129,27 @@ class UserController extends AppController
         $this->DataTable->mDataProp = true;
         $response = $this->DataTable->getResponse();
 
-        $users = $response['aaData'];
+        $users = $response['aaData'] ?? [];
         $data = [];
 
         foreach ($users as $value) {
-            $username = $value['pseudo'];
+            $username = (string)$value['pseudo'];
             $date = 'Le ' . LangService::date($value['created']);
 
-            $rankLabel = $availableRanks[$value['rank']]['label'] ?? $availableRanks[0]['label'];
-            $rankName = $availableRanks[$value['rank']]['name'] ?? $availableRanks[0]['name'];
+            $rankId = (int)($value['rank'] ?? 0);
+            $rankLabel = $availableRanks[$rankId]['label'] ?? $availableRanks[0]['label'];
+            $rankName = $availableRanks[$rankId]['name'] ?? $availableRanks[0]['name'];
 
             $rankHtml = '<span class="label label-' . $rankLabel . '">' . $rankName . '</span>';
 
             $editUrl = Router::url([
                 '_name' => 'admin_user_edit',
-                $value['id'],
+                (int)$value['id'],
             ]);
 
             $deleteUrl = Router::url([
                 '_name' => 'admin_user_delete',
-                $value['id'],
+                (int)$value['id'],
             ]);
 
             $btns = '<a href="' . $editUrl . '" class="btn btn-info">' . __('GLOBAL__EDIT') . '</a>';
@@ -131,7 +158,7 @@ class UserController extends AppController
             $data[] = [
                 'User' => [
                     'pseudo' => $username,
-                    'email' => $value['email'],
+                    'email' => (string)$value['email'],
                     'created' => $date,
                     'rank' => $rankHtml,
                 ],
@@ -156,17 +183,17 @@ class UserController extends AppController
 
         $this->set('title_for_layout', __('USER__EDIT_TITLE'));
 
-        $searchUser = $this->User
-            ->find('all', ['conditions' => $this->User->makeCondition($search)])
+        $searchUser = $this->Users
+            ->find()
+            ->where($this->Users->makeCondition($search))
             ->first();
 
         if ($searchUser === null) {
             throw new NotFoundException();
         }
 
-        $historyTable = TableRegistry::getTableLocator()->get('Histories');
-        $lastHistory = $historyTable->getLastFromUser($searchUser['id']);
-        $searchUser['History'] = $historyTable->format($lastHistory);
+        $lastHistory = $this->Histories->getLastFromUser((int)$searchUser->get('id'));
+        $searchUser->set('History', $this->Histories->format($lastHistory));
 
         $optionsRanks = [
             0 => __('USER__RANK_MEMBER'),
@@ -175,21 +202,21 @@ class UserController extends AppController
             4 => __('USER__RANK_SUPER_ADMINISTRATOR'),
         ];
 
-        $rankTable = TableRegistry::getTableLocator()->get('Ranks');
+        $rankTable = $this->fetchTable('Ranks');
         $customRanks = $rankTable->find()->all();
 
         foreach ($customRanks as $value) {
-            $optionsRanks[$value['rank_id']] = $value['name'];
+            $optionsRanks[(int)$value->get('rank_id')] = (string)$value->get('name');
         }
 
         if (
-            $this->Configuration->getKey('confirm_mail_signup')
-            && !empty($searchUser['confirmed'])
-            && date('Y-m-d H:i:s', strtotime($searchUser['confirmed'])) !== $searchUser['confirmed']
+            $this->config->get('confirm_mail_signup')
+            && !empty($searchUser->get('confirmed'))
+            && date('Y-m-d H:i:s', strtotime((string)$searchUser->get('confirmed'))) !== (string)$searchUser->get('confirmed')
         ) {
-            $searchUser['confirmed'] = false;
+            $searchUser->set('confirmed', false);
         } else {
-            $searchUser['confirmed'] = true;
+            $searchUser->set('confirmed', true);
         }
 
         $this->set(compact('optionsRanks', 'searchUser'));
@@ -210,16 +237,18 @@ class UserController extends AppController
             throw new NotFoundException();
         }
 
-        $find = $this->User
-            ->find('all', ['conditions' => ['id' => $user_id]])
+        $find = $this->Users
+            ->find()
+            ->select(['id'])
+            ->where(['Users.id' => (int)$user_id])
             ->first();
 
-        if (empty($find)) {
+        if ($find === null) {
             throw new NotFoundException();
         }
 
         $event = new Event('beforeConfirmAccount', $this, [
-            'user_id' => $find['id'],
+            'user_id' => (int)$find->get('id'),
             'manual' => true,
         ]);
         $this->getEventManager()->dispatch($event);
@@ -230,13 +259,13 @@ class UserController extends AppController
             return $result instanceof Response ? $result : $this->response;
         }
 
-        $user = $this->User->get($find['id']);
+        $user = $this->Users->get((int)$find->get('id'));
         $user->set(['confirmed' => date('Y-m-d H:i:s')]);
-        $this->User->save($user);
+        $this->Users->save($user);
 
         return $this->redirect([
             '_name' => 'admin_user_edit',
-            $user_id,
+            (int)$user_id,
         ]);
     }
 
@@ -271,20 +300,30 @@ class UserController extends AppController
             ]));
         }
 
-        $findUser = $this->User
-            ->find('all', ['conditions' => ['id' => (int)$id]])
+        $findUser = $this->Users
+            ->find()
+            ->where(['Users.id' => (int)$id])
             ->first();
 
-        if (empty($findUser)) {
+        if ($findUser === null) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('USER__EDIT_ERROR_UNKNOWN'),
             ]));
         }
 
+        $current = $this->Auth->user();
+        $currentId = null;
+        $currentRank = null;
+
+        if (is_object($current)) {
+            $currentId = $current->get('id');
+            $currentRank = $current->get('rank');
+        }
+
         if (
-            $findUser['id'] === $this->User->getKey('id')
-            && (string)$rank !== (string)$this->User->getKey('rank')
+            (int)$findUser->get('id') === (int)$currentId
+            && (string)$rank !== (string)$currentRank
         ) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
@@ -301,9 +340,10 @@ class UserController extends AppController
 
         $passwordUpdated = false;
 
-        $newPassword = $request->getData('password');
-        if (!empty($newPassword)) {
-            $data['password'] = $this->Util->password($newPassword, $findUser['pseudo']);
+        $newPassword = (string)$request->getData('password');
+        if ($newPassword !== '') {
+            $data['password'] = $this->userAuth->hashPassword($newPassword);
+            $data['password_hash'] = $this->userAuth->getPasswordHashType();
             $passwordUpdated = true;
         }
 
@@ -312,7 +352,7 @@ class UserController extends AppController
         }
 
         $event = new Event('beforeEditUser', $this, [
-            'user_id' => $findUser['id'],
+            'user_id' => (int)$findUser->get('id'),
             'data' => $data,
             'password_updated' => $passwordUpdated,
         ]);
@@ -324,9 +364,9 @@ class UserController extends AppController
             return $result instanceof Response ? $result : $this->response;
         }
 
-        $user = $this->User->get($findUser['id']);
+        $user = $this->Users->get((int)$findUser->get('id'));
         $user->set($data);
-        $this->User->save($user);
+        $this->Users->save($user);
 
         $this->History->set('EDIT_USER', 'user');
         $this->Flash->success(__('USER__EDIT_SUCCESS'));
@@ -346,11 +386,12 @@ class UserController extends AppController
         }
 
         if ($id !== null) {
-            $find = $this->User
-                ->find('all', ['conditions' => ['id' => $id]])
+            $find = $this->Users
+                ->find()
+                ->where(['Users.id' => (int)$id])
                 ->first();
 
-            if (!empty($find)) {
+            if ($find !== null) {
                 $event = new Event('beforeDeleteUser', $this, ['user' => $find]);
                 $this->getEventManager()->dispatch($event);
 
@@ -360,7 +401,7 @@ class UserController extends AppController
                     return $result instanceof Response ? $result : $this->response;
                 }
 
-                $this->User->delete($this->User->get($id));
+                $this->Users->delete($this->Users->get((int)$id));
                 $this->History->set('DELETE_USER', 'user');
                 $this->Flash->success(__('USER__DELETE_SUCCESS'));
             } else {

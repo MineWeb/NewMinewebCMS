@@ -141,7 +141,7 @@ class NewsController extends AppController
         $entity = $newsTable->newEntity([
             'title' => $title,
             'content' => $content,
-            'user_id' => $this->User->getKey('id'),
+            'user_id' => $this->User->get('id'),
             'updated' => date('Y-m-d H:i:s'),
             'comments' => 0,
             'likes' => 0,

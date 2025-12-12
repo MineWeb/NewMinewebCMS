@@ -29,6 +29,11 @@ use Cake\View\View;
  * @property \App\View\Helper\LangHelper $Lang
  * @property \App\View\Helper\AuthHelper $Auth
  * @property \App\View\Helper\SeoHelper $Seo
+ * @property \App\View\Helper\NavbarHelper $Navbar
+ * @property \App\View\Helper\WebsiteInfoHelper $WebsiteInfo
+ * @property \App\View\Helper\AdminUiHelper $AdminUi
+ * @property \App\View\Helper\ConfigHelper $Config
+ * @property \App\View\Helper\SocialButtonHelper $SocialButtons
  */
 class AppView extends View
 {
@@ -48,5 +53,10 @@ class AppView extends View
         $this->loadHelper('Lang');
         $this->loadHelper('Auth');
         $this->loadHelper('Seo');
+        $this->loadHelper('Navbar');
+        $this->loadHelper('WebsiteInfo');
+        $this->loadHelper('AdminUi');
+        $this->loadHelper('Config');
+        $this->loadHelper('SocialButton');
     }
 }

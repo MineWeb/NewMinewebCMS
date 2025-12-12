@@ -8,6 +8,7 @@ use Cake\Database\Expression\QueryExpression;
 use Cake\I18n\FrozenTime;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use Cake\Utility\Security;
+use Throwable;
 
 final class UserAuthService
 {
@@ -16,8 +17,8 @@ final class UserAuthService
     private function configurationKey(string $key): mixed
     {
         try {
-            return $this->fetchTable('Configurations')->getKey($key);
-        } catch (\Throwable) {
+            return $this->fetchTable('Configurations')->get($key);
+        } catch (Throwable) {
             return null;
         }
     }
@@ -25,7 +26,8 @@ final class UserAuthService
     public function getPasswordHashType(): string
     {
         $hash = $this->configurationKey('passwords_hash');
-        return (is_string($hash) && $hash !== '') ? $hash : 'bcrypt';
+
+        return is_string($hash) && $hash !== '' ? $hash : 'bcrypt';
     }
 
     public function hashPassword(string $password): string
@@ -34,18 +36,19 @@ final class UserAuthService
 
         if ($type === 'bcrypt' || $type === 'blowfish') {
             $hashed = password_hash($password, PASSWORD_BCRYPT);
+
             return is_string($hashed) ? $hashed : '';
         }
 
         $salt = $this->configurationKey('passwords_salt');
-        $saltValue = (is_string($salt) && $salt !== '') ? $salt : false;
+        $saltValue = is_string($salt) && $salt !== '' ? $salt : false;
 
         return (string)Security::hash($password, $type, $saltValue);
     }
 
     public function verifyPassword(string $password, string $storedHash, ?string $storedType): bool
     {
-        $type = (is_string($storedType) && $storedType !== '') ? $storedType : $this->getPasswordHashType();
+        $type = is_string($storedType) && $storedType !== '' ? $storedType : $this->getPasswordHashType();
 
         if ($storedHash === '') {
             return false;
@@ -56,7 +59,7 @@ final class UserAuthService
         }
 
         $salt = $this->configurationKey('passwords_salt');
-        $saltValue = (is_string($salt) && $salt !== '') ? $salt : false;
+        $saltValue = is_string($salt) && $salt !== '' ? $salt : false;
 
         $computed = (string)Security::hash($password, $type, $saltValue);
 
@@ -65,12 +68,13 @@ final class UserAuthService
 
     public function needsRehash(string $storedHash, ?string $storedType): bool
     {
-        $type = (is_string($storedType) && $storedType !== '') ? $storedType : $this->getPasswordHashType();
+        $type = is_string($storedType) && $storedType !== '' ? $storedType : $this->getPasswordHashType();
 
         if ($type === 'bcrypt' || $type === 'blowfish') {
             if ($storedHash === '') {
                 return true;
             }
+
             return password_needs_rehash($storedHash, PASSWORD_BCRYPT);
         }
 
@@ -116,7 +120,7 @@ final class UserAuthService
         string $inputPassword,
         string $ip,
         bool $confirmEmailIsNeeded,
-        bool $checkUUID
+        bool $checkUUID,
     ): array|string {
         $LoginRetries = $this->fetchTable('LoginRetries');
         $Users = $this->fetchTable('Users');
