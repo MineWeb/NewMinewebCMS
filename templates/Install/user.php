@@ -120,7 +120,7 @@
                 </div>
 
                 <p>
-                    <a href="<?= $this->Url->build(['_name' => 'install_run']) ?>"
+                    <a href="<?= $this->Url->build('/') ?>"
                        class="btn btn-block btn-success">
                         <?= __('INSTALL__GO_TO_INDEX') ?>
                     </a>

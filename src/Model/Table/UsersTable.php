@@ -23,6 +23,7 @@ class UsersTable extends Table
         $this->belongsTo('Ranks', [
             'foreignKey' => 'rank',
             'bindingKey' => 'rank_id',
+            'propertyName' => 'rank_entity',
         ]);
 
         $this->hasMany('News', ['foreignKey' => 'user_id']);
@@ -115,7 +116,6 @@ class UsersTable extends Table
         $rules->add($rules->isUnique(['username']));
         $rules->add($rules->isUnique(['email']));
         $rules->add($rules->isUnique(['uuid']));
-        $rules->add($rules->existsIn(['rank'], 'Ranks'));
 
         return $rules;
     }

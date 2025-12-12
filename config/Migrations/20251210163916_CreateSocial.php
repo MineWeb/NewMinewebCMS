@@ -7,11 +7,7 @@ final class CreateSocial extends AbstractMigration
 {
     public function change(): void
     {
-        $table = $this->table('social_buttons', [
-            'encoding' => 'latin1',
-            'collation' => 'latin1_swedish_ci',
-            'engine' => 'InnoDB',
-        ]);
+        $table = $this->table('social_buttons');
 
         $table
             ->addColumn('order', 'integer', ['null' => false, 'limit' => 2, 'signed' => false])

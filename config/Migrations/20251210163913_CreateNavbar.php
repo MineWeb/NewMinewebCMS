@@ -7,11 +7,7 @@ final class CreateNavbar extends AbstractMigration
 {
     public function change(): void
     {
-        $table = $this->table('navbars', [
-            'encoding' => 'latin1',
-            'collation' => 'latin1_swedish_ci',
-            'engine' => 'InnoDB',
-        ]);
+        $table = $this->table('navbars');
 
         $table
             ->addColumn('order_by', 'integer', ['null' => false, 'limit' => 2, 'signed' => false])

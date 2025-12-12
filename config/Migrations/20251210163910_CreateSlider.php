@@ -7,11 +7,7 @@ final class CreateSlider extends AbstractMigration
 {
     public function change(): void
     {
-        $table = $this->table('sliders', [
-            'encoding' => 'latin1',
-            'collation' => 'latin1_swedish_ci',
-            'engine' => 'InnoDB',
-        ]);
+        $table = $this->table('sliders');
 
         $table
             ->addColumn('title', 'string', ['null' => false, 'limit' => 50])

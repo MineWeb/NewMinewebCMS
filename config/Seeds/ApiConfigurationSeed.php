@@ -21,7 +21,7 @@ class ApiConfigurationSeed extends AbstractSeed
                 'cape_height' => 32,
                 'get_premium_skins' => 1,
                 'use_skin_restorer' => 0,
-                'skin_restorer_server_id' => 0,
+                'skin_restorer_server_id' => null,
             ],
         ];
 

@@ -7,11 +7,7 @@ final class CreateMaintenance extends AbstractMigration
 {
     public function change(): void
     {
-        $table = $this->table('maintenances', [
-            'encoding' => 'latin1',
-            'collation' => 'latin1_swedish_ci',
-            'engine' => 'InnoDB',
-        ]);
+        $table = $this->table('maintenances');
 
         $table
             ->addColumn('sub_url', 'integer', ['null' => false, 'default' => 0, 'limit' => 1, 'signed' => false])

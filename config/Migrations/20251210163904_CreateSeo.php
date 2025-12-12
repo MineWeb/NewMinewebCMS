@@ -7,11 +7,7 @@ final class CreateSeo extends AbstractMigration
 {
     public function change(): void
     {
-        $table = $this->table('seo', [
-            'encoding' => 'latin1',
-            'collation' => 'latin1_swedish_ci',
-            'engine' => 'InnoDB',
-        ]);
+        $table = $this->table('seo');
 
         $table
             ->addColumn('title', 'string', ['null' => true, 'default' => null, 'limit' => 255])

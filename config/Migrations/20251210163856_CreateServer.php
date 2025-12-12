@@ -7,11 +7,7 @@ final class CreateServer extends AbstractMigration
 {
     public function change(): void
     {
-        $table = $this->table('servers', [
-            'encoding' => 'latin1',
-            'collation' => 'latin1_swedish_ci',
-            'engine' => 'InnoDB',
-        ]);
+        $table = $this->table('servers');
 
         $table
             ->addColumn('name', 'string', ['null' => false, 'limit' => 20])

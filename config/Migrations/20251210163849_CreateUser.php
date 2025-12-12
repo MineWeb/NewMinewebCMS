@@ -7,11 +7,7 @@ final class CreateUser extends AbstractMigration
 {
     public function change(): void
     {
-        $table = $this->table('users', [
-            'encoding' => 'latin1',
-            'collation' => 'latin1_swedish_ci',
-            'engine' => 'InnoDB',
-        ]);
+        $table = $this->table('users');
 
         $table
             ->addColumn('username', 'string', ['null' => false])

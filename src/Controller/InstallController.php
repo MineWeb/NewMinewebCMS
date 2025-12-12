@@ -37,6 +37,14 @@ class InstallController extends BaseController
         if (InstallState::isInstalled()) {
             $this->setResponse($this->redirect(['_name' => 'home']));
             $event->stopPropagation();
+            return;
+        }
+
+        $path = (string)$this->request->getUri()->getPath();
+
+        if (strncmp($path, '/install', 8) !== 0 && $path !== '/') {
+            $this->setResponse($this->redirect(['_name' => 'install_index']));
+            $event->stopPropagation();
         }
     }
 
@@ -105,7 +113,7 @@ class InstallController extends BaseController
         $compatible['curl'] = extension_loaded('curl');
         $compatible['gd2'] = function_exists('imagettftext');
         $compatible['openZip'] = function_exists('zip_open');
-        $compatible['openSSL'] = function_exists('openssl_pkey_new');
+        $compatible['openSSL'] = extension_loaded('openssl');
 
         if (!$compatible['pdo']) {
             $help['pdo'] = 'L extension pdo_mysql n est pas activee.';
@@ -123,20 +131,20 @@ class InstallController extends BaseController
             $help['openZip'] = 'L extension zip n est pas activee.';
         }
 
+        if (!$compatible['openSSL']) {
+            $help['openSSL'] = 'L extension OpenSSL n est pas activee.';
+        }
+
         $compatible['rewriteUrl'] = true;
 
         $allowUrlFopen = false;
         if (function_exists('ini_get') && ini_get('allow_url_fopen') === '1') {
             $allowUrlFopen = true;
         } else {
-            if (InstallState::isInstalled()) {
+            $context = stream_context_create(['http' => ['timeout' => 1]]);
+            $probe = @file_get_contents('https://google.fr', false, $context);
+            if ($probe !== false) {
                 $allowUrlFopen = true;
-            } else {
-                $context = stream_context_create(['http' => ['timeout' => 1]]);
-                $probe = @file_get_contents('https://google.fr', false, $context);
-                if ($probe !== false) {
-                    $allowUrlFopen = true;
-                }
             }
         }
 
@@ -361,7 +369,9 @@ class InstallController extends BaseController
 
         try {
             $migrations->migrate();
-            $migrations->seed(['seed' => 'ConfigurationSeed']);
+            $migrations->seed([
+                'seed' => 'ConfigurationSeed',
+            ]);
         } catch (Throwable $e) {
             Log::error('Migration or seed failed: ' . $e->getMessage());
         }
@@ -448,7 +458,7 @@ class InstallController extends BaseController
             'username' => (string)$data['username'],
             'email' => (string)$data['email'],
             'password' => (string)$data['password'],
-            'rank' => 4,
+            'rank' => 2,
         ];
 
         $userId = $auth->createUser($dataToSave, $ip);
@@ -458,7 +468,7 @@ class InstallController extends BaseController
                 ->withType('application/json')
                 ->withStringBody(json_encode([
                     'statut' => false,
-                    'msg' => __('ERROR__UNKNOWN'),
+                    'msg' => __('ERROR__INTERNAL_ERROR'),
                 ]));
         }
 
@@ -469,6 +479,7 @@ class InstallController extends BaseController
             ->withStringBody(json_encode([
                 'statut' => true,
                 'msg' => __('USER__REGISTER_SUCCESS'),
+                'redirect' => '/',
             ]));
     }
 }

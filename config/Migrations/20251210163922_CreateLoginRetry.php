@@ -7,11 +7,7 @@ final class CreateLoginRetry extends AbstractMigration
 {
     public function change(): void
     {
-        $table = $this->table('login_retries', [
-            'encoding' => 'latin1',
-            'collation' => 'latin1_swedish_ci',
-            'engine' => 'InnoDB',
-        ]);
+        $table = $this->table('login_retries');
 
         $table
             ->addColumn('ip', 'string', ['null' => false, 'limit' => 50])

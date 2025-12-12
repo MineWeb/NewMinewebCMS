@@ -16,7 +16,7 @@
          data-install-url="<?= $this->Url->build(['_name' => 'install_run']) ?>">
         <?= $this->Form->create(null, [
             'id' => 'saveDB',
-            'data-ajax' => 'true'
+            'data-ajax' => 'true',
         ]) ?>
 
         <div class="form-group">
@@ -53,7 +53,7 @@
             </div>
         </div>
 
-        <button type="submit" class="btn btn-success pull-right">
+        <button type="submit" class="btn btn-success pull-right saveDB">
             <?= __('INSTALL__DB_TEST_AND_SAVE') ?>
         </button>
 

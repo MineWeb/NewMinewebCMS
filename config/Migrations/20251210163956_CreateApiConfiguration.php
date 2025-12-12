@@ -7,11 +7,7 @@ final class CreateApiConfiguration extends AbstractMigration
 {
     public function change(): void
     {
-        $table = $this->table('api_configurations', [
-            'encoding' => 'latin1',
-            'collation' => 'latin1_swedish_ci',
-            'engine' => 'InnoDB',
-        ]);
+        $table = $this->table('api_configurations');
 
         $table
             ->addColumn('skins', 'integer', ['null' => false, 'default' => 0, 'limit' => 1, 'signed' => false])
@@ -26,13 +22,10 @@ final class CreateApiConfiguration extends AbstractMigration
             ->addColumn('cape_height', 'integer', ['null' => true, 'default' => 32, 'signed' => false])
             ->addColumn('get_premium_skins', 'integer', ['null' => false, 'default' => 1, 'limit' => 1, 'signed' => false])
             ->addColumn('use_skin_restorer', 'integer', ['null' => false, 'default' => 0, 'limit' => 1, 'signed' => false])
-            ->addColumn('skin_restorer_server_id', 'integer', ['null' => true, 'default' => null, 'limit' => 8, 'signed' => false])
+            ->addColumn('skin_restorer_server_id', 'integer', ['null' => true, 'default' => null])
             ->addTimestamps()
             ->addIndex(['skin_restorer_server_id'])
-            ->create();
-
-        $table
             ->addForeignKey('skin_restorer_server_id', 'servers', 'id', ['delete' => 'SET_NULL', 'update' => 'NO_ACTION'])
-            ->update();
+            ->create();
     }
 }

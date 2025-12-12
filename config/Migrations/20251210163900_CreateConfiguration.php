@@ -7,11 +7,7 @@ final class CreateConfiguration extends AbstractMigration
 {
     public function change(): void
     {
-        $table = $this->table('configurations', [
-            'encoding' => 'latin1',
-            'collation' => 'latin1_swedish_ci',
-            'engine' => 'InnoDB',
-        ]);
+        $table = $this->table('configurations');
 
         $table
             ->addColumn('website_url', 'text', ['null' => false, 'default' => 'https://domain.fr'])

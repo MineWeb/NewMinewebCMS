@@ -7,24 +7,18 @@ final class CreateComment extends AbstractMigration
 {
     public function change(): void
     {
-        $table = $this->table('comments', [
-            'encoding' => 'latin1',
-            'collation' => 'latin1_swedish_ci',
-            'engine' => 'InnoDB',
-        ]);
+        $table = $this->table('comments');
 
         $table
             ->addColumn('content', 'text', ['null' => false])
             ->addTimestamps()
-            ->addColumn('user_id', 'integer', ['null' => false, 'limit' => 20, 'signed' => false])
-            ->addColumn('news_id', 'integer', ['null' => false, 'limit' => 20, 'signed' => false])
+            ->addColumn('user_id', 'integer', ['null' => false])
+            ->addColumn('news_id', 'integer', ['null' => false])
             ->addIndex(['user_id'])
             ->addIndex(['news_id'])
-            ->create();
-
-        $table
             ->addForeignKey('user_id', 'users', 'id', ['delete' => 'CASCADE', 'update' => 'NO_ACTION'])
             ->addForeignKey('news_id', 'news', 'id', ['delete' => 'CASCADE', 'update' => 'NO_ACTION'])
-            ->update();
+            ->create();
+
     }
 }

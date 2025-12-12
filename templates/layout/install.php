@@ -23,6 +23,8 @@
     <?= $this->Html->css('install/animate.min') ?>
     <?= $this->Html->css('install/install') ?>
 
+    <?= $this->Html->meta('csrf-token', $this->request->getAttribute('csrfToken')) ?>
+
 </head>
 <body>
 <div class="page-container">

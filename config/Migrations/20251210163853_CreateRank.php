@@ -7,11 +7,7 @@ final class CreateRank extends AbstractMigration
 {
     public function change(): void
     {
-        $table = $this->table('ranks', [
-            'encoding' => 'latin1',
-            'collation' => 'latin1_swedish_ci',
-            'engine' => 'InnoDB',
-        ]);
+        $table = $this->table('ranks');
 
         $table
             ->addColumn('rank_id', 'integer', ['null' => false, 'signed' => false])

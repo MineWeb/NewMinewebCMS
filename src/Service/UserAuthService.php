@@ -6,6 +6,7 @@ namespace App\Service;
 use App\Model\Entity\User;
 use Cake\Database\Expression\QueryExpression;
 use Cake\I18n\FrozenTime;
+use Cake\Log\Log;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use Cake\Utility\Security;
 use Throwable;
@@ -88,32 +89,35 @@ final class UserAuthService
 
         $username = (string)($data['username'] ?? '');
         $email = (string)($data['email'] ?? '');
+        $plainPassword = (string)($data['password'] ?? '');
 
         $dataToSave = [
-            'username' => htmlentities($username),
-            'email' => htmlentities($email),
+            'username' => $username,
+            'email' => $email,
             'ip' => $ip,
             'rank' => (int)($data['rank'] ?? 0),
             'money' => 0,
             'skin' => 0,
             'cape' => 0,
             'confirmed' => '',
-            'microsoft_user_id' => $data['microsoft_user_id'] ?? null,
-            'registered_by_microsoft' => (bool)($data['registered_by_microsoft'] ?? false),
+            'password' => $this->hashPassword($plainPassword),
+            'password_hash' => $this->getPasswordHashType(),
         ];
 
         if (!empty($data['uuid'])) {
-            $dataToSave['uuid'] = htmlentities((string)$data['uuid']);
+            $dataToSave['uuid'] = (string)$data['uuid'];
         }
 
-        $plainPassword = (string)($data['password'] ?? '');
-        $dataToSave['password'] = $this->hashPassword($plainPassword);
-        $dataToSave['password_hash'] = $this->getPasswordHashType();
-
         $newUser = $Users->newEntity($dataToSave);
-        $Users->save($newUser);
 
-        return (int)($newUser->id ?? 0);
+        $saved = $Users->save($newUser);
+        if (!$saved) {
+            Log::error('CreateUser failed: ' . json_encode($newUser->getErrors(), JSON_UNESCAPED_UNICODE));
+
+            return 0;
+        }
+
+        return (int)$saved->get('id');
     }
 
     public function attemptLogin(

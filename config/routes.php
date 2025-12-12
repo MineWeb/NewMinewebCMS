@@ -14,13 +14,16 @@ return static function (RouteBuilder $routes): void {
 
     $installed = InstallState::isInstalled();
 
+    $routes->scope('/install', function (RouteBuilder $builder): void {
+        $builder->connect('/', ['controller' => 'Install', 'action' => 'index'], ['_name' => 'install_index_alias']);
+        $builder->connect('/database', ['controller' => 'Install', 'action' => 'database'], ['_name' => 'install_database']);
+        $builder->connect('/install', ['controller' => 'Install', 'action' => 'install'], ['_name' => 'install_run']);
+        $builder->connect('/user', ['controller' => 'Install', 'action' => 'user'], ['_name' => 'install_user']);
+    });
+
     if (!$installed) {
         $routes->scope('/', function (RouteBuilder $builder): void {
             $builder->connect('/', ['controller' => 'Install', 'action' => 'index'], ['_name' => 'install_index']);
-            $builder->connect('/install', ['controller' => 'Install', 'action' => 'index'], ['_name' => 'install_index_alias']);
-            $builder->connect('/install/database', ['controller' => 'Install', 'action' => 'database'], ['_name' => 'install_database']);
-            $builder->connect('/install/install', ['controller' => 'Install', 'action' => 'install'], ['_name' => 'install_run']);
-            $builder->connect('/install/user', ['controller' => 'Install', 'action' => 'user'], ['_name' => 'install_user']);
             $builder->connect('/*', ['controller' => 'Install', 'action' => 'database'], ['_name' => 'install_catch_all']);
         });
 

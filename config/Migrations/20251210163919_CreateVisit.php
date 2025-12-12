@@ -7,11 +7,7 @@ final class CreateVisit extends AbstractMigration
 {
     public function change(): void
     {
-        $table = $this->table('visits', [
-            'encoding' => 'latin1',
-            'collation' => 'latin1_swedish_ci',
-            'engine' => 'InnoDB',
-        ]);
+        $table = $this->table('visits');
 
         $table
             ->addColumn('ip', 'string', ['null' => false, 'limit' => 50])

@@ -7,11 +7,7 @@ final class CreatePlugin extends AbstractMigration
 {
     public function change(): void
     {
-        $table = $this->table('plugins', [
-            'encoding' => 'latin1',
-            'collation' => 'latin1_swedish_ci',
-            'engine' => 'InnoDB',
-        ]);
+        $table = $this->table('plugins');
 
         $table
             ->addColumn('name', 'string', ['null' => false, 'limit' => 50])
