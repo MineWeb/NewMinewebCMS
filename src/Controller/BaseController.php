@@ -4,8 +4,10 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use Cake\Controller\Controller;
-use Cake\Http\Response;
 
+/**
+ * @property \Cake\Controller\Component\FlashComponent $Flash
+ */
 class BaseController extends Controller
 {
     public function initialize(): void
@@ -22,5 +24,4 @@ class BaseController extends Controller
 
         return parent::__get($name);
     }
-
 }

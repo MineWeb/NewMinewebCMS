@@ -12,6 +12,8 @@ class NewsTable extends Table
 {
     public function initialize(array $config): void
     {
+        parent::initialize($config);
+
         $this->setTable('news');
         $this->setPrimaryKey('id');
         $this->setDisplayField('title');
@@ -27,14 +29,17 @@ class NewsTable extends Table
 
         $this->belongsTo('Users', [
             'foreignKey' => 'user_id',
+            'joinType' => 'LEFT',
         ]);
 
         $this->hasMany('Comments', [
             'foreignKey' => 'news_id',
+            'dependent' => true,
         ]);
 
         $this->hasMany('Likes', [
             'foreignKey' => 'news_id',
+            'dependent' => true,
         ]);
     }
 
@@ -76,7 +81,7 @@ class NewsTable extends Table
             ->notEmptyString('slug');
 
         $validator
-            ->integer('published')
+            ->boolean('published')
             ->notEmptyString('published');
 
         return $validator;
@@ -89,8 +94,8 @@ class NewsTable extends Table
         return $rules;
     }
 
-    public function find(string $type = 'all', mixed ...$args): Query
+    public function findWithRelations(Query $query, array $options): Query
     {
-        return parent::find($type, $args)->contain(['Users', 'Comments', 'Likes']);
+        return $query->contain(['Users', 'Comments', 'Likes']);
     }
 }

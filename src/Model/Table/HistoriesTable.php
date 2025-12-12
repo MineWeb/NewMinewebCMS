@@ -5,14 +5,17 @@ namespace App\Model\Table;
 
 use App\Utility\LangService;
 use Cake\Datasource\ResultSetInterface;
+use Cake\ORM\Query;
+use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
-use Cake\ORM\RulesChecker;
 
 class HistoriesTable extends Table
 {
     public function initialize(array $config): void
     {
+        parent::initialize($config);
+
         $this->setTable('histories');
         $this->setPrimaryKey('id');
 
@@ -26,6 +29,7 @@ class HistoriesTable extends Table
 
         $this->belongsTo('Users', [
             'foreignKey' => 'user_id',
+            'joinType' => 'LEFT',
         ]);
     }
 
@@ -65,13 +69,19 @@ class HistoriesTable extends Table
         return $rules;
     }
 
+    public function findWithUser(Query $query, array $options): Query
+    {
+        return $query->contain(['Users']);
+    }
+
     public function getLastFromUser(int|string $userId): ResultSetInterface
     {
-        return $this->find('all', [
-            'conditions' => ['user_id' => $userId],
-            'limit' => 50,
-            'order' => ['id' => 'DESC'],
-        ])->all();
+        return $this
+            ->find('withUser')
+            ->where(['Histories.user_id' => $userId])
+            ->orderByDesc('Histories.id')
+            ->limit(50)
+            ->all();
     }
 
     public function format(ResultSetInterface|array $data): array
@@ -83,27 +93,33 @@ class HistoriesTable extends Table
         $return = [];
 
         foreach ($data as $value) {
-            $categoryKey = 'HISTORY__CATEGORY_' . strtoupper((string)$value['category']);
-            $category = __($categoryKey) !== $categoryKey ? __($categoryKey) : $value['category'];
+            $categoryRaw = (string)($value['category'] ?? '');
+            $actionRaw = (string)($value['action'] ?? '');
+            $otherRaw = (string)($value['other'] ?? '');
+            $createdRaw = $value['created'] ?? null;
+
+            $categoryKey = 'HISTORY__CATEGORY_' . strtoupper($categoryRaw);
+            $category = __($categoryKey) !== $categoryKey ? __($categoryKey) : $categoryRaw;
+
+            $actionKey = 'HISTORY__ACTION_' . strtoupper($actionRaw);
+            $action = __($actionKey) !== $actionKey ? __($actionKey) : $actionRaw;
+
             $string = '(' . $category . ') ';
-
-            $string .= 'Le ' . LangService::date($value['created']);
-
-            $actionKey = 'HISTORY__ACTION_' . strtoupper((string)$value['action']);
-            $action = __($actionKey) !== $actionKey ? __($actionKey) : $value['action'];
+            $string .= 'Le ' . LangService::date($createdRaw);
             $string .= ' : ' . $action;
 
-            switch ($value['action']) {
+            switch ($actionRaw) {
                 case 'SEND_MONEY':
-                    $other = explode('|', (string)$value['other']);
+                    $other = explode('|', $otherRaw);
                     if (isset($other[0], $other[1])) {
-                        $string .= ' pour un montant de ' . $other[1] . ' à ' . $this->User->getUsernameByID($other[0]);
+                        $targetPseudo = $this->getAssociation('Users')->getTarget()->getUsernameByID($other[0]);
+                        $string .= ' pour un montant de ' . $other[1] . ' à ' . $targetPseudo;
                     }
                     break;
 
                 case 'BUY_MONEY':
-                    $other = explode('|', (string)$value['other']);
-                    if (empty($other) || !isset($other[1])) {
+                    $other = explode('|', $otherRaw);
+                    if (!isset($other[1])) {
                         break;
                     }
                     $string .= ' pour un montant de ' . $other[1];
@@ -116,16 +132,19 @@ class HistoriesTable extends Table
                     break;
 
                 case 'BUY_ITEM':
-                    $string .= ' l\'article "' . $value['other'] . '"';
+                    if ($otherRaw !== '') {
+                        $string .= ' l\'article "' . $otherRaw . '"';
+                    }
                     break;
 
                 default:
                     break;
             }
 
-            $string .= ' par ' . $value['author'] . '.';
+            $author = (string)($value['author'] ?? 'N/A');
+            $string .= ' par ' . $author . '.';
 
-            $return[$value['id']] = $string;
+            $return[(int)$value['id']] = $string;
         }
 
         return $return;

@@ -13,6 +13,9 @@ use PDO;
 use PDOException;
 use Throwable;
 
+/**
+ * @property \App\Controller\Component\UtilComponent $Util
+ */
 class InstallController extends BaseController
 {
     public function initialize(): void

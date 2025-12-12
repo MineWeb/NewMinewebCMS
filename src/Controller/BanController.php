@@ -5,6 +5,10 @@ namespace App\Controller;
 
 use Cake\Http\Response;
 
+/**
+ * @property bool $isConnected
+ * @property mixed $isBanned
+ */
 class BanController extends AppController
 {
     public function index(): ?Response

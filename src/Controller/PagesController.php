@@ -9,6 +9,13 @@ use Cake\Http\Response;
 use Cake\Log\Log;
 use Cake\View\Exception\MissingViewException;
 
+/**
+ * @property \App\Model\Table\ConfigurationsTable $Configuration
+ * @property \App\Model\Table\UsersTable $User
+ * @property \App\Model\Table\ServersTable $Server
+ *
+ * @property \App\Controller\Component\PermissionsComponent $Permissions
+ */
 class PagesController extends AppController
 {
     public function display(string ...$path): Response

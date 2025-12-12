@@ -4,8 +4,16 @@ declare(strict_types=1);
 namespace App\Model\Entity;
 
 use Cake\ORM\Entity;
-use Cake\ORM\TableRegistry;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string $reason
+ * @property string|null $ip
+ *
+ * @property \App\Model\Entity\User|null $user
+ * @property string $pseudo
+ */
 class Ban extends Entity
 {
     protected array $_accessible = [
@@ -15,11 +23,18 @@ class Ban extends Entity
         'user' => true,
     ];
 
+    protected array $_virtual = [
+        'pseudo',
+    ];
+
     protected function _getPseudo(): string
     {
-        $UserTable = TableRegistry::getTableLocator()->get('Users');
-        $searchUser = $UserTable->find('all', conditions: ['id' => $this->user_id])->first();
+        $user = $this->user ?? null;
 
-        return $searchUser != null ? $searchUser['pseudo'] : 'N/A';
+        if ($user && isset($user->pseudo)) {
+            return (string)$user->pseudo;
+        }
+
+        return 'N/A';
     }
 }

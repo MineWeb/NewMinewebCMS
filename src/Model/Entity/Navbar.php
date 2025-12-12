@@ -5,6 +5,18 @@ namespace App\Model\Entity;
 
 use Cake\ORM\Entity;
 
+/**
+ * @property int $id
+ * @property int|null $order_by
+ * @property string $name
+ * @property string|null $icon
+ * @property string $type
+ * @property string $url
+ * @property string|null $submenu
+ * @property bool|null $open_new_tab
+ *
+ * @property array $url_data
+ */
 class Navbar extends Entity
 {
     protected array $_accessible = [
@@ -17,12 +29,18 @@ class Navbar extends Entity
         'open_new_tab' => true,
     ];
 
+    protected array $_virtual = [
+        'url_data',
+    ];
+
     protected function _getUrlData(?string $url): array
     {
-        if ($this->url == '#') {
+        if ($this->url === '#') {
             return ['type' => 'submenu'];
-        } else {
-            return json_decode($this->url, true);
         }
+
+        $decoded = json_decode($this->url, true);
+
+        return is_array($decoded) ? $decoded : [];
     }
 }

@@ -13,6 +13,23 @@ use Throwable;
 
 define('TIMESTAMP_DEBUT', microtime(true));
 
+/**
+ * @property \App\Controller\Component\UtilComponent $Util
+ * @property \App\Controller\Component\PermissionsComponent $Permissions
+ * @property \App\Controller\Component\EyPluginComponent $EyPlugin
+ * @property \App\Controller\Component\ThemeComponent $Theme
+ *
+ * @property \App\Model\Table\ConfigurationsTable $Configuration
+ * @property \App\Model\Table\UsersTable $User
+ * @property \App\Model\Table\VisitsTable $Visit
+ * @property \App\Model\Table\MaintenancesTable $Maintenance
+ * @property \App\Model\Table\NavbarsTable $Navbar
+ * @property \App\Model\Table\PagesTable $Page
+ * @property \App\Model\Table\SeoTable $Seo
+ * @property \App\Model\Table\SocialButtonsTable $SocialButton
+ * @property \App\Model\Table\BansTable $Ban
+ * @property \App\Model\Table\ServersTable $Server
+ */
 class AppController extends BaseController
 {
     public string $View = 'Theme';

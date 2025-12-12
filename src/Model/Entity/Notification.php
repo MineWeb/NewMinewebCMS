@@ -6,6 +6,19 @@ namespace App\Model\Entity;
 use Cake\I18n\DateTime;
 use Cake\ORM\Entity;
 
+/**
+ * @property int $id
+ * @property string|null $group
+ * @property int $user_id
+ * @property int|null $from
+ * @property string $content
+ * @property string|null $type
+ * @property bool $seen
+ * @property \Cake\I18n\DateTime $created
+ *
+ * @property \App\Model\Entity\User|null $user
+ * @property \App\Model\Entity\User|null $from_user
+ */
 class Notification extends Entity
 {
     protected array $_accessible = [
@@ -19,6 +32,7 @@ class Notification extends Entity
         'user' => true,
         'from_user' => true,
     ];
+
     protected function _getCreated(mixed $created): string
     {
         $created = new DateTime($created);

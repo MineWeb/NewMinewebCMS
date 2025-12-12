@@ -13,6 +13,18 @@ use Cake\I18n\FrozenTime;
 use Cake\Routing\Router;
 use DateTime;
 
+/**
+ * @property \App\Controller\Component\CaptchaComponent $Captcha
+ * @property \App\Controller\Component\APIComponent $API
+ * @property \App\Controller\Component\UtilComponent $Util
+ * @property \App\Controller\Component\PermissionsComponent $Permissions
+ * @property \App\Controller\Component\EyPluginComponent $EyPlugin
+ * @property \App\Controller\Component\HistoryComponent $History
+ *
+ * @property \App\Model\Table\UsersTable $User
+ * @property \App\Model\Table\ServersTable $Server
+ * @property \App\Model\Table\ConfigurationsTable $Configuration
+ */
 class UserController extends AppController
 {
     public function initialize(): void

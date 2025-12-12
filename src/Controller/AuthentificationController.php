@@ -10,9 +10,14 @@ use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
 use Cake\ORM\TableRegistry;
 use DateTime;
-use Exception;
 use RobThree\Auth\TwoFactorAuth;
 
+/**
+ * @property \App\Model\Table\UsersTable $User
+ * @property \App\Model\Table\UsersTwofactorauthTable $Authentification
+ *
+ * @property bool $isConnected
+ */
 class AuthentificationController extends AppController
 {
     public function validLogin(): Response

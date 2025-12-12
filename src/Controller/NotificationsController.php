@@ -7,6 +7,10 @@ use Cake\Event\EventInterface;
 use Cake\Http\Response;
 use Cake\ORM\Table;
 
+/**
+ * @property \App\Model\Table\UsersTable $User
+ * @property \App\Model\Table\NotificationsTable $Notification
+ */
 class NotificationsController extends AppController
 {
     private Table $Notification;

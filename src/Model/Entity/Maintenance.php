@@ -5,6 +5,13 @@ namespace App\Model\Entity;
 
 use Cake\ORM\Entity;
 
+/**
+ * @property int $id
+ * @property string|null $sub_url
+ * @property string|null $url
+ * @property string|null $reason
+ * @property bool $active
+ */
 class Maintenance extends Entity
 {
     protected array $_accessible = [

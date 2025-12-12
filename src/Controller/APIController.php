@@ -5,6 +5,9 @@ namespace App\Controller;
 
 use Cake\Http\Response;
 
+/**
+ * @property \App\Controller\Component\APIComponent $API
+ */
 class APIController extends AppController
 {
     public function initialize(): void

@@ -4,6 +4,7 @@
         <exclude name="CakePHP.Commenting.FunctionComment.Missing"/>
         <exclude name="Generic.Files.LineLength"/>
         <exclude name="Generic.PHP.NoSilencedErrors"/>
+        <exclude name="SlevomatCodingStandard.Functions.RequireTrailingCommaInCall.MissingTrailingComma"/>
     </rule>
 
     <rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint">

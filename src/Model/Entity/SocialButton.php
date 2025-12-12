@@ -5,6 +5,14 @@ namespace App\Model\Entity;
 
 use Cake\ORM\Entity;
 
+/**
+ * @property int $id
+ * @property int|null $order
+ * @property string $title
+ * @property string|null $extra
+ * @property string|null $color
+ * @property string $url
+ */
 class SocialButton extends Entity
 {
     protected array $_accessible = [
@@ -14,5 +22,4 @@ class SocialButton extends Entity
         'color' => true,
         'url' => true,
     ];
-
 }

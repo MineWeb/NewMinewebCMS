@@ -5,6 +5,11 @@ namespace App\Controller;
 
 use Cake\Http\Response;
 
+/**
+ * @property \App\Model\Table\MaintenancesTable $Maintenance
+ *
+ * @property \App\Controller\Component\PermissionsComponent $Permissions
+ */
 class MaintenanceController extends AppController
 {
     public function index(string $url = ''): Response

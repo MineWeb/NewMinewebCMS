@@ -9,6 +9,14 @@ use Cake\Http\Response;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 
+/**
+ * @property \App\Model\Table\UsersTable $User
+ * @property \App\Model\Table\NewsTable $News
+ * @property \App\Model\Table\CommentsTable $Comment
+ * @property \App\Model\Table\LikesTable $Like
+ *
+ * @property \App\Controller\Component\PermissionsComponent $Permissions
+ */
 class NewsController extends AppController
 {
     public function blog(): Response

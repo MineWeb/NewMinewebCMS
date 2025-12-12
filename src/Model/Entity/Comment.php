@@ -5,8 +5,19 @@ namespace App\Model\Entity;
 
 use Cake\I18n\DateTime;
 use Cake\ORM\Entity;
-use Cake\ORM\TableRegistry;
 
+/**
+ * @property int $id
+ * @property string $content
+ * @property \Cake\I18n\DateTime $created
+ * @property int $user_id
+ * @property int $news_id
+ *
+ * @property \App\Model\Entity\User|null $user
+ * @property \App\Model\Entity\News|null $news
+ *
+ * @property string $author
+ */
 class Comment extends Entity
 {
     protected array $_accessible = [
@@ -17,6 +28,11 @@ class Comment extends Entity
         'user' => true,
         'news' => true,
     ];
+
+    protected array $_virtual = [
+        'author',
+    ];
+
     protected function _getCreated(mixed $created): string
     {
         $created = new DateTime($created);
@@ -26,9 +42,12 @@ class Comment extends Entity
 
     protected function _getAuthor(): string
     {
-        $UserTable = TableRegistry::getTableLocator()->get('Users');
-        $searchUser = $UserTable->find('all', conditions: ['id' => $this->user_id])->first();
+        $user = $this->user ?? null;
 
-        return $searchUser != null ? $searchUser['pseudo'] : 'N/A';
+        if ($user && isset($user->pseudo)) {
+            return (string)$user->pseudo;
+        }
+
+        return 'N/A';
     }
 }

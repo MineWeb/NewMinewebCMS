@@ -5,6 +5,14 @@ namespace App\Model\Entity;
 
 use Cake\ORM\Entity;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string $secret
+ * @property bool|int $enabled
+ *
+ * @property \App\Model\Entity\User|null $user
+ */
 class UsersTwofactorauth extends Entity
 {
     protected array $_accessible = [

@@ -5,8 +5,24 @@ namespace App\Model\Entity;
 
 use Cake\I18n\DateTime;
 use Cake\ORM\Entity;
-use Cake\ORM\TableRegistry;
 
+/**
+ * @property int $id
+ * @property string $title
+ * @property string $content
+ * @property int $user_id
+ * @property \Cake\I18n\DateTime $created
+ * @property \Cake\I18n\DateTime $updated
+ * @property string $img
+ * @property string $slug
+ * @property bool $published
+ *
+ * @property \App\Model\Entity\User|null $user
+ * @property iterable<\App\Model\Entity\Comment>|\Cake\Collection\CollectionInterface|null $comments
+ * @property iterable<\App\Model\Entity\Like>|\Cake\Collection\CollectionInterface|null $likes
+ *
+ * @property string $author
+ */
 class News extends Entity
 {
     protected array $_accessible = [
@@ -21,6 +37,10 @@ class News extends Entity
         'user' => true,
         'comments' => true,
         'likes' => true,
+    ];
+
+    protected array $_virtual = [
+        'author',
     ];
 
     protected function _getCreated(mixed $created): string
@@ -39,21 +59,32 @@ class News extends Entity
 
     protected function _getAuthor(): string
     {
-        $UserTable = TableRegistry::getTableLocator()->get('Users');
-        $searchUser = $UserTable->find('all', conditions: ['id' => $this->user_id])->first();
+        $user = $this->user ?? null;
 
-        return $searchUser != null ? $searchUser['pseudo'] : 'N/A';
+        if ($user && isset($user->pseudo)) {
+            return (string)$user->pseudo;
+        }
+
+        return 'N/A';
     }
 
-    protected function _getLiked(): bool
+    public function isLikedBy(?int $userId): bool
     {
-        $LikeTable = TableRegistry::getTableLocator()->get('Likes');
-        $UserTable = TableRegistry::getTableLocator()->get('Users');
-
-        if (!$UserTable->isConnected()) {
+        if ($userId === null) {
             return false;
         }
 
-        return !empty($LikeTable->find('all', conditions: ['user_id' => $UserTable->getKey('id')])->first());
+        $likes = $this->likes ?? null;
+        if (!is_iterable($likes)) {
+            return false;
+        }
+
+        foreach ($likes as $like) {
+            if (isset($like->user_id) && (int)$like->user_id === $userId) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

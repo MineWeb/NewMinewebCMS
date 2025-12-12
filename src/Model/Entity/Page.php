@@ -6,6 +6,17 @@ namespace App\Model\Entity;
 use Cake\I18n\DateTime;
 use Cake\ORM\Entity;
 
+/**
+ * @property int $id
+ * @property string $title
+ * @property string $content
+ * @property string $slug
+ * @property int $user_id
+ * @property \Cake\I18n\DateTime $created
+ * @property \Cake\I18n\DateTime $updated
+ *
+ * @property \App\Model\Entity\User|null $user
+ */
 class Page extends Entity
 {
     protected array $_accessible = [
