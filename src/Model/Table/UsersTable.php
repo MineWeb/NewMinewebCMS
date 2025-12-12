@@ -18,7 +18,7 @@ class UsersTable extends Table
 
         $this->setTable('users');
         $this->setPrimaryKey('id');
-        $this->setDisplayField('pseudo');
+        $this->setDisplayField('username');
 
         $this->belongsTo('Ranks', [
             'foreignKey' => 'rank',
@@ -56,10 +56,10 @@ class UsersTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->scalar('pseudo')
-            ->maxLength('pseudo', 255)
-            ->requirePresence('pseudo', 'create')
-            ->notEmptyString('pseudo');
+            ->scalar('username')
+            ->maxLength('username', 255)
+            ->requirePresence('username', 'create')
+            ->notEmptyString('username');
 
         $validator
             ->scalar('uuid')
@@ -112,7 +112,7 @@ class UsersTable extends Table
 
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique(['pseudo']));
+        $rules->add($rules->isUnique(['username']));
         $rules->add($rules->isUnique(['email']));
         $rules->add($rules->isUnique(['uuid']));
         $rules->add($rules->existsIn(['rank'], 'Ranks'));
@@ -122,8 +122,8 @@ class UsersTable extends Table
 
     public function validRegister(array &$data, UtilComponent $UtilComponent): bool|string
     {
-        if (!preg_match('`^([a-zA-Z0-9_]{2,16})$`', $data['pseudo'] ?? '')) {
-            return 'USER__ERROR_PSEUDO_INVALID_FORMAT';
+        if (!preg_match('`^([a-zA-Z0-9_]{2,16})$`', $data['username'] ?? '')) {
+            return 'USER__ERROR_USERNAME_INVALID_FORMAT';
         }
 
         if (($data['password'] ?? '') !== ($data['password_confirmation'] ?? '')) {
@@ -134,7 +134,7 @@ class UsersTable extends Table
             return 'USER__ERROR_EMAIL_NOT_VALID';
         }
 
-        $search_member_by_pseudo = $this->find()->where(['pseudo' => $data['pseudo']])->first();
+        $search_member_by_username = $this->find()->where(['username' => $data['username']])->first();
 
         $search_member_by_uuid = null;
         if (isset($data['uuid'])) {
@@ -143,8 +143,8 @@ class UsersTable extends Table
 
         $search_member_by_email = $this->find()->where(['email' => $data['email']])->first();
 
-        if ($search_member_by_pseudo) {
-            return 'USER__ERROR_PSEUDO_ALREADY_REGISTERED';
+        if ($search_member_by_username) {
+            return 'USER__ERROR_USERNAME_ALREADY_REGISTERED';
         }
 
         $configTable = TableRegistry::getTableLocator()->get('Configurations');
@@ -176,7 +176,7 @@ class UsersTable extends Table
             return ['id' => (int)$search];
         }
 
-        return ['pseudo' => $search];
+        return ['username' => $search];
     }
 
     public function exist(int|string $search): bool
@@ -188,7 +188,7 @@ class UsersTable extends Table
     {
         $search_user = $this->find()->where(['id' => $id])->first();
 
-        return $search_user ? (string)$search_user['pseudo'] : '';
+        return $search_user ? (string)$search_user['username'] : '';
     }
 
     public function getAllFromUser(int|string|null $search = null): ?EntityInterface

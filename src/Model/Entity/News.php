@@ -78,8 +78,8 @@ class News extends Entity
     {
         $user = $this->user;
 
-        if ($user && isset($user->pseudo)) {
-            return (string)$user->pseudo;
+        if ($user && isset($user->username)) {
+            return (string)$user->username;
         }
 
         return 'N/A';

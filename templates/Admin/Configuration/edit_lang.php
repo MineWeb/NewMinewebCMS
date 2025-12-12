@@ -35,7 +35,7 @@
                                     <?php } ?>
                                     <?php if ($key == "RESET_PASSWORD_MAIL") { ?>
                                         <small><?= __('CONFIG__LANG_AVAILABLE_letIABLES') ?> : {EMAIL},
-                                            {PSEUDO}, {LINK}.</small>
+                                            {USERNAME}, {LINK}.</small>
                                     <?php } ?>
                                     <?php if ($key == "COPYRIGHT") { ?>
                                         <small><?= __('CONFIG__INFO_LANG') ?></small>

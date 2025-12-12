@@ -99,7 +99,7 @@ class NotificationsTable extends Table
             $fromName = null;
             $fromUser = $notification->get('from_user');
             if ($fromUser instanceof User) {
-                $fromName = (string)($fromUser->get('pseudo') ?? '');
+                $fromName = (string)($fromUser->get('username') ?? '');
                 if ($fromName === '') {
                     $fromName = null;
                 }

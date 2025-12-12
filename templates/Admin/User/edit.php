@@ -19,9 +19,9 @@
                         <div class="form-group">
                             <label for="user-username"><?= __('USER__USERNAME') ?></label>
                             <input id="user-username"
-                                   name="pseudo"
+                                   name="username"
                                    class="form-control"
-                                   value="<?= $searchUser['pseudo'] ?>"
+                                   value="<?= $searchUser['username'] ?>"
                                    type="text"
                                    autocomplete="off">
                         </div>

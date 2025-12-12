@@ -215,7 +215,7 @@ final class APIComponent extends Component
         $user = $this->Users
             ->find()
             ->where([
-                'pseudo' => $username,
+                'username' => $username,
                 'password' => $password,
             ])
             ->first();

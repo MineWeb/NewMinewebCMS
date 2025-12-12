@@ -15,7 +15,7 @@ use Cake\Routing\Router;
 
 /**
  * @property \App\Controller\Component\AuthComponent $Auth
- * @property \App\Controller\Component\FlashComponent $Flash
+ * @property \Cake\Controller\Component\FlashComponent $Flash
  * @property \App\Controller\Component\EyPluginComponent $EyPlugin
  * @property \App\Controller\Component\HistoryComponent $History
  * @property \App\Controller\Component\DataTableComponent $DataTable
@@ -71,14 +71,14 @@ class UserController extends AppController
 
         $result = $this->Users
             ->find()
-            ->select(['id', 'pseudo'])
-            ->where(['Users.pseudo LIKE' => $query . '%'])
+            ->select(['id', 'username'])
+            ->where(['Users.username LIKE' => $query . '%'])
             ->all();
 
         $users = [];
         foreach ($result as $entity) {
             $users[] = [
-                'pseudo' => (string)$entity->get('pseudo'),
+                'username' => (string)$entity->get('username'),
                 'id' => (int)$entity->get('id'),
             ];
         }
@@ -123,7 +123,7 @@ class UserController extends AppController
         $this->DataTable->setTable($this->Users);
 
         $this->paginate = [
-            'fields' => ['Users.id', 'Users.pseudo', 'Users.email', 'Users.created', 'Users.rank'],
+            'fields' => ['Users.id', 'Users.username', 'Users.email', 'Users.created', 'Users.rank'],
         ];
 
         $this->DataTable->mDataProp = true;
@@ -133,7 +133,7 @@ class UserController extends AppController
         $data = [];
 
         foreach ($users as $value) {
-            $username = (string)$value['pseudo'];
+            $username = (string)$value['username'];
             $date = 'Le ' . LangService::date($value['created_at']);
 
             $rankId = (int)($value['rank'] ?? 0);
@@ -157,7 +157,7 @@ class UserController extends AppController
 
             $data[] = [
                 'User' => [
-                    'pseudo' => $username,
+                    'username' => $username,
                     'email' => (string)$value['email'],
                     'created_at' => $date,
                     'rank' => $rankHtml,
@@ -285,13 +285,13 @@ class UserController extends AppController
 
         $id = $request->getData('id');
         $email = $request->getData('email');
-        $pseudo = $request->getData('pseudo');
+        $username = $request->getData('username');
         $rank = $request->getData('rank');
 
         if (
             empty($id)
             || empty($email)
-            || empty($pseudo)
+            || empty($username)
             || ($rank === null && $rank !== 0 && $rank !== '0')
         ) {
             return $this->response->withStringBody(json_encode([
@@ -334,7 +334,7 @@ class UserController extends AppController
         $data = [
             'email' => $email,
             'rank' => $rank,
-            'pseudo' => $pseudo,
+            'username' => $username,
             'uuid' => $request->getData('uuid'),
         ];
 

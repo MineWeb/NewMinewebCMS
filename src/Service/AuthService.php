@@ -30,7 +30,7 @@ final class AuthService
     {
         $user = $this->identity($request);
 
-        return is_object($user) && method_exists($user, 'get') ? (string)$user->get('pseudo') : null;
+        return is_object($user) && method_exists($user, 'get') ? (string)$user->get('username') : null;
     }
 
     public function isConnected(ServerRequestInterface $request): bool

@@ -44,7 +44,7 @@ class HistoryController extends AppController
             'contain' => ['Users'],
             'fields' => [
                 'Histories.id',
-                'Users.pseudo',
+                'Users.username',
                 'Histories.action',
                 'Histories.user_id',
                 'Histories.category',

@@ -108,8 +108,8 @@ class HistoriesTable extends Table
                 case 'SEND_MONEY':
                     $other = explode('|', $otherRaw);
                     if (isset($other[0], $other[1])) {
-                        $targetPseudo = $this->getAssociation('Users')->getTarget()->getUsernameByID($other[0]);
-                        $string .= ' pour un montant de ' . $other[1] . ' à ' . $targetPseudo;
+                        $targetUsername = $this->getAssociation('Users')->getTarget()->getUsernameByID($other[0]);
+                        $string .= ' pour un montant de ' . $other[1] . ' à ' . $targetUsername;
                     }
                     break;
 

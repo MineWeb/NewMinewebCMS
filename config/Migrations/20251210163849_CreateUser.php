@@ -14,7 +14,7 @@ final class CreateUser extends AbstractMigration
         ]);
 
         $table
-            ->addColumn('pseudo', 'string', ['null' => false])
+            ->addColumn('username', 'string', ['null' => false])
             ->addColumn('uuid', 'string', ['null' => true, 'default' => null])
             ->addColumn('password', 'string', ['null' => false])
             ->addColumn('password_hash', 'string', ['null' => true, 'default' => null])

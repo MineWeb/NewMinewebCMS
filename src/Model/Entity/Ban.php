@@ -14,7 +14,7 @@ use Cake\ORM\Entity;
  * @property \Cake\I18n\FrozenTime|null $updated_at
  *
  * @property \App\Model\Entity\User|null $user
- * @property string $pseudo
+ * @property string $username
  */
 class Ban extends Entity
 {
@@ -28,15 +28,15 @@ class Ban extends Entity
     ];
 
     protected array $_virtual = [
-        'pseudo',
+        'username',
     ];
 
-    protected function _getPseudo(): string
+    protected function _getUsername(): string
     {
         $user = $this->user ?? null;
 
-        if ($user && isset($user->pseudo)) {
-            return $user->pseudo;
+        if ($user && isset($user->username)) {
+            return $user->username;
         }
 
         return 'N/A';

@@ -403,17 +403,17 @@ class NewsController extends AppController
         }
 
         $identity = $this->Auth->identity();
-        $pseudo = null;
+        $username = null;
 
         if (is_object($identity) && method_exists($identity, 'get')) {
-            $p = $identity->get('pseudo');
+            $p = $identity->get('username');
             if (is_string($p)) {
-                $pseudo = $p;
+                $username = $p;
             }
         }
 
         $canDeleteAny = $this->Auth->can('DELETE_COMMENT');
-        $canDeleteOwn = $this->Auth->can('DELETE_HIS_COMMENT') && $pseudo !== null && $pseudo === ($search['author'] ?? null);
+        $canDeleteOwn = $this->Auth->can('DELETE_HIS_COMMENT') && $username !== null && $username === ($search['author'] ?? null);
 
         if (!$canDeleteAny && !$canDeleteOwn) {
             return $this->response->withStringBody('NOT_ADMIN');

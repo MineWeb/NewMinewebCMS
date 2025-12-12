@@ -39,10 +39,10 @@
                     <input
                         id="username"
                         type="text"
-                        name="pseudo"
+                        name="username"
                         class="form-control"
                         placeholder="<?= __('USER__USERNAME_LABEL') ?>"
-                        value="<?= !empty($admin_pseudo) ? h($admin_pseudo) : '' ?>"
+                        value="<?= !empty($admin_username) ? h($admin_username) : '' ?>"
                         autocomplete="off"
                     >
                 </div>
@@ -89,7 +89,7 @@
                     >
                 </div>
 
-                <?php if (!empty($admin_pseudo)) : ?>
+                <?php if (!empty($admin_username)) : ?>
                     <input type="hidden" name="step3" value="true">
                 <?php endif; ?>
 

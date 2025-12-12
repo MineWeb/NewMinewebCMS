@@ -23,7 +23,7 @@ class PagesController extends AppController
         $pages = $pageTable->find()->toArray();
 
         foreach ($pages as $index => $page) {
-            $pages[$index]['author'] = $this->User->getFromUser('pseudo', $page['user_id']);
+            $pages[$index]['author'] = $this->User->getFromUser('username', $page['user_id']);
         }
 
         $this->set('pages', $pages);

@@ -251,7 +251,7 @@ class ConfigurationsTable extends Table
             return null;
         }
 
-        return $user->pseudo;
+        return $user->username;
     }
 
     public function getInstalledDate(): mixed

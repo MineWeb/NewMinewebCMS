@@ -86,11 +86,11 @@ final class UserAuthService
     {
         $Users = $this->fetchTable('Users');
 
-        $pseudo = (string)($data['pseudo'] ?? '');
+        $username = (string)($data['username'] ?? '');
         $email = (string)($data['email'] ?? '');
 
         $dataToSave = [
-            'pseudo' => htmlentities($pseudo),
+            'username' => htmlentities($username),
             'email' => htmlentities($email),
             'ip' => $ip,
             'rank' => (int)($data['rank'] ?? 0),
@@ -188,13 +188,13 @@ final class UserAuthService
         }
 
         if ($checkUUID) {
-            $username = (string)($user->get('pseudo') ?? '');
+            $username = (string)($user->get('username') ?? '');
             $currentUuid = (string)($user->get('uuid') ?? '');
 
             if ($currentUuid === '') {
-                $pseudoToUUID = @file_get_contents('https://api.mojang.com/users/profiles/minecraft/' . rawurlencode($username));
-                if (!empty($pseudoToUUID)) {
-                    $parsed = json_decode($pseudoToUUID, true);
+                $usernameToUUID = @file_get_contents('https://api.mojang.com/users/profiles/minecraft/' . rawurlencode($username));
+                if (!empty($usernameToUUID)) {
+                    $parsed = json_decode($usernameToUUID, true);
                     if (is_array($parsed) && !empty($parsed['id'])) {
                         $conditions['uuid'] = (string)$parsed['id'];
                     }
@@ -209,13 +209,13 @@ final class UserAuthService
                     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
                     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 
-                    $uuidToPseudo = curl_exec($ch);
+                    $uuidToUsername = curl_exec($ch);
                     curl_close($ch);
 
-                    if (!empty($uuidToPseudo)) {
-                        $array = json_decode((string)$uuidToPseudo, true);
+                    if (!empty($uuidToUsername)) {
+                        $array = json_decode((string)$uuidToUsername, true);
                         if (is_array($array) && !empty($array['name'])) {
-                            $conditions['pseudo'] = (string)$array['name'];
+                            $conditions['username'] = (string)$array['name'];
                         }
                     }
                 }

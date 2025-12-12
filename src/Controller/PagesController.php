@@ -171,20 +171,20 @@ class PagesController extends AppController
 
         $this->viewBuilder()->setLayout((string)$this->config->get('layout'));
 
-        $page['author'] = $this->User->getFromUser('pseudo', (int)$page['user_id']);
+        $page['author'] = $this->User->getFromUser('username', (int)$page['user_id']);
 
         $username = '';
         if ($this->Auth->isConnected()) {
             $identity = $this->Auth->identity();
             if (is_object($identity) && method_exists($identity, 'get')) {
-                $p = $identity->get('pseudo');
+                $p = $identity->get('username');
                 if (is_string($p)) {
                     $username = $p;
                 }
             }
         }
 
-        $page['content'] = str_replace('{username}', $username, (string)$page['content']);
+        $page['content'] = str_replace('{USERNAME}', $username, (string)$page['content']);
 
         $count = (int)(mb_substr_count($page['content'], '{%') / 2);
 

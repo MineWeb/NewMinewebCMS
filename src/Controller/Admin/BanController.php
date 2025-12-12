@@ -142,7 +142,7 @@ class BanController extends AppController
         $this->DataTable = $this->loadComponent('DataTable');
         $this->DataTable->setTable($this->User);
         $this->paginate = [
-            'fields' => ['User.id', 'User.pseudo', 'User.rank', 'User.ip'],
+            'fields' => ['User.id', 'User.username', 'User.rank', 'User.ip'],
         ];
         $this->DataTable->mDataProp = true;
         $response = $this->DataTable->getResponse();
@@ -164,7 +164,7 @@ class BanController extends AppController
                 continue;
             }
 
-            $username = $value['pseudo'];
+            $username = $value['username'];
             $rankConfig = $available_ranks[$value['rank']] ?? $available_ranks[0];
 
             $rank = '<span class="label label-' . $rankConfig['label'] . '">' . $rankConfig['name'] . '</span>';
@@ -173,7 +173,7 @@ class BanController extends AppController
 
             $data[] = [
                 'User' => [
-                    'pseudo' => $username,
+                    'username' => $username,
                     'ban' => $checkbox,
                     'banIp' => $banIpCheckbox,
                     'rank' => $rank,
@@ -204,7 +204,7 @@ class BanController extends AppController
         $banTable = $this->fetchTable('Bans');
 
         $result = $usersTable
-            ->find('all', ['conditions' => ['pseudo LIKE' => $query . '%']])
+            ->find('all', ['conditions' => ['username LIKE' => $query . '%']])
             ->all();
 
         $users = [];
@@ -222,7 +222,7 @@ class BanController extends AppController
             }
 
             $users[] = [
-                'pseudo' => $value['pseudo'],
+                'username' => $value['username'],
                 'id' => $value['id'],
             ];
         }

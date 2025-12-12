@@ -28,7 +28,7 @@
                         <form action="<?= $this->Url->build(['_name' => 'admin_user_live_search']) ?>" method="search">
                             <div class="form-group">
                                 <label for="user-search"><?= __('GLOBAL__SEARCH') ?></label>
-                                <input id="user-search" type="text" name="search" placeholder="Pseudo..." autocomplete="off"
+                                <input id="user-search" type="text" name="search" placeholder="username..." autocomplete="off"
                                        class="form-control">
                                 <div class="list-group" style="display:none;"></div>
                             </div>
@@ -57,7 +57,7 @@
             serverSide: true,
             ajax: "<?= $this->Url->build(['_name' => 'admin_user_get_users']) ?>",
             columns: [
-                {data: "User.pseudo", searchable: true},
+                {data: "User.username", searchable: true},
                 {data: "User.email", searchable: true},
                 {data: "User.created", searchable: true},
                 {data: "User.rank", searchable: false},
@@ -113,7 +113,7 @@
                                 let link = document.createElement('a');
                                 link.href = "<?= $this->Url->build(['_name' => 'admin_user_edit']) ?>/" + encodeURIComponent(user.id);
                                 link.className = 'list-group-item';
-                                link.textContent = user.pseudo;
+                                link.textContent = user.username;
                                 listGroup.prepend(link);
                             });
 

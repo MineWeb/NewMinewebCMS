@@ -8,7 +8,7 @@ use Cake\ORM\Entity;
 
 /**
  * @property int $id
- * @property string $pseudo
+ * @property string $username
  * @property string|null $uuid
  * @property string $password
  * @property string|null $password_hash
@@ -25,7 +25,7 @@ use Cake\ORM\Entity;
 class User extends Entity
 {
     protected array $_accessible = [
-        'pseudo' => true,
+        'username' => true,
         'uuid' => true,
         'password' => true,
         'password_hash' => true,

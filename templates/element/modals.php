@@ -22,8 +22,8 @@
                     <div class="ajax-msg"></div>
 
                     <div class="form-group">
-                        <label for="login-pseudo"><?= __('USER__USERNAME') ?></label>
-                        <input type="text" class="form-control" id="login-pseudo" name="pseudo"
+                        <label for="login-username"><?= __('USER__USERNAME') ?></label>
+                        <input type="text" class="form-control" id="login-username" name="username"
                                placeholder="<?= __('USER__USERNAME_LABEL') ?>">
                     </div>
 
@@ -212,8 +212,8 @@
                     <div class="ajax-msg"></div>
 
                     <div class="form-group">
-                        <label for="register-pseudo"><?= __('USER__USERNAME') ?></label>
-                        <input type="text" class="form-control" id="register-pseudo" name="pseudo"
+                        <label for="register-username"><?= __('USER__USERNAME') ?></label>
+                        <input type="text" class="form-control" id="register-username" name="username"
                                placeholder="<?= __('USER__USERNAME_LABEL') ?>">
                     </div>
 

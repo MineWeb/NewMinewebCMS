@@ -54,8 +54,8 @@ class History extends Entity
     {
         $user = $this->user ?? null;
 
-        if ($user && isset($user->pseudo)) {
-            return (string)$user->pseudo;
+        if ($user && isset($user->username)) {
+            return (string)$user->username;
         }
 
         return 'N/A';

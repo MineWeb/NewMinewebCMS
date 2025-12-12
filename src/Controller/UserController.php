@@ -48,7 +48,7 @@ class UserController extends AppController
 
         $identity = $this->Auth->identity();
         $userId = null;
-        $pseudo = '';
+        $username = '';
 
         if (is_object($identity) && method_exists($identity, 'get')) {
             $id = $identity->get('id');
@@ -56,9 +56,9 @@ class UserController extends AppController
                 $userId = (int)$id;
             }
 
-            $p = $identity->get('pseudo');
+            $p = $identity->get('username');
             if (is_string($p)) {
-                $pseudo = $p;
+                $username = $p;
             }
         }
 
@@ -76,7 +76,7 @@ class UserController extends AppController
             ->first();
 
         $this->set('twoFactorAuthStatus', !empty($infos));
-        $this->set('title_for_layout', $pseudo);
+        $this->set('title_for_layout', $username);
 
         $this->viewBuilder()->setLayout($this->config->get('layout'));
 
@@ -178,13 +178,13 @@ class UserController extends AppController
         }
 
         $identity = $this->Auth->identity();
-        $pseudo = '';
+        $username = '';
         $userId = null;
 
         if (is_object($identity) && method_exists($identity, 'get')) {
-            $p = $identity->get('pseudo');
+            $p = $identity->get('username');
             if (is_string($p)) {
-                $pseudo = $p;
+                $username = $p;
             }
 
             $id = $identity->get('id');
@@ -193,15 +193,15 @@ class UserController extends AppController
             }
         }
 
-        if ($pseudo === '' || $userId === null) {
+        if ($username === '' || $userId === null) {
             return $this->json([
                 'statut' => false,
                 'msg' => __('USER__ERROR_MUST_BE_LOGGED'),
             ], 403);
         }
 
-        $password = $this->Util->password((string)$data['password'], $pseudo);
-        $password_confirmation = $this->Util->password((string)$data['password_confirmation'], $pseudo, $password);
+        $password = $this->Util->password((string)$data['password'], $username);
+        $password_confirmation = $this->Util->password((string)$data['password_confirmation'], $username, $password);
 
         if ($password !== $password_confirmation) {
             return $this->json([

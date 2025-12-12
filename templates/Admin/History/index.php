@@ -41,7 +41,7 @@
             serverSide: true,
             ajax: "<?= $this->Url->build(['_name' => 'admin_history_get_all']) ?>",
             columns: [
-                { data: "User.pseudo" },
+                { data: "User.username" },
                 { data: "History.action" },
                 { data: "History.category" },
                 { data: "History.created" }

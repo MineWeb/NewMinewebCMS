@@ -61,7 +61,7 @@
             ajax: "<?= $this->Url->build(['_name' => 'admin_ban_get_users_not_ban']) ?>",
             columns: [
                 {data: "User.ban", searchable: false},
-                {data: "User.pseudo", searchable: true},
+                {data: "User.username", searchable: true},
                 {data: "User.rank", searchable: false},
                 {data: "User.ip", searchable: true},
                 {data: "User.banIp", searchable: false}
@@ -116,7 +116,7 @@
                                 let link = document.createElement('a');
                                 link.href = "<?= $this->Url->build(['_name' => 'admin_ban_edit']) ?>/" + encodeURIComponent(user.id);
                                 link.className = 'list-group-item';
-                                link.textContent = user.pseudo;
+                                link.textContent = user.username;
                                 listGroup.prepend(link);
                             });
 

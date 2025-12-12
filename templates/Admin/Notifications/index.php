@@ -44,11 +44,11 @@
                     </div>
 
                     <div class="form-group" style="display:none;" id="userInput">
-                        <label for="notification-user-pseudo"><?= __('NOTIFICATION__WHO_USERNAME') ?></label>
+                        <label for="notification-user-username"><?= __('NOTIFICATION__WHO_USERNAME') ?></label>
                         <input
                             type="text"
-                            id="notification-user-pseudo"
-                            name="user_pseudo"
+                            id="notification-user-username"
+                            name="user_username"
                             class="form-control"
                         >
                     </div>
@@ -168,7 +168,7 @@
             serverSide: true,
             ajax: "<?= $this->Url->build(['_name' => 'admin_notifications_get_all']) ?>",
             columns: [
-                { data: "User.pseudo" },
+                { data: "User.username" },
                 { data: "Notification.group" },
                 { data: "Notification.from", searchable: false },
                 { data: "Notification.content" },

@@ -54,7 +54,7 @@ class AuthController extends AppController
 
         $conditionsRequired = (bool)$this->config->get('condition');
         if (
-            empty($data['pseudo']) ||
+            empty($data['username']) ||
             empty($data['password']) ||
             empty($data['password_confirmation']) ||
             empty($data['email']) ||
@@ -68,8 +68,8 @@ class AuthController extends AppController
         }
 
         if ($this->config->get('check_uuid')) {
-            $pseudo = (string)$data['pseudo'];
-            $res = @file_get_contents('https://api.mojang.com/users/profiles/minecraft/' . rawurlencode($pseudo));
+            $username = (string)$data['username'];
+            $res = @file_get_contents('https://api.mojang.com/users/profiles/minecraft/' . rawurlencode($username));
             if (!$res) {
                 return $this->json(['statut' => false, 'msg' => __('USER__ERROR_UUID')], 400);
             }
@@ -105,9 +105,9 @@ class AuthController extends AppController
             $confirmCode = substr(md5(uniqid('', true)), 0, 12);
 
             $mail = __('EMAIL__CONTENT_CONFIRM_MAIL', [
-                '{LINK}' => (string)$this->config->get('website_url') . '/auth/confirm/' . $confirmCode,
+                '{LINK}' => $this->config->get('website_url') . '/auth/confirm/' . $confirmCode,
                 '{IP}' => $this->Util->getIP(),
-                '{USERNAME}' => (string)$data['pseudo'],
+                '{USERNAME}' => (string)$data['username'],
                 '{DATE}' => FrozenTime::now()->i18nFormat('dd/MM/yyyy HH:mm'),
             ]);
 
@@ -136,11 +136,11 @@ class AuthController extends AppController
 
         $data = (array)$this->getRequest()->getData();
 
-        if (empty($data['pseudo']) || empty($data['password'])) {
+        if (empty($data['username']) || empty($data['password'])) {
             return $this->json(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')], 400);
         }
 
-        $user = $this->User->find()->where(['pseudo' => (string)$data['pseudo']])->first();
+        $user = $this->User->find()->where(['username' => (string)$data['username']])->first();
         if (!$user) {
             return $this->json(['statut' => false, 'msg' => __('USER__ERROR_INVALID_CREDENTIALS')], 400);
         }

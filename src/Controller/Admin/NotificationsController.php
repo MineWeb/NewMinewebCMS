@@ -43,17 +43,18 @@ class NotificationsController extends AppController
         $this->DataTable->setTable($notificationsTable);
 
         $this->paginate = [
-            'contain' => ['Users'],
+            'contain' => ['Users', 'FromUsers'],
             'fields' => [
                 'Notifications.id',
-                'Users.pseudo',
                 'Notifications.group',
                 'Notifications.user_id',
                 'Notifications.from',
                 'Notifications.content',
                 'Notifications.seen',
                 'Notifications.type',
-                'Notifications.created',
+                'Notifications.created_at',
+                'Users.username',
+                'FromUsers.username',
             ],
             'recursive' => 1,
         ];
@@ -63,14 +64,17 @@ class NotificationsController extends AppController
 
         $data = [];
         foreach ($response['aaData'] as $notification) {
-            if ($notification['from'] === null) {
+            if (($notification['from'] ?? null) === null) {
                 $from = '<small class="text-muted">' . __('NOTIFICATION__NO_FROM') . '</small>';
             } else {
-                $from = $this->User->getFromUser('pseudo', $notification['from']);
+                $fromName = $notification['from_user']['username'] ?? null;
+                $from = is_string($fromName) && $fromName !== ''
+                    ? $fromName
+                    : '<small class="text-muted">' . __('NOTIFICATION__NO_FROM') . '</small>';
             }
 
             $actions = '<div class="btn btn-group">';
-            if ($notification['seen']) {
+            if (!empty($notification['seen'])) {
                 $actions .= '<btn class="btn btn-default disabled active" disabled>' . __('NOTIFICATION__SEEN') . '</btn>';
             } else {
                 $actions .= '<a class="btn btn-default mark-as-seen" data-seen="' . __('NOTIFICATION__SEEN') . '" href="' . Router::url([
@@ -85,7 +89,7 @@ class NotificationsController extends AppController
                 ]) . '">' . __('GLOBAL__DELETE') . '</a>';
             $actions .= '</div>';
 
-            if ($notification['type'] === 'admin') {
+            if (($notification['type'] ?? '') === 'admin') {
                 $type = '<span class="label label-danger">' . __('NOTIFICATION__TYPE_ADMIN') . '</span>';
             } else {
                 $type = '<span class="label label-success">' . __('NOTIFICATION__TYPE_USER') . '</span>';
@@ -99,12 +103,12 @@ class NotificationsController extends AppController
                 'Notification' => [
                     'group' => $groupLabel,
                     'from' => $from,
-                    'content' => $notification['content'],
+                    'content' => $notification['content'] ?? '',
                     'type' => $type,
-                    'created_at' => LangService::date($notification['created_at']),
+                    'created_at' => LangService::date($notification['created_at'] ?? null),
                     'actions' => $actions,
                 ],
-                'User' => $notification['user'],
+                'User' => $notification['user'] ?? null,
             ];
         }
 
@@ -130,10 +134,10 @@ class NotificationsController extends AppController
 
         $content = (string)$request->getData('content', '');
         $userIdRaw = $request->getData('user_id');
-        $userPseudo = (string)$request->getData('user_pseudo', '');
-        $fromFlag = $request->getData('from');
+        $username = (string)$request->getData('user_username', '');
+        $fromFlag = (bool)$request->getData('from', false);
 
-        if ($content === '' || $userIdRaw === null || ($userIdRaw !== 'all' && $userPseudo === '')) {
+        if ($content === '' || $userIdRaw === null || ($userIdRaw !== 'all' && $username === '')) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('ERROR__FILL_ALL_FIELDS'),
@@ -141,14 +145,22 @@ class NotificationsController extends AppController
         }
 
         $notificationsTable = $this->fetchTable('Notifications');
-        $from = $fromFlag ? $this->User->get('id') : null;
+
+        $from = $fromFlag ? $this->Auth->id($this->getRequest()) : null;
 
         if ($userIdRaw === 'all') {
             $notificationsTable->setToAll($content, $from);
         } else {
-            $user_id = $this->User->getFromUser('id', $userPseudo);
+            $Users = $this->fetchTable('Users');
 
-            if (empty($user_id)) {
+            $user = $Users->find()
+                ->select(['id'])
+                ->where(['username' => $username])
+                ->first();
+
+            $user_id = $user ? (int)$user->get('id') : 0;
+
+            if ($user_id <= 0) {
                 return $this->response->withStringBody(json_encode([
                     'statut' => false,
                     'msg' => __('USER__EDIT_ERROR_UNKNOWN'),
@@ -174,7 +186,7 @@ class NotificationsController extends AppController
         $this->response = $this->response->withType('application/json');
 
         $notificationsTable = $this->fetchTable('Notifications');
-        $status = $notificationsTable->clearFromUser($id, $user_id);
+        $status = $notificationsTable->clearFromUser((int)$id, (int)$user_id);
 
         return $this->response->withStringBody(json_encode(['status' => $status]));
     }
@@ -189,7 +201,7 @@ class NotificationsController extends AppController
         $this->response = $this->response->withType('application/json');
 
         $notificationsTable = $this->fetchTable('Notifications');
-        $status = $notificationsTable->clearAllFromUser($user_id);
+        $status = $notificationsTable->clearAllFromUser((int)$user_id);
 
         return $this->response->withStringBody(json_encode(['status' => $status]));
     }
@@ -204,7 +216,7 @@ class NotificationsController extends AppController
         $this->response = $this->response->withType('application/json');
 
         $notificationsTable = $this->fetchTable('Notifications');
-        $status = $notificationsTable->clearFromAllUsers($id);
+        $status = $notificationsTable->clearFromAllUsers((int)$id);
 
         return $this->response->withStringBody(json_encode(['status' => $status]));
     }
@@ -234,7 +246,7 @@ class NotificationsController extends AppController
         $this->response = $this->response->withType('application/json');
 
         $notificationsTable = $this->fetchTable('Notifications');
-        $status = $notificationsTable->markAsSeenFromUser($id, $user_id);
+        $status = $notificationsTable->markAsSeenFromUser((int)$id, (int)$user_id);
 
         return $this->response->withStringBody(json_encode(['status' => $status]));
     }
@@ -249,7 +261,7 @@ class NotificationsController extends AppController
         $this->response = $this->response->withType('application/json');
 
         $notificationsTable = $this->fetchTable('Notifications');
-        $status = $notificationsTable->markAllAsSeenFromUser($user_id);
+        $status = $notificationsTable->markAllAsSeenFromUser((int)$user_id);
 
         return $this->response->withStringBody(json_encode(['status' => $status]));
     }
@@ -264,7 +276,7 @@ class NotificationsController extends AppController
         $this->response = $this->response->withType('application/json');
 
         $notificationsTable = $this->fetchTable('Notifications');
-        $status = $notificationsTable->markAsSeenFromAllUsers($id);
+        $status = $notificationsTable->markAsSeenFromAllUsers((int)$id);
 
         return $this->response->withStringBody(json_encode(['status' => $status]));
     }
@@ -293,9 +305,9 @@ class NotificationsController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        $group = $this->getRequest()->getData('group');
+        $group = (string)$this->getRequest()->getData('group', '');
 
-        if ($group === null || $group === '') {
+        if ($group === '') {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('ERROR__FILL_ALL_FIELDS'),

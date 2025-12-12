@@ -24,7 +24,7 @@
                         <tbody>
                         <?php foreach ($banned_users as $v) { ?>
                             <tr>
-                                <td><?= $v["pseudo"] ?></td>
+                                <td><?= $v["username"] ?></td>
                                 <td><?= $v["reason"] ?></td>
                                 <td><?= $v["ip"] !== null ? $v["ip"] : __("BAN__NOT_BAN_IP") ?></td>
                                 <td>

@@ -401,7 +401,7 @@ class InstallController extends BaseController
             ? (string)$this->Util->getIP()
             : $this->request->clientIp();
 
-        if (empty($data['pseudo']) || empty($data['password']) || empty($data['password_confirmation']) || empty($data['email'])) {
+        if (empty($data['username']) || empty($data['password']) || empty($data['password_confirmation']) || empty($data['email'])) {
             return $this->response
                 ->withType('application/json')
                 ->withStringBody(json_encode([
@@ -445,7 +445,7 @@ class InstallController extends BaseController
         $auth = new UserAuthService();
 
         $dataToSave = [
-            'pseudo' => (string)$data['pseudo'],
+            'username' => (string)$data['username'],
             'email' => (string)$data['email'],
             'password' => (string)$data['password'],
             'rank' => 4,
