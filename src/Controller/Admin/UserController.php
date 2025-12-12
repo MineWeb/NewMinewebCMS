@@ -16,7 +16,7 @@ class UserController extends AppController
 {
     public function index(): ?Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_USERS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_USERS'))) {
             return $this->redirect('/');
         }
 
@@ -36,7 +36,7 @@ class UserController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_USERS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_USERS'))) {
             return $this->response->withStringBody(json_encode(['status' => false]));
         }
 
@@ -65,7 +65,7 @@ class UserController extends AppController
 
     public function getUsers(): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_USERS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_USERS'))) {
             throw new ForbiddenException();
         }
 
@@ -97,7 +97,7 @@ class UserController extends AppController
         $this->DataTable->setTable($this->User);
 
         $this->paginate = [
-            'fields' => ['User.id', 'User.pseudo', 'User.email', 'User.created', 'User.rank'],
+            'fields' => ['Users.id', 'Users.pseudo', 'Users.email', 'Users.created', 'Users.rank'],
         ];
 
         $this->DataTable->mDataProp = true;
@@ -144,9 +144,9 @@ class UserController extends AppController
         return $this->response->withStringBody(json_encode($response));
     }
 
-    public function edit(string $search = null): ?Response
+    public function edit(?string $search = null): ?Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_USERS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_USERS'))) {
             return $this->redirect('/');
         }
 
@@ -206,7 +206,7 @@ class UserController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!($user_id !== null && $this->isConnected && $this->Permissions->can('MANAGE_USERS'))) {
+        if (!($user_id !== null && $this->Auth->isConnected() && $this->Auth->can('MANAGE_USERS'))) {
             throw new NotFoundException();
         }
 
@@ -226,6 +226,7 @@ class UserController extends AppController
 
         if ($event->isStopped()) {
             $result = $event->getResult();
+
             return $result instanceof Response ? $result : $this->response;
         }
 
@@ -241,7 +242,7 @@ class UserController extends AppController
 
     public function editAjax(): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_USERS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_USERS'))) {
             throw new ForbiddenException();
         }
 
@@ -319,6 +320,7 @@ class UserController extends AppController
 
         if ($event->isStopped()) {
             $result = $event->getResult();
+
             return $result instanceof Response ? $result : $this->response;
         }
 
@@ -339,7 +341,7 @@ class UserController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_USERS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_USERS'))) {
             return $this->redirect('/');
         }
 
@@ -354,6 +356,7 @@ class UserController extends AppController
 
                 if ($event->isStopped()) {
                     $result = $event->getResult();
+
                     return $result instanceof Response ? $result : $this->response;
                 }
 

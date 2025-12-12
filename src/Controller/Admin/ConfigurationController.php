@@ -12,7 +12,7 @@ class ConfigurationController extends AppController
 {
     public function index(): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_CONFIGURATION')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_CONFIGURATION')) {
             return $this->redirect('/');
         }
 
@@ -67,7 +67,7 @@ class ConfigurationController extends AppController
 
     public function editLang(): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_CONFIGURATION')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_CONFIGURATION')) {
             return $this->redirect('/');
         }
 

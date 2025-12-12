@@ -7,8 +7,6 @@ use Cake\Http\Response;
 
 /**
  * @property \App\Model\Table\MaintenancesTable $Maintenance
- *
- * @property \App\Controller\Component\PermissionsComponent $Permissions
  */
 class MaintenanceController extends AppController
 {
@@ -19,7 +17,7 @@ class MaintenanceController extends AppController
         $this->Maintenance = $this->fetchTable('Maintenances');
         $check = $this->Maintenance->checkMaintenance('/' . ltrim($url, '/'));
 
-        if ($this->Permissions->can('BYPASS_MAINTENANCE') || !$check) {
+        if (!$check) {
             return $this->redirect('/');
         }
 

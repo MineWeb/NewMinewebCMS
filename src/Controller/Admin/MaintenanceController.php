@@ -12,7 +12,7 @@ class MaintenanceController extends AppController
 {
     public function index(): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_MAINTENANCE')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_MAINTENANCE')) {
             throw new ForbiddenException();
         }
 
@@ -33,7 +33,7 @@ class MaintenanceController extends AppController
 
     public function add(): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_MAINTENANCE')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_MAINTENANCE')) {
             throw new ForbiddenException();
         }
 
@@ -71,7 +71,7 @@ class MaintenanceController extends AppController
 
     public function edit(int|string|null $id = null): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_MAINTENANCE') || !$id) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_MAINTENANCE') || !$id) {
             throw new ForbiddenException();
         }
 
@@ -122,7 +122,7 @@ class MaintenanceController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_MAINTENANCE') || !$id) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_MAINTENANCE') || !$id) {
             throw new ForbiddenException();
         }
 
@@ -143,7 +143,7 @@ class MaintenanceController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_MAINTENANCE') || !$id) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_MAINTENANCE') || !$id) {
             throw new ForbiddenException();
         }
 
@@ -164,7 +164,7 @@ class MaintenanceController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_MAINTENANCE') || !$id) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_MAINTENANCE') || !$id) {
             throw new ForbiddenException();
         }
 

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -27,6 +26,8 @@
     <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
     <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
+
+    <?= $this->Html->meta('csrf-token', $this->request->getAttribute('csrfToken')) ?>
 
 </head>
 
@@ -92,8 +93,8 @@
                 } ?>
                 <li class="button">
                     <div class="btn-group">
-                        <?php if (isset($isConnected) && $isConnected) { ?>
-                            <button type="button" class="btn btn-success"><?= $user['pseudo'] ?></button>
+                        <?php if ($this->Auth->isConnected()) { ?>
+                            <button type="button" class="btn btn-success"><?= h((string)$this->Auth->username()) ?></button>
                         <?php } else { ?>
                             <button type="button" class="btn btn-success"><i class="fa fa-user"></i></button>
                         <?php } ?>
@@ -103,7 +104,7 @@
                             <span class="sr-only">Toggle Dropdown</span>
                         </button>
                         <ul class="dropdown-menu" role="menu">
-                            <?php if ($isConnected) { ?>
+                            <?php if ($this->Auth->isConnected()) { ?>
                                 <li>
                                     <a href="<?= $this->Url->build(['_name' => 'user_profile']) ?>"><?= __('USER__PROFILE') ?></a>
                                 </li>
@@ -112,7 +113,7 @@
                                        data-toggle="modal"><?= __('NOTIFICATIONS__LIST') ?></a>
                                     <span class="notification-indicator"></span>
                                 </li>
-                                <?php if ($Permissions->can('ACCESS_DASHBOARD')) { ?>
+                                <?php if ($this->Auth->can('ACCESS_DASHBOARD')) { ?>
                                     <li class="divider"></li>
                                     <li>
                                         <a href="<?= $this->Url->build(['_name' => 'admin_index']) ?>"><?= __('GLOBAL__ADMIN_PANEL') ?></a>
@@ -120,7 +121,7 @@
                                 <?php } ?>
                                 <li class="divider"></li>
                                 <li>
-                                    <a href="<?= $this->Url->build(['_name' => 'user_logout']) ?>"><?= __('USER__LOGOUT') ?></a>
+                                    <a href="<?= $this->Url->build(['_name' => 'auth_logout']) ?>"><?= __('USER__LOGOUT') ?></a>
                                 </li>
                             <?php } else { ?>
                                 <li><a href="#" data-toggle="modal"
@@ -153,7 +154,6 @@ if (!empty($flash_messages)) {
     </div>
 </footer>
 
-
 <?= $this->element('modals') ?>
 
 <?= $this->Html->script('jquery-1.11.0') ?>
@@ -163,7 +163,7 @@ if (!empty($flash_messages)) {
 <?= $this->Html->script('form') ?>
 <?= $this->Html->script('notification') ?>
 <script>
-    <?php if($isConnected) { ?>
+    <?php if ($this->Auth->isConnected()) { ?>
     // Notifications
     let notification = new $.Notification({
         'url': {
@@ -188,10 +188,8 @@ if (!empty($flash_messages)) {
     let LOADING_MSG = "<?= __('GLOBAL__LOADING') ?>";
     let ERROR_MSG = "<?= __('GLOBAL__ERROR') ?>";
     let INTERNAL_ERROR_MSG = "<?= __('ERROR__INTERNAL_ERROR') ?>";
-    let FORBIDDEN_ERROR_MSG = "<?= __('ERROR__FORBIDDEN') ?>"
+    let FORBIDDEN_ERROR_MSG = "<?= __('ERROR__FORBIDDEN') ?>";
     let SUCCESS_MSG = "<?= __('GLOBAL__SUCCESS') ?>";
-
-    let CSRF_TOKEN = "<?= $csrfToken ?>";
 
     $(".navbar-collapse").css({maxHeight: ($(window).height() - 130) - $(".navbar-header").height() + "px"});
 </script>

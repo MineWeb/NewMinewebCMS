@@ -13,7 +13,7 @@ use Cake\ORM\Table;
  */
 class NotificationsController extends AppController
 {
-    private Table $Notification;
+    private Table $Notifications;
 
     public function beforeFilter(EventInterface $event): ?Response
     {
@@ -22,7 +22,7 @@ class NotificationsController extends AppController
             return $response;
         }
 
-        $this->Notification = $this->fetchTable('Notification');
+        $this->Notifications = $this->fetchTable('Notifications');
 
         $request = $this->getRequest();
         $isAdminRequest = (bool)$request->getParam('admin');
@@ -43,8 +43,8 @@ class NotificationsController extends AppController
     {
         $this->response = $this->response->withType('application/json');
 
-        if ($this->isConnected) {
-            $notifications = $this->Notification->getFromUser($this->User->getKey('id'), $type);
+        if ($this->Auth->isConnected()) {
+            $notifications = $this->Notifications->getFromUser($this->User->getKey('id'), $type);
             return $this->response->withStringBody(json_encode($notifications));
         }
 
@@ -55,8 +55,8 @@ class NotificationsController extends AppController
     {
         $this->response = $this->response->withType('application/json');
 
-        if ($this->isConnected) {
-            $status = $this->Notification->clearFromUser($id, $this->User->getKey('id'));
+        if ($this->Auth->isConnected()) {
+            $status = $this->Notifications->clearFromUser($id, $this->User->getKey('id'));
             return $this->response->withStringBody(json_encode(['status' => $status]));
         }
 
@@ -67,8 +67,8 @@ class NotificationsController extends AppController
     {
         $this->response = $this->response->withType('application/json');
 
-        if ($this->isConnected) {
-            $status = $this->Notification->clearAllFromUser($this->User->getKey('id'));
+        if ($this->Auth->isConnected()) {
+            $status = $this->Notifications->clearAllFromUser($this->User->getKey('id'));
             return $this->response->withStringBody(json_encode(['status' => $status]));
         }
 
@@ -79,8 +79,8 @@ class NotificationsController extends AppController
     {
         $this->response = $this->response->withType('application/json');
 
-        if ($this->isConnected) {
-            $status = $this->Notification->markAsSeenFromUser($id, $this->User->getKey('id'));
+        if ($this->Auth->isConnected()) {
+            $status = $this->Notifications->markAsSeenFromUser($id, $this->User->getKey('id'));
             return $this->response->withStringBody(json_encode(['status' => $status]));
         }
 
@@ -91,8 +91,8 @@ class NotificationsController extends AppController
     {
         $this->response = $this->response->withType('application/json');
 
-        if ($this->isConnected) {
-            $status = $this->Notification->markAllAsSeenFromUser($this->User->getKey('id'));
+        if ($this->Auth->isConnected()) {
+            $status = $this->Notifications->markAllAsSeenFromUser($this->User->getKey('id'));
             return $this->response->withStringBody(json_encode(['status' => $status]));
         }
 

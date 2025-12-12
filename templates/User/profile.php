@@ -67,7 +67,7 @@
                 <?= $this->Form->create(null, [
                     'class' => 'form-horizontal',
                     'method' => 'post',
-                    'url' => ['_name' => 'authentification_valid_enable'],
+                    'url' => ['_name' => 'auth_2fa_enable'],
                     'data-ajax' => 'true',
                     'data-callback-function' => 'afterValidQrCode'
                 ]) ?>
@@ -109,7 +109,7 @@
                         toggleBtn.classList.add('disabled');
 
                         if (!status) {
-                            fetch('<?= $this->Url->build(['_name' => 'authentification_generate_secret']) ?>', {
+                            fetch('<?= $this->Url->build(['_name' => 'auth_2fa_generate_secret']) ?>', {
                                 method: 'GET',
                                 headers: {
                                     'X-Requested-With': 'XMLHttpRequest'
@@ -136,7 +136,7 @@
                                     toggleBtn.classList.remove('disabled');
                                 });
                         } else {
-                            fetch('<?= $this->Url->build(['_name' => 'authentification_disable']) ?>', {
+                            fetch('<?= $this->Url->build(['_name' => 'auth_2fa_disable']) ?>', {
                                 method: 'GET',
                                 headers: {
                                     'X-Requested-With': 'XMLHttpRequest'
@@ -217,7 +217,7 @@
             </div>
             <?= $this->Form->end() ?>
 
-            <?php if ($Permissions->can('EDIT_HIS_EMAIL')) { ?>
+            <?php if ($this->Auth->can('EDIT_HIS_EMAIL')) { ?>
                 <hr>
 
                 <h3><?= __('USER__UPDATE_EMAIL') ?></h3>

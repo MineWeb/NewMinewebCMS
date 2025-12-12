@@ -13,7 +13,7 @@ class ThemeController extends AppController
 {
     public function index(): ?Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_THEMES'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_THEMES'))) {
             throw new ForbiddenException();
         }
 
@@ -34,7 +34,7 @@ class ThemeController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_THEMES'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_THEMES'))) {
             throw new ForbiddenException();
         }
 
@@ -53,7 +53,7 @@ class ThemeController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_THEMES'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_THEMES'))) {
             throw new ForbiddenException();
         }
 
@@ -81,7 +81,7 @@ class ThemeController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_THEMES'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_THEMES'))) {
             throw new ForbiddenException();
         }
 
@@ -107,7 +107,7 @@ class ThemeController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_THEMES'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_THEMES'))) {
             throw new ForbiddenException();
         }
 
@@ -131,7 +131,7 @@ class ThemeController extends AppController
 
     public function custom(string $slug): ?Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_THEMES'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_THEMES'))) {
             throw new ForbiddenException();
         }
 
@@ -171,7 +171,7 @@ class ThemeController extends AppController
 
     public function customFiles(string $slug): ?Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_THEMES'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_THEMES'))) {
             throw new ForbiddenException();
         }
 
@@ -211,7 +211,7 @@ class ThemeController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_THEMES'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_THEMES'))) {
             throw new ForbiddenException();
         }
 
@@ -238,7 +238,7 @@ class ThemeController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_THEMES'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_THEMES'))) {
             throw new ForbiddenException();
         }
 

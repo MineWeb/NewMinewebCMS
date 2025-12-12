@@ -11,7 +11,7 @@ class BanController extends AppController
 {
     public function index(): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_BAN')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_BAN')) {
             throw new ForbiddenException();
         }
 
@@ -32,7 +32,7 @@ class BanController extends AppController
 
     public function add(): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_BAN')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_BAN')) {
             throw new ForbiddenException();
         }
 
@@ -96,7 +96,7 @@ class BanController extends AppController
 
     public function unban(int|string $id = 0): Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_BAN')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_BAN')) {
             throw new ForbiddenException();
         }
 
@@ -114,7 +114,7 @@ class BanController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_BAN'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_BAN'))) {
             return $this->response->withStringBody(json_encode(['status' => false]));
         }
 
@@ -192,7 +192,7 @@ class BanController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_BAN'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_BAN'))) {
             return $this->response->withStringBody(json_encode(['status' => false]));
         }
 

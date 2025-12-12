@@ -14,9 +14,13 @@ declare(strict_types=1);
  * @since     3.3.0
  * @license   https://opensource.org/licenses/mit-license.php MIT License
  */
+
 namespace App;
 
+use App\Middleware\AuthContextMiddleware;
+use App\Middleware\BanMiddleware;
 use App\Middleware\InstallMiddleware;
+use App\Middleware\MaintenanceMiddleware;
 use Cake\Core\Configure;
 use Cake\Core\ContainerInterface;
 use Cake\Datasource\FactoryLocator;
@@ -77,24 +81,17 @@ class Application extends BaseApplication
         $middlewareQueue
             ->add(new InstallMiddleware())
             ->add(new ErrorHandlerMiddleware(Configure::read('Error')))
-
             ->add(new AssetMiddleware([
                 'cacheTime' => Configure::read('Asset.cacheTime'),
             ]))
-
+            ->add(new AuthContextMiddleware())
             ->add(new RoutingMiddleware($this))
-
+            ->add(new CsrfProtectionMiddleware([
+                'httponly' => true,
+            ]))
+            ->add(new BanMiddleware())
+            ->add(new MaintenanceMiddleware())
             ->add(new BodyParserMiddleware());
-
-        $csrf = new CsrfProtectionMiddleware();
-        $csrf->skipCheckCallback(function ($request) {
-            if (!$request->getParam('crsf')) {
-                return true;
-            }
-
-            return false;
-        });
-        $middlewareQueue->add($csrf);
 
         return $middlewareQueue;
     }

@@ -5,42 +5,38 @@ namespace App\Controller;
 
 use Cake\Http\Response;
 
-/**
- * @property bool $isConnected
- * @property mixed $isBanned
- */
 class BanController extends AppController
 {
     public function index(): ?Response
     {
-        if (!$this->isConnected || !$this->isBanned) {
+        if (!$this->Auth->isConnected() || !$this->Auth->isBanned()) {
             return $this->redirect('/');
         }
+
+        $this->set('title_for_layout', __('BAN__BAN'));
+        $this->set('reason', $this->Auth->banReason());
 
         $this->viewBuilder()
             ->setLayout('default')
             ->setTemplatePath('Ban')
             ->setTemplate('index');
 
-        $this->set('title_for_layout', __('BAN__BAN'));
-        $this->set('reason', $this->isBanned);
-
         return null;
     }
 
     public function ip(): ?Response
     {
-        if (!$this->isBanned) {
+        if (!$this->Auth->isBanned()) {
             return $this->redirect('/');
         }
+
+        $this->set('title_for_layout', __('BAN__BAN'));
+        $this->set('reason', $this->Auth->banReason());
 
         $this->viewBuilder()
             ->setLayout('default')
             ->setTemplatePath('Ban')
             ->setTemplate('ip');
-
-        $this->set('title_for_layout', __('BAN__BAN'));
-        $this->set('reason', $this->isBanned);
 
         return null;
     }

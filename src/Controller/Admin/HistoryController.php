@@ -12,7 +12,7 @@ class HistoryController extends AppController
 {
     public function index(): ?Response
     {
-        if (!$this->Permissions->can('VIEW_WEBSITE_HISTORY')) {
+        if (!$this->Auth->can('VIEW_WEBSITE_HISTORY')) {
             throw new ForbiddenException();
         }
 
@@ -28,7 +28,7 @@ class HistoryController extends AppController
 
     public function getAll(): Response
     {
-        if (!$this->Permissions->can('VIEW_WEBSITE_HISTORY')) {
+        if (!$this->Auth->can('VIEW_WEBSITE_HISTORY')) {
             throw new ForbiddenException();
         }
 

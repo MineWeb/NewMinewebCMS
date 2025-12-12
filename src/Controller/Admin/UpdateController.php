@@ -14,7 +14,7 @@ class UpdateController extends AppController
 {
     public function index(): ?Response
     {
-        if (!$this->isConnected || !$this->User->isAdmin()) {
+        if (!$this->Auth->isConnected() || !$this->User->isAdmin()) {
             throw new ForbiddenException();
         }
 
@@ -30,7 +30,7 @@ class UpdateController extends AppController
 
     public function clearCache(): Response
     {
-        if (!$this->isConnected || !$this->User->isAdmin()) {
+        if (!$this->Auth->isConnected() || !$this->User->isAdmin()) {
             throw new ForbiddenException();
         }
 
@@ -65,7 +65,7 @@ class UpdateController extends AppController
 
     public function update(string $componentUpdated = '0'): Response
     {
-        if (!$this->isConnected || !$this->User->isAdmin()) {
+        if (!$this->Auth->isConnected() || !$this->User->isAdmin()) {
             throw new ForbiddenException();
         }
 
@@ -96,7 +96,7 @@ class UpdateController extends AppController
 
     public function check(): Response
     {
-        if (!$this->isConnected || !$this->User->isAdmin()) {
+        if (!$this->Auth->isConnected() || !$this->User->isAdmin()) {
             throw new ForbiddenException();
         }
 

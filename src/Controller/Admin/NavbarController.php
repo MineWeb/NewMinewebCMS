@@ -14,7 +14,7 @@ class NavbarController extends AppController
 {
     public function index(): ?Response
     {
-        if (!$this->Permissions->can('MANAGE_NAV')) {
+        if (!$this->Auth->can('MANAGE_NAV')) {
             throw new ForbiddenException();
         }
 
@@ -90,7 +90,7 @@ class NavbarController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_NAV'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NAV'))) {
             return $this->redirect(['_name' => 'home']);
         }
 
@@ -172,7 +172,7 @@ class NavbarController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_NAV'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NAV'))) {
             return $this->redirect(['_name' => 'home']);
         }
 
@@ -198,7 +198,7 @@ class NavbarController extends AppController
 
     public function add(): ?Response
     {
-        if (!$this->Permissions->can('MANAGE_NAV')) {
+        if (!$this->Auth->can('MANAGE_NAV')) {
             throw new ForbiddenException();
         }
 
@@ -228,7 +228,7 @@ class NavbarController extends AppController
 
     public function addAjax(): Response
     {
-        if (!$this->Permissions->can('MANAGE_NAV')) {
+        if (!$this->Auth->can('MANAGE_NAV')) {
             throw new ForbiddenException();
         }
 
@@ -289,7 +289,7 @@ class NavbarController extends AppController
 
     public function edit(int|string|null $id = null): ?Response
     {
-        if (!$this->Permissions->can('MANAGE_NAV')) {
+        if (!$this->Auth->can('MANAGE_NAV')) {
             throw new ForbiddenException();
         }
 
@@ -334,7 +334,7 @@ class NavbarController extends AppController
 
     public function editAjax(int|string $id): Response
     {
-        if (!$this->Permissions->can('MANAGE_NAV')) {
+        if (!$this->Auth->can('MANAGE_NAV')) {
             throw new ForbiddenException();
         }
 

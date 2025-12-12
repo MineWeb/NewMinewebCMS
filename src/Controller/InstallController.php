@@ -401,7 +401,14 @@ class InstallController extends BaseController
 
         $data['ip'] = $ip;
         $data['rank'] = 4;
-        $data['password'] = $this->Util->password($data['password'], $data['pseudo']);
+
+        $data['money'] = 0;
+        $data['skin'] = 0;
+        $data['cape'] = 0;
+        $data['confirmed'] = '';
+
+        $data['password'] = $this->Util->password((string)$data['password'], (string)$data['pseudo']);
+        $data['password_hash'] = $this->Util->getPasswordHashType();
 
         $user = $userTable->newEntity($data);
         $saved = $userTable->save($user);

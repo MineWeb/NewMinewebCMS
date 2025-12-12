@@ -12,7 +12,7 @@ class LogController extends AppController
 {
     public function error(): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('PERMISSIONS__VIEW_WEBSITE_LOGS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('PERMISSIONS__VIEW_WEBSITE_LOGS')) {
             throw new ForbiddenException();
         }
 
@@ -50,7 +50,7 @@ class LogController extends AppController
 
     public function debug(): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('PERMISSIONS__VIEW_WEBSITE_LOGS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('PERMISSIONS__VIEW_WEBSITE_LOGS')) {
             throw new ForbiddenException();
         }
 

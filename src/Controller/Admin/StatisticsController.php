@@ -11,7 +11,7 @@ class StatisticsController extends AppController
 {
     public function index(): ?Response
     {
-        if (!($this->isConnected && $this->Permissions->can('VIEW_STATISTICS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('VIEW_STATISTICS'))) {
             return $this->redirect('/');
         }
 
@@ -31,7 +31,7 @@ class StatisticsController extends AppController
 
     public function getVisits(): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('VIEW_STATISTICS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('VIEW_STATISTICS'))) {
             throw new ForbiddenException();
         }
 
@@ -58,7 +58,7 @@ class StatisticsController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!($this->isConnected && $this->Permissions->can('VIEW_STATISTICS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('VIEW_STATISTICS'))) {
             return $this->redirect('/');
         }
 

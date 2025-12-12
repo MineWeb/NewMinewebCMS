@@ -11,7 +11,7 @@ class PermissionsController extends AppController
 {
     public function index(): ?Response
     {
-        if (!$this->Permissions->can('MANAGE_PERMISSIONS')) {
+        if (!$this->Auth->can('MANAGE_PERMISSIONS')) {
             throw new ForbiddenException();
         }
 
@@ -89,7 +89,7 @@ class PermissionsController extends AppController
 
     public function addRank(): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_PERMISSIONS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_PERMISSIONS'))) {
             return $this->redirect('/');
         }
 
@@ -145,7 +145,7 @@ class PermissionsController extends AppController
 
     public function deleteRank(int|string|null $id = null): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_PERMISSIONS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_PERMISSIONS'))) {
             return $this->redirect('/');
         }
 

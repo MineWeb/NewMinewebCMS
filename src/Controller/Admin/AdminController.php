@@ -12,7 +12,7 @@ class AdminController extends AppController
 {
     public function index(): ?Response
     {
-        if (!($this->isConnected && $this->Permissions->can('ACCESS_DASHBOARD'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('ACCESS_DASHBOARD'))) {
             return $this->redirect('/');
         }
 
@@ -91,7 +91,7 @@ class AdminController extends AppController
         $serverTable = $this->fetchTable('Servers');
         $servers = $serverTable->find()->all();
 
-        if ($this->request->is('ajax') && $this->Permissions->can('SEND_SERVER_COMMAND_FROM_DASHBOARD')) {
+        if ($this->request->is('ajax') && $this->Auth->can('SEND_SERVER_COMMAND_FROM_DASHBOARD')) {
             $serverId = $this->request->getData('server_id');
             if ($serverId !== null) {
                 $this->ServerComponent = $this->loadComponent('Server');
@@ -138,7 +138,7 @@ class AdminController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!$this->isConnected) {
+        if (!$this->Auth->isConnected()) {
             throw new ForbiddenException();
         }
 

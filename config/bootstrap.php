@@ -158,3 +158,5 @@ I18n::config('_fallback', function (string $domain, string $locale) {
 
     return new Package('default', null, $messages);
 });
+
+Configure::write('Permissions.list', require CONFIG . 'permissions.php');

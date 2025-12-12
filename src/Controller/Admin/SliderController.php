@@ -13,7 +13,7 @@ class SliderController extends AppController
 {
     public function index(): ?Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_SLIDER'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SLIDER'))) {
             return $this->redirect('/');
         }
 
@@ -34,7 +34,7 @@ class SliderController extends AppController
 
     public function delete(int|string|null $id = null): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_SLIDER'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SLIDER'))) {
             return $this->redirect('/');
         }
 
@@ -61,7 +61,7 @@ class SliderController extends AppController
 
     public function edit(int|string|null $id = null): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_SLIDER'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SLIDER'))) {
             return $this->redirect('/');
         }
 
@@ -95,7 +95,7 @@ class SliderController extends AppController
 
     public function editAjax(): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_SLIDER'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SLIDER'))) {
             throw new ForbiddenException();
         }
 
@@ -174,7 +174,7 @@ class SliderController extends AppController
 
     public function add(): ?Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_SLIDER'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SLIDER'))) {
             return $this->redirect('/');
         }
 
@@ -190,7 +190,7 @@ class SliderController extends AppController
 
     public function addAjax(): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_SLIDER'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SLIDER'))) {
             throw new ForbiddenException();
         }
 

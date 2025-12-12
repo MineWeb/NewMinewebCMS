@@ -3,23 +3,28 @@ declare(strict_types=1);
 
 namespace App\Controller\Component;
 
+use App\Model\Table\ApiConfigurationsTable;
+use App\Model\Table\ConfigurationsTable;
+use App\Service\AuthService;
 use Cake\Cache\Cache;
 use Cake\Controller\Component;
 use Cake\Log\Log;
-use Cake\ORM\Table;
-use Cake\ORM\TableRegistry;
+use Cake\ORM\Locator\LocatorAwareTrait;
+use GdImage;
 
-class APIComponent extends Component
+final class APIComponent extends Component
 {
-    public array $components = ['Session', 'Configuration'];
+    use LocatorAwareTrait;
+
+    public array $components = ['Session'];
 
     public bool $skin_active = false;
     public bool $cape_active = false;
 
-    private $controller;
-
-    private Table $User;
-    private Table $ApiConfiguration;
+    private AuthService $auth;
+    private mixed $identity = null;
+    private ApiConfigurationsTable $ApiConfigurations;
+    private ConfigurationsTable $Configurations;
 
     private ?object $config = null;
 
@@ -27,39 +32,30 @@ class APIComponent extends Component
     {
         parent::initialize($config);
 
-        $this->controller = $this->_registry->getController();
-        $this->controller->set('API', $this);
+        $this->auth = new AuthService();
 
-        if (isset($this->controller->Configuration)) {
-            $this->Configuration = $this->controller->Configuration;
-        } else {
-            $this->Configuration = TableRegistry::getTableLocator()->get('Configurations');
+        $request = $this->getController()->getRequest();
+        $this->identity = $this->auth->identity($request);
+
+        $this->ApiConfigurations = $this->fetchTable('ApiConfigurations');
+        $this->Configurations = $this->fetchTable('Configurations');
+
+        $this->config = $this->ApiConfigurations->find()->first() ?: null;
+
+        if ($this->config === null) {
+            return;
         }
 
-        $locator = TableRegistry::getTableLocator();
-        $this->User = $locator->get('User');
-        $this->ApiConfiguration = $locator->get('ApiConfiguration');
-
-        $this->config = $this->ApiConfiguration->find()->first() ?: null;
-
-        $skinsEnabled = false;
-        $capesEnabled = false;
-
-        if ($this->config !== null) {
-            $skinsEnabled = ((string)($this->config->skins ?? '0')) === '1';
-            $capesEnabled = ((string)($this->config->capes ?? '0')) === '1';
-        }
-
-        $this->skin_active = $skinsEnabled;
-        $this->cape_active = $capesEnabled;
+        $this->skin_active = (string)($this->config->skins ?? '0') === '1';
+        $this->cape_active = (string)($this->config->capes ?? '0') === '1';
     }
 
     public function set(string $key, mixed $value): bool
     {
-        $config = $this->ApiConfiguration->get(1);
-        $config->set([$key => $value]);
+        $entity = $this->ApiConfigurations->get(1);
+        $entity->set($key, $value);
 
-        return (bool)$this->ApiConfiguration->save($config);
+        return (bool)$this->ApiConfigurations->save($entity);
     }
 
     public function can_skin(): bool
@@ -72,7 +68,11 @@ class APIComponent extends Component
             return true;
         }
 
-        return (int)$this->User->getKey('skin') === 1;
+        if (!is_object($this->identity) || !method_exists($this->identity, 'get')) {
+            return false;
+        }
+
+        return ($this->identity->get('skin') ?? 0) === 1;
     }
 
     public function can_cape(): bool
@@ -85,7 +85,11 @@ class APIComponent extends Component
             return true;
         }
 
-        return (int)$this->User->getKey('cape') === 1;
+        if (!is_object($this->identity) || !method_exists($this->identity, 'get')) {
+            return false;
+        }
+
+        return ($this->identity->get('cape') ?? 0) === 1;
     }
 
     public function get_skin(string $username): string
@@ -95,9 +99,10 @@ class APIComponent extends Component
             return '';
         }
 
-        $source = $this->_getSkinImage($username);
+        $source = $this->getSkinImage($username);
         if ($source === false) {
             imagedestroy($rendered);
+
             return '';
         }
 
@@ -108,26 +113,26 @@ class APIComponent extends Component
         imagefilledrectangle($rendered, 0, 0, 240, 480, $pink);
         imagecolortransparent($rendered, $pink);
 
-        $size_x = imagesx($source);
-        $size_y = imagesy($source);
+        $sizeX = imagesx($source);
+        $sizeY = imagesy($source);
 
-        $temp = imagecreatetruecolor($size_x, $size_y);
+        $temp = imagecreatetruecolor($sizeX, $sizeY);
         if ($temp === false) {
             imagedestroy($rendered);
             imagedestroy($source);
+
             return '';
         }
 
-        imagecopyresampled($temp, $source, 0, 0, $size_x - 1, 0, $size_x, $size_y, -$size_x, $size_y);
-        $fsource = $temp;
+        imagecopyresampled($temp, $source, 0, 0, $sizeX - 1, 0, $sizeX, $sizeY, -$sizeX, $sizeY);
 
         imagecopyresampled($rendered, $source, $b / 2, 0, $s, $s, $b, $b, $s, $s);
         imagecopyresampled($rendered, $source, $b / 2, 0, $s * 5, $s, $b, $b, $s, $s);
         imagecopyresampled($rendered, $source, $b / 2, $b, (int)($s * 2.5), (int)($s * 2.5), $b, (int)($b * 1.5), $s, (int)($s * 1.5));
         imagecopyresampled($rendered, $source, (int)($b * 1.5), $b, (int)($s * 5.5), (int)($s * 2.5), (int)($b / 2), (int)($b * 1.5), (int)($s / 2), (int)($s * 1.5));
-        imagecopyresampled($rendered, $fsource, 0, $b, $s * 2, (int)($s * 2.5), (int)($b / 2), (int)($b * 1.5), (int)($s / 2), (int)($s * 1.5));
+        imagecopyresampled($rendered, $temp, 0, $b, $s * 2, (int)($s * 2.5), (int)($b / 2), (int)($b * 1.5), (int)($s / 2), (int)($s * 1.5));
         imagecopyresampled($rendered, $source, 60, (int)($b * 2.5), (int)($s / 2), (int)($s * 2.5), (int)($b / 2), (int)($b * 1.5), (int)($s / 2), (int)($s * 1.5));
-        imagecopyresampled($rendered, $fsource, $b, (int)($b * 2.5), $s * 7, (int)($s * 2.5), (int)($b / 2), (int)($b * 1.5), (int)($s / 2), (int)($s * 1.5));
+        imagecopyresampled($rendered, $temp, $b, (int)($b * 2.5), $s * 7, (int)($s * 2.5), (int)($b / 2), (int)($b * 1.5), (int)($s / 2), (int)($s * 1.5));
 
         ob_start();
         imagepng($rendered);
@@ -140,40 +145,119 @@ class APIComponent extends Component
         return $data;
     }
 
-    private function _getSkinImage(string $username)
+    public function get_head_skin(string $username, int $size = 50): string
     {
-        $content = '';
+        $src = $this->getSkinImage($username);
+        if ($src === false) {
+            return '';
+        }
 
-        if ($this->skin_active && $this->config !== null) {
-            $filenameTemplate = (string)($this->config->skin_filename ?? '');
-            if ($filenameTemplate !== '') {
-                $filename = str_replace('{PLAYER}', $username, $filenameTemplate);
-                $path = WWW_ROOT . $filename . '.png';
-                if (is_file($path) && is_readable($path)) {
-                    $fileContent = @file_get_contents($path);
-                    if ($fileContent !== false) {
-                        $content = $fileContent;
-                    }
+        $dest = imagecreatetruecolor(8, 8);
+        if ($dest === false) {
+            imagedestroy($src);
+
+            return '';
+        }
+
+        imagecopy($dest, $src, 0, 0, 8, 8, 8, 8);
+
+        $bgColor = imagecolorat($src, 0, 0);
+        $noHelm = true;
+
+        for ($i = 1; $i <= 8; $i++) {
+            for ($j = 1; $j <= 4; $j++) {
+                if (imagecolorat($src, 40 + $i, 7 + $j) !== $bgColor) {
+                    $noHelm = false;
+                    break;
                 }
+            }
+            if (!$noHelm) {
+                break;
             }
         }
 
-        if ($content === '' && $this->config !== null && (string)($this->config->get_premium_skins ?? '0') === '1') {
-            $cacheKey = 'skin_' . $username;
-            $skin = Cache::read($cacheKey, 'skin');
+        if (!$noHelm) {
+            imagecopy($dest, $src, 0, -1, 40, 7, 8, 4);
+        }
 
-            if ($skin === null) {
-                $premiumContent = $this->_getSkinFromUsername($username);
-                if ($premiumContent !== false && $premiumContent !== '') {
-                    $content = $premiumContent;
-                    Cache::remember($cacheKey, static function () use ($content) {
-                        return base64_encode($content);
-                    }, 'skin');
-                }
-            } else {
-                $decoded = base64_decode($skin, true);
+        $final = imagecreatetruecolor($size, $size);
+        if ($final === false) {
+            imagedestroy($dest);
+            imagedestroy($src);
+
+            return '';
+        }
+
+        imagecopyresized($final, $dest, 0, 0, 0, 0, $size, $size, 8, 8);
+
+        ob_start();
+        imagepng($final);
+        $data = (string)ob_get_clean();
+
+        imagedestroy($dest);
+        imagedestroy($final);
+        imagedestroy($src);
+
+        return $data;
+    }
+
+    public function get(string $username, string $password, ?array $args = null): array
+    {
+        if ($username === '' || $password === '' || empty($args) || !is_array($args)) {
+            return ['status' => false];
+        }
+
+        $args = array_values(array_unique(array_filter(array_map('strval', $args), static fn(string $v): bool => $v !== '')));
+        if ($args === []) {
+            return ['status' => false];
+        }
+
+        $user = $this->Users
+            ->find()
+            ->where([
+                'pseudo' => $username,
+                'password' => $password,
+            ])
+            ->first();
+
+        if ($user === null) {
+            return ['status' => false];
+        }
+
+        $out = [
+            'status' => true,
+            'args' => [],
+        ];
+
+        foreach ($args as $field) {
+            if (property_exists($user, $field) || isset($user[$field])) {
+                $out['args'][$field] = $user->{$field} ?? $user[$field] ?? null;
+            }
+        }
+
+        return $out;
+    }
+
+    private function getSkinImage(string $username): GdImage|string|bool|null
+    {
+        $content = $this->getLocalSkinContent($username);
+
+        if ($content === '' && $this->config !== null && ((string)($this->config->get_premium_skins ?? '0')) === '1') {
+            $cacheKey = 'skin_' . $username;
+            $cached = Cache::read($cacheKey, 'skin');
+
+            if (is_string($cached) && $cached !== '') {
+                $decoded = base64_decode($cached, true);
                 if ($decoded !== false) {
                     $content = $decoded;
+                }
+            }
+
+            if ($content === '') {
+                $premium = $this->getSkinFromUsername($username);
+                if (is_string($premium) && $premium !== '') {
+                    $content = $premium;
+                    Cache::write($cacheKey, base64_encode($content), 'skin');
                 }
             }
         }
@@ -217,180 +301,96 @@ class APIComponent extends Component
             'P9QDlBCGKEECoHEBEDLAXHAQMQnI8jwFYRQw3AMOQAJoOADoAVcDAh0HZAKQZUMZdC43kdeqAPwU' .
             'BEsC+M4cIEq5KEEBCl90mR8CVR3nxwCdBBS9OAe020UGnXb7KcxzPY9SXoEEIBZtgE7UDgBKyLMh' .
             'gBS2YdzjMJb4XHRDAPiQhSGjNOxKQIZTgC8BiMECgarxprjjO0OXiV4MAf4A/x0nbcyiS5EAAAAA' .
-            'SUVORK5CYII='
+            'SUVORK5CYII=',
+            true
         );
 
         if ($fallback === false) {
-            Log::error('APIComponent: unable to decode fallback skin image');
+            Log::error('APIComponent fallback decode failed');
+
             return false;
         }
 
         $img = imagecreatefromstring($fallback);
         if ($img === false) {
-            Log::error('APIComponent: unable to create image from fallback skin data');
+            Log::error('APIComponent fallback imagecreatefromstring failed');
         }
 
         return $img;
     }
 
-    private function _getSkinFromUsername(string $username): string|false
+    private function getLocalSkinContent(string $username): string
+    {
+        if (!$this->skin_active || $this->config === null) {
+            return '';
+        }
+
+        $template = (string)($this->config->skin_filename ?? '');
+        if ($template === '') {
+            return '';
+        }
+
+        $filename = str_replace('{PLAYER}', $username, $template);
+        $path = WWW_ROOT . $filename . '.png';
+
+        if (!is_file($path) || !is_readable($path)) {
+            return '';
+        }
+
+        $fileContent = @file_get_contents($path);
+        if ($fileContent === false) {
+            return '';
+        }
+
+        return $fileContent;
+    }
+
+    private function getSkinFromUsername(string $username): string|false
     {
         $user = @json_decode((string)@file_get_contents('https://api.mojang.com/users/profiles/minecraft/' . $username), true);
         if (!is_array($user) || !isset($user['id'])) {
             return false;
         }
 
-        $uuid = $user['id'];
+        $uuid = (string)$user['id'];
 
         $profile = @json_decode((string)@file_get_contents('https://sessionserver.mojang.com/session/minecraft/profile/' . $uuid), true);
         if (!is_array($profile) || !isset($profile['properties']) || !is_array($profile['properties'])) {
             return false;
         }
 
-        $textures = null;
+        $texturesValue = null;
         foreach ($profile['properties'] as $property) {
-            if (is_array($property) && isset($property['name'], $property['value']) && $property['name'] === 'textures') {
-                $textures = $property;
+            if (is_array($property) && ($property['name'] ?? null) === 'textures' && isset($property['value'])) {
+                $texturesValue = (string)$property['value'];
                 break;
             }
         }
 
-        if ($textures === null) {
+        if ($texturesValue === null || $texturesValue === '') {
             return false;
         }
 
-        $texturesObject = @json_decode((string)@base64_decode($textures['value']), true);
+        $decoded = base64_decode($texturesValue, true);
+        if ($decoded === false) {
+            return false;
+        }
+
+        $texturesObject = @json_decode($decoded, true);
         if (!is_array($texturesObject) || !isset($texturesObject['textures']['SKIN']['url'])) {
             return false;
         }
 
-        $url = $texturesObject['textures']['SKIN']['url'];
-        $content = @file_get_contents($url);
+        $url = (string)$texturesObject['textures']['SKIN']['url'];
+        if ($url === '') {
+            return false;
+        }
 
+        $content = @file_get_contents($url);
         if ($content === false) {
             return false;
         }
 
         return $content;
-    }
-
-    public function get_head_skin(string $username, int $size = 50): string
-    {
-        $src = $this->_getSkinImage($username);
-        if ($src === false) {
-            return '';
-        }
-
-        $dest = imagecreatetruecolor(8, 8);
-        if ($dest === false) {
-            imagedestroy($src);
-            return '';
-        }
-
-        imagecopy($dest, $src, 0, 0, 8, 8, 8, 8);
-
-        $bg_color = imagecolorat($src, 0, 0);
-        $no_helm = true;
-
-        for ($i = 1; $i <= 8; $i++) {
-            for ($j = 1; $j <= 4; $j++) {
-                if (imagecolorat($src, 40 + $i, 7 + $j) !== $bg_color) {
-                    $no_helm = false;
-                    break;
-                }
-            }
-            if (!$no_helm) {
-                break;
-            }
-        }
-
-        if (!$no_helm) {
-            imagecopy($dest, $src, 0, -1, 40, 7, 8, 4);
-        }
-
-        $final = imagecreatetruecolor($size, $size);
-        if ($final === false) {
-            imagedestroy($dest);
-            imagedestroy($src);
-            return '';
-        }
-
-        imagecopyresized($final, $dest, 0, 0, 0, 0, $size, $size, 8, 8);
-
-        ob_start();
-        imagepng($final);
-        $data = (string)ob_get_clean();
-
-        imagedestroy($dest);
-        imagedestroy($final);
-        imagedestroy($src);
-
-        return $data;
-    }
-
-    public function get(string $username, string $password, ?array $args = null): array
-    {
-        if ($username === '' || $password === '') {
-            return ['status' => false];
-        }
-
-        if ($args === null || !is_array($args) || $args === []) {
-            return ['status' => false];
-        }
-
-        $args = array_values(array_filter(array_map('strval', $args), static function (string $v): bool {
-            return $v !== '';
-        }));
-
-        if ($args === []) {
-            return ['status' => false];
-        }
-
-        $user = $this->User
-            ->find()
-            ->where([
-                'pseudo' => $username,
-                'password' => $password,
-            ])
-            ->first();
-
-        if ($user === null) {
-            return ['status' => false];
-        }
-
-        $result = [
-            'status' => true,
-            'args' => [],
-        ];
-
-        if (in_array('id', $args, true)) {
-            $result['args']['id'] = $user->id ?? null;
-        }
-
-        if (in_array('email', $args, true)) {
-            $result['args']['email'] = $user->email ?? null;
-        }
-
-        if (in_array('rank', $args, true)) {
-            $result['args']['rank'] = $user->rank ?? null;
-        }
-
-        if (in_array('money', $args, true)) {
-            $result['args']['money'] = $user->money ?? null;
-        }
-
-        if (in_array('ip', $args, true)) {
-            $result['args']['ip'] = $user->ip ?? null;
-        }
-
-        if (in_array('vote', $args, true)) {
-            $result['args']['vote'] = $user->vote ?? null;
-        }
-
-        if (in_array('created', $args, true)) {
-            $result['args']['created'] = $user->created ?? null;
-        }
-
-        return $result;
     }
 }

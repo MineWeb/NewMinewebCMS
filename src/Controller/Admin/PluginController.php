@@ -15,7 +15,7 @@ class PluginController extends AppController
 {
     public function index(): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_PLUGINS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_PLUGINS')) {
             throw new ForbiddenException();
         }
 
@@ -31,7 +31,7 @@ class PluginController extends AppController
 
     public function admin_delete(int|string|null $id = null): Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_PLUGINS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_PLUGINS')) {
             throw new ForbiddenException();
         }
 
@@ -61,7 +61,7 @@ class PluginController extends AppController
 
     public function admin_enable(int|string|null $id = null): Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_PLUGINS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_PLUGINS')) {
             throw new ForbiddenException();
         }
 
@@ -81,7 +81,7 @@ class PluginController extends AppController
 
     public function admin_disable(int|string|null $id = null): Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_PLUGINS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_PLUGINS')) {
             throw new ForbiddenException();
         }
 
@@ -101,7 +101,7 @@ class PluginController extends AppController
 
     public function install(string $slug): Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_PLUGINS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_PLUGINS')) {
             throw new ForbiddenException();
         }
 
@@ -154,7 +154,7 @@ class PluginController extends AppController
 
     public function admin_update(string $slug): Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_PLUGINS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_PLUGINS')) {
             throw new ForbiddenException();
         }
 

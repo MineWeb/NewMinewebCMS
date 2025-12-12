@@ -14,7 +14,7 @@ use Cake\View\Exception\MissingViewException;
  * @property \App\Model\Table\UsersTable $User
  * @property \App\Model\Table\ServersTable $Server
  *
- * @property \App\Controller\Component\PermissionsComponent $Permissions
+ * @property \App\Controller\Component\AuthComponent $Auth
  */
 class PagesController extends AppController
 {
@@ -92,12 +92,23 @@ class PagesController extends AppController
             ->limit(6)
             ->toArray();
 
+        $identity = $this->Auth->identity();
+        $userId = null;
+
+        if ($this->Auth->isConnected() && is_object($identity) && method_exists($identity, 'get')) {
+            $id = $identity->get('id');
+            if (is_numeric($id)) {
+                $userId = (int)$id;
+            }
+        }
+
         foreach ($search_news as $key => $model) {
-            if ($this->isConnected && isset($model['likes'])) {
+            if ($userId !== null && isset($model['likes'])) {
                 foreach ($model['likes'] as $value) {
                     foreach ($value as $v) {
-                        if ($this->User->getKey('id') === $v) {
+                        if ((int)$v === $userId) {
                             $search_news[$key]['liked'] = true;
+                            break 2;
                         }
                     }
                 }
@@ -115,7 +126,7 @@ class PagesController extends AppController
                 : 0;
         }
 
-        $can_like = (bool)$this->Permissions->can('LIKE_NEWS');
+        $can_like = (bool)$this->Auth->can('LIKE_NEWS');
         $this->set(compact('search_news', 'can_like'));
 
         $sliderTable = $this->fetchTable('Sliders');
@@ -161,7 +172,19 @@ class PagesController extends AppController
         $this->viewBuilder()->setLayout($this->Configuration->getKey('layout'));
 
         $page['author'] = $this->User->getFromUser('pseudo', $page['user_id']);
-        $page['content'] = str_replace('{username}', $this->User->getKey('pseudo'), $page['content']);
+
+        $username = '';
+        if ($this->Auth->isConnected()) {
+            $identity = $this->Auth->identity();
+            if (is_object($identity) && method_exists($identity, 'get')) {
+                $p = $identity->get('pseudo');
+                if (is_string($p)) {
+                    $username = $p;
+                }
+            }
+        }
+
+        $page['content'] = str_replace('{username}', $username, $page['content']);
 
         $count = (int)(mb_substr_count($page['content'], '{%') / 2);
 
@@ -187,7 +210,7 @@ class PagesController extends AppController
 
             $blockContent = $endParts[0];
 
-            $connected = $this->isConnected ? 1 : 0;
+            $connected = $this->Auth->isConnected() ? 1 : 0;
             $server_online = $this->Server->online() ? 1 : 0;
 
             $condition = str_replace(

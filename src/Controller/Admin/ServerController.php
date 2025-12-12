@@ -13,7 +13,7 @@ class ServerController extends AppController
 {
     public function link(): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
             throw new ForbiddenException();
         }
 
@@ -51,7 +51,7 @@ class ServerController extends AppController
 
     public function cmd(): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
             throw new ForbiddenException();
         }
 
@@ -81,7 +81,7 @@ class ServerController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
             throw new ForbiddenException();
         }
 
@@ -97,7 +97,7 @@ class ServerController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
             throw new ForbiddenException();
         }
 
@@ -120,7 +120,7 @@ class ServerController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
             throw new ForbiddenException();
         }
 
@@ -170,7 +170,7 @@ class ServerController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_SERVERS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SERVERS'))) {
             throw new ForbiddenException();
         }
 
@@ -190,7 +190,7 @@ class ServerController extends AppController
 
     public function switchState(): Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
             throw new ForbiddenException();
         }
 
@@ -206,7 +206,7 @@ class ServerController extends AppController
 
     public function switchCacheState(): Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
             throw new ForbiddenException();
         }
 
@@ -224,7 +224,7 @@ class ServerController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
             throw new ForbiddenException();
         }
 
@@ -255,7 +255,7 @@ class ServerController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
             return $this->redirect(['_name' => 'home']);
         }
 
@@ -291,7 +291,7 @@ class ServerController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
             throw new ForbiddenException();
         }
 
@@ -330,7 +330,7 @@ class ServerController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
             return $this->redirect(['_name' => 'home']);
         }
 
@@ -363,7 +363,7 @@ class ServerController extends AppController
 
     public function banlist(int $server_id = null): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
             throw new ForbiddenException();
         }
 
@@ -398,7 +398,7 @@ class ServerController extends AppController
 
     public function whitelist(int $server_id = null): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
             throw new ForbiddenException();
         }
 
@@ -433,7 +433,7 @@ class ServerController extends AppController
 
     public function online(int $server_id = null): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
             throw new ForbiddenException();
         }
 

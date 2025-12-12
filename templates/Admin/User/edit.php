@@ -59,7 +59,7 @@
                                         <a class="btn btn-success<?= ($searchUser['confirmed']) ? ' disabled' : '' ?>"
                                            href="<?= ($searchUser['confirmed'])
                                                ? '#'
-                                               : $this->Url->build(['_name' => 'admin_user_confirm', $searchUser['id']]) ?>">
+                                               : $this->Url->build(['_name' => 'admin_auth_confirm', $searchUser['id']]) ?>">
                                             <?= ($searchUser['confirmed'])
                                                 ? __('USER__EMAIL_CONFIRMED')
                                                 : __('USER__CONFIRM_EMAIL') ?>

@@ -15,27 +15,22 @@ define('TIMESTAMP_DEBUT', microtime(true));
 
 /**
  * @property \App\Controller\Component\UtilComponent $Util
- * @property \App\Controller\Component\PermissionsComponent $Permissions
+ * @property \App\Controller\Component\AuthComponent $Auth
  * @property \App\Controller\Component\EyPluginComponent $EyPlugin
  * @property \App\Controller\Component\ThemeComponent $Theme
  *
  * @property \App\Model\Table\ConfigurationsTable $Configuration
  * @property \App\Model\Table\UsersTable $User
  * @property \App\Model\Table\VisitsTable $Visit
- * @property \App\Model\Table\MaintenancesTable $Maintenance
  * @property \App\Model\Table\NavbarsTable $Navbar
  * @property \App\Model\Table\PagesTable $Page
  * @property \App\Model\Table\SeoTable $Seo
  * @property \App\Model\Table\SocialButtonsTable $SocialButton
- * @property \App\Model\Table\BansTable $Ban
  * @property \App\Model\Table\ServersTable $Server
  */
 class AppController extends BaseController
 {
     public string $View = 'Theme';
-
-    protected bool $isConnected = false;
-    protected mixed $isBanned = false;
 
     public array $paginate = [];
 
@@ -72,24 +67,8 @@ class AppController extends BaseController
 
         $this->setLocale();
 
-        $loginCondition = $this->getRequest()->getRequestTarget() !== '/login' || !$this->EyPlugin->isInstalled('phpierre.signinup');
-
-        if ($this->request->getParam('controller') !== 'User' && $loginCondition) {
-            if ($this->isIPBan($this->Util->getIP()) && $this->request->getParam('controller') !== 'Ban' && !$this->Permissions->can('BYPASS_BAN')) {
-                return $this->redirect(['_name' => 'ban_ip']);
-            }
-
-            $this->Maintenance = $this->fetchTable('Maintenances');
-            if ($this->request->getParam('controller') !== 'Maintenance' && !$this->Permissions->can('BYPASS_MAINTENANCE')) {
-                $maintenance = $this->Maintenance->checkMaintenance($this->getRequest()->getRequestTarget());
-                if ($maintenance) {
-                    return $this->redirect(['_name' => 'maintenance_index', $maintenance['url']]);
-                }
-            }
-        }
-
         if ($this->request->getParam('plugin')) {
-            $plugin = $this->EyPlugin->findPlugin('slugLower', $this->request->getParam('plugin'));
+            $plugin = $this->EyPlugin->findPlugin('slugLower', (string)$this->request->getParam('plugin'));
             if (!empty($plugin) && !$plugin->loaded) {
                 return $this->redirect('/');
             }
@@ -147,11 +126,9 @@ class AppController extends BaseController
         if ($headerLocale) {
             $headerLocale = str_replace('-', '_', $headerLocale);
         }
-
         if ($cookie) {
             $cookie = str_replace('-', '_', $cookie);
         }
-
         if ($bddLang) {
             $bddLang = str_replace('-', '_', $bddLang);
         }
@@ -240,38 +217,22 @@ class AppController extends BaseController
     {
         $this->User = $this->fetchTable('Users');
 
-        if (
-            !$this->User->isConnected()
-            && ($cookie = $this->getRequest()->getCookie('remember_me'))
-            && isset($cookie['pseudo'], $cookie['password'])
-        ) {
-            $user = $this->User->find('first', conditions: ['pseudo' => $cookie['pseudo']]);
-            if (!empty($user) && $user['User']['password'] === $cookie['password']) {
-                $this->getRequest()->getSession()->write('user', $user['User']['id']);
-            }
+        $identity = $this->Auth->identity();
+
+        if ($identity) {
+            $userArray = is_object($identity) && method_exists($identity, 'toArray')
+                ? $identity->toArray()
+                : (array)$identity;
+
+            $userArray['isAdmin'] = $this->Auth->isAdmin();
+            $userArray['permissions'] = $this->getRequest()->getAttribute('auth.permissions', []);
+
+            $this->set('user', $userArray);
+
+            return;
         }
 
-        $this->isConnected = $this->User->isConnected();
-        $this->set('isConnected', $this->isConnected);
-
-        if ($this->isConnected) {
-            $loginCondition = $this->getRequest()->getRequestTarget() !== '/login' || !$this->EyPlugin->isInstalled('phpierre.signinup');
-            if (
-                $this->getRequest()->getParam('controller') !== 'User'
-                && $this->getRequest()->getParam('controller') !== 'Ban'
-                && $this->User->isBanned()
-                && $loginCondition
-            ) {
-                $this->redirect(['_name' => 'ban_index']);
-            }
-        }
-
-        $user = $this->isConnected ? $this->User->getAllFromCurrentUser() : [];
-        if (!empty($user)) {
-            $user['isAdmin'] = $this->User->isAdmin();
-        }
-
-        $this->set(compact('user'));
+        $this->set('user', []);
     }
 
     private function __initWebsiteInfos(): void
@@ -509,21 +470,9 @@ class AppController extends BaseController
                         'permission' => 'MANAGE_SLIDER',
                         'route' => ['_name' => 'admin_slider_index'],
                     ],
-                ],
+                ]
             );
         }
-
-        $nav['GLOBAL__CUSTOMIZE']['menu'] = addToArrayAt(
-            $nav['GLOBAL__CUSTOMIZE']['menu'],
-            count($nav['GLOBAL__CUSTOMIZE']['menu']),
-            [
-                'SLIDER__TITLE' => [
-                    'icon' => 'far fa-image',
-                    'permission' => 'MANAGE_SLIDER',
-                    'route' => ['_name' => 'admin_slider_index'],
-                ],
-            ],
-        );
 
         $plugins = $this->EyPlugin->pluginsLoaded;
         foreach ($plugins as $plugin) {
@@ -614,12 +563,10 @@ class AppController extends BaseController
         }
 
         try {
-            if (!empty($configuration)) {
-                $server_infos = $this->Server->banner_infos($configuration);
-            } else {
-                $server_infos = $this->Server->banner_infos();
-            }
-        } catch (Throwable $e) {
+            $server_infos = !empty($configuration)
+                ? $this->Server->banner_infos($configuration)
+                : $this->Server->banner_infos();
+        } catch (Throwable) {
             $this->set([
                 'banner_server' => false,
                 'server_infos' => false,
@@ -629,8 +576,7 @@ class AppController extends BaseController
         }
 
         if (
-            !isset($server_infos['GET_MAX_PLAYERS'])
-            || !isset($server_infos['GET_PLAYER_COUNT'])
+            !isset($server_infos['GET_MAX_PLAYERS'], $server_infos['GET_PLAYER_COUNT'])
             || $server_infos['GET_MAX_PLAYERS'] === 0
         ) {
             $this->set([
@@ -701,9 +647,8 @@ class AppController extends BaseController
         $get_page = [];
         $condition = ["'" . $current_url . "' LIKE CONCAT(page, '%')"];
 
-        $use_sqlite = $this->Util->useSqlite();
-        if ($use_sqlite) {
-            $condition = ["'" . $current_url . "' LIKE 'page' || '%' "];
+        if ($this->Util->useSqlite()) {
+            $condition = ["'" . $current_url . "' LIKE page || '%'"];
         }
 
         $check = $this->Seo->find('all', conditions: $condition)->toArray();
@@ -724,7 +669,7 @@ class AppController extends BaseController
             ? $get_page['favicon_url']
             : (!empty($default['favicon_url']) ? $default['favicon_url'] : '');
         $seo_config['favicon_url'] = Router::url($seo_config['favicon_url'], true);
-        $seo_config['img_url'] = empty($seo_config['img_url'])
+        $seo_config['img_url'] = $seo_config['img_url'] === ''
             ? $seo_config['favicon_url']
             : Router::url($seo_config['img_url'], true);
 
@@ -734,7 +679,7 @@ class AppController extends BaseController
         $seo_config['title'] = str_replace(
             ['{TITLE}', '{WEBSITE_NAME}'],
             [$title_for_layout, $website_name],
-            $seo_config['title'],
+            $seo_config['title']
         );
 
         $seo_config['theme_color'] = !empty($get_page['theme_color'])
@@ -841,19 +786,5 @@ class AppController extends BaseController
         curl_multi_close($multi);
 
         return $result;
-    }
-
-    public function isIPBan(string $ip): bool
-    {
-        $this->Ban = $this->fetchTable('Bans');
-        $ipIsBan = $this->Ban->find('all', conditions: ['ip' => $ip])->first();
-
-        if ($ipIsBan !== null) {
-            $this->isBanned = $ipIsBan['reason'];
-
-            return true;
-        }
-
-        return false;
     }
 }

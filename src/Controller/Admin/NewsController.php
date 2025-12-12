@@ -14,7 +14,7 @@ class NewsController extends AppController
 {
     public function index(): ?Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_NEWS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NEWS'))) {
             return $this->redirect(['_name' => 'home']);
         }
 
@@ -35,7 +35,7 @@ class NewsController extends AppController
 
     public function delete(int|string|null $id = null): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_NEWS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NEWS'))) {
             return $this->redirect(['_name' => 'home']);
         }
 
@@ -75,7 +75,7 @@ class NewsController extends AppController
 
     public function add(): ?Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_NEWS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NEWS'))) {
             return $this->redirect(['_name' => 'home']);
         }
 
@@ -94,7 +94,7 @@ class NewsController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_NEWS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NEWS'))) {
             throw new ForbiddenException();
         }
 
@@ -163,7 +163,7 @@ class NewsController extends AppController
 
     public function edit(int|string|null $id = null): ?Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_NEWS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NEWS'))) {
             return $this->redirect(['_name' => 'home']);
         }
 
@@ -197,7 +197,7 @@ class NewsController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_NEWS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NEWS'))) {
             throw new ForbiddenException();
         }
 

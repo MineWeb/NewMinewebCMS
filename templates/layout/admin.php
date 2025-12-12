@@ -81,7 +81,7 @@ use Cake\Routing\Router;
 
             <li class="nav-item">
                 <a class="nav-link"
-                   href="<?= $this->Url->build(['_name' => 'user_logout']); ?>"><i
+                   href="<?= $this->Url->build(['_name' => 'auth_logout']); ?>"><i
                         class="fa fa-power-off"></i> <?= __('USER__LOGOUT') ?></a>
             </li>
         </ul>
@@ -156,59 +156,69 @@ use Cake\Routing\Router;
                     data-accordion="false">
                     <?php
 
-                    function checkCurrent($nav)
+                    function checkCurrent(array $nav): bool
                     {
-                        if (is_array($nav)) {
-                            foreach ($nav as $value) {
-                                if (isset($v['menu'])) {
-                                    return checkCurrent($v['menu']);
-                                }
-                                $route = (isset($value['route']) ? Router::url($value['route']) : '#');
-                                $current = $route == Router::url();
-                                if ($current == $route) {
+                        foreach ($nav as $value) {
+                            if (isset($value['menu']) && is_array($value['menu'])) {
+                                if (checkCurrent($value['menu'])) {
                                     return true;
                                 }
                             }
+
+                            $route = isset($value['route']) ? Router::url($value['route']) : '#';
+                            if ($route === Router::url()) {
+                                return true;
+                            }
                         }
+
                         return false;
                     }
 
-                    function displayNav($nav, $context)
+                    function displayNav(array $nav, $context): void
                     {
                         foreach ($nav as $name => $value) {
                             if (!isset($value['menu']) && !isset($value['route'])) {
                                 continue;
                             }
-                            if (!isset($value['menu']) && isset($value['permission']) && !$context->Permissions->can($value['permission'])) {
+
+                            if (!isset($value['menu']) && isset($value['permission']) && !$context->Auth->can($value['permission'])) {
                                 continue;
                             }
+
                             $currentMenu = false;
+
                             if (isset($value['menu'])) {
                                 $currentMenu = checkCurrent($value['menu']) ? "menu-open" : "";
                                 echo '<li class="nav-item has-treeview ' . ($currentMenu ? "menu-open" : "") . '">';
                             } else {
                                 echo '<li class="nav-item">';
                             }
-                            $route = (isset($value['route']) ? Router::url($value['route']) : '#');
-                            $current = $route == Router::url();
+
+                            $route = isset($value['route']) ? Router::url($value['route']) : '#';
+                            $current = $route === Router::url();
+
                             echo '<a class="nav-link' . ($current || $currentMenu ? " active" : "") . '" href="' . $route . '">';
-                            echo '<i class="' . (strpos($value['icon'], "fa-") ? $value['icon'] : "fa fa-" . $value['icon']) . ' nav-icon"></i>  <p>' . __($name);
+                            echo '<i class="' . (strpos($value['icon'], "fa-") !== false ? $value['icon'] : "fa fa-" . $value['icon']) . ' nav-icon"></i>  <p>' . __($name);
+
                             if (isset($value['menu'])) {
                                 echo '<i class="fas fa-angle-left right"></i></p>';
                             } else {
                                 echo '</p>';
                             }
+
                             echo '</a>';
+
                             if (isset($value['menu'])) {
                                 echo '<ul class="nav nav-treeview">';
                                 displayNav($value['menu'], $context);
                                 echo '</ul>';
                             }
+
                             echo '</li>';
                         }
                     }
 
-                    displayNav($adminNavbar, (object)['Permissions' => $Permissions]);
+                    displayNav($adminNavbar, $this);
                     ?>
                 </ul>
             </nav>

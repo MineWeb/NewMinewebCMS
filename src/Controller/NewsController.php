@@ -15,7 +15,7 @@ use Cake\Routing\Router;
  * @property \App\Model\Table\CommentsTable $Comment
  * @property \App\Model\Table\LikesTable $Like
  *
- * @property \App\Controller\Component\PermissionsComponent $Permissions
+ * @property \App\Controller\Component\AuthComponent $Auth
  */
 class NewsController extends AppController
 {
@@ -23,7 +23,18 @@ class NewsController extends AppController
     {
         $search_news = $this->getNews();
 
-        if ($this->isConnected) {
+        $userId = null;
+        if ($this->Auth->isConnected()) {
+            $identity = $this->Auth->identity();
+            if (is_object($identity) && method_exists($identity, 'get')) {
+                $id = $identity->get('id');
+                if (is_numeric($id)) {
+                    $userId = (int)$id;
+                }
+            }
+        }
+
+        if ($userId !== null) {
             foreach ($search_news as $i => $val) {
                 if (!isset($val['likes'])) {
                     continue;
@@ -31,8 +42,9 @@ class NewsController extends AppController
 
                 foreach ($val['likes'] as $value) {
                     foreach ($value as $v) {
-                        if ($this->User->getKey('id') === $v) {
+                        if ((int)$v === $userId) {
                             $search_news[$i]['liked'] = true;
+                            break 2;
                         }
                     }
                 }
@@ -45,7 +57,7 @@ class NewsController extends AppController
             }
         }
 
-        $can_like = $this->Permissions->can('LIKE_NEWS');
+        $can_like = $this->Auth->can('LIKE_NEWS');
 
         $this->set('title_for_layout', __('NEWS__TITLE'));
         $this->set(compact('search_news', 'can_like'));
@@ -86,11 +98,23 @@ class NewsController extends AppController
             throw new NotFoundException();
         }
 
-        if ($this->isConnected && isset($news['likes'])) {
+        $userId = null;
+        if ($this->Auth->isConnected()) {
+            $identity = $this->Auth->identity();
+            if (is_object($identity) && method_exists($identity, 'get')) {
+                $id = $identity->get('id');
+                if (is_numeric($id)) {
+                    $userId = (int)$id;
+                }
+            }
+        }
+
+        if ($userId !== null && isset($news['likes'])) {
             foreach ($news['likes'] as $value) {
                 foreach ($value as $v) {
-                    if ($this->User->getKey('id') === $v) {
+                    if ((int)$v === $userId) {
                         $news['liked'] = true;
+                        break 2;
                     }
                 }
             }
@@ -130,24 +154,29 @@ class NewsController extends AppController
             ]));
         }
 
-        if (!$this->Permissions->can('COMMENT_NEWS')) {
+        if (!$this->Auth->can('COMMENT_NEWS')) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('USER__ERROR_MUST_BE_LOGGED'),
             ]));
         }
 
-        if (empty($this->getRequest()->getData('content')) || empty($this->getRequest()->getData('news_id'))) {
+        $content = (string)$this->getRequest()->getData('content', '');
+        $newsId = (int)$this->getRequest()->getData('news_id', 0);
+
+        if ($content === '' || $newsId <= 0) {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
                 'msg' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
+        $identity = $this->Auth->identity();
+
         $event = new Event('beforeAddComment', $this, [
-            'content' => $this->getRequest()->getData('content'),
-            'news_id' => $this->getRequest()->getData('news_id'),
-            'user' => $this->User->getAllFromCurrentUser(),
+            'content' => $content,
+            'news_id' => $newsId,
+            'user' => $identity,
         ]);
         $this->getEventManager()->dispatch($event);
         if ($event->isStopped()) {
@@ -159,11 +188,26 @@ class NewsController extends AppController
             return $this->response->withStringBody(json_encode($result));
         }
 
+        $userId = null;
+        if (is_object($identity) && method_exists($identity, 'get')) {
+            $id = $identity->get('id');
+            if (is_numeric($id)) {
+                $userId = (int)$id;
+            }
+        }
+
+        if ($userId === null) {
+            return $this->response->withStringBody(json_encode([
+                'statut' => false,
+                'msg' => __('USER__ERROR_MUST_BE_LOGGED'),
+            ]));
+        }
+
         $this->Comment = TableRegistry::getTableLocator()->get('Comments');
         $comment = $this->Comment->newEntity([
-            'content' => $this->getRequest()->getData('content'),
-            'user_id' => $this->User->getKey('id'),
-            'news_id' => (int)$this->getRequest()->getData('news_id'),
+            'content' => $content,
+            'user_id' => $userId,
+            'news_id' => $newsId,
         ]);
         $this->Comment->save($comment);
 
@@ -185,7 +229,7 @@ class NewsController extends AppController
                 ]));
         }
 
-        if (!$this->Permissions->can('LIKE_NEWS')) {
+        if (!$this->Auth->can('LIKE_NEWS')) {
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
                     'statut' => false,
@@ -193,12 +237,38 @@ class NewsController extends AppController
                 ]));
         }
 
+        $identity = $this->Auth->identity();
+        $userId = null;
+        if (is_object($identity) && method_exists($identity, 'get')) {
+            $id = $identity->get('id');
+            if (is_numeric($id)) {
+                $userId = (int)$id;
+            }
+        }
+
+        if ($userId === null) {
+            return $this->response->withType('application/json')
+                ->withStringBody(json_encode([
+                    'statut' => false,
+                    'msg' => __('USER__ERROR_MUST_BE_LOGGED'),
+                ]));
+        }
+
+        $newsId = (int)$this->getRequest()->getData('id', 0);
+        if ($newsId <= 0) {
+            return $this->response->withType('application/json')
+                ->withStringBody(json_encode([
+                    'statut' => false,
+                    'msg' => __('ERROR__BAD_REQUEST'),
+                ]));
+        }
+
         $this->Like = TableRegistry::getTableLocator()->get('Likes');
         $already = $this->Like->find(
             'all',
             conditions: [
-                'news_id' => $this->getRequest()->getData('id'),
-                'user_id' => $this->User->getKey('id'),
+                'news_id' => $newsId,
+                'user_id' => $userId,
             ],
         )->first();
 
@@ -211,8 +281,8 @@ class NewsController extends AppController
         }
 
         $event = new Event('beforeLike', $this, [
-            'news_id' => $this->getRequest()->getData('id'),
-            'user' => $this->User->getAllFromCurrentUser(),
+            'news_id' => $newsId,
+            'user' => $identity,
         ]);
         $this->getEventManager()->dispatch($event);
         if ($event->isStopped()) {
@@ -226,8 +296,8 @@ class NewsController extends AppController
         }
 
         $like = $this->Like->newEntity([
-            'news_id' => $this->getRequest()->getData('id'),
-            'user_id' => $this->User->getKey('id'),
+            'news_id' => $newsId,
+            'user_id' => $userId,
         ]);
         $this->Like->save($like);
 
@@ -246,7 +316,7 @@ class NewsController extends AppController
                 ]));
         }
 
-        if (!$this->Permissions->can('LIKE_NEWS')) {
+        if (!$this->Auth->can('LIKE_NEWS')) {
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
                     'statut' => false,
@@ -254,12 +324,38 @@ class NewsController extends AppController
                 ]));
         }
 
+        $identity = $this->Auth->identity();
+        $userId = null;
+        if (is_object($identity) && method_exists($identity, 'get')) {
+            $id = $identity->get('id');
+            if (is_numeric($id)) {
+                $userId = (int)$id;
+            }
+        }
+
+        if ($userId === null) {
+            return $this->response->withType('application/json')
+                ->withStringBody(json_encode([
+                    'statut' => false,
+                    'msg' => __('USER__ERROR_MUST_BE_LOGGED'),
+                ]));
+        }
+
+        $newsId = (int)$this->getRequest()->getData('id', 0);
+        if ($newsId <= 0) {
+            return $this->response->withType('application/json')
+                ->withStringBody(json_encode([
+                    'statut' => false,
+                    'msg' => __('ERROR__BAD_REQUEST'),
+                ]));
+        }
+
         $this->Like = TableRegistry::getTableLocator()->get('Likes');
         $already = $this->Like->find(
             'all',
             conditions: [
-                'news_id' => $this->getRequest()->getData('id'),
-                'user_id' => $this->User->getKey('id'),
+                'news_id' => $newsId,
+                'user_id' => $userId,
             ],
         )->first();
 
@@ -272,8 +368,8 @@ class NewsController extends AppController
         }
 
         $event = new Event('beforeDislike', $this, [
-            'news_id' => $this->getRequest()->getData('id'),
-            'user' => $this->User->getAllFromCurrentUser(),
+            'news_id' => $newsId,
+            'user' => $identity,
         ]);
         $this->getEventManager()->dispatch($event);
         if ($event->isStopped()) {
@@ -302,13 +398,24 @@ class NewsController extends AppController
             conditions: ['id' => $this->getRequest()->getData('id')],
         )->first();
 
-        if (
-            !$this->Permissions->can('DELETE_COMMENT') &&
-            !(
-                $this->Permissions->can('DELETE_HIS_COMMENT') &&
-                $this->User->getKey('pseudo') === ($search['author'] ?? null)
-            )
-        ) {
+        if (!$search) {
+            return $this->response->withStringBody('NOT_FOUND');
+        }
+
+        $identity = $this->Auth->identity();
+        $pseudo = null;
+
+        if (is_object($identity) && method_exists($identity, 'get')) {
+            $p = $identity->get('pseudo');
+            if (is_string($p)) {
+                $pseudo = $p;
+            }
+        }
+
+        $canDeleteAny = $this->Auth->can('DELETE_COMMENT');
+        $canDeleteOwn = $this->Auth->can('DELETE_HIS_COMMENT') && $pseudo !== null && $pseudo === ($search['author'] ?? null);
+
+        if (!$canDeleteAny && !$canDeleteOwn) {
             return $this->response->withStringBody('NOT_ADMIN');
         }
 
@@ -319,7 +426,7 @@ class NewsController extends AppController
         $event = new Event('beforeDeleteComment', $this, [
             'comment_id' => $this->getRequest()->getData('id'),
             'news_id' => $search['news_id'] ?? null,
-            'user' => $this->User->getAllFromCurrentUser(),
+            'user' => $identity,
         ]);
         $this->getEventManager()->dispatch($event);
         if ($event->isStopped()) {

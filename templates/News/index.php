@@ -15,12 +15,12 @@
             <hr>
             <p class="lead"><?= $news['content'] ?></p>
             <button id="<?= $news['id'] ?>" type="button"
-                    class="btn btn-primary pull-right like<?= ($news['liked']) ? ' active' : '' ?>"<?= (!$Permissions->can('LIKE_NEWS')) ? ' disabled' : '' ?>>
+                    class="btn btn-primary pull-right like<?= ($news['liked']) ? ' active' : '' ?>"<?= (!$this->Auth->can('LIKE_NEWS')) ? ' disabled' : '' ?>>
                 <?= count($news['likes']) ?>
                 <i class="fa fa-thumbs-up"></i>
             </button>
             <br>
-            <?php if ($Permissions->can('COMMENT_NEWS')) { ?>
+            <?php if ($this->Auth->can('COMMENT_NEWS')) { ?>
                 <div id="form-comment-fade-out">
                     <hr>
                     <div class="well">
@@ -54,7 +54,7 @@
                         <?= before_display($v['content']) ?>
                     </div>
                     <div class="pull-right">
-                        <?php if ($Permissions->can('DELETE_COMMENT') or $Permissions->can('DELETE_HIS_COMMENT') and $user['pseudo'] == $v['author']) { ?>
+                        <?php if ($this->Auth->can('DELETE_COMMENT') or $this->Auth->can('DELETE_HIS_COMMENT') and $user['pseudo'] == $v['author']) { ?>
                             <p>
                                 <a id="<?= $v['id'] ?>" title="<?= __('GLOBAL__DELETE') ?>"
                                    class="comment-delete btn btn-danger btn-sm">

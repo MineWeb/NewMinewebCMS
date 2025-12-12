@@ -10,7 +10,7 @@ class APIController extends AppController
 {
     public function index(): ?Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_API'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_API'))) {
             return $this->redirect('/');
         }
 

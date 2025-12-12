@@ -19,7 +19,7 @@ class SocialController extends AppController
 
     public function index(): ?Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_SOCIAL'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SOCIAL'))) {
             throw new ForbiddenException();
         }
 
@@ -42,7 +42,7 @@ class SocialController extends AppController
 
     public function saveAjax(): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_SOCIAL'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SOCIAL'))) {
             return $this->redirect('/');
         }
 
@@ -122,7 +122,7 @@ class SocialController extends AppController
 
     public function add(): ?Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_SOCIAL'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SOCIAL'))) {
             throw new ForbiddenException();
         }
 
@@ -200,7 +200,7 @@ class SocialController extends AppController
 
     public function edit(int|string|null $id = null): ?Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_SOCIAL'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SOCIAL'))) {
             throw new ForbiddenException();
         }
 
@@ -297,7 +297,7 @@ class SocialController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_SOCIAL'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SOCIAL'))) {
             return $this->redirect('/');
         }
 

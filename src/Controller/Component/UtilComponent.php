@@ -8,13 +8,11 @@ use Cake\Controller\Component;
 use Cake\Database\Driver\Sqlite;
 use Cake\Datasource\ConnectionManager;
 use Cake\Datasource\Exception\MissingDatasourceConfigException;
-use Cake\Event\Event;
 use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Mailer\Mailer;
 use Cake\Mailer\TransportFactory;
 use Cake\ORM\Locator\LocatorAwareTrait;
-use Cake\Utility\Security;
 use Exception;
 use Laminas\Diactoros\UploadedFile;
 use RecursiveDirectoryIterator;
@@ -26,9 +24,6 @@ class UtilComponent extends Component
 {
     use LocatorAwareTrait;
 
-    /**
-     * @var \App\Model\Table\ConfigurationsTable|null
-     */
     private ?ConfigurationsTable $Configurations = null;
 
     private mixed $to = null;
@@ -44,7 +39,6 @@ class UtilComponent extends Component
     public function initialize(array $config): void
     {
         parent::initialize($config);
-
         $this->dbAvailable = $this->checkDatabaseAvailable();
     }
 
@@ -128,123 +122,19 @@ class UtilComponent extends Component
         return isset($_SERVER['REMOTE_ADDR']) ? htmlentities((string)$_SERVER['REMOTE_ADDR']) : '0.0.0.0';
     }
 
-    public function getPasswordHashType(): ?string
-    {
-        $hash = $this->configurationKey('passwords_hash');
-        if (is_string($hash) && $hash !== '') {
-            return $hash;
-        }
-
-        return 'bcrypt';
-    }
-
-    public function password(
-        string $password,
-        string $username,
-        ?string $existingHash = null,
-        ?string $hash = null,
-    ): bool|string {
-        $controller = $this->getController();
-
-        $event = new Event('beforeEncodePassword', $this, [
-            'password' => $password,
-            'username' => $username,
-        ]);
-
-        $controller->getEventManager()->dispatch($event);
-
-        if ($event->isStopped()) {
-            return $event->getResult();
-        }
-
-        if ($hash === null || $hash === '') {
-            $hash = $this->getPasswordHashType();
-        }
-
-        if ($hash === null || $hash === '') {
-            $hash = 'bcrypt';
-        }
-
-        if ($hash === 'blowfish' || $hash === 'bcrypt') {
-            if ($existingHash !== null) {
-                return password_verify($password, $existingHash);
-            }
-
-            return password_hash($password, PASSWORD_BCRYPT);
-        }
-
-        $salt = $this->configurationKey('passwords_salt');
-        if (!is_string($salt) || $salt === '') {
-            $salt = false;
-        }
-
-        return Security::hash($password, $hash, $salt);
-    }
-
-    public function generateStringFromTime(int $waitTime): string
-    {
-        $waitTime = $this->secondsToTime($waitTime);
-        $time = [];
-
-        if ($waitTime['d'] > 0) {
-            $label = __('GLOBAL__DATE_R_DAYS');
-            $time[] = $waitTime['d'] . ' ' . $label;
-        }
-        if ($waitTime['h'] > 0) {
-            $label = __('GLOBAL__DATE_R_HOURS');
-            $time[] = $waitTime['h'] . ' ' . $label;
-        }
-        if ($waitTime['m'] > 0) {
-            $label = __('GLOBAL__DATE_R_MINUTES');
-            $time[] = $waitTime['m'] . ' ' . $label;
-        }
-        if ($waitTime['s'] > 0) {
-            $label = __('GLOBAL__DATE_R_SECONDS');
-            $time[] = $waitTime['s'] . ' ' . $label;
-        }
-
-        return implode(', ', $time);
-    }
-
-    public function secondsToTime(int $inputSeconds): array
-    {
-        $secondsInAMinute = 60;
-        $secondsInAnHour = 60 * $secondsInAMinute;
-        $secondsInADay = 24 * $secondsInAnHour;
-
-        $days = (int)floor($inputSeconds / $secondsInADay);
-        $hourSeconds = $inputSeconds % $secondsInADay;
-        $hours = (int)floor($hourSeconds / $secondsInAnHour);
-
-        $minuteSeconds = $hourSeconds % $secondsInAnHour;
-        $minutes = (int)floor($minuteSeconds / $secondsInAMinute);
-
-        $remainingSeconds = $minuteSeconds % $secondsInAMinute;
-        $seconds = (int)ceil($remainingSeconds);
-
-        return [
-            'd' => $days,
-            'h' => $hours,
-            'm' => $minutes,
-            's' => $seconds,
-        ];
-    }
-
     public function prepareMail(string $to, string $subject, string $message): self
     {
         $this->to = $to;
         $this->message = $message;
 
         $siteName = $this->configurationKey('name');
-        if (!is_string($siteName) || $siteName === '') {
-            $siteName = null;
-        }
+        $siteNameValue = is_string($siteName) && $siteName !== '' ? $siteName : null;
 
-        $this->subject = $siteName ? ($subject . ' | ' . $siteName) : $subject;
+        $this->subject = $siteNameValue ? ($subject . ' | ' . $siteNameValue) : $subject;
 
         $fromEmail = $this->configurationKey('email');
-        if (is_string($fromEmail) && $fromEmail !== '' && $siteName) {
-            $this->from = [$fromEmail => $siteName];
+        if (is_string($fromEmail) && $fromEmail !== '' && $siteNameValue) {
+            $this->from = [$fromEmail => $siteNameValue];
         } else {
             $this->from = null;
         }
@@ -310,19 +200,104 @@ class UtilComponent extends Component
         }
     }
 
-    public function in_array_r(mixed $needle, array $haystack, bool $strict = false): bool
+    public function isValidReCaptcha(string $code, ?string $ip, string $secret, int $type = 2): bool
     {
-        foreach ($haystack as $item) {
-            if (($strict ? $item === $needle : $item == $needle) || (is_array($item) && $this->in_array_r($needle, $item, $strict))) {
-                return true;
-            }
+        if ($code === '' || $secret === '') {
+            return false;
         }
 
-        return false;
+        $params = ['secret' => $secret, 'response' => $code];
+        if ($ip) {
+            $params['remoteip'] = $ip;
+        }
+
+        $website = '';
+        if ($type === 2) {
+            $website = 'https://www.google.com/recaptcha/api/siteverify';
+        } elseif ($type === 3) {
+            $website = 'https://hcaptcha.com/siteverify';
+        }
+
+        if ($website === '') {
+            return false;
+        }
+
+        $url = $website . '?' . http_build_query($params);
+
+        $response = null;
+
+        if (function_exists('curl_version')) {
+            $curl = curl_init($url);
+            if ($curl === false) {
+                return false;
+            }
+            curl_setopt($curl, CURLOPT_HEADER, false);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($curl, CURLOPT_TIMEOUT, 2);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 1);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
+            $response = curl_exec($curl);
+            curl_close($curl);
+        } else {
+            $context = stream_context_create(['http' => ['timeout' => 2]]);
+            $response = @file_get_contents($url, false, $context);
+        }
+
+        if (empty($response)) {
+            return false;
+        }
+
+        $json = json_decode((string)$response);
+
+        return is_object($json) && !empty($json->success);
     }
 
-    public function isValidImage(ServerRequest $request, array $extensions = ['png'], bool|int $width_max = false, bool|int $height_max = false, bool|int $max_size = false): array
+    public function useSqlite(): bool
     {
+        return $this->dbType instanceof Sqlite;
+    }
+
+    public function saveFolderInZIP(string $path, string $location, string $name): void
+    {
+        $rootPath = realpath($path);
+        if ($rootPath === false) {
+            return;
+        }
+
+        $zip = new ZipArchive();
+        if ($zip->open($location . $name . '.zip', ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            return;
+        }
+
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($rootPath),
+            RecursiveIteratorIterator::LEAVES_ONLY
+        );
+
+        foreach ($files as $file) {
+            if ($file->isDir()) {
+                continue;
+            }
+
+            $filePath = $file->getRealPath();
+            if ($filePath === false) {
+                continue;
+            }
+
+            $relativePath = substr($filePath, strlen($rootPath) + 1);
+            $zip->addFile($filePath, $relativePath);
+        }
+
+        $zip->close();
+    }
+
+    public function isValidImage(
+        ServerRequest $request,
+        array $extensions = ['png'],
+        bool|int $width_max = false,
+        bool|int $height_max = false,
+        bool|int $max_size = false,
+    ): array {
         $img = $request->getData('image');
 
         $msgEmpty = __('FORM__EMPTY_IMG');
@@ -388,21 +363,8 @@ class UtilComponent extends Component
         ];
     }
 
-    public function uploadImage(ServerRequest $request, string $name): mixed
+    public function uploadImage(ServerRequest $request, string $name): bool
     {
-        $controller = $this->getController();
-
-        $event = new Event('beforeUploadImage', $this, [
-            'request' => $request,
-            'name' => $name,
-        ]);
-
-        $controller->getEventManager()->dispatch($event);
-
-        if ($event->isStopped()) {
-            return $event->getResult();
-        }
-
         $pathInfo = pathinfo($name);
         $path = $pathInfo['dirname'] ?? '.';
 
@@ -420,127 +382,5 @@ class UtilComponent extends Component
         }
 
         return false;
-    }
-
-    public function isValidReCaptcha(string $code, ?string $ip, string $secret, int $type = 2): bool
-    {
-        if ($code === '') {
-            return false;
-        }
-
-        $params = [
-            'secret' => $secret,
-            'response' => $code,
-        ];
-        if ($ip) {
-            $params['remoteip'] = $ip;
-        }
-
-        $website = '';
-        if ($type === 2) {
-            $website = 'https://www.google.com/recaptcha/api/siteverify';
-        } elseif ($type === 3) {
-            $website = 'https://hcaptcha.com/siteverify';
-        }
-
-        if ($website === '') {
-            return false;
-        }
-
-        $url = $website . '?' . http_build_query($params);
-
-        if (function_exists('curl_version')) {
-            $curl = curl_init($url);
-            if ($curl === false) {
-                return false;
-            }
-            curl_setopt($curl, CURLOPT_HEADER, false);
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($curl, CURLOPT_TIMEOUT, 1);
-            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 1);
-            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
-            $response = curl_exec($curl);
-            curl_close($curl);
-        } else {
-            $context = stream_context_create(['http' => ['timeout' => 1]]);
-            $response = @file_get_contents($url, false, $context);
-        }
-
-        if (empty($response)) {
-            return false;
-        }
-
-        $json = json_decode($response);
-
-        return is_object($json) && !empty($json->success);
-    }
-
-    public function random(array $list, float|int $probabilityTotal): string|int|null
-    {
-        $pct = 1000;
-        $rand = mt_rand(0, $pct);
-        $items = [];
-        $item = null;
-
-        foreach ($list as $key => $value) {
-            $items[$key] = $probabilityTotal > 0 ? $value / $probabilityTotal : 0;
-        }
-
-        $i = 0;
-        asort($items);
-
-        foreach ($items as $name => $value) {
-            $item = $name;
-            $i += $value * $pct;
-            if ($rand <= $i) {
-                break;
-            }
-        }
-
-        return $item;
-    }
-
-    public function getDBType(): mixed
-    {
-        return $this->dbType;
-    }
-
-    public function useSqlite(): bool
-    {
-        return $this->getDBType() instanceof Sqlite;
-    }
-
-    public function saveFolderInZIP(string $path, string $location, string $name): void
-    {
-        $rootPath = realpath($path);
-        if ($rootPath === false) {
-            return;
-        }
-
-        $zip = new ZipArchive();
-        if ($zip->open($location . $name . '.zip', ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            return;
-        }
-
-        $files = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($rootPath),
-            RecursiveIteratorIterator::LEAVES_ONLY
-        );
-
-        foreach ($files as $file) {
-            if ($file->isDir()) {
-                continue;
-            }
-
-            $filePath = $file->getRealPath();
-            if ($filePath === false) {
-                continue;
-            }
-
-            $relativePath = substr($filePath, strlen($rootPath) + 1);
-            $zip->addFile($filePath, $relativePath);
-        }
-
-        $zip->close();
     }
 }

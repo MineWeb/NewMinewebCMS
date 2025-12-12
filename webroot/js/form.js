@@ -1,188 +1,324 @@
-function initForms() {
-  $('form[data-ajax="true"]').unbind("submit");
+const AjaxForms = (() => {
+    const STATE_ATTR = "data-ajax-bound";
 
-  $('form[data-ajax="true"]').on("submit", function(e) {
-    form = $(this);
-
-    e.preventDefault();
-
-    let submit;
-    if(form.find("input[type='submit']").length == 0) {
-      submit = form.find("button[type='submit']");
-    } else {
-      submit = form.find("input[type='submit']");
+    function init(root = document) {
+        const forms = root.querySelectorAll('form[data-ajax="true"]');
+        forms.forEach((form) => bind(form));
     }
 
-    let div_msg;
-    if(form.attr('data-custom-div-msg') == undefined || form.attr('data-custom-div-msg').length == 0) {
-      if(form.find('.ajax-msg') === undefined || form.find('.ajax-msg').length == 0) {
-        form.prepend('<div class="ajax-msg"></div>');
-      }
-      div_msg = form.find('.ajax-msg');
-    } else {
-      div_msg = $(form.attr('data-custom-div-msg'));
+    function bind(form) {
+        if (form.getAttribute(STATE_ATTR) === "1") return;
+        form.setAttribute(STATE_ATTR, "1");
+
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            submit(form);
+        });
     }
 
-    div_msg.empty().html('<div class="alert alert-info"><a class="close" data-dismiss="alert">×</a>'+LOADING_MSG+' ...</div>').fadeIn(500);
+    async function submit(form) {
+        const ui = getUI(form);
+        ui.showLoading();
 
-      var submit_btn_content = form.find('button[type=submit]').html();
-      submit.html(LOADING_MSG+'...').attr('disabled', 'disabled').fadeIn(500);
+        const recaptchaAvailable = typeof grecaptcha !== "undefined" && typeof grecaptcha.getResponse === "function";
+        let payload = buildPayload(form, recaptchaAvailable);
 
-      // Data
-    if(form.attr('data-custom-function') == undefined || form.attr('data-custom-function').length == 0) {
-
-        var array = form.serialize();
-        array = array.split('&');
-
-        form.find('input[type="checkbox"]').each(function(){
-          if(!$(this).is(':checked')) {
-            array.push($(this).attr('name')+'=off');
-          }
-          });
-
-        var inputs = {};
-
-        var i = 0;
-        for (var key in args = array)
-        {
-          input = args[i];
-          input = input.split('=');
-          input_name = decodeURI(input[0]);
-
-          /*console.log('Name :', input_name+"\n");
-          console.log('Type :', form.find('input[name="'+input_name+'"]').attr('type')+"\n");
-          console.log('Value :', form.find('input[name="'+input_name+'"]').val()+"\n\n")*/
-
-          if(form.find('input[name="'+input_name+'"]').attr('type') == "text" || form.find('input[name="'+input_name+'"]').attr('type') == "hidden" || form.find('input[name="'+input_name+'"]').attr('type') == "email" || form.find('input[name="'+input_name+'"]').attr('type') == "password") {
-            inputs[input_name] = form.find('input[name="'+input_name+'"]').val(); // je récup la valeur comme ça pour éviter la sérialization
-          } else if(form.find('input[name="'+input_name+'"]').attr('type') == "radio") {
-            inputs[input_name] = form.find('input[name="'+input_name+'"][type="radio"]:checked').val();
-          } else if(form.find('input[name="'+input_name+'"]').attr('type') == "checkbox") {
-            if(form.find('input[name="'+input_name+'"]:checked').val() !== undefined) {
-              inputs[input_name] = 1;
-            } else {
-              inputs[input_name] = 0;
+        const checkName = form.getAttribute("data-checkData");
+        if (checkName && typeof window[checkName] === "function") {
+            const check = window[checkName](payload);
+            if (check && typeof check === "object" && check.statut === false) {
+                resetRecaptcha(recaptchaAvailable);
+                ui.showError(check.msg || INTERNAL_ERROR_MSG);
+                ui.restore();
+                return;
             }
-          } else if(form.find('textarea[name="'+input_name+'"]').attr('id') == "editor") {
-                inputs[input_name] = tinymce.get('editor').getContent();
-            } else if(form.find('textarea[name="'+input_name+'"]').length > 0) {
-              inputs[input_name] = form.find('textarea[name="'+input_name+'"]').val();
-          } else if(form.find('select[name="'+input_name+'"]').val() !== undefined) {
-            inputs[input_name] = form.find('select[name="'+input_name+'"]').val();
-          }
-
-          i++;
         }
 
-        // ReCaptcha
-        if(typeof grecaptcha !== "undefined" && typeof grecaptcha.getResponse() !== "undefined") {
-          inputs['recaptcha'] = grecaptcha.getResponse();
-          var recaptcha = true;
-        } else {
-          var recaptcha = false;
-        }
+        const action = form.getAttribute("action") || "";
+        const isFormData = payload instanceof FormData;
 
-        // CSRF
-        inputs["data[_Token][key]"] = CSRF_TOKEN;
+        try {
+            const res = await fetch(action, {
+                method: "POST",
+                credentials: "same-origin",
+                headers: isFormData ? {} : { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+                body: isFormData ? payload : toUrlEncoded(payload),
+            });
 
-        //
+            const json = await readJsonSafe(res);
 
-      if(form.attr('data-upload-image') == "true") {
-        var contentType = false;
-        var processData = false;
-        inputs = (window.FormData) ? new FormData(form[0]) : null;
-      }
-
-    } else {
-      inputs = window[form.attr('data-custom-function')](form);
-
-      if(inputs['data[_Token][key]'] == undefined) {
-        inputs["data[_Token][key]"] = CSRF_TOKEN;
-      }
-    }
-
-    if(form.attr('data-checkData') !== undefined && form.attr('data-checkData').length > 0) {
-      var check = window[form.attr('data-checkData')](inputs);
-
-      if(typeof(check) == "object" && !check.statut) {
-        if(recaptcha) {
-          grecaptcha.reset();
-        }
-
-        div_msg.html('<div class="alert alert-danger"><b>'+ERROR_MSG+' : </b>'+check.msg+'</div>');
-        submit.html(submit_btn_content).attr('disabled', false).fadeIn(500);
-        return;
-      }
-    }
-
-    $.ajax({
-      url: form.attr('action'),
-      data: inputs,
-      method: 'post',
-      contentType: (contentType === undefined) ? 'application/x-www-form-urlencoded; charset=UTF-8' : contentType,
-      processData: (processData === undefined) ? 'application/x-www-form-urlencoded; charset=UTF-8' : processData,
-      success: function(data) {
-        if(typeof data != 'object') {
-          try {
-            var json = JSON.parse(data);
-          }
-          catch (e) { // si c'est pas du JSON
-            console.log(e);
-
-            if(recaptcha) {
-              grecaptcha.reset();
+            if (!json || typeof json !== "object") {
+                resetRecaptcha(recaptchaAvailable);
+                ui.showError(INTERNAL_ERROR_MSG);
+                ui.restore();
+                return;
             }
 
-            div_msg.html('<div class="alert alert-danger"><a class="close" data-dismiss="alert">×</a><i class="fa fa-times"></i> <b>'+ERROR_MSG+' :</b> '+INTERNAL_ERROR_MSG+'</i></div>');
-            submit.html(submit_btn_content).attr('disabled', false).fadeIn(500);
-          }
-        } else {
-          json = data;
+            if (json.statut === true) {
+                const successPref = form.getAttribute("data-success-msg");
+                if (successPref === null || successPref === "true") {
+                    ui.showSuccess(json.msg || SUCCESS_MSG);
+                }
+
+                const cbName = form.getAttribute("data-callback-function");
+                if (cbName && typeof window[cbName] === "function") {
+                    window[cbName](payload, json);
+                }
+
+                const redirectUrl = form.getAttribute("data-redirect-url");
+                if (redirectUrl) {
+                    redirectWithCacheBust(redirectUrl);
+                    return;
+                }
+
+                ui.restore();
+                return;
+            }
+
+            resetRecaptcha(recaptchaAvailable);
+
+            if (json.statut === false) {
+                ui.showError(json.msg || INTERNAL_ERROR_MSG);
+                ui.restore();
+                return;
+            }
+
+            ui.showError(INTERNAL_ERROR_MSG);
+            ui.restore();
+        } catch (e) {
+            resetRecaptcha(recaptchaAvailable);
+            ui.showError(INTERNAL_ERROR_MSG);
+            ui.restore();
+        }
+    }
+
+    function getUI(form) {
+        const submitEl = form.querySelector("input[type='submit'], button[type='submit']");
+        const submitSnapshot = submitEl
+            ? submitEl.tagName === "INPUT"
+                ? submitEl.value
+                : submitEl.innerHTML
+            : "";
+
+        const msgEl = resolveMessageElement(form);
+
+        function setSubmitLoading() {
+            if (!submitEl) return;
+            if (submitEl.tagName === "INPUT") submitEl.value = LOADING_MSG + "...";
+            else submitEl.innerHTML = LOADING_MSG + "...";
+            submitEl.setAttribute("disabled", "disabled");
         }
 
-        if(json.statut === true) {
-          if(form.attr('data-success-msg') === undefined || form.attr('data-success-msg') == "true") {
-            div_msg.html('<div class="alert alert-success"><a class="close" data-dismiss="alert">×</a><i class="fa fa-exclamation"></i> <b>'+SUCCESS_MSG+' :</b> '+json.msg+'</i></div>').fadeIn(500);
-          }
-          if(form.attr('data-callback-function') !== undefined) {
-            window[form.attr('data-callback-function')](inputs, json);
-          }
-          if(form.attr('data-redirect-url') !== undefined) {
-            document.location.href=form.attr('data-redirect-url')+'?no-cache='+ (new Date()).getTime();
-          }
-          submit.html(submit_btn_content).attr('disabled', false).fadeIn(500);
-        } else if(json.statut === false) {
+        function restoreSubmit() {
+            if (!submitEl) return;
+            if (submitEl.tagName === "INPUT") submitEl.value = submitSnapshot;
+            else submitEl.innerHTML = submitSnapshot;
+            submitEl.removeAttribute("disabled");
+        }
 
-          if(recaptcha) {
+        function setMsg(html) {
+            if (!msgEl) return;
+            msgEl.innerHTML = html;
+            msgEl.style.display = "";
+        }
+
+        return {
+            showLoading() {
+                setMsg(
+                    '<div class="alert alert-info"><a class="close" data-dismiss="alert">×</a>' +
+                    LOADING_MSG +
+                    " ...</div>"
+                );
+                setSubmitLoading();
+            },
+            showSuccess(message) {
+                setMsg(
+                    '<div class="alert alert-success"><a class="close" data-dismiss="alert">×</a><i class="fa fa-exclamation"></i> <b>' +
+                    SUCCESS_MSG +
+                    " :</b> " +
+                    escapeHtml(String(message)) +
+                    "</i></div>"
+                );
+            },
+            showError(message) {
+                setMsg(
+                    '<div class="alert alert-danger"><a class="close" data-dismiss="alert">×</a><i class="fa fa-times"></i> <b>' +
+                    ERROR_MSG +
+                    " :</b> " +
+                    escapeHtml(String(message)) +
+                    "</i></div>"
+                );
+            },
+            restore() {
+                restoreSubmit();
+            },
+        };
+    }
+
+    function resolveMessageElement(form) {
+        const customDiv = form.getAttribute("data-custom-div-msg");
+        if (customDiv && customDiv.length > 0) {
+            return document.querySelector(customDiv);
+        }
+
+        let el = form.querySelector(".ajax-msg");
+        if (!el) {
+            el = document.createElement("div");
+            el.className = "ajax-msg";
+            form.insertBefore(el, form.firstChild);
+        }
+        return el;
+    }
+
+    function buildPayload(form, recaptchaAvailable) {
+        const customFnName = form.getAttribute("data-custom-function");
+        const upload = form.getAttribute("data-upload-image") === "true";
+
+        if (customFnName && typeof window[customFnName] === "function") {
+            const data = window[customFnName](form) || {};
+            ensureCsrf(data);
+            if (recaptchaAvailable && data.recaptcha === undefined) data.recaptcha = grecaptcha.getResponse();
+            return data;
+        }
+
+        if (upload) {
+            const fd = new FormData(form);
+            ensureCsrf(fd, form);
+            if (recaptchaAvailable) fd.set("recaptcha", grecaptcha.getResponse());
+            return fd;
+        }
+
+        const obj = formToObject(form);
+        ensureCsrf(obj, form);
+        if (recaptchaAvailable) obj.recaptcha = grecaptcha.getResponse();
+        return obj;
+    }
+
+    function formToObject(form) {
+        const fd = new FormData(form);
+
+        form.querySelectorAll('input[type="checkbox"][name]').forEach((cb) => {
+            if (!cb.checked && !fd.has(cb.name)) fd.append(cb.name, "off");
+        });
+
+        const obj = {};
+        const names = new Set();
+
+        for (const [name] of fd.entries()) names.add(name);
+
+        names.forEach((name) => {
+            const input = form.querySelector(`input[name="${CSS.escape(name)}"]`);
+            const textarea = form.querySelector(`textarea[name="${CSS.escape(name)}"]`);
+            const select = form.querySelector(`select[name="${CSS.escape(name)}"]`);
+
+            if (textarea) {
+                if (textarea.id === "editor" && typeof tinymce !== "undefined" && tinymce.get("editor")) {
+                    obj[name] = tinymce.get("editor").getContent();
+                } else {
+                    obj[name] = textarea.value;
+                }
+                return;
+            }
+
+            if (select) {
+                obj[name] = select.value;
+                return;
+            }
+
+            if (!input) return;
+
+            const type = (input.getAttribute("type") || "text").toLowerCase();
+            if (type === "radio") {
+                const checked = form.querySelector(`input[name="${CSS.escape(name)}"][type="radio"]:checked`);
+                obj[name] = checked ? checked.value : "";
+                return;
+            }
+
+            if (type === "checkbox") {
+                const checked = form.querySelector(`input[name="${CSS.escape(name)}"][type="checkbox"]:checked`);
+                obj[name] = checked ? 1 : 0;
+                return;
+            }
+
+            obj[name] = input.value;
+        });
+
+        return obj;
+    }
+
+    function ensureCsrf(target, form) {
+        const csrfInput =
+            form.querySelector('input[name="_csrfToken"]') ||
+            form.querySelector('input[name="data[_Token][key]"]');
+
+        if (!csrfInput) return;
+
+        const token = csrfInput.value;
+
+        if (target instanceof FormData) {
+            if (!target.has("_csrfToken") && !target.has("data[_Token][key]")) {
+                target.set(csrfInput.name, token);
+            }
+            return;
+        }
+
+        if (target && target[csrfInput.name] === undefined) {
+            target[csrfInput.name] = token;
+        }
+    }
+
+    function toUrlEncoded(obj) {
+        const params = new URLSearchParams();
+        Object.keys(obj || {}).forEach((k) => {
+            const v = obj[k];
+            if (Array.isArray(v)) v.forEach((vv) => params.append(k, String(vv)));
+            else params.append(k, v === null || v === undefined ? "" : String(v));
+        });
+        return params.toString();
+    }
+
+    async function readJsonSafe(res) {
+        const text = await res.text();
+
+        if (!text) {
+            if (res.status === 403) return { statut: false, msg: FORBIDDEN_ERROR_MSG };
+            return null;
+        }
+
+        try {
+            const json = JSON.parse(text);
+            if (res.status === 403 && json && json.statut === undefined) {
+                return { statut: false, msg: FORBIDDEN_ERROR_MSG };
+            }
+            return json;
+        } catch (e) {
+            if (res.status === 403) return { statut: false, msg: FORBIDDEN_ERROR_MSG };
+            return null;
+        }
+    }
+
+    function resetRecaptcha(enabled) {
+        if (!enabled) return;
+        if (typeof grecaptcha !== "undefined" && typeof grecaptcha.reset === "function") {
             grecaptcha.reset();
-          }
-
-          div_msg.html('<div class="alert alert-danger"><a class="close" data-dismiss="alert">×</a><i class="fa fa-times"></i> <b>'+ERROR_MSG+' :</b> '+json.msg+'</i></div>').fadeIn(500);
-          submit.html(submit_btn_content).attr('disabled', false).fadeIn(500);
-        } else {
-
-          if(recaptcha) {
-            grecaptcha.reset();
-          }
-
-          div_msg.html('<div class="alert alert-danger"><a class="close" data-dismiss="alert">×</a><i class="fa fa-times"></i> <b>'+ERROR_MSG+' :</b> '+INTERNAL_ERROR_MSG+'</i></div>');
-          submit.html(submit_btn_content).attr('disabled', false).fadeIn(500);
         }
-      },
-      error : function(xhr) {
-        if(recaptcha) {
-          grecaptcha.reset();
-        }
+    }
 
-        if(xhr.status == "403") {
-          div_msg.html('<div class="alert alert-danger"><a class="close" data-dismiss="alert">×</a><i class="fa fa-times"></i> <b>'+ERROR_MSG+' :</b> '+FORBIDDEN_ERROR_MSG+'</i></div>');
-        } else {
-          div_msg.html('<div class="alert alert-danger"><a class="close" data-dismiss="alert">×</a><i class="fa fa-times"></i> <b>'+ERROR_MSG+' :</b> '+INTERNAL_ERROR_MSG+'</i></div>');
-        }
-        submit.html(submit_btn_content).attr('disabled', false).fadeIn(500);
-      }
-    });
-  });
-}
+    function redirectWithCacheBust(url) {
+        const sep = url.includes("?") ? "&" : "?";
+        window.location.href = url + sep + "no-cache=" + Date.now();
+    }
 
-initForms();
+    function escapeHtml(str) {
+        return str
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+    return { init };
+})();
+
+AjaxForms.init();

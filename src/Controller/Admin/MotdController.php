@@ -12,7 +12,7 @@ class MotdController extends AppController
 {
     public function index(): ?Response
     {
-        if (!$this->Permissions->can('MANAGE_MOTD')) {
+        if (!$this->Auth->can('MANAGE_MOTD')) {
             throw new ForbiddenException();
         }
 
@@ -51,7 +51,7 @@ class MotdController extends AppController
 
     public function edit(int|string|null $server_id = null): ?Response
     {
-        if (!$this->Permissions->can('MANAGE_MOTD')) {
+        if (!$this->Auth->can('MANAGE_MOTD')) {
             throw new ForbiddenException();
         }
 
@@ -92,7 +92,7 @@ class MotdController extends AppController
 
     public function editAjax(int|string $server_id): Response
     {
-        if (!$this->Permissions->can('MANAGE_MOTD')) {
+        if (!$this->Auth->can('MANAGE_MOTD')) {
             throw new ForbiddenException();
         }
 
@@ -121,7 +121,7 @@ class MotdController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!$this->Permissions->can('MANAGE_MOTD')) {
+        if (!$this->Auth->can('MANAGE_MOTD')) {
             throw new ForbiddenException();
         }
 

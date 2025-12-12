@@ -13,7 +13,7 @@ class SeoController extends AppController
 {
     public function index(): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SEO')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SEO')) {
             throw new ForbiddenException();
         }
 
@@ -43,7 +43,7 @@ class SeoController extends AppController
 
     public function editDefault(): Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SEO') || !$this->getRequest()->is('post')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SEO') || !$this->getRequest()->is('post')) {
             throw new ForbiddenException();
         }
 
@@ -114,7 +114,7 @@ class SeoController extends AppController
 
     public function add(): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SEO')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SEO')) {
             throw new ForbiddenException();
         }
 
@@ -200,7 +200,7 @@ class SeoController extends AppController
 
     public function edit(int|string|null $id = null): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SEO') || $id === null) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SEO') || $id === null) {
             throw new ForbiddenException();
         }
 
@@ -301,7 +301,7 @@ class SeoController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SEO') || $id === null) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SEO') || $id === null) {
             throw new ForbiddenException();
         }
 

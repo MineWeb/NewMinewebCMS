@@ -14,7 +14,7 @@ class NotificationsController extends AppController
 {
     public function index(): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_NOTIFICATIONS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_NOTIFICATIONS')) {
             throw new ForbiddenException();
         }
 
@@ -30,7 +30,7 @@ class NotificationsController extends AppController
 
     public function getAll(): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_NOTIFICATIONS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NOTIFICATIONS'))) {
             throw new ForbiddenException();
         }
 
@@ -43,17 +43,17 @@ class NotificationsController extends AppController
         $this->DataTable->setTable($notificationsTable);
 
         $this->paginate = [
-            'contain' => ['User'],
+            'contain' => ['Users'],
             'fields' => [
-                'Notification.id',
-                'User.pseudo',
-                'Notification.group',
-                'Notification.user_id',
-                'Notification.from',
-                'Notification.content',
-                'Notification.seen',
-                'Notification.type',
-                'Notification.created',
+                'Notifications.id',
+                'Users.pseudo',
+                'Notifications.group',
+                'Notifications.user_id',
+                'Notifications.from',
+                'Notifications.content',
+                'Notifications.seen',
+                'Notifications.type',
+                'Notifications.created',
             ],
             'recursive' => 1,
         ];
@@ -115,7 +115,7 @@ class NotificationsController extends AppController
 
     public function setTo(): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_NOTIFICATIONS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NOTIFICATIONS'))) {
             throw new ForbiddenException();
         }
 
@@ -166,7 +166,7 @@ class NotificationsController extends AppController
 
     public function clearFromUser(int|string $id, int|string $user_id): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_NOTIFICATIONS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NOTIFICATIONS'))) {
             throw new ForbiddenException();
         }
 
@@ -181,7 +181,7 @@ class NotificationsController extends AppController
 
     public function clearAllFromUser(int|string $user_id): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_NOTIFICATIONS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NOTIFICATIONS'))) {
             throw new ForbiddenException();
         }
 
@@ -196,7 +196,7 @@ class NotificationsController extends AppController
 
     public function clearFromAllUsers(int|string $id): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_NOTIFICATIONS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NOTIFICATIONS'))) {
             throw new ForbiddenException();
         }
 
@@ -211,7 +211,7 @@ class NotificationsController extends AppController
 
     public function clearAllFromAllUsers(): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_NOTIFICATIONS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NOTIFICATIONS'))) {
             throw new ForbiddenException();
         }
 
@@ -226,7 +226,7 @@ class NotificationsController extends AppController
 
     public function markAsSeenFromUser(int|string $id, int|string $user_id): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_NOTIFICATIONS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NOTIFICATIONS'))) {
             throw new ForbiddenException();
         }
 
@@ -241,7 +241,7 @@ class NotificationsController extends AppController
 
     public function markAllAsSeenFromUser(int|string $user_id): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_NOTIFICATIONS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NOTIFICATIONS'))) {
             throw new ForbiddenException();
         }
 
@@ -256,7 +256,7 @@ class NotificationsController extends AppController
 
     public function markAsSeenFromAllUsers(int|string $id): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_NOTIFICATIONS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NOTIFICATIONS'))) {
             throw new ForbiddenException();
         }
 
@@ -271,7 +271,7 @@ class NotificationsController extends AppController
 
     public function markAllAsSeenFromAllUsers(): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_NOTIFICATIONS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NOTIFICATIONS'))) {
             throw new ForbiddenException();
         }
 
@@ -286,7 +286,7 @@ class NotificationsController extends AppController
 
     public function clearAllFromGroup(): Response
     {
-        if (!($this->isConnected && $this->Permissions->can('MANAGE_NOTIFICATIONS'))) {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NOTIFICATIONS'))) {
             throw new ForbiddenException();
         }
 
