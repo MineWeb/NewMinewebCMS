@@ -4,13 +4,14 @@ use Cake\Routing\Router;
 
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="<?= h($this->Seo->htmlLang()) ?>">
+
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title><?= $title_for_layout ?> | Admin</title>
+    <title><?= h($this->Seo->getTitle((string)($title ?? $title_for_layout ?? 'MineWeb'))) ?> | Admin</title>
+    <?= $this->Seo->favicon() ?>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="<?= $seo_config['favicon_url'] ?>"/>
     <?= $this->Html->css('fontawesome-5/css/all'); ?>
     <?= $this->Html->css('bootstrap-4/plugins/tempusdominus/tempusdominus-bootstrap-4.min'); ?>
     <?= $this->Html->css('bootstrap-4/plugins/icheck/icheck-bootstrap.min'); ?>
@@ -156,7 +157,7 @@ use Cake\Routing\Router;
                     data-accordion="false">
                     <?php
 
-                    function checkCurrent(array $nav): bool
+                    function checkCurrent(array $nav, $context): bool
                     {
                         foreach ($nav as $value) {
                             if (isset($value['menu']) && is_array($value['menu'])) {
@@ -165,8 +166,8 @@ use Cake\Routing\Router;
                                 }
                             }
 
-                            $route = isset($value['route']) ? Router::url($value['route']) : '#';
-                            if ($route === Router::url()) {
+                            $route = isset($value['route']) ? $context->Url->build($value['route']) : '#';
+                            if ($route === $context->Url->build()) {
                                 return true;
                             }
                         }
@@ -188,14 +189,14 @@ use Cake\Routing\Router;
                             $currentMenu = false;
 
                             if (isset($value['menu'])) {
-                                $currentMenu = checkCurrent($value['menu']) ? "menu-open" : "";
+                                $currentMenu = checkCurrent($value['menu'], $context) ? "menu-open" : "";
                                 echo '<li class="nav-item has-treeview ' . ($currentMenu ? "menu-open" : "") . '">';
                             } else {
                                 echo '<li class="nav-item">';
                             }
 
-                            $route = isset($value['route']) ? Router::url($value['route']) : '#';
-                            $current = $route === Router::url();
+                            $route = isset($value['route']) ? $context->Url->build($value['route']) : '#';
+                            $current = $route === $context->Url->build();
 
                             echo '<a class="nav-link' . ($current || $currentMenu ? " active" : "") . '" href="' . $route . '">';
                             echo '<i class="' . (strpos($value['icon'], "fa-") !== false ? $value['icon'] : "fa fa-" . $value['icon']) . ' nav-icon"></i>  <p>' . __($name);

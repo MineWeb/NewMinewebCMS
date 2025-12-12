@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="<?= h($this->Seo->htmlLang()) ?>">
 
 <head>
 
@@ -8,7 +8,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="author" content="Eywek">
 
-    <?= $this->element('seo') ?>
+    <title><?= h($this->Seo->getTitle($title ?? $title_for_layout ?? null)) ?></title>
+    <?= $this->Seo->favicon() ?>
+    <?= $this->Seo->metaTags() ?>
 
     <!-- Font Awesome 5 -->
     <script src="https://kit.fontawesome.com/fb032ab5a6.js" crossorigin="anonymous"></script>

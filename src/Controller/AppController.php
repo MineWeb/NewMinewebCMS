@@ -24,7 +24,6 @@ define('TIMESTAMP_DEBUT', microtime(true));
  * @property \App\Model\Table\VisitsTable $Visit
  * @property \App\Model\Table\NavbarsTable $Navbar
  * @property \App\Model\Table\PagesTable $Page
- * @property \App\Model\Table\SeoTable $Seo
  * @property \App\Model\Table\SocialButtonsTable $SocialButton
  * @property \App\Model\Table\ServersTable $Server
  */
@@ -58,19 +57,18 @@ class AppController extends BaseController
         closedir($componentsDir);
     }
 
-    public function beforeFilter(EventInterface $event): ?Response
+    public function beforeFilter(EventInterface $event): void
     {
-        $response = parent::beforeFilter($event);
-        if ($response instanceof Response) {
-            return $response;
-        }
+        parent::beforeFilter($event);
 
         $this->setLocale();
 
         if ($this->request->getParam('plugin')) {
             $plugin = $this->EyPlugin->findPlugin('slugLower', (string)$this->request->getParam('plugin'));
             if (!empty($plugin) && !$plugin->loaded) {
-                return $this->redirect('/');
+                $this->redirect('/');
+
+                return;
             }
         }
 
@@ -95,24 +93,13 @@ class AppController extends BaseController
         $requestEvent = new Event('requestPage', $this, $this->request->getData());
         $this->getEventManager()->dispatch($requestEvent);
         if ($requestEvent->isStopped()) {
-            $result = $requestEvent->getResult();
-            if ($result instanceof Response) {
-                return $result;
-            }
+            return;
         }
 
         if ($this->request->is('post')) {
             $postEvent = new Event('onPostRequest', $this, $this->request->getData());
             $this->getEventManager()->dispatch($postEvent);
-            if ($postEvent->isStopped()) {
-                $result = $postEvent->getResult();
-                if ($result instanceof Response) {
-                    return $result;
-                }
-            }
         }
-
-        return null;
     }
 
     protected function setLocale(): void
@@ -598,23 +585,16 @@ class AppController extends BaseController
         ]);
     }
 
-    public function beforeRender(EventInterface $event): ?Response
+    public function beforeRender(EventInterface $event): void
     {
-        $response = parent::beforeRender($event);
-        if ($response instanceof Response) {
-            return $response;
-        }
-
-        $this->__initSeoConfiguration();
+        parent::beforeRender($event);
 
         $pageEvent = new Event('onLoadPage', $this, $this->request->getData());
         $this->getEventManager()->dispatch($pageEvent);
         if ($pageEvent->isStopped()) {
             $this->__setTheme();
-            $result = $pageEvent->getResult();
-            if ($result instanceof Response) {
-                return $result;
-            }
+
+            return;
         }
 
         if ($this->getRequest()->getParam('prefix') === 'Admin') {
@@ -622,74 +602,12 @@ class AppController extends BaseController
             $this->getEventManager()->dispatch($adminEvent);
             if ($adminEvent->isStopped()) {
                 $this->__setTheme();
-                $result = $adminEvent->getResult();
-                if ($result instanceof Response) {
-                    return $result;
-                }
+
+                return;
             }
         }
 
         $this->__setTheme();
-
-        return null;
-    }
-
-    private function __initSeoConfiguration(): void
-    {
-        if (!Configure::read('Install.dbConfigured')) {
-            return;
-        }
-
-        $this->Seo = $this->fetchTable('Seo');
-        $default = $this->Seo->find('all', conditions: ['Seo.page IS NULL'])->first();
-
-        $current_url = $this->getRequest()->getRequestTarget();
-        $get_page = [];
-        $condition = ["'" . $current_url . "' LIKE CONCAT(page, '%')"];
-
-        if ($this->Util->useSqlite()) {
-            $condition = ["'" . $current_url . "' LIKE page || '%'"];
-        }
-
-        $check = $this->Seo->find('all', conditions: $condition)->toArray();
-        if ($check && ($check = max($check)) && ($check['page'] === $current_url || $current_url !== '/')) {
-            $get_page = $check;
-        }
-
-        $seo_config = [];
-        $seo_config['title'] = !empty($default['title']) ? $default['title'] : '{TITLE} - {WEBSITE_NAME}';
-        $seo_config['title'] = !empty($get_page['title']) ? $get_page['title'] : $seo_config['title'];
-        $seo_config['description'] = !empty($get_page['description'])
-            ? $get_page['description']
-            : (!empty($default['description']) ? $default['description'] : '');
-        $seo_config['img_url'] = !empty($get_page['img_url'])
-            ? $get_page['img_url']
-            : (!empty($default['img_url']) ? $default['img_url'] : '');
-        $seo_config['favicon_url'] = !empty($get_page['favicon_url'])
-            ? $get_page['favicon_url']
-            : (!empty($default['favicon_url']) ? $default['favicon_url'] : '');
-        $seo_config['favicon_url'] = Router::url($seo_config['favicon_url'], true);
-        $seo_config['img_url'] = $seo_config['img_url'] === ''
-            ? $seo_config['favicon_url']
-            : Router::url($seo_config['img_url'], true);
-
-        $title_for_layout = $this->viewBuilder()->getVar('title_for_layout') ?: __('GLOBAL__ERROR');
-        $website_name = $this->viewBuilder()->getVar('website_name') ?: 'MineWeb';
-
-        $seo_config['title'] = str_replace(
-            ['{TITLE}', '{WEBSITE_NAME}'],
-            [$title_for_layout, $website_name],
-            $seo_config['title']
-        );
-
-        $seo_config['theme_color'] = !empty($get_page['theme_color'])
-            ? $get_page['theme_color']
-            : (!empty($default['theme_color']) ? $default['theme_color'] : '');
-        $seo_config['twitter_site'] = !empty($get_page['twitter_site'])
-            ? $get_page['twitter_site']
-            : (!empty($default['twitter_site']) ? $default['twitter_site'] : '');
-
-        $this->set(compact('seo_config'));
     }
 
     public function afterFilter(EventInterface $event): ?Response

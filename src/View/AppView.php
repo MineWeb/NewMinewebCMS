@@ -28,6 +28,7 @@ use Cake\View\View;
 /**
  * @property \App\View\Helper\LangHelper $Lang
  * @property \App\View\Helper\AuthHelper $Auth
+ * @property \App\View\Helper\SeoHelper $Seo
  */
 class AppView extends View
 {
@@ -46,5 +47,6 @@ class AppView extends View
 
         $this->loadHelper('Lang');
         $this->loadHelper('Auth');
+        $this->loadHelper('Seo');
     }
 }
