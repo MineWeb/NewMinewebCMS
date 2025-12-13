@@ -4,11 +4,34 @@ declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
+use App\Service\PermissionService;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Response;
 
+/**
+ * @property \App\Controller\Component\AuthComponent $Auth
+ * @property \App\Controller\Component\DataTableComponent $DataTable
+ * @property \App\Model\Table\BansTable $Bans
+ * @property \App\Model\Table\UsersTable $Users
+ * @property \App\Model\Table\RanksTable $Ranks
+ */
 class BanController extends AppController
 {
+    private PermissionService $permissions;
+
+    public function initialize(): void
+    {
+        parent::initialize();
+
+        $this->loadComponent('DataTable');
+
+        $this->Bans = $this->fetchTable('Bans');
+        $this->Users = $this->fetchTable('Users');
+        $this->Ranks = $this->fetchTable('Ranks');
+
+        $this->permissions = new PermissionService();
+    }
+
     public function index(): ?Response
     {
         if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_BAN')) {
@@ -17,8 +40,7 @@ class BanController extends AppController
 
         $this->set('title_for_layout', __('BAN__HOME'));
 
-        $banTable = $this->fetchTable('Bans');
-        $banned_users = $banTable->find()->all();
+        $banned_users = $this->Bans->find()->all();
 
         $this->viewBuilder()
             ->setLayout('admin')
@@ -50,39 +72,42 @@ class BanController extends AppController
             $this->disableAutoRender();
             $this->response = $this->response->withType('application/json');
 
-            $reason = $request->getData('reason');
-            if (empty($reason)) {
+            $reason = (string)$request->getData('reason', '');
+            if ($reason === '') {
                 return $this->response->withStringBody(json_encode([
                     'statut' => false,
                     'msg' => __('ERROR__FILL_ALL_FIELDS'),
                 ]));
             }
 
-            $banTable = $this->fetchTable('Bans');
-            $userTable = $this->User;
-
-            foreach ($request->getData() as $key => $value) {
-                if ($value !== 'on' || $key === 'name' || strpos($key, '-ip') !== false) {
+            foreach ((array)$request->getData() as $key => $value) {
+                if ($value !== 'on' || $key === 'name' || str_contains((string)$key, '-ip')) {
                     continue;
                 }
 
-                $ban = $banTable->newEntity([
-                    'user_id' => $key,
+                $userId = (int)$key;
+                if ($userId <= 0) {
+                    continue;
+                }
+
+                $ban = $this->Bans->newEntity([
+                    'user_id' => $userId,
                     'reason' => $reason,
                 ]);
 
-                $ipFieldName = $key . '-ip';
+                $ipFieldName = $userId . '-ip';
                 if ($request->getData($ipFieldName) === 'on') {
-                    $user = $userTable
-                        ->find('all', conditions: ['id' => $key])
+                    $user = $this->Users->find()
+                        ->select(['id', 'ip'])
+                        ->where(['id' => $userId])
                         ->first();
 
-                    if ($user !== null && array_key_exists('ip', $user)) {
-                        $ban->set('ip', $user['ip']);
+                    if ($user !== null && isset($user->ip) && is_string($user->ip)) {
+                        $ban->ip = $user->ip;
                     }
                 }
 
-                $banTable->save($ban);
+                $this->Bans->save($ban);
             }
 
             return $this->response->withStringBody(json_encode([
@@ -100,9 +125,8 @@ class BanController extends AppController
             throw new ForbiddenException();
         }
 
-        $banTable = $this->fetchTable('Bans');
-        $ban = $banTable->get($id);
-        $banTable->delete($ban);
+        $ban = $this->Bans->get((int)$id);
+        $this->Bans->delete($ban);
 
         $this->Flash->success(__('BAN__UNBAN_SUCCESS'));
 
@@ -114,7 +138,7 @@ class BanController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_BAN'))) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_BAN')) {
             return $this->response->withStringBody(json_encode(['status' => false]));
         }
 
@@ -129,55 +153,54 @@ class BanController extends AppController
             4 => ['label' => 'danger', 'name' => __('USER__RANK_ADMINISTRATOR')],
         ];
 
-        $rankTable = $this->fetchTable('Ranks');
-        $custom_ranks = $rankTable->find()->all();
+        foreach ($this->Ranks->find()->all() as $rank) {
+            $rid = (int)($rank->rank_id ?? 0);
+            if ($rid <= 0) {
+                continue;
+            }
 
-        foreach ($custom_ranks as $value) {
-            $available_ranks[$value['rank_id']] = [
+            $available_ranks[$rid] = [
                 'label' => 'info',
-                'name' => $value['name'],
+                'name' => (string)($rank->name ?? ''),
             ];
         }
 
-        $this->DataTable = $this->loadComponent('DataTable');
-        $this->DataTable->setTable($this->User);
+        $this->DataTable->setTable($this->Users);
         $this->paginate = [
-            'fields' => ['User.id', 'User.username', 'User.rank', 'User.ip'],
+            'fields' => ['Users.id', 'Users.username', 'Users.rank', 'Users.ip'],
         ];
         $this->DataTable->mDataProp = true;
-        $response = $this->DataTable->getResponse();
 
-        $banTable = $this->fetchTable('Bans');
+        $response = $this->DataTable->getResponse();
         $users = $response['aaData'] ?? [];
+
         $data = [];
 
         foreach ($users as $value) {
-            $checkIsBan = $banTable
-                ->find('all', conditions: ['user_id' => $value['id']])
-                ->first();
+            $userId = (int)($value['id'] ?? 0);
+            $rankId = (int)($value['rank'] ?? 0);
 
-            if ($checkIsBan !== null) {
+            if ($userId <= 0) {
                 continue;
             }
 
-            if ($this->Permissions->have($value['rank'], 'BYPASS_BAN')) {
+            if ($this->Bans->exists(['user_id' => $userId])) {
                 continue;
             }
 
-            $username = $value['username'];
-            $rankConfig = $available_ranks[$value['rank']] ?? $available_ranks[0];
+            if ($this->permissions->have($rankId, 'BYPASS_BAN')) {
+                continue;
+            }
 
-            $rank = '<span class="label label-' . $rankConfig['label'] . '">' . $rankConfig['name'] . '</span>';
-            $checkbox = "<input type='checkbox' name='" . $value['id'] . "'>";
-            $banIpCheckbox = "<input type='checkbox' name='" . $value['id'] . "-ip'>";
+            $rankConfig = $available_ranks[$rankId] ?? $available_ranks[0];
 
             $data[] = [
                 'Users' => [
-                    'username' => $username,
-                    'ban' => $checkbox,
-                    'banIp' => $banIpCheckbox,
-                    'rank' => $rank,
-                    'ip' => $value['ip'],
+                    'username' => (string)($value['username'] ?? ''),
+                    'ban' => "<input type='checkbox' name='{$userId}'>",
+                    'banIp' => "<input type='checkbox' name='{$userId}-ip'>",
+                    'rank' => "<span class=\"label label-{$rankConfig['label']}\">{$rankConfig['name']}</span>",
+                    'ip' => (string)($value['ip'] ?? ''),
                 ],
             ];
         }

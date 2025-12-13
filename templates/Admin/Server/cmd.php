@@ -35,25 +35,32 @@
                                     }
                                     ?>
                                 </td>
-
                                 <td class="right">
-                                    <form method="post"
-                                          action="<?= $this->Url->build(['_name' => 'admin_server_execute_cmd']) ?>"
-                                          data-ajax="true"
-                                          data-redirect-url="<?= $this->Url->build(['_name' => 'admin_server_cmd']) ?>">
 
-                                        <input type="hidden" name="cmd" value="<?= $c['cmd'] ?>">
-                                        <input type="hidden" name="server_id" value="<?= $c['server_id'] ?>">
+                                    <?= $this->Form->create(
+                                        null,
+                                        [
+                                            'url' => ['_name' => 'admin_server_execute_cmd'],
+                                            'method' => 'post',
+                                            'data-ajax' => 'true',
+                                            'data-redirect-url' => $this->Url->build(['_name' => 'admin_server_cmd']),
+                                        ]
+                                    ) ?>
 
-                                        <button class="btn btn-primary" type="submit">
-                                            <?= __('GLOBAL__SUBMIT') ?>
-                                        </button>
+                                    <input type="hidden" name="cmd" value="<?= $c['cmd'] ?>">
+                                    <input type="hidden" name="server_id" value="<?= $c['server_id'] ?>">
 
-                                        <a onclick="confirmDel('<?= $this->Url->build(['_name' => 'admin_server_delete_cmd', $c['id']]) ?>')"
-                                           class="btn btn-danger">
-                                            <?= __('GLOBAL__DELETE') ?>
-                                        </a>
-                                    </form>
+                                    <button class="btn btn-primary" type="submit">
+                                        <?= __('GLOBAL__SUBMIT') ?>
+                                    </button>
+
+                                    <a onclick="confirmDel('<?= $this->Url->build(['_name' => 'admin_server_delete_cmd', $c['id']]) ?>')"
+                                       class="btn btn-danger">
+                                        <?= __('GLOBAL__DELETE') ?>
+                                    </a>
+
+                                    <?= $this->Form->end() ?>
+
                                 </td>
                             </tr>
                         <?php } ?>
@@ -78,48 +85,53 @@
             </div>
 
             <div class="modal-body">
-                <form action="<?= $this->Url->build(['_name' => 'admin_server_add_cmd']) ?>"
-                      method="post"
-                      data-ajax="true"
-                      data-redirect-url="<?= $this->Url->build(['_name' => 'admin_server_cmd']) ?>">
 
-                    <div class="ajax-msg" aria-live="polite"></div>
+                <?= $this->Form->create(
+                    null,
+                    [
+                        'url' => ['_name' => 'admin_server_add_cmd'],
+                        'method' => 'post',
+                        'data-ajax' => 'true',
+                        'data-redirect-url' => $this->Url->build(['_name' => 'admin_server_cmd']),
+                    ]
+                ) ?>
 
-                    <div class="form-group">
-                        <label for="cmd-name-1"><?= __('GLOBAL__NAME') ?></label>
-                        <input id="cmd-name-1" name="name" class="form-control" type="text">
-                    </div>
+                <div class="ajax-msg" aria-live="polite"></div>
 
-                    <div class="form-group">
-                        <label for="cmd-command-1"><?= __('SERVER__COMMAND') ?></label>
-                        <input id="cmd-command-1" name="cmd" class="form-control" type="text">
-                    </div>
+                <div class="form-group">
+                    <label for="cmd-name-1"><?= __('GLOBAL__NAME') ?></label>
+                    <input id="cmd-name-1" name="name" class="form-control" type="text">
+                </div>
 
-                    <div class="form-group">
-                        <label for="cmd-server-1"><?= __('SERVER__TITLE') ?></label>
-                        <select id="cmd-server-1" class="form-control" name="server_id">
-                            <?php foreach ($search_server as $c) {
-                                if ($c['type'] == 0 or $c['type'] == 2) { ?>
-                                    <option value="<?= $c['id'] ?>"><?= $c['name'] ?></option>
-                                <?php }
-                            } ?>
-                        </select>
-                    </div>
+                <div class="form-group">
+                    <label for="cmd-command-1"><?= __('SERVER__COMMAND') ?></label>
+                    <input id="cmd-command-1" name="cmd" class="form-control" type="text">
+                </div>
 
-                    <div class="float-right">
-                        <a href="<?= $this->Url->build(['_name' => 'admin_server_cmd']) ?>"
-                           class="btn btn-default">
-                            <?= __('GLOBAL__CANCEL') ?>
-                        </a>
+                <div class="form-group">
+                    <label for="cmd-server-1"><?= __('SERVER__TITLE') ?></label>
+                    <select id="cmd-server-1" class="form-control" name="server_id">
+                        <?php foreach ($search_server as $c) {
+                            if ($c['type'] == 0 || $c['type'] == 2) { ?>
+                                <option value="<?= $c['id'] ?>"><?= $c['name'] ?></option>
+                            <?php }
+                        } ?>
+                    </select>
+                </div>
 
-                        <button class="btn btn-primary" type="submit">
-                            <?= __('GLOBAL__SUBMIT') ?>
-                        </button>
-                    </div>
+                <div class="float-right">
+                    <a href="<?= $this->Url->build(['_name' => 'admin_server_cmd']) ?>"
+                       class="btn btn-default">
+                        <?= __('GLOBAL__CANCEL') ?>
+                    </a>
+                    <button class="btn btn-primary" type="submit">
+                        <?= __('GLOBAL__SUBMIT') ?>
+                    </button>
+                </div>
 
-                </form>
+                <?= $this->Form->end() ?>
+
             </div>
-
         </div>
     </div>
 </div>
@@ -136,46 +148,50 @@
 
                     <div class="card-body">
 
-                        <form action="<?= $this->Url->build(['_name' => 'admin_server_add_cmd']) ?>"
-                              method="post"
-                              data-ajax="true"
-                              data-redirect-url="<?= $this->Url->build(['_name' => 'admin_server_cmd']) ?>">
+                        <?= $this->Form->create(
+                            null,
+                            [
+                                'url' => ['_name' => 'admin_server_add_cmd'],
+                                'method' => 'post',
+                                'data-ajax' => 'true',
+                                'data-redirect-url' => $this->Url->build(['_name' => 'admin_server_cmd']),
+                            ]
+                        ) ?>
 
-                            <div class="ajax-msg" aria-live="polite"></div>
+                        <div class="ajax-msg" aria-live="polite"></div>
 
-                            <div class="form-group">
-                                <label for="cmd-name-2"><?= __('GLOBAL__NAME') ?></label>
-                                <input id="cmd-name-2" name="name" class="form-control" type="text">
-                            </div>
+                        <div class="form-group">
+                            <label for="cmd-name-2"><?= __('GLOBAL__NAME') ?></label>
+                            <input id="cmd-name-2" name="name" class="form-control" type="text">
+                        </div>
 
-                            <div class="form-group">
-                                <label for="cmd-command-2"><?= __('SERVER__COMMAND') ?></label>
-                                <input id="cmd-command-2" name="cmd" class="form-control" type="text">
-                            </div>
+                        <div class="form-group">
+                            <label for="cmd-command-2"><?= __('SERVER__COMMAND') ?></label>
+                            <input id="cmd-command-2" name="cmd" class="form-control" type="text">
+                        </div>
 
-                            <div class="form-group">
-                                <label for="cmd-server-2"><?= __('SERVER__TITLE') ?></label>
-                                <select id="cmd-server-2" class="form-control" name="server_id">
-                                    <?php foreach ($search_server as $c) {
-                                        if ($c['type'] == 0 or $c['type'] == 2) { ?>
-                                            <option value="<?= $c['id'] ?>"><?= $c['name'] ?></option>
-                                        <?php }
-                                    } ?>
-                                </select>
-                            </div>
+                        <div class="form-group">
+                            <label for="cmd-server-2"><?= __('SERVER__TITLE') ?></label>
+                            <select id="cmd-server-2" class="form-control" name="server_id">
+                                <?php foreach ($search_server as $c) {
+                                    if ($c['type'] == 0 || $c['type'] == 2) { ?>
+                                        <option value="<?= $c['id'] ?>"><?= $c['name'] ?></option>
+                                    <?php }
+                                } ?>
+                            </select>
+                        </div>
 
-                            <div class="float-right">
-                                <a href="<?= $this->Url->build(['_name' => 'admin_server_cmd']) ?>"
-                                   class="btn btn-default">
-                                    <?= __('GLOBAL__CANCEL') ?>
-                                </a>
+                        <div class="float-right">
+                            <a href="<?= $this->Url->build(['_name' => 'admin_server_cmd']) ?>"
+                               class="btn btn-default">
+                                <?= __('GLOBAL__CANCEL') ?>
+                            </a>
+                            <button class="btn btn-primary" type="submit">
+                                <?= __('GLOBAL__SUBMIT') ?>
+                            </button>
+                        </div>
 
-                                <button class="btn btn-primary" type="submit">
-                                    <?= __('GLOBAL__SUBMIT') ?>
-                                </button>
-                            </div>
-
-                        </form>
+                        <?= $this->Form->end() ?>
 
                     </div>
                 </div>

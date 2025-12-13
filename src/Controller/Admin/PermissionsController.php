@@ -4,20 +4,37 @@ declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
+use App\Service\PermissionService;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Response;
 
+/**
+ * @property \App\Controller\Component\AuthComponent $Auth
+ * @property \App\Model\Table\RanksTable $Ranks
+ * @property \App\Model\Table\PermissionsTable $Permissions
+ */
 class PermissionsController extends AppController
 {
+    private PermissionService $permissionService;
+
+    public function initialize(): void
+    {
+        parent::initialize();
+
+        $this->Ranks = $this->fetchTable('Ranks');
+        $this->Permissions = $this->fetchTable('Permissions');
+
+        $this->permissionService = new PermissionService();
+    }
+
     public function index(): ?Response
     {
-        if (!$this->Auth->can('MANAGE_PERMISSIONS')) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_PERMISSIONS')) {
             throw new ForbiddenException();
         }
 
         $this->set('title_for_layout', __('PERMISSIONS__LABEL'));
 
-        $rankTable = $this->fetchTable('Ranks');
         $all_ranks = [
             [
                 'rank_id' => 0,
@@ -29,7 +46,7 @@ class PermissionsController extends AppController
             ],
         ];
 
-        $customRanks = $rankTable->find()->toArray();
+        $customRanks = $this->Ranks->find()->toArray();
         $all_ranks = array_merge($all_ranks, $customRanks);
 
         $this->set('all_ranks', $all_ranks);
@@ -38,46 +55,76 @@ class PermissionsController extends AppController
 
         if ($request->is('post')) {
             $permissionsByRank = [];
-
             foreach ($all_ranks as $rank) {
-                $permissionsByRank[$rank['rank_id']] = [];
+                $rankId = is_array($rank) ? ($rank['rank_id'] ?? null) : ($rank->rank_id ?? null);
+                if ($rankId === null) {
+                    continue;
+                }
+                $permissionsByRank[(int)$rankId] = [];
             }
 
-            foreach ($request->getData() as $key => $checked) {
+            foreach ((array)$request->getData() as $key => $checked) {
                 if (is_array($checked)) {
                     continue;
                 }
-                [$permission, $rankId] = explode('-', (string)$key);
+
+                $key = (string)$key;
+                if (!str_contains($key, '-')) {
+                    continue;
+                }
+
+                [$permission, $rankIdRaw] = explode('-', $key, 2);
+                $permission = trim((string)$permission);
+
+                if ($permission === '') {
+                    continue;
+                }
+
+                $rankId = (int)$rankIdRaw;
+
+                if (!array_key_exists($rankId, $permissionsByRank)) {
+                    continue;
+                }
+
                 $permissionsByRank[$rankId][] = $permission;
             }
 
-            $permissionTable = $this->fetchTable('Permissions');
-
             foreach ($permissionsByRank as $rankId => $permissions) {
-                $row = $permissionTable
+                $permissions = array_values(array_unique(array_filter(array_map('strval', $permissions), static fn(string $v): bool => $v !== '')));
+
+                $row = $this->Permissions
                     ->find()
                     ->where(['rank' => $rankId])
                     ->first();
 
-                if ($row) {
-                    $entity = $permissionTable->get($row['id']);
-                } else {
-                    $entity = $permissionTable->newEmptyEntity();
-                }
+                $entity = $row ? $this->Permissions->get((int)$row->id) : $this->Permissions->newEmptyEntity();
 
                 $entity->set([
                     'permissions' => serialize($permissions),
                     'rank' => $rankId,
                 ]);
 
-                $permissionTable->save($entity);
+                $this->Permissions->save($entity);
+
+                $this->permissionService->clearCache($rankId);
             }
 
             $this->Flash->success(__('PERMISSIONS__SUCCESS_SAVE'));
         }
 
-        $this->Permissions->ranks = [];
-        $this->set('permissions', $this->Permissions->get_all());
+        $rankIds = [];
+        foreach ($all_ranks as $rank) {
+            $rid = is_array($rank) ? ($rank['rank_id'] ?? null) : ($rank->rank_id ?? null);
+            if ($rid !== null) {
+                $rankIds[] = (int)$rid;
+            }
+        }
+        $rankIds = array_values(array_unique($rankIds));
+        sort($rankIds);
+
+        $permissions = $this->permissionService->getAllPermissionsMatrix($rankIds);
+
+        $this->set('permissions', $permissions);
 
         $this->viewBuilder()
             ->setLayout('admin')
@@ -89,7 +136,7 @@ class PermissionsController extends AppController
 
     public function addRank(): Response
     {
-        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_PERMISSIONS'))) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_PERMISSIONS')) {
             return $this->redirect('/');
         }
 
@@ -105,7 +152,6 @@ class PermissionsController extends AppController
         }
 
         $name = (string)$request->getData('name', '');
-
         if ($name === '') {
             return $this->response->withStringBody(json_encode([
                 'statut' => false,
@@ -113,26 +159,20 @@ class PermissionsController extends AppController
             ]));
         }
 
-        $rankTable = $this->fetchTable('Ranks');
-
-        $lastRank = $rankTable
+        $lastRank = $this->Ranks
             ->find()
             ->orderBy(['rank_id' => 'DESC'])
             ->limit(1)
             ->first();
 
-        if ($lastRank) {
-            $rank_id = (int)$lastRank['rank_id'] + 1;
-        } else {
-            $rank_id = 10;
-        }
+        $rank_id = $lastRank ? ((int)$lastRank->rank_id + 1) : 10;
 
-        $entity = $rankTable->newEntity([
+        $entity = $this->Ranks->newEntity([
             'name' => $name,
             'rank_id' => $rank_id,
         ]);
 
-        $rankTable->save($entity);
+        $this->Ranks->save($entity);
 
         $this->History->set('ADD_RANK', 'permissions');
         $this->Flash->success(__('USER__RANK_ADD_SUCCESS'));
@@ -145,32 +185,33 @@ class PermissionsController extends AppController
 
     public function deleteRank(int|string|null $id = null): Response
     {
-        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_PERMISSIONS'))) {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_PERMISSIONS')) {
             return $this->redirect('/');
         }
 
         $this->disableAutoRender();
 
         if ($id !== null) {
-            $rankTable = $this->fetchTable('Ranks');
-            $permissionTable = $this->fetchTable('Permissions');
+            $rankId = (int)$id;
 
-            $rank = $rankTable
+            $rank = $this->Ranks
                 ->find()
-                ->where(['rank_id' => $id])
+                ->where(['rank_id' => $rankId])
                 ->first();
 
             if ($rank) {
-                $rankTable->delete($rank);
+                $this->Ranks->delete($rank);
 
-                $perm = $permissionTable
+                $perm = $this->Permissions
                     ->find()
-                    ->where(['rank' => $id])
+                    ->where(['rank' => $rankId])
                     ->first();
 
                 if ($perm) {
-                    $permissionTable->delete($perm);
+                    $this->Permissions->delete($perm);
                 }
+
+                $this->permissionService->clearCache($rankId);
 
                 $this->Flash->success(__('USER__RANK_DELETE_SUCCESS'));
             }

@@ -1,6 +1,3 @@
-<?php
-
-?>
 <section class="content">
     <div class="row">
         <div class="col-md-12">
@@ -9,39 +6,56 @@
                     <h3 class="card-title"><?= __('BAN__HOME') ?></h3>
                 </div>
                 <div class="card-body">
-                    <form method="post" data-ajax="true" data-upload-image="true"
-                          data-redirect-url="<?= $this->Url->build(['_name' => 'admin_ban_index']) ?>">
-                        <table class="table table-responsive-sm table-bordered"
-                               style="table-layout: fixed;word-wrap: break-word;" id="users">
-                            <thead>
-                            <tr>
-                                <th><?= __('BAN__QUESTION') ?></th>
-                                <th><?= __('USER__TITLE') ?></th>
-                                <th><?= __('USER__RANK') ?></th>
-                                <th>IP</th>
-                                <th><?= __('BAN__IP_QUESTION') ?></th>
-                            </tr>
-                            </thead>
-                        </table>
 
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label><?= __('BAN__REASON') ?></label>
-                                <input type="text" class="form-control" name="reason">
-                            </div>
-                        </div>
+                    <?= $this->Form->create(
+                        null,
+                        [
+                            'method' => 'post',
+                            'data-ajax' => 'true',
+                            'data-upload-image' => 'true',
+                            'data-redirect-url' => $this->Url->build(['_name' => 'admin_ban_index']),
+                        ]
+                    ) ?>
 
-                        <div class="float-right">
-                            <a href="<?= $this->Url->build(['_name' => 'admin_ban_index']) ?>"
-                               class="btn btn-default"><?= __('GLOBAL__CANCEL') ?></a>
-                            <button class="btn btn-primary" type="submit"><?= __('GLOBAL__SUBMIT') ?></button>
+                    <table class="table table-responsive-sm table-bordered"
+                           style="table-layout: fixed;word-wrap: break-word;"
+                           id="users">
+                        <thead>
+                        <tr>
+                            <th><?= __('BAN__QUESTION') ?></th>
+                            <th><?= __('USER__TITLE') ?></th>
+                            <th><?= __('USER__RANK') ?></th>
+                            <th>IP</th>
+                            <th><?= __('BAN__IP_QUESTION') ?></th>
+                        </tr>
+                        </thead>
+                    </table>
+
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label><?= __('BAN__REASON') ?></label>
+                            <input type="text" class="form-control" name="reason">
                         </div>
-                    </form>
+                    </div>
+
+                    <div class="float-right">
+                        <a href="<?= $this->Url->build(['_name' => 'admin_ban_index']) ?>"
+                           class="btn btn-default">
+                            <?= __('GLOBAL__CANCEL') ?>
+                        </a>
+                        <button class="btn btn-primary" type="submit">
+                            <?= __('GLOBAL__SUBMIT') ?>
+                        </button>
+                    </div>
+
+                    <?= $this->Form->end() ?>
+
                 </div>
             </div>
         </div>
     </div>
 </section>
+
 <script type="text/javascript">
     <?php if ($type == '0') { ?>
     document.addEventListener("DOMContentLoaded", function () {

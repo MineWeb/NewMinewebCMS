@@ -9,6 +9,13 @@ use Psr\Http\Message\ServerRequestInterface;
 
 final class AuthService
 {
+    private PermissionService $permissionService;
+
+    public function __construct(?PermissionService $permissionService = null)
+    {
+        $this->permissionService = $permissionService ?? new PermissionService();
+    }
+
     public function identity(ServerRequestInterface $request): ?User
     {
         return $request->getAttribute('auth.identity');
@@ -31,6 +38,17 @@ final class AuthService
         $user = $this->identity($request);
 
         return is_object($user) && method_exists($user, 'get') ? (string)$user->get('username') : null;
+    }
+
+    public function rankId(ServerRequestInterface $request): int
+    {
+        $user = $this->identity($request);
+
+        if (is_object($user) && method_exists($user, 'get')) {
+            return (int)$user->get('rank');
+        }
+
+        return 0;
     }
 
     public function isConnected(ServerRequestInterface $request): bool
@@ -56,9 +74,22 @@ final class AuthService
             return false;
         }
 
+        if ($this->isAdmin($request)) {
+            return true;
+        }
+
         $perms = $this->permissions($request);
 
-        return in_array('*', $perms, true) || in_array($perm, $perms, true);
+        if (in_array('*', $perms, true) || in_array($perm, $perms, true)) {
+            return true;
+        }
+
+        $rankId = $this->rankId($request);
+        if ($rankId === 0) {
+            return false;
+        }
+
+        return $this->permissionService->have($rankId, $perm);
     }
 
     public function require(ServerRequestInterface $request, string $perm): void

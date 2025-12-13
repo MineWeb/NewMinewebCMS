@@ -5,6 +5,7 @@ namespace App\Controller;
 
 use App\Service\ConfigurationService;
 use App\Service\LocaleService;
+use App\Service\PermissionService;
 use Cake\Event\EventInterface;
 
 /**
@@ -20,6 +21,7 @@ class AppController extends BaseController
     public array $paginate = [];
 
     protected ConfigurationService $config;
+    private PermissionService $permissions;
 
     public function initialize(): void
     {
@@ -59,6 +61,7 @@ class AppController extends BaseController
         closedir($componentsDir);
 
         $this->config = new ConfigurationService();
+        $this->permissions = new PermissionService();
     }
 
     public function beforeFilter(EventInterface $event): void

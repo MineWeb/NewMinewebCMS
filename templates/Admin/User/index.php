@@ -22,20 +22,31 @@
                             </tbody>
                         </table>
                     <?php } else { ?>
-                        <form action="<?= $this->Url->build(['_name' => 'admin_user_live_search']) ?>" method="search">
-                            <div class="form-group">
-                                <label for="user-search"><?= __('GLOBAL__SEARCH') ?></label>
-                                <input id="user-search" type="text" name="search" placeholder="username..." autocomplete="off"
-                                       class="form-control">
-                                <div class="list-group" style="display:none;"></div>
-                            </div>
-                        </form>
+                        <?= $this->Form->create(null, [
+                            'url' => ['_name' => 'admin_user_live_search'],
+                            'method' => 'get',
+                        ]) ?>
+                        <div class="form-group">
+                            <label for="user-search"><?= __('GLOBAL__SEARCH') ?></label>
+                            <input
+                                id="user-search"
+                                type="text"
+                                name="search"
+                                placeholder="username..."
+                                autocomplete="off"
+                                class="form-control"
+                            >
+                            <div class="list-group" style="display:none;"></div>
+                        </div>
+                        <?= $this->Form->end() ?>
+
                     <?php } ?>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
 <script type="text/javascript">
     <?php if ($type == '0') { ?>
     document.addEventListener("DOMContentLoaded", function () {
@@ -64,7 +75,7 @@
     });
     <?php } else { ?>
     document.addEventListener("DOMContentLoaded", function () {
-        let forms = document.querySelectorAll('form[method="search"]');
+        let forms = document.querySelectorAll('form[method="get"]');
 
         forms.forEach(function (form) {
             let searchInput = form.querySelector('input[name="search"]');
