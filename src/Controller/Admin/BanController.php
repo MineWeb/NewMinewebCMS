@@ -209,4 +209,53 @@ class BanController extends AppController
 
         return $this->response->withStringBody(json_encode($response));
     }
+
+    public function liveSearch(?string $query = null): Response
+    {
+        $this->disableAutoRender();
+        $this->response = $this->response->withType('application/json');
+
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_BAN'))) {
+            return $this->response->withStringBody(json_encode(['status' => false]));
+        }
+
+        if (!$query) {
+            return $this->response->withStringBody(json_encode(['status' => false]));
+        }
+
+        $banTable = $this->fetchTable('Bans');
+
+        $result = $this->Users
+            ->find('all', conditions: ['username LIKE' => $query . '%'])
+            ->all();
+
+        $users = [];
+        foreach ($result as $value) {
+            $checkIsBan = $banTable
+                ->find('all', conditions: ['user_id' => $value['id']])
+                ->first();
+
+            if ($checkIsBan !== null) {
+                continue;
+            }
+
+            if ($this->permissions->have($value['rank'], 'BYPASS_BAN')) {
+                continue;
+            }
+
+            $users[] = [
+                'username' => $value['username'],
+                'id' => $value['id'],
+            ];
+        }
+
+        if (empty($users)) {
+            return $this->response->withStringBody(json_encode(['status' => false]));
+        }
+
+        return $this->response->withStringBody(json_encode([
+            'status' => true,
+            'data' => $users,
+        ]));
+    }
 }

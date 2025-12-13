@@ -59,6 +59,40 @@ class UserController extends AppController
         return null;
     }
 
+    public function liveSearch(?string $query = null): Response
+    {
+        $this->disableAutoRender();
+        $this->response = $this->response->withType('application/json');
+
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_USERS'))) {
+            return $this->response->withStringBody(json_encode(['status' => false]));
+        }
+
+        if ($query === null || $query === '') {
+            return $this->response->withStringBody(json_encode(['status' => false]));
+        }
+
+        $result = $this->Users
+            ->find()
+            ->select(['id', 'username'])
+            ->where(['Users.username LIKE' => $query . '%'])
+            ->all();
+
+        $users = [];
+        foreach ($result as $entity) {
+            $users[] = [
+                'username' => (string)$entity->get('username'),
+                'id' => (int)$entity->get('id'),
+            ];
+        }
+
+        $response = empty($users)
+            ? ['status' => false]
+            : ['status' => true, 'data' => $users];
+
+        return $this->response->withStringBody(json_encode($response));
+    }
+
     public function getUsers(): Response
     {
         if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_USERS'))) {
