@@ -6,6 +6,7 @@ namespace App\Controller\Admin;
 use App\Controller\AppController;
 use App\Model\Table\HistoriesTable;
 use App\Model\Table\UsersTable;
+use App\Service\RoleService;
 use App\Service\UserAuthService;
 use App\Utility\LangService;
 use Cake\Event\Event;
@@ -14,13 +15,6 @@ use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
 use Cake\Routing\Router;
 
-/**
- * @property \App\Controller\Component\AuthComponent $Auth
- * @property \Cake\Controller\Component\FlashComponent $Flash
- * @property \App\Controller\Component\EyPluginComponent $EyPlugin
- * @property \App\Controller\Component\HistoryComponent $History
- * @property \App\Controller\Component\DataTableComponent $DataTable
- */
 class UserController extends AppController
 {
     private UserAuthService $userAuth;
@@ -104,27 +98,12 @@ class UserController extends AppController
             return $this->response->withStringBody(json_encode([]));
         }
 
-        $availableRanks = [
-            0 => ['label' => 'success', 'name' => __('USER__RANK_MEMBER')],
-            2 => ['label' => 'warning', 'name' => __('USER__RANK_MODERATOR')],
-            3 => ['label' => 'danger', 'name' => __('USER__RANK_ADMINISTRATOR')],
-            4 => ['label' => 'danger', 'name' => __('USER__RANK_ADMINISTRATOR')],
-        ];
-
-        $rankTable = $this->fetchTable('Ranks');
-        $customRanks = $rankTable->find()->all();
-
-        foreach ($customRanks as $value) {
-            $availableRanks[(int)$value->get('rank_id')] = [
-                'label' => 'info',
-                'name' => (string)$value->get('name'),
-            ];
-        }
+        $rolesConfig = $this->buildRolesConfig();
 
         $this->DataTable->setTable($this->Users);
 
         $this->paginate = [
-            'fields' => ['Users.id', 'Users.username', 'Users.email', 'Users.created_at', 'Users.rank'],
+            'fields' => ['Users.id', 'Users.username', 'Users.email', 'Users.created_at', 'Users.role_id'],
         ];
 
         $this->DataTable->mDataProp = true;
@@ -137,11 +116,9 @@ class UserController extends AppController
             $username = (string)$value['username'];
             $date = 'Le ' . LangService::date($value['created_at']);
 
-            $rankId = (int)($value['rank'] ?? 0);
-            $rankLabel = $availableRanks[$rankId]['label'] ?? $availableRanks[0]['label'];
-            $rankName = $availableRanks[$rankId]['name'] ?? $availableRanks[0]['name'];
-
-            $rankHtml = '<span class="label label-' . $rankLabel . '">' . $rankName . '</span>';
+            $roleId = (int)($value['role_id'] ?? 0);
+            $roleCfg = $rolesConfig[$roleId] ?? $this->fallbackRoleConfig($roleId);
+            $roleHtml = '<span class="badge badge-' . $roleCfg['label'] . '">' . $roleCfg['name'] . '</span>';
 
             $editUrl = Router::url([
                 '_name' => 'admin_user_edit',
@@ -161,7 +138,7 @@ class UserController extends AppController
                     'username' => $username,
                     'email' => (string)$value['email'],
                     'created_at' => $date,
-                    'rank' => $rankHtml,
+                    'rank' => $roleHtml,
                 ],
                 'actions' => $btns,
             ];
@@ -196,19 +173,7 @@ class UserController extends AppController
         $lastHistory = $this->Histories->getLastFromUser((int)$searchUser->get('id'));
         $searchUser->set('History', $this->Histories->format($lastHistory));
 
-        $optionsRanks = [
-            0 => __('USER__RANK_MEMBER'),
-            2 => __('USER__RANK_MODERATOR'),
-            3 => __('USER__RANK_ADMINISTRATOR'),
-            4 => __('USER__RANK_SUPER_ADMINISTRATOR'),
-        ];
-
-        $rankTable = $this->fetchTable('Ranks');
-        $customRanks = $rankTable->find()->all();
-
-        foreach ($customRanks as $value) {
-            $optionsRanks[(int)$value->get('rank_id')] = (string)$value->get('name');
-        }
+        $optionsRanks = $this->buildRolesOptions();
 
         if (
             $this->config->get('confirm_mail_signup')
@@ -287,13 +252,13 @@ class UserController extends AppController
         $id = $request->getData('id');
         $email = $request->getData('email');
         $username = $request->getData('username');
-        $rank = $request->getData('rank');
+        $roleId = $request->getData('role_id');
 
         if (
             empty($id)
             || empty($email)
             || empty($username)
-            || ($rank === null && $rank !== 0 && $rank !== '0')
+            || ($roleId === null && $roleId !== 0 && $roleId !== '0')
         ) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
@@ -315,17 +280,14 @@ class UserController extends AppController
 
         $current = $this->Auth->user();
         $currentId = null;
-        $currentRank = null;
+        $currentRoleId = null;
 
         if (is_object($current)) {
             $currentId = $current->get('id');
-            $currentRank = $current->get('rank');
+            $currentRoleId = $current->get('role_id');
         }
 
-        if (
-            (int)$findUser->get('id') === (int)$currentId
-            && (string)$rank !== (string)$currentRank
-        ) {
+        if ((int)$findUser->get('id') === (int)$currentId && (string)$roleId !== (string)$currentRoleId) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
                 'messages' => __('USER__EDIT_ERROR_YOURSELF'),
@@ -334,7 +296,7 @@ class UserController extends AppController
 
         $data = [
             'email' => $email,
-            'rank' => $rank,
+            'role_id' => $roleId,
             'username' => $username,
             'uuid' => $request->getData('uuid'),
         ];
@@ -413,5 +375,63 @@ class UserController extends AppController
         return $this->redirect([
             '_name' => 'admin_user_index',
         ]);
+    }
+
+    private function buildRolesOptions(): array
+    {
+        $Roles = $this->fetchTable('Roles');
+        $roles = $Roles->find()->orderBy(['sort' => 'ASC', 'id' => 'ASC'])->all();
+
+        $options = [];
+        foreach ($roles as $r) {
+            $id = (int)($r->id ?? 0);
+            if ($id <= 0) {
+                continue;
+            }
+
+            $options[$id] = $r->display_name;
+        }
+
+        return $options;
+    }
+
+    private function buildRolesConfig(): array
+    {
+        $Roles = $this->fetchTable('Roles');
+        $roles = $Roles->find()->orderBy(['sort' => 'ASC', 'id' => 'ASC'])->all();
+
+        $out = [];
+        foreach ($roles as $r) {
+            $id = (int)($r->id ?? 0);
+            if ($id <= 0) {
+                continue;
+            }
+
+            $slug = (string)($r->slug ?? '');
+
+            $label = 'info';
+            if ($slug === RoleService::ADMIN_SLUG) {
+                $label = 'danger';
+            } elseif ((int)($r->is_default ?? 0) === 1) {
+                $label = 'primary';
+            } elseif ((int)($r->is_system ?? 0) === 1) {
+                $label = 'secondary';
+            }
+
+            $out[$id] = [
+                'label' => $label,
+                'name' => $r->display_name,
+            ];
+        }
+
+        return $out;
+    }
+
+    private function fallbackRoleConfig(int $roleId): array
+    {
+        return [
+            'label' => 'info',
+            'name' => (string)$roleId,
+        ];
     }
 }

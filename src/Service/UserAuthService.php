@@ -95,7 +95,7 @@ final class UserAuthService
             'username' => $username,
             'email' => $email,
             'ip' => $ip,
-            'rank' => (int)($data['rank'] ?? 0),
+            'role_id' => (int)($data['role_id'] ?? 0),
             'money' => 0,
             'skin' => 0,
             'cape' => 0,

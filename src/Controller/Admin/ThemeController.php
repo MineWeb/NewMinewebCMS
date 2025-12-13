@@ -42,7 +42,7 @@ class ThemeController extends AppController
             throw new NotFoundException();
         }
 
-        $this->config->setKey('theme', $slug);
+        $this->config->set('theme', $slug);
         $this->History->set('SET_THEME', 'theme');
         $this->Flash->success(__('THEME__ENABLED_SUCCESS'));
 

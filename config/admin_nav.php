@@ -22,7 +22,7 @@ return [
             'PERMISSIONS__LABEL' => [
                 'icon' => 'user',
                 'permission' => 'MANAGE_PERMISSIONS',
-                'route' => ['_name' => 'admin_permissions_index'],
+                'route' => ['_name' => 'admin_roles_index'],
             ],
             'CONFIG__GENERAL_PREFERENCES' => [
                 'icon' => 'cog',

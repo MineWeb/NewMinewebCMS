@@ -31,6 +31,7 @@ class InstallMiddleware implements MiddlewareInterface
         }
 
         $response = new Response();
+
         return $response
             ->withHeader('Location', '/install')
             ->withStatus(302);

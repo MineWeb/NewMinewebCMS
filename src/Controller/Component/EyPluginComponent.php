@@ -3,19 +3,17 @@ declare(strict_types=1);
 
 namespace App\Controller\Component;
 
-use AppSchema;
 use Cake\Cache\Cache;
 use Cake\Controller\Component;
 use Cake\Controller\ComponentRegistry;
 use Cake\Core\App;
+use Cake\Core\Configure;
 use Cake\Core\Plugin;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use Cake\Routing\Router;
-use CakeSchema;
 use Exception;
 use FilesystemIterator;
-use MainComponent;
 use PDOException;
 use PharIo\Version\Version;
 use PharIo\Version\VersionConstraintParser;
@@ -59,7 +57,7 @@ final class EyPluginComponent extends Component
 
         $this->models = (object)[
             'Plugin' => $this->fetchTable('Plugins'),
-            'Permission' => $this->fetchTable('Permissions'),
+            'Roles' => $this->fetchTable('Roles'),
         ];
 
         $this->pluginsInFolder = $this->getPluginsInFolder();
@@ -273,7 +271,7 @@ final class EyPluginComponent extends Component
             return [];
         }
 
-        $class = new AppSchema();
+        $class = new \AppSchema();
         $tables = get_class_vars($class::class);
         $ignoredVars = ['name', 'path', 'file', 'connection', 'plugin', 'tables'];
 
@@ -359,7 +357,7 @@ final class EyPluginComponent extends Component
         $mainPath = $this->pluginsFolder . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component' . DIRECTORY_SEPARATOR . 'MainComponent.php';
         if (file_exists($mainPath)) {
             App::uses('MainComponent', 'Plugin' . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component');
-            $this->Main = new MainComponent();
+            $this->Main = new \MainComponent();
             $this->Main->onEnable();
         }
 
@@ -398,7 +396,7 @@ final class EyPluginComponent extends Component
         $replace_class_name = str_replace('AppSchema', 'AppUpdateSchema', $sourceSchema);
         file_put_contents($options['path'] . DIRECTORY_SEPARATOR . $options['file'], $replace_class_name);
 
-        $this->Schema = new CakeSchema($options);
+        $this->Schema = new \CakeSchema($options);
 
         $db = ConnectionManager::get('default');
         if (property_exists($db, 'cacheSources')) {
@@ -525,33 +523,51 @@ final class EyPluginComponent extends Component
 
     private function addPermissions(mixed $permissionConfig): void
     {
-        if (!is_object($permissionConfig) || !isset($permissionConfig->default) || empty($permissionConfig->default)) {
+        if (!is_object($permissionConfig)) {
             return;
         }
 
-        foreach ($permissionConfig->default as $rank => $permissions) {
-            $rankEntity = $this->models->Permission->find()->where(['rank' => $rank])->first();
-            if (!$rankEntity) {
+        $defaults = $permissionConfig->default ?? null;
+        if ($defaults === null) {
+            return;
+        }
+
+        $Roles = $this->models->Roles;
+
+        foreach ((array)$defaults as $key => $permissions) {
+            $role = null;
+
+            if (is_numeric($key)) {
+                $role = $Roles->find()->where(['id' => (int)$key])->first();
+            } else {
+                $role = $Roles->find()->where(['slug' => (string)$key])->first();
+            }
+
+            if ($role === null) {
                 continue;
             }
 
-            $raw = $rankEntity->get('permissions');
-            $rankPermissions = [];
-            if (is_string($raw) && $raw !== '') {
-                $tmp = @unserialize($raw);
-                if (is_array($tmp)) {
-                    $rankPermissions = $tmp;
+            $raw = (string)($role->get('permissions') ?? '[]');
+            $decoded = json_decode($raw, true);
+            $rolePermissions = is_array($decoded) ? $decoded : [];
+
+            $clean = [];
+            foreach ($rolePermissions as $v) {
+                $s = trim((string)$v);
+                if ($s !== '') {
+                    $clean[] = $s;
                 }
             }
 
             foreach ((array)$permissions as $perm) {
-                if (!in_array($perm, $rankPermissions, true)) {
-                    $rankPermissions[] = $perm;
+                $p = trim((string)$perm);
+                if ($p !== '' && !in_array($p, $clean, true)) {
+                    $clean[] = $p;
                 }
             }
 
-            $rankEntity->set('permissions', serialize($rankPermissions));
-            $this->models->Permission->save($rankEntity);
+            $role->set('permissions', json_encode(array_values(array_unique($clean)), JSON_UNESCAPED_UNICODE));
+            $Roles->save($role);
         }
     }
 
@@ -585,7 +601,7 @@ final class EyPluginComponent extends Component
         $mainPath = $this->pluginsFolder . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component' . DIRECTORY_SEPARATOR . 'MainComponent.php';
         if (file_exists($mainPath)) {
             App::uses('MainComponent', 'Plugin' . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component');
-            $this->Main = new MainComponent();
+            $this->Main = new \MainComponent();
             $this->Main->onDisable();
         }
 
@@ -610,61 +626,94 @@ final class EyPluginComponent extends Component
 
     private function refreshPermissions(): void
     {
-        $controller = $this->getController();
+        $defaultPermissions = $this->getCorePermissionsList();
+        $pluginsPermissions = $this->getPluginsPermissionsAvailable();
 
-        $defaultPermissions = [];
-        if ($controller && property_exists($controller, 'Permissions')) {
-            $raw = $controller->Permissions->permissions ?? [];
-            $defaultPermissions = is_array($raw) ? $raw : [];
+        $allowed = array_values(array_unique(array_merge($defaultPermissions, $pluginsPermissions)));
+
+        $Roles = $this->models->Roles;
+        $roles = $Roles->find()->select(['id', 'permissions'])->all();
+
+        foreach ($roles as $role) {
+            $raw = (string)($role->get('permissions') ?? '[]');
+            $decoded = json_decode($raw, true);
+            $permissions = is_array($decoded) ? $decoded : [];
+
+            $clean = [];
+            $seen = [];
+
+            foreach ($permissions as $perm) {
+                $p = trim((string)$perm);
+                if ($p === '') {
+                    continue;
+                }
+
+                if ($p === '*') {
+                    if (!in_array('*', $seen, true)) {
+                        $clean[] = '*';
+                        $seen[] = '*';
+                    }
+                    continue;
+                }
+
+                if (!in_array($p, $allowed, true)) {
+                    continue;
+                }
+
+                if (in_array($p, $seen, true)) {
+                    continue;
+                }
+
+                $clean[] = $p;
+                $seen[] = $p;
+            }
+
+            $role->set('permissions', json_encode($clean, JSON_UNESCAPED_UNICODE));
+            $Roles->save($role);
+        }
+    }
+
+    private function getCorePermissionsList(): array
+    {
+        $list = Configure::read('Permissions.list', []);
+        if (!is_array($list)) {
+            return [];
         }
 
+        $out = [];
+        foreach ($list as $v) {
+            $s = trim((string)$v);
+            if ($s !== '') {
+                $out[] = $s;
+            }
+        }
+
+        $out = array_values(array_unique($out));
+        sort($out);
+
+        return $out;
+    }
+
+    private function getPluginsPermissionsAvailable(): array
+    {
         $pluginsPermissions = [];
+
         foreach ((array)$this->loadPlugins() as $data) {
-            if (!isset($data->permissions->available)) {
+            if (!isset($data->permissions) || !isset($data->permissions->available)) {
                 continue;
             }
             foreach ((array)$data->permissions->available as $permission) {
-                $pluginsPermissions[] = $permission;
+                $p = trim((string)$permission);
+                if ($p !== '') {
+                    $pluginsPermissions[] = $p;
+                }
             }
         }
 
-        $ranks = $this->models->Permission->find()->all();
+        $pluginsPermissions = array_values(array_unique($pluginsPermissions));
+        sort($pluginsPermissions);
 
-        foreach ($ranks as $rankEntity) {
-            $raw = $rankEntity->get('permissions');
-            $permissions = [];
-            if (is_string($raw) && $raw !== '') {
-                $tmp = @unserialize($raw);
-                if (is_array($tmp)) {
-                    $permissions = $tmp;
-                }
-            }
-
-            $before = $permissions;
-            $checked = [];
-
-            foreach ($permissions as $key => $perm) {
-                $shouldRemove = false;
-
-                if (!in_array($perm, $defaultPermissions, true) && !in_array($perm, $pluginsPermissions, true)) {
-                    $shouldRemove = true;
-                }
-                if (in_array($perm, $checked, true)) {
-                    $shouldRemove = true;
-                }
-
-                if ($shouldRemove) {
-                    unset($permissions[$key]);
-                } else {
-                    $checked[] = $perm;
-                }
-            }
-
-            if (count($permissions) !== count($before)) {
-                $rankEntity->set('permissions', serialize(array_values($permissions)));
-                $this->models->Permission->save($rankEntity);
-            }
-        }
+        return $pluginsPermissions;
     }
 
     public function loadPlugins(): object
@@ -1134,7 +1183,7 @@ final class EyPluginComponent extends Component
         if (file_exists($mainPath)) {
             App::uses('MainComponent', $this->pluginsFolder . DIRECTORY_SEPARATOR . $pluginName . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component');
             if (class_exists('MainComponent')) {
-                $this->Main = new MainComponent();
+                $this->Main = new \MainComponent();
                 $this->Main->onEnable();
             }
         }
@@ -1156,7 +1205,7 @@ final class EyPluginComponent extends Component
         if (file_exists($mainPath)) {
             App::uses('MainComponent', $this->pluginsFolder . DIRECTORY_SEPARATOR . $pluginName . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component');
             if (class_exists('MainComponent')) {
-                $this->Main = new MainComponent();
+                $this->Main = new \MainComponent();
                 $this->Main->onDisable();
             }
         }

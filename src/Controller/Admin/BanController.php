@@ -5,19 +5,14 @@ namespace App\Controller\Admin;
 
 use App\Controller\AppController;
 use App\Service\PermissionService;
+use App\Service\RoleService;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Response;
 
-/**
- * @property \App\Controller\Component\AuthComponent $Auth
- * @property \App\Controller\Component\DataTableComponent $DataTable
- * @property \App\Model\Table\BansTable $Bans
- * @property \App\Model\Table\UsersTable $Users
- * @property \App\Model\Table\RanksTable $Ranks
- */
 class BanController extends AppController
 {
     private PermissionService $permissions;
+    private RoleService $roleService;
 
     public function initialize(): void
     {
@@ -27,9 +22,9 @@ class BanController extends AppController
 
         $this->Bans = $this->fetchTable('Bans');
         $this->Users = $this->fetchTable('Users');
-        $this->Ranks = $this->fetchTable('Ranks');
 
         $this->permissions = new PermissionService();
+        $this->roleService = new RoleService();
     }
 
     public function index(): ?Response
@@ -118,7 +113,7 @@ class BanController extends AppController
         return null;
     }
 
-    public function unban(int|string $id = 0): Response
+    public function unban(int|string $id): Response
     {
         if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_BAN')) {
             throw new ForbiddenException();
@@ -145,28 +140,11 @@ class BanController extends AppController
             return $this->response->withStringBody(json_encode(['status' => false]));
         }
 
-        $available_ranks = [
-            0 => ['label' => 'success', 'name' => __('USER__RANK_MEMBER')],
-            2 => ['label' => 'warning', 'name' => __('USER__RANK_MODERATOR')],
-            3 => ['label' => 'danger', 'name' => __('USER__RANK_ADMINISTRATOR')],
-            4 => ['label' => 'danger', 'name' => __('USER__RANK_ADMINISTRATOR')],
-        ];
-
-        foreach ($this->Ranks->find()->all() as $rank) {
-            $rid = (int)($rank->rank_id ?? 0);
-            if ($rid <= 0) {
-                continue;
-            }
-
-            $available_ranks[$rid] = [
-                'label' => 'info',
-                'name' => (string)($rank->name ?? ''),
-            ];
-        }
+        $rolesConfig = $this->buildRolesConfig();
 
         $this->DataTable->setTable($this->Users);
         $this->paginate = [
-            'fields' => ['Users.id', 'Users.username', 'Users.rank', 'Users.ip'],
+            'fields' => ['Users.id', 'Users.username', 'Users.role_id', 'Users.ip'],
         ];
         $this->DataTable->mDataProp = true;
 
@@ -177,7 +155,7 @@ class BanController extends AppController
 
         foreach ($users as $value) {
             $userId = (int)($value['id'] ?? 0);
-            $rankId = (int)($value['rank'] ?? 0);
+            $roleId = (int)($value['role_id'] ?? 0);
 
             if ($userId <= 0) {
                 continue;
@@ -187,18 +165,19 @@ class BanController extends AppController
                 continue;
             }
 
-            if ($this->permissions->have($rankId, 'BYPASS_BAN')) {
+            if ($this->permissions->canRole($roleId, 'BYPASS_BAN')) {
                 continue;
             }
 
-            $rankConfig = $available_ranks[$rankId] ?? $available_ranks[0];
+            $roleCfg = $rolesConfig[$roleId] ?? $this->fallbackRoleConfig($roleId);
+            $roleHtml = '<span class="badge badge-' . $roleCfg['label'] . '">' . $roleCfg['name'] . '</span>';
 
             $data[] = [
                 'Users' => [
                     'username' => (string)($value['username'] ?? ''),
                     'ban' => "<input type='checkbox' name='{$userId}'>",
                     'banIp' => "<input type='checkbox' name='{$userId}-ip'>",
-                    'rank' => "<span class=\"label label-{$rankConfig['label']}\">{$rankConfig['name']}</span>",
+                    'rank' => $roleHtml,
                     'ip' => (string)($value['ip'] ?? ''),
                 ],
             ];
@@ -225,26 +204,36 @@ class BanController extends AppController
         $banTable = $this->fetchTable('Bans');
 
         $result = $this->Users
-            ->find('all', conditions: ['username LIKE' => $query . '%'])
+            ->find()
+            ->select(['id', 'username', 'role_id'])
+            ->where(['Users.username LIKE' => $query . '%'])
             ->all();
 
         $users = [];
         foreach ($result as $value) {
+            $userId = (int)($value['id'] ?? 0);
+            $roleId = (int)($value['role_id'] ?? 0);
+
+            if ($userId <= 0) {
+                continue;
+            }
+
             $checkIsBan = $banTable
-                ->find('all', conditions: ['user_id' => $value['id']])
+                ->find()
+                ->where(['user_id' => $userId])
                 ->first();
 
             if ($checkIsBan !== null) {
                 continue;
             }
 
-            if ($this->permissions->have($value['rank'], 'BYPASS_BAN')) {
+            if ($this->permissions->canRole($roleId, 'BYPASS_BAN')) {
                 continue;
             }
 
             $users[] = [
-                'username' => $value['username'],
-                'id' => $value['id'],
+                'username' => (string)($value['username'] ?? ''),
+                'id' => $userId,
             ];
         }
 
@@ -256,5 +245,47 @@ class BanController extends AppController
             'status' => true,
             'data' => $users,
         ]));
+    }
+
+    private function buildRolesConfig(): array
+    {
+        $Roles = $this->fetchTable('Roles');
+        $roles = $Roles->find()
+            ->orderBy(['sort' => 'ASC', 'id' => 'ASC'])
+            ->all();
+
+        $out = [];
+        foreach ($roles as $r) {
+            $roleId = (int)($r->id ?? 0);
+            if ($roleId <= 0) {
+                continue;
+            }
+
+            $slug = (string)($r->slug ?? '');
+
+            $label = 'info';
+            if ($slug === RoleService::ADMIN_SLUG) {
+                $label = 'danger';
+            } elseif ((int)($r->is_default ?? 0) === 1) {
+                $label = 'primary';
+            } elseif ((int)($r->is_system ?? 0) === 1) {
+                $label = 'secondary';
+            }
+
+            $out[$roleId] = [
+                'label' => $label,
+                'name' => $r->display_name,
+            ];
+        }
+
+        return $out;
+    }
+
+    private function fallbackRoleConfig(int $roleId): array
+    {
+        return [
+            'label' => 'info',
+            'name' => (string)$roleId,
+        ];
     }
 }

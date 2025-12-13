@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Middleware;
 
 use App\Service\AuthService;
+use App\Service\InstallState;
 use Cake\Http\Response;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use Cake\Routing\Router;
@@ -26,6 +27,10 @@ final class MaintenanceMiddleware implements MiddlewareInterface
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
+        if (!InstallState::isInstalled()) {
+            return $handler->handle($request);
+        }
+
         if ((string)$request->getParam('controller') === 'Maintenance') {
             return $handler->handle($request);
         }

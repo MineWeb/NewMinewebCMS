@@ -215,10 +215,10 @@ return static function (RouteBuilder $routes): void {
             $b->connect('/edit-ajax', ['controller' => 'Pages', 'action' => 'editAjax'], ['_name' => 'admin_pages_edit_ajax']);
         });
 
-        $builder->scope('/permissions', function (RouteBuilder $b): void {
-            $b->connect('/', ['controller' => 'Permissions', 'action' => 'index'], ['_name' => 'admin_permissions_index']);
-            $b->connect('/add-rank', ['controller' => 'Permissions', 'action' => 'addRank'], ['_name' => 'admin_permissions_add_rank']);
-            $b->connect('/delete-rank/*', ['controller' => 'Permissions', 'action' => 'deleteRank'], ['_name' => 'admin_permissions_delete_rank']);
+        $builder->scope('/roles', function (RouteBuilder $b): void {
+            $b->connect('/', ['controller' => 'Roles', 'action' => 'index'], ['_name' => 'admin_roles_index']);
+            $b->connect('/add', ['controller' => 'Roles', 'action' => 'add'], ['_name' => 'admin_roles_add']);
+            $b->connect('/delete/*', ['controller' => 'Roles', 'action' => 'delete'], ['_name' => 'admin_roles_delete']);
         });
 
         $builder->scope('/plugin', function (RouteBuilder $b): void {

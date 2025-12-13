@@ -6,22 +6,6 @@ namespace App\Model\Entity;
 use Cake\I18n\FrozenTime;
 use Cake\ORM\Entity;
 
-/**
- * @property int $id
- * @property string $username
- * @property string|null $uuid
- * @property string $password
- * @property string|null $password_hash
- * @property string $email
- * @property int|null $rank
- * @property float|null $money
- * @property string|null $ip
- * @property int|null $skin
- * @property int|null $cape
- * @property string|null $confirmed
- * @property \Cake\I18n\FrozenTime|null $created_at
- * @property \Cake\I18n\FrozenTime|null $updated_at
- */
 class User extends Entity
 {
     protected array $_accessible = [
@@ -30,7 +14,7 @@ class User extends Entity
         'password' => true,
         'password_hash' => true,
         'email' => true,
-        'rank' => true,
+        'role_id' => true,
         'money' => true,
         'ip' => true,
         'skin' => true,
@@ -38,6 +22,7 @@ class User extends Entity
         'confirmed' => true,
         'created_at' => false,
         'updated_at' => false,
+        'role' => false,
     ];
 
     protected array $_hidden = [

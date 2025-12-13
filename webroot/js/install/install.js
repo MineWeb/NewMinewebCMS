@@ -79,54 +79,54 @@ window.addEventListener("load", function() {
         return null
     }
 
-    function showErrormessages(box, messages) {
+    function showErrorMsg(box, msg) {
         if (!box) return
         box.innerHTML =
             '<div class="alert alert-danger animated fadeInTop"><b>' +
             (typeof TEXT__ERROR !== "undefined" ? TEXT__ERROR : "Erreur") +
             " : </b> " +
-            messages +
+            msg +
             "</div>"
     }
 
-    function showInfomessages(box, messages) {
+    function showInfoMsg(box, msg) {
         if (!box) return
         box.innerHTML =
             '<div class="alert alert-info animated fadeInTop">' +
-            messages +
+            msg +
             "</div>"
     }
 
-    function showSuccessmessages(box, messages) {
+    function showSuccessMsg(box, msg) {
         if (!box) return
         box.innerHTML =
             '<div class="alert alert-success animated fadeInTop">' +
-            messages +
+            msg +
             "</div>"
     }
 
-    function setNextLoading(link, messagesBox) {
+    function setNextLoading(link, msgBox) {
         if (!link) return
         link.dataset.originalHtml = link.innerHTML
         link.classList.add("disabled")
         link.setAttribute("aria-disabled", "true")
-        link.innerHTML = typeof LOADING_messages !== "undefined" ? LOADING_messages : "Chargement..."
-        showInfomessages(messagesBox, typeof LOADING_messages !== "undefined" ? LOADING_messages : "Chargement...")
+        link.innerHTML = typeof LOADING_MSG !== "undefined" ? LOADING_MSG : "Chargement..."
+        showInfoMsg(msgBox, typeof LOADING_MSG !== "undefined" ? LOADING_MSG : "Chargement...")
     }
 
-    function resetNextLoading(link, messagesBox, errormessages) {
+    function resetNextLoading(link, msgBox, errorMsg) {
         if (!link) return
         link.classList.remove("disabled")
         link.removeAttribute("aria-disabled")
         if (link.dataset.originalHtml != null) link.innerHTML = link.dataset.originalHtml
-        if (errormessages) showErrormessages(messagesBox, errormessages)
+        if (errorMsg) showErrorMsg(msgBox, errorMsg)
     }
 
     let csrfToken = getCsrfToken()
 
     let databaseDiv = document.querySelector("div.database")
     let installBtn = document.querySelector(".installSQL")
-    let ajaxmessagesBox = document.querySelector(".ajax-messages")
+    let ajaxMsgBox = document.querySelector(".ajax-msg")
     let progressBox = document.querySelector(".SQLprogress")
 
     if (installBtn) {
@@ -196,8 +196,8 @@ window.addEventListener("load", function() {
 
             if (typeValue === "0") {
                 if (hostValue.trim() === "" || loginValue.trim() === "" || databaseValue.trim() === "") {
-                    showErrormessages(
-                        ajaxmessagesBox,
+                    showErrorMsg(
+                        ajaxMsgBox,
                         (typeof TEXT__FILL_ALL_FIELDS !== "undefined"
                             ? TEXT__FILL_ALL_FIELDS
                             : "Veuillez remplir tous les champs obligatoires")
@@ -238,10 +238,10 @@ window.addEventListener("load", function() {
                 })
                 .then(function(data) {
                     if (data && data.status) {
-                        if (ajaxmessagesBox) fadeOutElement(ajaxmessagesBox, 250)
+                        if (ajaxMsgBox) fadeOutElement(ajaxMsgBox, 250)
                         fadeOutElement(saveForm, 550, showInstallButton)
                     } else {
-                        showErrormessages(ajaxmessagesBox, (data && data.messages) ? data.messages : "Erreur")
+                        showErrorMsg(ajaxMsgBox, (data && data.messages) ? data.messages : "Erreur")
                         button.innerHTML = submitContent
                         button.classList.remove("disabled")
                         button.disabled = false
@@ -254,8 +254,8 @@ window.addEventListener("load", function() {
                     }
                 })
                 .catch(function() {
-                    showErrormessages(
-                        ajaxmessagesBox,
+                    showErrorMsg(
+                        ajaxMsgBox,
                         (typeof TEXT__INTERNAL_ERROR !== "undefined" ? TEXT__INTERNAL_ERROR : "Erreur interne")
                     )
                     button.innerHTML = submitContent
@@ -304,15 +304,15 @@ window.addEventListener("load", function() {
                     if (data && data.status) {
                         window.location = "/install/user"
                     } else {
-                        showErrormessages(ajaxmessagesBox, (data && data.messages) ? data.messages : "Erreur")
+                        showErrorMsg(ajaxMsgBox, (data && data.messages) ? data.messages : "Erreur")
                         button.innerHTML = submitContent
                         button.classList.remove("disabled")
                         button.disabled = false
                     }
                 })
                 .catch(function() {
-                    showErrormessages(
-                        ajaxmessagesBox,
+                    showErrorMsg(
+                        ajaxMsgBox,
                         (typeof TEXT__INTERNAL_ERROR !== "undefined" ? TEXT__INTERNAL_ERROR : "Erreur interne")
                     )
                     button.innerHTML = submitContent
@@ -328,7 +328,7 @@ window.addEventListener("load", function() {
 
         let userUrl = step3Form.dataset.userUrl
         let nextLink = step3Form.querySelector("#tabsleft-link-step1")
-        let ajaxmessagesStep3 = step3Form.querySelector(".ajax-messages-step3")
+        let ajaxMsgStep3 = step3Form.querySelector(".ajax-msg-step3")
 
         if (!nextLink || !userUrl) return
 
@@ -339,7 +339,7 @@ window.addEventListener("load", function() {
 
             csrfToken = getCsrfToken()
 
-            setNextLoading(nextLink, ajaxmessagesStep3)
+            setNextLoading(nextLink, ajaxMsgStep3)
 
             let usernameEl = step3Form.querySelector('input[name="username"]')
             let passwordEl = step3Form.querySelector('input[name="password"]')
@@ -367,7 +367,7 @@ window.addEventListener("load", function() {
                 .then(function(data) {
                     let ok = !!(data && (data.status === true))
                     if (ok) {
-                        showSuccessmessages(ajaxmessagesStep3, (data && data.messages) ? data.messages : "OK")
+                        showSuccessMsg(ajaxMsgStep3, (data && data.messages) ? data.messages : "OK")
 
                         let tab2 = document.getElementById("tabsleft-tab2")
                         let tab3 = document.getElementById("tabsleft-tab3")
@@ -381,7 +381,7 @@ window.addEventListener("load", function() {
                     } else {
                         resetNextLoading(
                             nextLink,
-                            ajaxmessagesStep3,
+                            ajaxMsgStep3,
                             (data && data.messages) ? data.messages : "Erreur"
                         )
                     }
@@ -389,7 +389,7 @@ window.addEventListener("load", function() {
                 .catch(function() {
                     resetNextLoading(
                         nextLink,
-                        ajaxmessagesStep3,
+                        ajaxMsgStep3,
                         (typeof TEXT__INTERNAL_ERROR !== "undefined" ? TEXT__INTERNAL_ERROR : "Erreur interne")
                     )
                 })

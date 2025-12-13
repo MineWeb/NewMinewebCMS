@@ -5,165 +5,117 @@ namespace App\Service;
 
 use Cake\Core\Configure;
 use Cake\ORM\Locator\LocatorAwareTrait;
+use Throwable;
 
 final class PermissionService
 {
     use LocatorAwareTrait;
 
-    public const ADMIN_RANK_IDS = [3, 4];
-
-    private array $rankCache = [];
+    private array $roleCache = [];
 
     public function list(): array
     {
         $list = Configure::read('Permissions.list', []);
-
-        if (is_array($list)) {
-            return array_values(array_unique(array_filter(array_map('strval', $list), static fn(string $v): bool => $v !== '')));
+        if (!is_array($list)) {
+            return [];
         }
 
-        return [];
+        $out = [];
+        foreach ($list as $v) {
+            $s = trim((string)$v);
+            if ($s !== '') {
+                $out[] = $s;
+            }
+        }
+
+        $out = array_values(array_unique($out));
+        sort($out);
+
+        return $out;
     }
 
-    public function have(int $rankId, string $permission): bool
+    public function isSuper(int $roleId): bool
     {
-        if (in_array($rankId, self::ADMIN_RANK_IDS, true)) {
-            return true;
-        }
+        return in_array('*', $this->getRolePermissions($roleId), true);
+    }
 
-        $permissions = $this->getRankPermissions($rankId);
+    public function canRole(int $roleId, string $permission): bool
+    {
+        $permissions = $this->getRolePermissions($roleId);
 
         return in_array('*', $permissions, true) || in_array($permission, $permissions, true);
     }
 
-    public function getRankPermissions(int $rankId): array
+    public function getRolePermissions(int $roleId): array
     {
-        if (isset($this->rankCache[$rankId])) {
-            return $this->rankCache[$rankId];
+        if ($roleId <= 0) {
+            return [];
         }
 
-        $this->rankCache[$rankId] = $this->loadRankPermissions($rankId);
+        if (!InstallState::isInstalled()) {
+            return [];
+        }
 
-        return $this->rankCache[$rankId];
+        if (isset($this->roleCache[$roleId])) {
+            return $this->roleCache[$roleId];
+        }
+
+        try {
+            $Roles = $this->fetchTable('Roles');
+            $role = $Roles
+                ->find()
+                ->select(['id', 'permissions'])
+                ->where(['id' => $roleId])
+                ->first();
+        } catch (Throwable) {
+            return $this->roleCache[$roleId] = [];
+        }
+
+        if ($role === null) {
+            return $this->roleCache[$roleId] = [];
+        }
+
+        $raw = (string)($role->permissions ?? '[]');
+        $decoded = json_decode($raw, true);
+
+        if (!is_array($decoded)) {
+            return $this->roleCache[$roleId] = [];
+        }
+
+        $out = [];
+        foreach ($decoded as $v) {
+            $s = trim((string)$v);
+            if ($s !== '') {
+                $out[] = $s;
+            }
+        }
+
+        return $this->roleCache[$roleId] = array_values(array_unique($out));
     }
 
-    public function clearCache(?int $rankId = null): void
+    public function clearCache(?int $roleId = null): void
     {
-        if ($rankId === null) {
-            $this->rankCache = [];
+        if ($roleId === null) {
+            $this->roleCache = [];
+
             return;
         }
 
-        unset($this->rankCache[$rankId]);
+        unset($this->roleCache[$roleId]);
     }
 
-    public function getAllPermissionsMatrix(?array $rankIds = null): array
+    public function getAllPermissionsMatrix(array $roleIds): array
     {
         $permissionsList = $this->list();
-
-        $rankIds = $rankIds ?? $this->getAllRankIds();
 
         $matrix = [];
         foreach ($permissionsList as $permission) {
             $matrix[$permission] = [];
-            foreach ($rankIds as $rankId) {
-                $matrix[$permission][(int)$rankId] = $this->have((int)$rankId, $permission);
+            foreach ($roleIds as $roleId) {
+                $matrix[$permission][(int)$roleId] = $this->canRole((int)$roleId, $permission);
             }
         }
 
         return $matrix;
-    }
-
-    public function getAllRankIds(): array
-    {
-        $rankIds = [0, 2];
-
-        $Ranks = $this->fetchTable('Ranks');
-        foreach ($Ranks->find()->all() as $rank) {
-            $rid = (int)($rank->rank_id ?? 0);
-            if ($rid > 0) {
-                $rankIds[] = $rid;
-            }
-        }
-
-        $rankIds = array_values(array_unique($rankIds));
-        sort($rankIds);
-
-        return $rankIds;
-    }
-
-    private function loadRankPermissions(int $rankId): array
-    {
-        if ($rankId <= 0) {
-            return [];
-        }
-
-        $Permissions = $this->fetchTable('Permissions');
-
-        $row = $Permissions
-            ->find()
-            ->where(['rank' => $rankId])
-            ->first();
-
-        if ($row === null) {
-            return [];
-        }
-
-        $raw = null;
-        if (isset($row->permissions)) {
-            $raw = $row->permissions;
-        } elseif (isset($row->perms)) {
-            $raw = $row->perms;
-        }
-
-        return $this->normalizePermissions($raw);
-    }
-
-    private function normalizePermissions(mixed $raw): array
-    {
-        if ($raw === null) {
-            return [];
-        }
-
-        if (is_array($raw)) {
-            return $this->cleanList($raw);
-        }
-
-        if (!is_string($raw) || $raw === '') {
-            return [];
-        }
-
-        $unserialized = @unserialize($raw);
-        if (is_array($unserialized)) {
-            return $this->cleanList($unserialized);
-        }
-
-        $json = json_decode($raw, true);
-        if (is_array($json)) {
-            return $this->cleanList($json);
-        }
-
-        $parts = preg_split('/[\s,;|]+/', $raw) ?: [];
-
-        return $this->cleanList($parts);
-    }
-
-    private function cleanList(array $list): array
-    {
-        $out = [];
-        foreach ($list as $v) {
-            if (!is_string($v) && !is_int($v) && !is_float($v)) {
-                continue;
-            }
-
-            $s = trim((string)$v);
-            if ($s === '') {
-                continue;
-            }
-
-            $out[] = $s;
-        }
-
-        return array_values(array_unique($out));
     }
 }

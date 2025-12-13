@@ -20,10 +20,9 @@ class UsersTable extends Table
         $this->setPrimaryKey('id');
         $this->setDisplayField('username');
 
-        $this->belongsTo('Ranks', [
-            'foreignKey' => 'rank',
-            'bindingKey' => 'rank_id',
-            'propertyName' => 'rank_entity',
+        $this->belongsTo('Roles', [
+            'foreignKey' => 'role_id',
+            'joinType' => 'LEFT',
         ]);
 
         $this->hasMany('News', ['foreignKey' => 'user_id']);
@@ -81,9 +80,9 @@ class UsersTable extends Table
             ->notEmptyString('email');
 
         $validator
-            ->integer('rank')
-            ->requirePresence('rank', 'create')
-            ->notEmptyString('rank');
+            ->integer('role_id')
+            ->requirePresence('role_id', 'create')
+            ->notEmptyString('role_id');
 
         $validator
             ->numeric('money')

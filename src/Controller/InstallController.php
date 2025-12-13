@@ -364,9 +364,7 @@ class InstallController extends BaseController
 
         try {
             $migrations->migrate();
-            $migrations->seed([
-                'seed' => 'ConfigurationSeed',
-            ]);
+            $migrations->seed();
         } catch (Throwable $e) {
             Log::error('Migration or seed failed: ' . $e->getMessage());
         }
@@ -444,11 +442,24 @@ class InstallController extends BaseController
 
         $auth = new UserAuthService();
 
+        $Roles = $this->fetchTable('Roles');
+        $adminRole = $Roles->find()->where(['slug' => 'admin'])->first();
+
+        $adminRoleId = $adminRole ? (int)$adminRole->id : 0;
+        if ($adminRoleId <= 0) {
+            return $this->response
+                ->withType('application/json')
+                ->withStringBody(json_encode([
+                    'status' => false,
+                    'messages' => __('ERROR__INTERNAL_ERROR'),
+                ]));
+        }
+
         $dataToSave = [
             'username' => (string)$data['username'],
             'email' => (string)$data['email'],
             'password' => (string)$data['password'],
-            'rank' => 4,
+            'role_id' => $adminRoleId,
         ];
 
         $userId = $auth->createUser($dataToSave, $ip);

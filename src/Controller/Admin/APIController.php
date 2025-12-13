@@ -94,7 +94,7 @@ class APIController extends AppController
 
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'messages' => __('ERROR__INTERNAL'),
+                'messages' => __('ERROR__INTERNAL_ERROR'),
             ]));
         }
 

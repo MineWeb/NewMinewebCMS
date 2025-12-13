@@ -40,12 +40,12 @@ final class AuthService
         return is_object($user) && method_exists($user, 'get') ? (string)$user->get('username') : null;
     }
 
-    public function rankId(ServerRequestInterface $request): int
+    public function roleId(ServerRequestInterface $request): int
     {
         $user = $this->identity($request);
 
         if (is_object($user) && method_exists($user, 'get')) {
-            return (int)$user->get('rank');
+            return (int)$user->get('role_id');
         }
 
         return 0;
@@ -58,14 +58,16 @@ final class AuthService
 
     public function isAdmin(ServerRequestInterface $request): bool
     {
-        return (bool)$request->getAttribute('auth.isAdmin', false);
-    }
+        if (!$this->isConnected($request)) {
+            return false;
+        }
 
-    public function permissions(ServerRequestInterface $request): array
-    {
-        $perms = $request->getAttribute('auth.permissions', []);
+        $roleId = $this->roleId($request);
+        if ($roleId <= 0) {
+            return false;
+        }
 
-        return is_array($perms) ? $perms : [];
+        return $this->permissionService->isSuper($roleId);
     }
 
     public function can(ServerRequestInterface $request, string $perm): bool
@@ -74,22 +76,12 @@ final class AuthService
             return false;
         }
 
-        if ($this->isAdmin($request)) {
-            return true;
-        }
-
-        $perms = $this->permissions($request);
-
-        if (in_array('*', $perms, true) || in_array($perm, $perms, true)) {
-            return true;
-        }
-
-        $rankId = $this->rankId($request);
-        if ($rankId === 0) {
+        $roleId = $this->roleId($request);
+        if ($roleId <= 0) {
             return false;
         }
 
-        return $this->permissionService->have($rankId, $perm);
+        return $this->permissionService->canRole($roleId, $perm);
     }
 
     public function require(ServerRequestInterface $request, string $perm): void
