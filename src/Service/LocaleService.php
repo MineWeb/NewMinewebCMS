@@ -8,7 +8,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 final class LocaleService
 {
-    public function resolveLocale(ServerRequestInterface $request): string
+
+    public function resolveLocale(ServerRequestInterface $request, ?string $defaultLocale = null): string
     {
         $cookie = $request->getCookie('language');
 
@@ -18,7 +19,7 @@ final class LocaleService
         $cookie = $cookie ? str_replace('-', '_', $cookie) : null;
         $headerLocale = $headerLocale ? str_replace('-', '_', $headerLocale) : null;
 
-        return $cookie ?: $headerLocale ?: 'fr_FR';
+        return $cookie ?: $defaultLocale ?: $headerLocale ?: 'fr_FR';
     }
 
     public function apply(string $locale): void

@@ -68,8 +68,12 @@ class AppController extends BaseController
     {
         parent::beforeFilter($event);
 
+        $siteConfigLang = $this->config->get('lang');
+
         $localeService = new LocaleService();
-        $locale = $localeService->resolveLocale($this->getRequest());
+
+        $locale = $localeService->resolveLocale($this->getRequest(), (string)$siteConfigLang);
+
         $localeService->apply($locale);
 
         $this->set('currentLocale', $locale);
