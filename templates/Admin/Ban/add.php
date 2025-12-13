@@ -60,11 +60,11 @@
             serverSide: true,
             ajax: "<?= $this->Url->build(['_name' => 'admin_ban_get_users_not_ban']) ?>",
             columns: [
-                {data: "User.ban", searchable: false},
-                {data: "User.username", searchable: true},
-                {data: "User.rank", searchable: false},
-                {data: "User.ip", searchable: true},
-                {data: "User.banIp", searchable: false}
+                {data: "Users.ban", searchable: false},
+                {data: "Users.username", searchable: true},
+                {data: "Users.rank", searchable: false},
+                {data: "Users.ip", searchable: true},
+                {data: "Users.banIp", searchable: false}
             ]
         });
     });

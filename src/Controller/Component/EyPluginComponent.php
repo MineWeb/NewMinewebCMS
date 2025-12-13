@@ -23,7 +23,7 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ZipArchive;
 
-class EyPluginComponent extends Component
+final class EyPluginComponent extends Component
 {
     use LocatorAwareTrait;
 
@@ -35,10 +35,7 @@ class EyPluginComponent extends Component
     private array $alreadyCheckValid = [];
     private string $reference = 'https://raw.githubusercontent.com/MineWeb/mineweb.org/gh-pages/market/plugins.json';
 
-    private mixed $controller = null;
-
     private array $CmsSqlTables = [];
-
     private object $models;
 
     private mixed $Schema = null;
@@ -55,8 +52,10 @@ class EyPluginComponent extends Component
     {
         parent::initialize($config);
 
-        $this->controller = $this->_registry->getController();
-        $this->controller->set('EyPlugin', $this);
+        $controller = $this->getController();
+        if ($controller) {
+            $controller->set('EyPlugin', $this);
+        }
 
         $this->models = (object)[
             'Plugin' => $this->fetchTable('Plugins'),
@@ -72,8 +71,7 @@ class EyPluginComponent extends Component
 
     private function getPluginsInFolder(): array
     {
-        $dir = $this->pluginsFolder;
-        $plugins = @scandir($dir);
+        $plugins = @scandir($this->pluginsFolder);
         if ($plugins === false) {
             $this->log('Unable to scan plugins folder.');
 
@@ -240,17 +238,18 @@ class EyPluginComponent extends Component
         $tables = get_class_vars($class::class);
         $ignoredVars = ['name', 'path', 'file', 'connection', 'plugin', 'tables'];
 
-        foreach ($tables as $key => $value) {
-            if (!in_array($key, $ignoredVars, true)) {
-                $CmsSqlTables = $this->getCmsSqlTables();
-                if (!in_array($key, $CmsSqlTables, true)) {
-                    $valueExploded = explode('__', $key);
-                    if (count($valueExploded) <= 1 || $valueExploded[0] !== strtolower($slug)) {
-                        $this->log('File : ' . $slug . ' is not a valid plugin! SQL tables need to be prefixed by slug.');
-                        $this->alreadyCheckValid[$slug] = false;
+        foreach ($tables as $key => $val) {
+            if (in_array($key, $ignoredVars, true)) {
+                continue;
+            }
 
-                        return false;
-                    }
+            $CmsSqlTables = $this->getCmsSqlTables();
+            if (!in_array($key, $CmsSqlTables, true)) {
+                $valueExploded = explode('__', $key);
+                if (count($valueExploded) <= 1 || $valueExploded[0] !== strtolower($slug)) {
+                    $this->log('File : ' . $slug . ' is not a valid plugin! SQL tables need to be prefixed by slug.');
+
+                    return $this->alreadyCheckValid[$slug] = false;
                 }
             }
         }
@@ -260,25 +259,27 @@ class EyPluginComponent extends Component
 
     private function getCmsSqlTables(): array
     {
-        if (empty($this->CmsSqlTables)) {
-            $schemaPath = ROOT . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . 'Schema' . DIRECTORY_SEPARATOR . 'schema.php';
-            if (!file_exists($schemaPath)) {
-                return [];
-            }
+        if (!empty($this->CmsSqlTables)) {
+            return $this->CmsSqlTables;
+        }
 
-            require_once $schemaPath;
-            if (!class_exists('AppSchema')) {
-                return [];
-            }
+        $schemaPath = ROOT . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . 'Schema' . DIRECTORY_SEPARATOR . 'schema.php';
+        if (!file_exists($schemaPath)) {
+            return [];
+        }
 
-            $class = new AppSchema();
-            $tables = get_class_vars($class::class);
-            $ignoredVars = ['name', 'path', 'file', 'connection', 'plugin', 'tables'];
+        require_once $schemaPath;
+        if (!class_exists('AppSchema')) {
+            return [];
+        }
 
-            foreach ($tables as $key => $value) {
-                if (!in_array($key, $ignoredVars, true)) {
-                    $this->CmsSqlTables[] = $key;
-                }
+        $class = new AppSchema();
+        $tables = get_class_vars($class::class);
+        $ignoredVars = ['name', 'path', 'file', 'connection', 'plugin', 'tables'];
+
+        foreach ($tables as $key => $val) {
+            if (!in_array($key, $ignoredVars, true)) {
+                $this->CmsSqlTables[] = $key;
             }
         }
 
@@ -362,8 +363,9 @@ class EyPluginComponent extends Component
             $this->Main->onEnable();
         }
 
-        if (method_exists($this->controller, 'addPlugin')) {
-            $this->controller->addPlugin();
+        $controller = $this->getController();
+        if ($controller && method_exists($controller, 'addPlugin')) {
+            $controller->addPlugin();
         }
 
         Plugin::load([$slug => ['routes' => true, 'bootstrap' => true]]);
@@ -608,9 +610,12 @@ class EyPluginComponent extends Component
 
     private function refreshPermissions(): void
     {
-        $defaultPermissions = $this->controller->Permissions->permissions ?? [];
-        if (!is_array($defaultPermissions)) {
-            $defaultPermissions = [];
+        $controller = $this->getController();
+
+        $defaultPermissions = [];
+        if ($controller && property_exists($controller, 'Permissions')) {
+            $raw = $controller->Permissions->permissions ?? [];
+            $defaultPermissions = is_array($raw) ? $raw : [];
         }
 
         $pluginsPermissions = [];
@@ -635,8 +640,8 @@ class EyPluginComponent extends Component
                 }
             }
 
-            $permissionsBeforeCheck = $permissions;
-            $permissionsChecked = [];
+            $before = $permissions;
+            $checked = [];
 
             foreach ($permissions as $key => $perm) {
                 $shouldRemove = false;
@@ -644,18 +649,18 @@ class EyPluginComponent extends Component
                 if (!in_array($perm, $defaultPermissions, true) && !in_array($perm, $pluginsPermissions, true)) {
                     $shouldRemove = true;
                 }
-                if (in_array($perm, $permissionsChecked, true)) {
+                if (in_array($perm, $checked, true)) {
                     $shouldRemove = true;
                 }
 
                 if ($shouldRemove) {
                     unset($permissions[$key]);
                 } else {
-                    $permissionsChecked[] = $perm;
+                    $checked[] = $perm;
                 }
             }
 
-            if (count($permissions) !== count($permissionsBeforeCheck)) {
+            if (count($permissions) !== count($before)) {
                 $rankEntity->set('permissions', serialize(array_values($permissions)));
                 $this->models->Permission->save($rankEntity);
             }
@@ -670,6 +675,7 @@ class EyPluginComponent extends Component
 
         foreach ($dbPlugins as $plugin) {
             $name = (string)$plugin->get('name');
+
             $config = $this->getPluginConfig($name);
             if (!is_object($config)) {
                 Plugin::unload($name);
@@ -769,7 +775,12 @@ class EyPluginComponent extends Component
 
     public function getFreePlugins(bool $all = false, bool $removeInstalledPlugins = false): array|false
     {
-        $pluginsList = @json_decode((string)$this->controller->sendGetRequest($this->reference), true);
+        $controller = $this->getController();
+        if (!$controller || !method_exists($controller, 'sendGetRequest')) {
+            return false;
+        }
+
+        $pluginsList = @json_decode((string)$controller->sendGetRequest($this->reference), true);
 
         $plugins = [];
         if ($pluginsList) {
@@ -811,12 +822,17 @@ class EyPluginComponent extends Component
 
     private function getPluginsFromRepoNames(array $repos): array|false
     {
+        $controller = $this->getController();
+        if (!$controller || !method_exists($controller, 'sendMultipleGetRequests')) {
+            return false;
+        }
+
         $urls = [];
         foreach ($repos as $repo) {
             $urls[] = 'https://raw.githubusercontent.com/' . $repo . '/master/config.json';
         }
 
-        $result = $this->controller->sendMultipleGetRequests($urls);
+        $result = $controller->sendMultipleGetRequests($urls);
         if (!is_array($result)) {
             return false;
         }
@@ -886,7 +902,12 @@ class EyPluginComponent extends Component
             return 'ERROR__PLUGIN_REQUIREMENTS';
         }
 
-        $zipContent = $this->controller->sendGetRequest('https://github.com/MineWeb/Plugin-' . $slug . '/archive/master.zip');
+        $controller = $this->getController();
+        if (!$controller || !method_exists($controller, 'sendGetRequest')) {
+            return 'ERROR__PLUGIN_CANT_BE_DOWNLOADED';
+        }
+
+        $zipContent = $controller->sendGetRequest('https://github.com/MineWeb/Plugin-' . $slug . '/archive/master.zip');
         if (!$zipContent) {
             return 'ERROR__PLUGIN_CANT_BE_DOWNLOADED';
         }

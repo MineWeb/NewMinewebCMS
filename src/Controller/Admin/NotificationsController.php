@@ -100,7 +100,7 @@ class NotificationsController extends AppController
                 : '<small class="text-muted">' . __('NOTIFICATION__NO_FROM') . '</small>';
 
             $data[] = [
-                'Notification' => [
+                'Notifications' => [
                     'group' => $groupLabel,
                     'from' => $from,
                     'content' => $notification['content'] ?? '',
@@ -108,7 +108,7 @@ class NotificationsController extends AppController
                     'created_at' => LangService::date($notification['created_at'] ?? null),
                     'actions' => $actions,
                 ],
-                'User' => $notification['user'] ?? null,
+                'Users' => $notification['user'] ?? null,
             ];
         }
 

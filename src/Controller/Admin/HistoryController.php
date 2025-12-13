@@ -60,12 +60,12 @@ class HistoryController extends AppController
         $data = [];
         foreach ($response['aaData'] as $history) {
             $data[] = [
-                'History' => [
+                'Histories' => [
                     'action' => LangService::history($history['action']),
                     'category' => $history['category'],
                     'created_at' => LangService::date($history['created_at']),
                 ],
-                'User' => $history['user'],
+                'Users' => $history['user'],
             ];
         }
 

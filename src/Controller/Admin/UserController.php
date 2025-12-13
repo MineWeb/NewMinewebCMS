@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
+use App\Model\Table\HistoriesTable;
+use App\Model\Table\UsersTable;
 use App\Service\ConfigurationService;
 use App\Service\UserAuthService;
 use App\Utility\LangService;
@@ -19,12 +21,13 @@ use Cake\Routing\Router;
  * @property \App\Controller\Component\EyPluginComponent $EyPlugin
  * @property \App\Controller\Component\HistoryComponent $History
  * @property \App\Controller\Component\DataTableComponent $DataTable
- * @property \App\Model\Table\UsersTable $Users
- * @property \App\Model\Table\HistoriesTable $Histories
  */
 class UserController extends AppController
 {
     private UserAuthService $userAuth;
+
+    private UsersTable $Users;
+    private HistoriesTable $Histories;
 
     public function initialize(): void
     {
@@ -54,40 +57,6 @@ class UserController extends AppController
             ->setTemplate('index');
 
         return null;
-    }
-
-    public function liveSearch(?string $query = null): Response
-    {
-        $this->disableAutoRender();
-        $this->response = $this->response->withType('application/json');
-
-        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_USERS'))) {
-            return $this->response->withStringBody(json_encode(['status' => false]));
-        }
-
-        if ($query === null || $query === '') {
-            return $this->response->withStringBody(json_encode(['status' => false]));
-        }
-
-        $result = $this->Users
-            ->find()
-            ->select(['id', 'username'])
-            ->where(['Users.username LIKE' => $query . '%'])
-            ->all();
-
-        $users = [];
-        foreach ($result as $entity) {
-            $users[] = [
-                'username' => (string)$entity->get('username'),
-                'id' => (int)$entity->get('id'),
-            ];
-        }
-
-        $response = empty($users)
-            ? ['status' => false]
-            : ['status' => true, 'data' => $users];
-
-        return $this->response->withStringBody(json_encode($response));
     }
 
     public function getUsers(): Response
@@ -156,7 +125,7 @@ class UserController extends AppController
             $btns .= '&nbsp;<a onClick="confirmDel(\'' . $deleteUrl . '\')" class="btn btn-danger">' . __('GLOBAL__DELETE') . '</a>';
 
             $data[] = [
-                'User' => [
+                'Users' => [
                     'username' => $username,
                     'email' => (string)$value['email'],
                     'created_at' => $date,

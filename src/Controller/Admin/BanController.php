@@ -37,7 +37,7 @@ class BanController extends AppController
         }
 
         $this->set('title_for_layout', __('BAN__HOME'));
-        $this->set('type', (string) $this->config->get('member_page_type'));
+        $this->set('type', (string)$this->config->get('member_page_type'));
 
         $this->viewBuilder()
             ->setLayout('admin')
@@ -74,7 +74,7 @@ class BanController extends AppController
                 $ipFieldName = $key . '-ip';
                 if ($request->getData($ipFieldName) === 'on') {
                     $user = $userTable
-                        ->find('all', ['conditions' => ['id' => $key]])
+                        ->find('all', conditions: ['id' => $key])
                         ->first();
 
                     if ($user !== null && array_key_exists('ip', $user)) {
@@ -153,7 +153,7 @@ class BanController extends AppController
 
         foreach ($users as $value) {
             $checkIsBan = $banTable
-                ->find('all', ['conditions' => ['user_id' => $value['id']]])
+                ->find('all', conditions: ['user_id' => $value['id']])
                 ->first();
 
             if ($checkIsBan !== null) {
@@ -172,7 +172,7 @@ class BanController extends AppController
             $banIpCheckbox = "<input type='checkbox' name='" . $value['id'] . "-ip'>";
 
             $data[] = [
-                'User' => [
+                'Users' => [
                     'username' => $username,
                     'ban' => $checkbox,
                     'banIp' => $banIpCheckbox,
@@ -185,55 +185,5 @@ class BanController extends AppController
         $response['aaData'] = $data;
 
         return $this->response->withStringBody(json_encode($response));
-    }
-
-    public function liveSearch(?string $query = null): Response
-    {
-        $this->disableAutoRender();
-        $this->response = $this->response->withType('application/json');
-
-        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_BAN'))) {
-            return $this->response->withStringBody(json_encode(['status' => false]));
-        }
-
-        if (!$query) {
-            return $this->response->withStringBody(json_encode(['status' => false]));
-        }
-
-        $usersTable = $this->User;
-        $banTable = $this->fetchTable('Bans');
-
-        $result = $usersTable
-            ->find('all', ['conditions' => ['username LIKE' => $query . '%']])
-            ->all();
-
-        $users = [];
-        foreach ($result as $value) {
-            $checkIsBan = $banTable
-                ->find('all', ['conditions' => ['user_id' => $value['id']]])
-                ->first();
-
-            if ($checkIsBan !== null) {
-                continue;
-            }
-
-            if ($this->Permissions->have($value['rank'], 'BYPASS_BAN')) {
-                continue;
-            }
-
-            $users[] = [
-                'username' => $value['username'],
-                'id' => $value['id'],
-            ];
-        }
-
-        if (empty($users)) {
-            return $this->response->withStringBody(json_encode(['status' => false]));
-        }
-
-        return $this->response->withStringBody(json_encode([
-            'status' => true,
-            'data' => $users,
-        ]));
     }
 }

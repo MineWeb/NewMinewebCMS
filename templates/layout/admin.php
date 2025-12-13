@@ -1,8 +1,3 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <!DOCTYPE html>
 <html lang="<?= h($this->Seo->htmlLang()) ?>">
 
@@ -66,7 +61,7 @@ use Cake\Routing\Router;
                 });
             </script>
             <li class="nav-item dropdown">
-                <a class="nav-link" onclick="notification.markAllAsSeen(1)" data-toggle="dropdown" href="#">
+                <a class="nav-link" id="notification-bell" href="#" aria-haspopup="true" aria-expanded="false">
                     <i class="far fa-bell"></i>
                 </a>
                 <div id="notification-container" class="dropdown-menu dropdown-menu-right">
@@ -90,57 +85,69 @@ use Cake\Routing\Router;
         <?= $this->Html->script('notification') ?>
 
         <script type="text/javascript">
-            let notification = new $.Notification({
-                'notification_type': 'admin',
-                'limit': 5,
-                'url': {
-                    'get': '<?= $this->Url->build(['_name' => 'notifications_get_all']) ?>',
-                    'clear': '<?= $this->Url->build(['_name' => 'notifications_clear', 'NOTIF_ID']) ?>',
-                    'clearAll': '<?= $this->Url->build(['_name' => 'notifications_clear_all']) ?>',
-                    'markAsSeen': '<?= $this->Url->build(['_name' => 'notifications_mark_as_seen', 'NOTIF_ID']) ?>',
-                    'markAllAsSeen': '<?= $this->Url->build(['_name' => 'notifications_mark_all_as_seen']) ?>'
-                },
-                'messages': {
-                    'markAsSeen': '<?= __('NOTIFICATION__MARK_AS_SEEN') ?>',
-                    'notifiedBy': '<?= __('NOTIFICATION__NOTIFIED_BY') ?>'
-                },
-                'indicator': {
-                    'element': '#notification-indicator',
-                    'class': 'label label-warning',
-                    'style': {},
-                    'defaultContent': '<i class="fa fa-bell-o"></i>'
-                },
-                'list': {
-                    'element': '#notification-container',
-                    'container': {
-                        'type': '',
-                        'class': '',
-                        'style': ''
+            document.addEventListener('DOMContentLoaded', function () {
+                window.notification = new window.NotificationWidget({
+                    notification_type: 'admin',
+                    limit: 5,
+                    url: {
+                        get: '<?= $this->Url->build(['_name' => 'notifications_get_all']) ?>',
+                        clear: '<?= $this->Url->build(['_name' => 'notifications_clear', 'NOTIF_ID']) ?>',
+                        clearAll: '<?= $this->Url->build(['_name' => 'notifications_clear_all']) ?>',
+                        markAsSeen: '<?= $this->Url->build(['_name' => 'notifications_mark_as_seen', 'NOTIF_ID']) ?>',
+                        markAllAsSeen: '<?= $this->Url->build(['_name' => 'notifications_mark_all_as_seen']) ?>'
                     },
-                    'notification': {
-                        'type': 'a',
-                        'class': 'dropdown-item',
-                        'style': '',
-                        'content': '{CONTENT}',
-                        'from': {
-                            'type': '',
-                            'class': '',
-                            'style': '',
-                            'content': ''
+                    messages: {
+                        markAsSeen: '<?= __('NOTIFICATION__MARK_AS_SEEN') ?>',
+                        notifiedBy: '<?= __('NOTIFICATION__NOTIFIED_BY') ?>'
+                    },
+                    indicator: {
+                        element: '#notification-indicator',
+                        class: 'label label-warning',
+                        style: {},
+                        defaultContent: '<i class="fa fa-bell-o"></i>'
+                    },
+                    list: {
+                        element: '#notification-container',
+                        container: {
+                            type: '',
+                            class: '',
+                            style: ''
                         },
-                        'seen': {
-                            'element': {
-                                'style': '',
-                                'class': ''
+                        notification: {
+                            type: 'a',
+                            class: 'dropdown-item',
+                            style: '',
+                            content: '{CONTENT}',
+                            from: {
+                                type: '',
+                                class: '',
+                                style: '',
+                                content: ''
                             },
-                            'btn': {
-                                'element': '.mark-as-seen',
-                                'style': '',
-                                'class': 'hidden',
-                                'attr': [{'onclick': ''}]
+                            seen: {
+                                element: {
+                                    style: '',
+                                    class: ''
+                                },
+                                btn: {
+                                    element: '.mark-as-seen',
+                                    style: '',
+                                    class: 'hidden',
+                                    attr: [{ onclick: '' }]
+                                }
                             }
                         }
                     }
+                });
+
+                var bell = document.getElementById('notification-bell');
+                if (bell) {
+                    bell.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        if (window.notification) {
+                            window.notification.markAllAsSeen(1);
+                        }
+                    });
                 }
             });
         </script>

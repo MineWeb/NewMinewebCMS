@@ -11,15 +11,12 @@ use Cake\Routing\Router;
 use xPaw\MinecraftPing;
 use xPaw\MinecraftPingException;
 
-class ServerComponent extends Component
+final class ServerComponent extends Component
 {
     use LocatorAwareTrait;
 
     public ?string $lastErrorMessage = null;
     public ?string $linkErrorCode = null;
-    public mixed $controller = null;
-
-    public array $components = ['Session', 'Configuration'];
 
     private ?int $timeout = null;
 
@@ -28,25 +25,24 @@ class ServerComponent extends Component
 
     private ?string $key = null;
 
-    private Table $configModel;
+    private Table $Configurations;
 
     public function initialize(array $config): void
     {
         parent::initialize($config);
 
-        $this->controller = $this->_registry->getController();
-        $this->controller->set('Server', $this);
-
-        $this->configModel = $this->fetchTable('Configurations');
+        $this->Configurations = $this->fetchTable('Configurations');
     }
 
     public function getServerIdConnected(string $username, string $type = 'BUKKIT'): int|false
     {
-        $servers = TableRegistry::getTableLocator()->get('Servers')->find()->where(['type' => 0])->all();
-        foreach ($servers as $srv) {
+        $Servers = TableRegistry::getTableLocator()->get('Servers');
+
+        foreach ($Servers->find()->where(['type' => 0])->all() as $srv) {
             $serverId = (int)$srv->get('id');
-            $serverType = (string)$this->getServerType($serverId);
-            $check = ($serverType === $type) || ($type === 'ALL');
+
+            $serverType = $this->getServerType($serverId);
+            $check = ((string)$serverType === $type) || ($type === 'ALL');
 
             if ($this->userIsConnected($username, $serverId) && $check) {
                 return $serverId;
@@ -58,33 +54,32 @@ class ServerComponent extends Component
 
     public function getServerType(int|false $server_id = false): mixed
     {
-        if (!$server_id) {
-            $server_id = $this->getFirstServerID();
-        }
+        $server_id = $server_id ?: $this->getFirstServerID();
         if (!$server_id) {
             return false;
         }
 
-        $call = ['GET_PLUGIN_TYPE' => []];
-        $res = $this->call($call, $server_id);
+        $res = $this->call(['GET_PLUGIN_TYPE' => []], $server_id);
 
         return is_array($res) ? ($res['GET_PLUGIN_TYPE'] ?? false) : false;
     }
 
     public function getFirstServerID(): ?int
     {
-        $get = TableRegistry::getTableLocator()->get('Servers')->find()->first();
+        $Servers = TableRegistry::getTableLocator()->get('Servers');
+        $row = $Servers->find()->select(['id'])->first();
 
-        return $get ? (int)$get->get('id') : null;
+        return $row ? (int)$row->get('id') : null;
     }
 
     public function call(mixed $methods = [], int|false $server_id = false, bool $debug = false): mixed
     {
+        $this->lastErrorMessage = null;
+        $this->linkErrorCode = null;
+
         $multi = true;
 
-        if (!$server_id) {
-            $server_id = $this->getFirstServerID();
-        }
+        $server_id = $server_id ?: $this->getFirstServerID();
         if (!$server_id) {
             $this->lastErrorMessage = 'Unknown server.';
 
@@ -106,51 +101,64 @@ class ServerComponent extends Component
             $methods = [[$methods => []]];
             $multi = false;
         } elseif (!isset($methods[0])) {
-            $result = [];
+            $normalized = [];
             foreach ($methods as $name => $args) {
-                $result[] = [$name => is_array($args) ? $args : [$args]];
+                $normalized[] = [$name => is_array($args) ? $args : [$args]];
             }
-            $methods = $result;
+            $methods = $normalized;
             $multi = false;
         }
 
-        if ($config['type'] == 1 || $config['type'] == 2 || $config['type'] == 3) {
+        if ($config['type'] === 1 || $config['type'] === 2 || $config['type'] === 3) {
             $methodsName = array_map(static function ($method) {
                 return array_keys($method)[0];
             }, $methods);
 
             $result = [];
 
-            if (in_array('RUN_COMMAND', $methodsName, true) && $config['type'] == 2) {
+            if ($config['type'] === 2 && in_array('RUN_COMMAND', $methodsName, true)) {
                 foreach ($methods as $key => $method) {
                     if (array_keys($method)[0] === 'RUN_COMMAND') {
                         $result[$key]['RUN_COMMAND'] = $this->rcon(
-                            ['ip' => $config['ip'], 'port' => $config['data']['rcon_port'] ?? null, 'password' => $config['data']['rcon_password'] ?? null],
+                            [
+                                    'ip' => $config['ip'],
+                                    'port' => $config['data']['rcon_port'] ?? null,
+                                    'password' => $config['data']['rcon_password'] ?? null,
+                                ],
                             (string)$method['RUN_COMMAND']
                         ) !== false;
                     }
                 }
-                $methodsName = array_values(array_filter($methodsName, static fn($v) => $v !== 'RUN_COMMAND'));
+
+                $methodsName = array_values(array_filter($methodsName, static function ($v) {
+                    return $v !== 'RUN_COMMAND';
+                }));
             }
 
             if (count($methodsName) > 0) {
-                $ping = $this->ping(['ip' => $config['ip'], 'port' => $config['port'], 'udp' => ($config['type'] == 3)]);
+                $ping = $this->ping([
+                    'ip' => $config['ip'],
+                    'port' => $config['port'],
+                    'udp' => ($config['type'] === 3),
+                ]);
+
                 foreach ($methods as $key => $method) {
                     $name = array_keys($method)[0];
-                    if (is_array($ping) && isset($ping[$name])) {
+                    if (is_array($ping) && array_key_exists($name, $ping)) {
                         $result[$key][$name] = $ping[$name];
                     }
                 }
             }
 
             if (!$multi) {
-                $parsedResult = [];
+                $flat = [];
                 foreach ($result as $item) {
                     foreach ($item as $k => $v) {
-                        $parsedResult[$k] = $v;
+                        $flat[$k] = $v;
                     }
                 }
-                $result = $parsedResult;
+
+                return $flat;
             }
 
             return $result;
@@ -161,9 +169,16 @@ class ServerComponent extends Component
             return false;
         }
 
-        $data = $this->encryptWithKey(json_encode($this->parse($methods)));
+        $payload = json_encode($this->parse($methods));
+        if (!is_string($payload)) {
+            $this->lastErrorMessage = 'Bad request payload.';
 
-        [$return, $code, $error] = $this->request($url, $data);
+            return false;
+        }
+
+        $data = $this->encryptWithKey($payload);
+
+        [$return, $code] = $this->request($url, $data);
 
         if ($debug) {
             $decoded = json_decode((string)$return);
@@ -172,7 +187,7 @@ class ServerComponent extends Component
         }
 
         if ($return && $code === 200) {
-            $returnArr = @json_decode((string)$return, true);
+            $returnArr = json_decode((string)$return, true);
             if (!is_array($returnArr) || !isset($returnArr['signed'], $returnArr['iv'])) {
                 $this->lastErrorMessage = 'Bad response.';
 
@@ -180,7 +195,14 @@ class ServerComponent extends Component
             }
 
             $decrypted = $this->decryptWithKey((string)$returnArr['signed'], (string)$returnArr['iv']);
-            $parsed = $this->parseResult(@json_decode((string)$decrypted, true));
+            if ($decrypted === false) {
+                $this->lastErrorMessage = 'Bad response.';
+
+                return false;
+            }
+
+            $decoded = json_decode((string)$decrypted, true);
+            $parsed = $this->parseResult($decoded);
 
             if (!$multi) {
                 $flat = [];
@@ -215,20 +237,18 @@ class ServerComponent extends Component
 
     public function getServerConfig(int|false $server_id = false): array|false
     {
-        if ($server_id === false) {
-            $server_id = $this->getFirstServerID();
-        }
+        $server_id = $server_id ?: $this->getFirstServerID();
         if (!$server_id) {
             $this->configCache[(int)$server_id] = false;
 
             return false;
         }
 
-        if (isset($this->configCache[$server_id]) && $this->configCache[$server_id] !== []) {
+        if (array_key_exists($server_id, $this->configCache) && $this->configCache[$server_id] !== []) {
             return $this->configCache[$server_id];
         }
 
-        $configuration = $this->configModel->find()->first();
+        $configuration = $this->Configurations->find()->first();
         if (!$configuration) {
             return $this->configCache[$server_id] = false;
         }
@@ -240,18 +260,18 @@ class ServerComponent extends Component
         $this->timeout = (int)$configuration->get('server_timeout');
 
         $Servers = TableRegistry::getTableLocator()->get('Servers');
-        $search = $Servers->find()->where(['id' => $server_id])->first();
-        if (!$search) {
+        $server = $Servers->find()->where(['id' => $server_id])->first();
+        if (!$server) {
             return $this->configCache[$server_id] = false;
         }
 
-        $dataRaw = $search->get('data');
+        $dataRaw = $server->get('data');
         $dataArr = is_string($dataRaw) ? json_decode($dataRaw, true) : null;
 
         return $this->configCache[$server_id] = [
-            'ip' => (string)$search->get('ip'),
-            'port' => (int)$search->get('port'),
-            'type' => (int)$search->get('type'),
+            'ip' => (string)$server->get('ip'),
+            'port' => (int)$server->get('port'),
+            'type' => (int)$server->get('type'),
             'data' => is_array($dataArr) ? $dataArr : [],
         ];
     }
@@ -276,7 +296,7 @@ class ServerComponent extends Component
             return $this->timeout;
         }
 
-        $row = $this->configModel->find()->first();
+        $row = $this->Configurations->find()->first();
         $this->timeout = $row ? (int)$row->get('server_timeout') : 5;
 
         return $this->timeout;
@@ -289,7 +309,12 @@ class ServerComponent extends Component
         }
 
         try {
-            $Query = new MinecraftPing((string)$config['ip'], (int)$config['port'], $this->getTimeout(), (bool)($config['udp'] ?? false));
+            $Query = new MinecraftPing(
+                (string)$config['ip'],
+                (int)$config['port'],
+                $this->getTimeout(),
+                (bool)($config['udp'] ?? false)
+            );
             $Info = $Query->Query();
         } catch (MinecraftPingException) {
             return false;
@@ -313,7 +338,7 @@ class ServerComponent extends Component
 
     public function getUrl(int $server_id): string|false
     {
-        if (empty($server_id)) {
+        if (!$server_id) {
             return false;
         }
 
@@ -328,7 +353,7 @@ class ServerComponent extends Component
     private function encryptWithKey(string $data): string
     {
         if ($this->key === null) {
-            $row = $this->configModel->find()->first();
+            $row = $this->Configurations->find()->first();
             $this->key = $row ? (string)$row->get('server_secretkey') : '';
         }
 
@@ -339,7 +364,6 @@ class ServerComponent extends Component
 
         $signed = openssl_encrypt($data, 'aes-128-cbc', substr((string)$this->key, 0, 16), OPENSSL_ZERO_PADDING, $iv);
         if ($signed === false) {
-            $this->log('Server: openssl_encrypt failed.');
             $signed = '';
         }
 
@@ -356,6 +380,7 @@ class ServerComponent extends Component
     private function parse(array $methods): array
     {
         $result = [];
+
         foreach ($methods as $method) {
             if (!is_array($method)) {
                 $result[] = ['name' => $method, 'args' => []];
@@ -394,16 +419,15 @@ class ServerComponent extends Component
 
         $return = curl_exec($curl);
         $code = (int)curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        $error = (int)curl_errno($curl);
         curl_close($curl);
 
-        return [$return, $code, $error];
+        return [$return, $code];
     }
 
     private function decryptWithKey(string $data, string $iv): string|false
     {
         if ($this->key === null) {
-            $row = $this->configModel->find()->first();
+            $row = $this->Configurations->find()->first();
             $this->key = $row ? (string)$row->get('server_secretkey') : '';
         }
 
@@ -442,7 +466,7 @@ class ServerComponent extends Component
         }
 
         $cfg = $this->getServerConfig($server_id);
-        if (is_array($cfg) && ($cfg['type'] ?? null) == 2) {
+        if (is_array($cfg) && ($cfg['type'] ?? null) === 2) {
             return true;
         }
 
@@ -451,8 +475,7 @@ class ServerComponent extends Component
 
     public function serversOnline(): bool
     {
-        $allServers = $this->getAllServers();
-        foreach ($allServers as $server) {
+        foreach ($this->getAllServers() as $server) {
             $serverId = (int)($server['server_id'] ?? 0);
             if ($serverId && $this->online($serverId) !== false) {
                 return true;
@@ -464,25 +487,24 @@ class ServerComponent extends Component
 
     public function getAllServers(): array
     {
-        $search = TableRegistry::getTableLocator()->get('Servers')->find()->all();
+        $Servers = TableRegistry::getTableLocator()->get('Servers');
+
         $return = [];
-        foreach ($search as $value) {
+        foreach ($Servers->find()->all() as $value) {
             $return[] = ['server_id' => (int)$value->get('id')];
         }
 
         return $return;
     }
 
-    public function online(int|false $server_id = false, bool $debug = false): mixed
+    public function online(int|false $server_id = false): mixed
     {
-        if (!$server_id) {
-            $server_id = $this->getFirstServerID();
-        }
+        $server_id = $server_id ?: $this->getFirstServerID();
         if (!$server_id) {
             return $this->onlineCache[(int)$server_id] = false;
         }
 
-        $configuration = $this->configModel->find()->first();
+        $configuration = $this->Configurations->find()->first();
         if ($configuration && (string)$configuration->get('server_state') === '0') {
             return $this->onlineCache[$server_id] = false;
         }
@@ -496,15 +518,15 @@ class ServerComponent extends Component
             return $this->onlineCache[$server_id] = false;
         }
 
-        if ($config['type'] == 1 || $config['type'] == 2 || $config['type'] == 3) {
+        if ($config['type'] === 1 || $config['type'] === 2 || $config['type'] === 3) {
             return $this->onlineCache[$server_id] = $this->ping([
                 'ip' => $config['ip'],
                 'port' => $config['port'],
-                'udp' => ($config['type'] == 3),
+                'udp' => ($config['type'] === 3),
             ]);
         }
 
-        [$return, $code, $error] = $this->request((string)$this->getUrl($server_id), $this->encryptWithKey('[]'));
+        [$return, $code] = $this->request((string)$this->getUrl($server_id), $this->encryptWithKey('[]'));
         if ($return && $code === 200) {
             return $this->onlineCache[$server_id] = true;
         }
@@ -514,17 +536,31 @@ class ServerComponent extends Component
 
     public function check(mixed $info, array $value): bool
     {
+        $this->lastErrorMessage = null;
+        $this->linkErrorCode = null;
+
         if (empty($info) || empty($value)) {
             return false;
         }
 
+        if (!isset($value['host'], $value['port'])) {
+            return false;
+        }
+
         $path = 'http://' . $value['host'] . ':' . $value['port'] . '/handshake';
-        $data = json_encode([
+        $payload = json_encode([
             'secretKey' => substr($this->getSecretKey(), 0, 16),
             'domain' => Router::url('/', true),
         ]);
 
-        [$return, $code, $error] = $this->request($path, (string)$data, (int)($value['timeout'] ?? $this->getTimeout()));
+        if (!is_string($payload)) {
+            $this->lastErrorMessage = 'Invalid params';
+            $this->linkErrorCode = 'INVALID_PARAMS';
+
+            return false;
+        }
+
+        [$return, $code] = $this->request($path, (string)$payload, (int)($value['timeout'] ?? $this->getTimeout()));
 
         if ($return && $code === 200) {
             return true;
@@ -545,48 +581,46 @@ class ServerComponent extends Component
                 break;
         }
 
-        $this->log('Link server: ' . $this->lastErrorMessage);
-
         return false;
     }
 
     public function getSecretKey(): string
     {
-        $config = $this->configModel->find()->first();
+        $config = $this->Configurations->find()->first();
         if (!$config) {
             return '';
         }
 
-        $key = (string)$config->get('server_secretkey');
-        if ($key !== '') {
-            return $key;
+        $existing = (string)$config->get('server_secretkey');
+        if ($existing !== '') {
+            $this->key = $existing;
+
+            return $existing;
         }
 
         $possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        $key = '';
+        $generated = '';
         for ($i = 0; $i < 32; $i++) {
-            $key .= $possible[random_int(0, 61)];
+            $generated .= $possible[random_int(0, 61)];
         }
 
-        $entity = $this->configModel->get((int)$config->get('id'));
-        $entity->set('server_secretkey', $key);
-        $this->configModel->save($entity);
+        $entity = $this->Configurations->get((int)$config->get('id'));
+        $entity->set('server_secretkey', $generated);
+        $this->Configurations->save($entity);
 
-        $this->key = $key;
+        $this->key = $generated;
 
-        return $key;
+        return $generated;
     }
 
     public function banner_infos(mixed $serverId = false): array
     {
-        if (!$serverId) {
-            $serverId = $this->getFirstServerID();
-        }
+        $serverId = $serverId ?: $this->getFirstServerID();
         if (!is_array($serverId)) {
             $serverId = [$serverId];
         }
 
-        $configuration = $this->configModel->find()->first();
+        $configuration = $this->Configurations->find()->first();
 
         $cacheFolder = null;
         $cacheFile = null;
@@ -642,9 +676,6 @@ class ServerComponent extends Component
     public function commands(mixed $commands, int|false $server_id = false): mixed
     {
         if (!is_array($commands)) {
-            $Users = TableRegistry::getTableLocator()->get('Users');
-            $user = method_exists($Users, 'get') ? null : null;
-
             $commands = str_replace('{PLAYER}', '', (string)$commands);
             $commands = explode('[{+}]', (string)$commands);
         }

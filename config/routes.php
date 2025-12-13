@@ -132,7 +132,6 @@ return static function (RouteBuilder $routes): void {
             $b->connect('/', ['controller' => 'Ban', 'action' => 'index'], ['_name' => 'admin_ban_index']);
             $b->connect('/add', ['controller' => 'Ban', 'action' => 'add'], ['_name' => 'admin_ban_add']);
             $b->connect('/get-users-not-ban', ['controller' => 'Ban', 'action' => 'getUsersNotBan'], ['_name' => 'admin_ban_get_users_not_ban']);
-            $b->connect('/live-search/*', ['controller' => 'Ban', 'action' => 'liveSearch'], ['_name' => 'admin_ban_live_search']);
             $b->connect('/unban/*', ['controller' => 'Ban', 'action' => 'unban'], ['_name' => 'admin_ban_unban']);
         });
 
@@ -300,7 +299,6 @@ return static function (RouteBuilder $routes): void {
             $b->connect('/edit/*', ['controller' => 'User', 'action' => 'edit'], ['_name' => 'admin_user_edit']);
             $b->connect('/edit-ajax', ['controller' => 'User', 'action' => 'editAjax'], ['_name' => 'admin_user_edit_ajax']);
             $b->connect('/get-users', ['controller' => 'User', 'action' => 'getUsers'], ['_name' => 'admin_user_get_users']);
-            $b->connect('/live-search/*', ['controller' => 'User', 'action' => 'liveSearch'], ['_name' => 'admin_user_live_search']);
         });
     });
 };

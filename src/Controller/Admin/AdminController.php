@@ -13,6 +13,7 @@ use Cake\ORM\Table;
  * @property \App\Controller\Component\AuthComponent $Auth
  * @property \App\Controller\Component\EyPluginComponent $EyPlugin
  * @property \App\Controller\Component\ServerComponent $Server
+ * @property \App\Controller\Component\HistoryComponent $History
  */
 class AdminController extends AppController
 {
@@ -145,6 +146,10 @@ class AdminController extends AppController
             'servers',
             'search_cmd'
         ));
+
+        $this->set('History', $this->History);
+        $this->set('Server', $this->Server);
+        $this->set('EyPlugin', $this->EyPlugin);
 
         return null;
     }

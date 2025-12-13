@@ -1,6 +1,3 @@
-<?php
-
-?>
 <section class="content">
     <div class="row">
         <div class="col-md-12">
@@ -59,7 +56,7 @@
             columns: [
                 {data: "Users.username", searchable: true},
                 {data: "Users.email", searchable: true},
-                {data: "User.created_at", searchable: true},
+                {data: "Users.created_at", searchable: true},
                 {data: "Users.rank", searchable: false},
                 {data: "actions", searchable: false}
             ]
