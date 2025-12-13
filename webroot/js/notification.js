@@ -1,285 +1,335 @@
-(function ($) {
+(function () {
 
-    $.Notification = function (config) {
+    function all(selector, root) {
+        return Array.from((root || document).querySelectorAll(selector));
+    }
 
-      for (var key in config) {
-        $.Notification.defaultOptions[key] = config[key];
-      }
+    function escapeHtml(value) {
+        return String(value)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
 
-      this.getNotifications();
+    class Notification {
+        constructor(config) {
+            this.options = Object.assign({}, Notification.defaultOptions, config || {});
+            this.options.indicator = Object.assign({}, Notification.defaultOptions.indicator, (config && config.indicator) || {});
+            this.options.indicator.style = Object.assign({}, Notification.defaultOptions.indicator.style, (config && config.indicator && config.indicator.style) || {});
+            this.options.messages = Object.assign({}, Notification.defaultOptions.messages, (config && config.messages) || {});
+            this.options.url = Object.assign({}, Notification.defaultOptions.url, (config && config.url) || {});
+            this.options.list = Object.assign({}, Notification.defaultOptions.list, (config && config.list) || {});
+            this.options.list.container = Object.assign({}, Notification.defaultOptions.list.container, (config && config.list && config.list.container) || {});
+            this.options.list.notification = Object.assign({}, Notification.defaultOptions.list.notification, (config && config.list && config.list.notification) || {});
+            this.options.list.notification.from = Object.assign({}, Notification.defaultOptions.list.notification.from, (config && config.list && config.list.notification && config.list.notification.from) || {});
+            this.options.list.notification.seen = Object.assign({}, Notification.defaultOptions.list.notification.seen, (config && config.list && config.list.notification && config.list.notification.seen) || {});
+            this.options.list.notification.seen.element = Object.assign({}, Notification.defaultOptions.list.notification.seen.element, (config && config.list && config.list.notification && config.list.notification.seen && config.list.notification.seen.element) || {});
+            this.options.list.notification.seen.btn = Object.assign({}, Notification.defaultOptions.list.notification.seen.btn, (config && config.list && config.list.notification && config.list.notification.seen && config.list.notification.seen.btn) || {});
+            this.options.list.notification.seen.btn.attr = Array.isArray((config && config.list && config.list.notification && config.list.notification.seen && config.list.notification.seen.btn && config.list.notification.seen.btn.attr))
+                ? config.list.notification.seen.btn.attr
+                : Notification.defaultOptions.list.notification.seen.btn.attr;
 
-    };
-
-    $.Notification.prototype = {
-
-      createIndicator: function(count) {
-        var indicator = document.createElement('span');
-
-        indicator.className = $.Notification.defaultOptions.indicator.class;
-
-        for (var property in $.Notification.defaultOptions.indicator.style) {
-          indicator.style[property] = $.Notification.defaultOptions.indicator.style[property];
+            this.notifications = {};
+            this.getNotifications().then();
         }
 
-        indicator.innerText = count;
+        createIndicator(count) {
+            const indicator = document.createElement('span');
+            indicator.className = this.options.indicator.class;
 
-        return indicator;
-      },
-
-      getNotifications: function() {
-
-        var self = this;
-        self.notifications = {};
-
-        $.get($.Notification.defaultOptions.url.get+'/'+$.Notification.defaultOptions.notification_type, function(data) {
-
-          for (var i = 0; i < data.length; i++) {
-            if($.Notification.defaultOptions.limit > 0 && $.Notification.defaultOptions.limit == i) {
-              break;
-            }
-            self.notifications[data[i]['id']] = data[i];
-          }
-
-          self.updateDOM()
-
-        });
-
-      },
-
-      updateDOM: function() {
-
-        var self = this;
-        var notifications = self.notifications;
-        var count = 0;
-        for (var k in notification.notifications) {
-          if(!notification.notifications[k].seen) {
-            count++;
-          }
-        }
-
-        if(count > 0) {
-          $($.Notification.defaultOptions.indicator.element).each(function() {
-            $(this).html($.Notification.defaultOptions.indicator.defaultContent+self.createIndicator(count).outerHTML);
-          });
-        } else {
-          $($.Notification.defaultOptions.indicator.element).each(function() {
-            $(this).html($.Notification.defaultOptions.indicator.defaultContent);
-          });
-        }
-
-        this.generateNotificationsList()
-
-      },
-
-      generateNotificationsList: function() {
-
-        // On créé le container
-          if($.Notification.defaultOptions.list.container.type.length > 0) {
-            var container = document.createElement($.Notification.defaultOptions.list.container.type);
-            container.style.cssText = $.Notification.defaultOptions.list.container.style;
-            container.className = $.Notification.defaultOptions.list.container.class;
-          } else {
-            var container = '';
-          }
-
-        // On parcours les notifications et on créé un élement par notif
-          var self = this;
-          Object.keys(this.notifications).sort().reverse().forEach(function(id) {
-
-            id = parseInt(id);
-
-            var el = document.createElement($.Notification.defaultOptions.list.notification.type);
-            el.style.cssText = $.Notification.defaultOptions.list.notification.style;
-            el.className = $.Notification.defaultOptions.list.notification.class;
-
-            if(self.notifications[id].seen) {
-
-              el.style.cssText += ' '+$.Notification.defaultOptions.list.notification.seen.element.style
-              el.className += ' '+$.Notification.defaultOptions.list.notification.seen.element.class;
-
+            const style = this.options.indicator.style || {};
+            for (const property in style) {
+                indicator.style[property] = style[property];
             }
 
-            var content = $.Notification.defaultOptions.list.notification.content;
-            content = content.replace('{ID}', id);
-            content = content.replace('{ID}', id);
-            content = content.replace('{CONTENT}', self.notifications[id].content);
-            content = content.replace('{TIME}', self.notifications[id].time);
-            content = content.replace('{MARK_AS_SEEN}', $.Notification.defaultOptions.messages.markAsSeen);
+            indicator.textContent = String(count);
+            return indicator;
+        }
 
-            el.innerHTML = content;
+        async request(url) {
+            const res = await fetch(url, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
 
-            if(self.notifications[id].seen) {
-              var btn_seen = el.querySelector($.Notification.defaultOptions.list.notification.seen.btn.element);
+            const contentType = res.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                return await res.json();
+            }
 
-              if(btn_seen != null && typeof btn_seen == "object" && Object.keys(btn_seen).length == 1) {
+            return await res.text();
+        }
 
-                btn_seen.style.cssText += ' '+$.Notification.defaultOptions.list.notification.seen.btn.style
-                btn_seen.className += ' '+$.Notification.defaultOptions.list.notification.seen.btn.class;
+        async getNotifications() {
+            this.notifications = {};
+            const url = String(this.options.url.get || '') + '/' + encodeURIComponent(this.options.notification_type || 'user');
 
-                for (var i = 0; i < $.Notification.defaultOptions.list.notification.seen.btn.attr.length; i++) {
+            const data = await this.request(url);
+            if (!Array.isArray(data)) {
+                this.updateDOM();
+                return;
+            }
 
-                  for (var attr in $.Notification.defaultOptions.list.notification.seen.btn.attr[i]) {
+            for (let i = 0; i < data.length; i++) {
+                if (this.options.limit > 0 && this.options.limit === i) break;
+                const id = Number(data[i] && data[i].id);
+                if (!Number.isFinite(id)) continue;
+                this.notifications[id] = data[i];
+            }
 
-                    btn_seen.setAttribute(attr, $.Notification.defaultOptions.list.notification.seen.btn.attr[i][attr]);
+            this.updateDOM();
+        }
 
-                  }
+        unseenCount() {
+            let count = 0;
+            for (const k in this.notifications) {
+                if (!this.notifications[k].seen) count++;
+            }
+            return count;
+        }
 
+        updateDOM() {
+            const count = this.unseenCount();
+            const indicatorTargets = all(this.options.indicator.element);
+
+            if (count > 0) {
+                const indicatorHtml = this.createIndicator(count).outerHTML;
+                for (const el of indicatorTargets) {
+                    el.innerHTML = String(this.options.indicator.defaultContent || '') + indicatorHtml;
+                }
+            } else {
+                for (const el of indicatorTargets) {
+                    el.innerHTML = String(this.options.indicator.defaultContent || '');
+                }
+            }
+
+            this.generateNotificationsList();
+        }
+
+        bindActions(rootEl) {
+            if (!rootEl) return;
+
+            const markBtns = rootEl.querySelectorAll('[data-notif-action="mark"]');
+            for (const btn of markBtns) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const id = Number(btn.getAttribute('data-notif-id'));
+                    if (Number.isFinite(id)) this.markAsSeen(id);
+                });
+            }
+
+            const clearBtns = rootEl.querySelectorAll('[data-notif-action="clear"]');
+            for (const btn of clearBtns) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const id = Number(btn.getAttribute('data-notif-id'));
+                    if (Number.isFinite(id)) this.clear(id);
+                });
+            }
+        }
+
+        generateNotificationsList() {
+            const useContainerEl = String(this.options.list.container.type || '').length > 0;
+            const containerEl = useContainerEl ? document.createElement(this.options.list.container.type) : null;
+
+            if (containerEl) {
+                containerEl.style.cssText = String(this.options.list.container.style || '');
+                containerEl.className = String(this.options.list.container.class || '');
+            }
+
+            const ids = Object.keys(this.notifications)
+                .map((x) => Number(x))
+                .filter((x) => Number.isFinite(x))
+                .sort((a, b) => b - a);
+
+            let containerHtml = '';
+
+            for (const id of ids) {
+                const notif = this.notifications[id];
+                const el = document.createElement(this.options.list.notification.type);
+                el.style.cssText = String(this.options.list.notification.style || '');
+                el.className = String(this.options.list.notification.class || '');
+
+                if (notif && notif.seen) {
+                    el.style.cssText += ' ' + String(this.options.list.notification.seen.element.style || '');
+                    el.className += ' ' + String(this.options.list.notification.seen.element.class || '');
                 }
 
-              }
+                const safeContent = escapeHtml(notif && notif.content != null ? notif.content : '');
+                const safeTime = escapeHtml(notif && notif.time != null ? notif.time : '');
+
+                let content = String(this.options.list.notification.content || '');
+                content = content.replaceAll('{ID}', String(id));
+                content = content.replaceAll('{CONTENT}', safeContent);
+                content = content.replaceAll('{TIME}', safeTime);
+                content = content.replaceAll('{MARK_AS_SEEN}', escapeHtml(this.options.messages.markAsSeen || ''));
+
+                el.innerHTML = content;
+
+                const seenBtnSel = String(this.options.list.notification.seen.btn.element || '');
+                if (notif && notif.seen && seenBtnSel) {
+                    const btnSeen = el.querySelector(seenBtnSel);
+                    if (btnSeen) {
+                        btnSeen.style.cssText += ' ' + String(this.options.list.notification.seen.btn.style || '');
+                        btnSeen.className += ' ' + String(this.options.list.notification.seen.btn.class || '');
+
+                        const attrs = this.options.list.notification.seen.btn.attr || [];
+                        for (const attrObj of attrs) {
+                            for (const attr in attrObj) {
+                                btnSeen.setAttribute(attr, String(attrObj[attr]));
+                            }
+                        }
+                    }
+                }
+
+                const fromCfg = this.options.list.notification.from || {};
+                const hasFrom = notif && notif.from != null && String(fromCfg.type || '').length > 0;
+                if (hasFrom) {
+                    const fromEl = document.createElement(fromCfg.type);
+                    fromEl.style.cssText = String(fromCfg.style || '');
+                    fromEl.className = String(fromCfg.class || '');
+
+                    let fromContent = String(fromCfg.content || '');
+                    fromContent = fromContent.replaceAll('{NOTIFIED_BY}', escapeHtml(this.options.messages.notifiedBy || ''));
+                    fromContent = fromContent.replaceAll('{FROM}', escapeHtml(notif.from));
+
+                    fromEl.innerHTML = fromContent;
+                    el.innerHTML = el.innerHTML.replaceAll('{FROM}', fromEl.outerHTML);
+                } else {
+                    el.innerHTML = el.innerHTML.replaceAll('{FROM}', '');
+                }
+
+                this.bindActions(el);
+
+                if (containerEl) {
+                    containerEl.appendChild(el);
+                } else {
+                    containerHtml += el.outerHTML;
+                }
             }
 
-            if(self.notifications[id].from != null && $.Notification.defaultOptions.list.notification.from.type.length > 0) {
-
-              var from_element = document.createElement($.Notification.defaultOptions.list.notification.from.type);
-              from_element.style.cssText = $.Notification.defaultOptions.list.notification.from.style;
-              from_element.className = $.Notification.defaultOptions.list.notification.from.class;
-
-              var from_content = $.Notification.defaultOptions.list.notification.from.content;
-              from_content = from_content.replace('{NOTIFIED_BY}', $.Notification.defaultOptions.messages.notifiedBy);
-              from_content = from_content.replace('{FROM}', self.notifications[id].from);
-
-              from_element.innerHTML = from_content;
-
-              el.innerHTML = el.innerHTML.replace('{FROM}', from_element.outerHTML);
-
-            } else {
-              el.innerHTML = el.innerHTML.replace('{FROM}', '');
+            const targets = all(this.options.list.element);
+            for (const t of targets) {
+                if (containerEl) {
+                    t.innerHTML = '';
+                    t.appendChild(containerEl.cloneNode(true));
+                    this.bindActions(t);
+                } else {
+                    t.innerHTML = containerHtml;
+                    this.bindActions(t);
+                }
             }
-
-            // On l'ajoute au container
-              if($.Notification.defaultOptions.list.container.type.length > 0) {
-                container.appendChild(el);
-              } else {
-                container += el.outerHTML;
-              }
-
-          });
-
-        // On met dans l'HTML
-
-          $($.Notification.defaultOptions.list.element).each(function() {
-
-            $(this).html(container);
-
-          });
-
-      },
-
-      clear: function(id) {
-        var url = $.Notification.defaultOptions.url.clear;
-        url = url.replace('NOTIF_ID', id);
-
-        $.get(url);
-
-        delete this.notifications[id];
-
-        this.updateDOM();
-      },
-      clearAll: function() {
-        var url = $.Notification.defaultOptions.url.clearAll;
-
-        $.get(url);
-
-        this.notifications = {};
-
-        this.updateDOM();
-      },
-
-      markAsSeen: function(id) {
-        var url = $.Notification.defaultOptions.url.markAsSeen;
-        url = url.replace('NOTIF_ID', id);
-
-        $.get(url);
-
-        this.notifications[id].seen = true;
-
-        this.updateDOM();
-      },
-
-      markAllAsSeen: function(time) {
-
-        var self = this;
-
-        if(time == undefined) {
-          time = 0;
         }
-        time = time*1000;
 
-        setTimeout(function(){
+        async clear(id) {
+            let url = String(this.options.url.clear || '');
+            url = url.replace('NOTIF_ID', String(id));
 
-          var url = $.Notification.defaultOptions.url.markAllAsSeen;
+            await this.request(url);
+            delete this.notifications[id];
+            this.updateDOM();
+        }
 
-          $.get(url);
+        async clearAll() {
+            await this.request(String(this.options.url.clearAll || ''));
+            this.notifications = {};
+            this.updateDOM();
+        }
 
-          for (var k in notification.notifications) {
-            notification.notifications[k].seen = true;
-          }
+        async markAsSeen(id) {
+            let url = String(this.options.url.markAsSeen || '');
+            url = url.replace('NOTIF_ID', String(id));
 
-          self.updateDOM();
+            await this.request(url);
+            if (this.notifications[id]) this.notifications[id].seen = true;
+            this.updateDOM();
+        }
 
-        }, time);
+        markAllAsSeen(time) {
+            const delay = (Number(time) || 0) * 1000;
 
-      }
+            window.setTimeout(async () => {
+                await this.request(String(this.options.url.markAllAsSeen || ''));
 
-    };
+                for (const k in this.notifications) {
+                    this.notifications[k].seen = true;
+                }
 
-    $.Notification.defaultOptions = {
-      'notification_type': 'user',
-      'limit': 0,
-      'indicator': {
-        'element': '.notification-indicator',
-        'style': {
-          'position': 'absolute',
-          'top': '-5px',
-          'borderRadius': '30px'
-        },
-        'class': 'label label-danger',
-        'defaultContent': ''
-      },
-      'messages': {
-        'markAsSeen': '#',
-        'notifiedBy': '#'
-      },
-      'urls': {
-        'get': '#',
-        'clear': '#',
-        'clearAll': '#',
-        'markAsSeen': '#',
-        'markAllAsSeen': '#'
-      },
-      'list': {
-        'element': '.notifications-list',
-        'container': {
-          'type': 'ul',
-          'class': 'list-group',
-          'style': 'margin-bottom:0;'
-        },
-        'notification': {
-          'type': 'li',
-          'class': 'list-group-item',
-          'style': 'border-top-left-radius:0;border-top-right-radius:0;',
-          'content': '<p>{CONTENT}<small class="pull-right"><em>{TIME}</em></small></p>{FROM}<div class="btn-group pull-right" style="margin-top:-5px;"><button type="button" class="btn btn-default btn-sm mark-as-seen" onClick="notification.markAsSeen({ID})" name="button"><abbr title="{MARK_AS_SEEN}"><i class="fa fa-check"></i></abbr></button><button type="button" class="btn btn-danger btn-sm" onClick="notification.clear({ID})" name="button"><i class="fa fa-times"></i></button></div><div class="clearfix"></div>',
-          'from': {
-            'type': 'small',
-            'class': 'text-muted',
-            'style': '',
-            'content': '<u><em>{NOTIFIED_BY} {FROM}</em></u>'
-          },
-          'seen': {
-            'element': {
-              'style': 'opacity:0.6;',
-              'class': ''
+                this.updateDOM();
+            }, delay);
+        }
+    }
+
+    Notification.defaultOptions = {
+        notification_type: 'user',
+        limit: 0,
+        indicator: {
+            element: '.notification-indicator',
+            style: {
+                position: 'absolute',
+                top: '-5px',
+                borderRadius: '30px'
             },
-            'btn': {
-              'element': '.mark-as-seen',
-              'style': '',
-              'class': 'disabled active',
-              'attr': [{'disabled': true}, {'onclick': ''}],
+            class: 'label label-danger',
+            defaultContent: ''
+        },
+        messages: {
+            markAsSeen: '#',
+            notifiedBy: '#'
+        },
+        url: {
+            get: '#',
+            clear: '#',
+            clearAll: '#',
+            markAsSeen: '#',
+            markAllAsSeen: '#'
+        },
+        list: {
+            element: '.notifications-list',
+            container: {
+                type: 'ul',
+                class: 'list-group',
+                style: 'margin-bottom:0;'
+            },
+            notification: {
+                type: 'li',
+                class: 'list-group-item',
+                style: 'border-top-left-radius:0;border-top-right-radius:0;',
+                content:
+                    '<p>{CONTENT}<small class="pull-right"><em>{TIME}</em></small></p>{FROM}' +
+                    '<div class="btn-group pull-right" style="margin-top:-5px;">' +
+                    '<button type="button" class="btn btn-default btn-sm mark-as-seen" data-notif-action="mark" data-notif-id="{ID}">' +
+                    '<abbr title="{MARK_AS_SEEN}"><i class="fa fa-check"></i></abbr>' +
+                    '</button>' +
+                    '<button type="button" class="btn btn-danger btn-sm" data-notif-action="clear" data-notif-id="{ID}">' +
+                    '<i class="fa fa-times"></i>' +
+                    '</button>' +
+                    '</div>' +
+                    '<div class="clearfix"></div>',
+                from: {
+                    type: 'small',
+                    class: 'text-muted',
+                    style: '',
+                    content: '<u><em>{NOTIFIED_BY} {FROM}</em></u>'
+                },
+                seen: {
+                    element: {
+                        style: 'opacity:0.6;',
+                        class: ''
+                    },
+                    btn: {
+                        element: '.mark-as-seen',
+                        style: '',
+                        class: 'disabled active',
+                        attr: [{ disabled: true }, { onclick: '' }]
+                    }
+                }
             }
-          }
         }
-      }
     };
 
-}(jQuery));
+    window.NotificationWidget = Notification;
+})();

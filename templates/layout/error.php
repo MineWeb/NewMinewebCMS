@@ -35,8 +35,7 @@
         <div class="col-md-12">
             <div id="content">
 
-
-                <?php echo $this->fetch('content'); ?>
+                <?= $this->fetch('content'); ?>
 
             </div>
         </div>

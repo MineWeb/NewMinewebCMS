@@ -1,92 +1,128 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller\Component;
 
+use App\Model\Table\HistoriesTable;
 use Cake\Controller\Component;
-use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
+use Cake\ORM\Locator\LocatorAwareTrait;
+use Cake\ORM\ResultSet;
+use Throwable;
 
-/**
- * Composant qui gère les différents historiques
- **/
-
-class HistoryComponent extends Component
+final class HistoryComponent extends Component
 {
-    private $controller;
+    use LocatorAwareTrait;
 
-    function initialize(array $config): void
+    private HistoriesTable $Histories;
+
+    public function initialize(array $config): void
     {
-        $this->controller = $this->_registry->getController();
-        $this->controller->set('History', $this);
+        parent::initialize($config);
+
+        $this->Histories = $this->fetchTable('Histories');
     }
 
-    function startup($controller)
+    public function set(string $action, string $category, mixed $optional = null, ?int $userId = null): bool
     {
-    }
+        try {
+            $resolvedUserId = $userId ?? $this->getController()->Auth->id();
+            if (!$resolvedUserId) {
+                return false;
+            }
 
-    function set($action, $category, $optionnal = null, $user_id = null)
-    { // Ajoute une entrée dans l'historique général
-        // j'inclue le fichier lang
-        $this->User = TableRegistry::getTableLocator()->get("User");
+            $entity = $this->Histories->newEntity([
+                'action' => $action,
+                'category' => $category,
+                'user_id' => $resolvedUserId,
+                'other' => $optional,
+            ]);
 
-        $user_id = (empty($user_id)) ? $this->User->getKey('id') : $user_id;
+            return (bool)$this->Histories->save($entity);
+        } catch (Throwable $e) {
+            $this->logThrowable('HistoryComponent::set', $e);
 
-        $this->History = TableRegistry::getTableLocator()->get("History"); // le model history
-        $history = $this->History->newEntity([
-            'action' => $action,
-            'category' => $category,
-            'user_id' => $user_id,
-            'other' => $optionnal
-        ]);
-        if ($this->History->save($history)) {
-            return true;
-        } else {
             return false;
         }
     }
 
-    function get($category = false, $limit = false, $date = false, $action = false)
-    { // récupére tout l'historique ou seulement une catégorie
-        // j'inclue le fichier lang
-        $this->History = TableRegistry::getTableLocator()->get("History"); // le model history
+    public function get(
+        string|false $category = false,
+        int|false $limit = false,
+        string|false $date = false,
+        string|false $action = false,
+    ): array {
+        try {
+            $conditions = $this->buildConditions($category, $date, $action);
 
-        if ($category) {
-            $array['conditions']['category'] = $category;
-        }
-        if ($limit) {
-            $array['limit'] = $limit;
-        }
-        if ($date) {
-            $array['conditions']['created LIKE'] = $date . '%';
-        }
-        if ($action) {
-            $array['conditions']['action'] = $action;
-        }
-        $array['order'] = 'id DESC';
-        $search_history = $this->History->find('all', $array)->toArray();
+            $query = $this->Histories->find()
+                ->where($conditions)
+                ->orderBy(['id' => 'DESC']);
 
-        $i = 0;
+            if ($limit !== false) {
+                $query->limit($limit);
+            }
 
-        $this->Lang = $this->controller->Lang;
+            return $this->translateActions($query->all());
+        } catch (Throwable $e) {
+            $this->logThrowable('HistoryComponent::get', $e);
 
-        foreach ($search_history as $value) { // je remplace les actions par leur traduction (ex: BUY_ITEM devient Achat d'un article)
-            $search_history[$i]['action'] = str_replace($value['action'], $this->Lang->get($value['action']), $value['action']);
-            $i++;
+            return [];
         }
-        return $search_history;
     }
 
-    function get_by_author($author)
-    { // récupére tout l'historique d'un utilisateur
-        // j'inclue le fichier lang
-        $this->Lang = $this->controller->Lang;
+    public function getByAuthor(string $author): array
+    {
+        try {
+            $query = $this->Histories->find()
+                ->where(['author' => $author])
+                ->orderBy(['id' => 'DESC']);
 
-        $this->History = TableRegistry::getTableLocator()->get("History"); // le model history
-        $search_history = $this->History->find('all', conditions: ['author' => $author])->toArray(); // je cherche l'historique de l'utilisateur
-        $i = 0;
-        foreach ($search_history as $value) { // je remplace les actions par leur traduction (ex: BUY_ITEM devient Achat d'un article)
-            $search_history[$i]['action'] = str_replace($value['action'], $this->Lang->get($value['action']), $value['action']);
-            $i++;
+            return $this->translateActions($query->all());
+        } catch (Throwable $e) {
+            $this->logThrowable('HistoryComponent::getByAuthor', $e);
+
+            return [];
         }
-        return $search_history;
     }
 
+    public function get_by_author(string $author): array
+    {
+        return $this->getByAuthor($author);
+    }
+
+    private function buildConditions(string|false $category, string|false $date, string|false $action): array
+    {
+        $conditions = [];
+
+        if ($category !== false) {
+            $conditions['category'] = $category;
+        }
+        if ($date !== false) {
+            $conditions['created_at LIKE'] = $date . '%';
+        }
+        if ($action !== false) {
+            $conditions['action'] = $action;
+        }
+
+        return $conditions;
+    }
+
+    private function translateActions(ResultSet $resultSet): array
+    {
+        $rows = $resultSet->toArray();
+
+        foreach ($rows as $row) {
+            $action = $row->get('action');
+            $row->set('action', __((string)$action));
+        }
+
+        return $rows;
+    }
+
+    private function logThrowable(string $context, Throwable $e): void
+    {
+        Log::error($context . ' error: ' . $e->getMessage());
+        Log::error($e->getTraceAsString());
+    }
 }

@@ -28,7 +28,6 @@ class ModuleComponent extends Component
         if (!isset($list[$name]))
             return false;
 
-        $Lang = $this->controller->Lang;
         $Configuration = $this->controller->Configuration;
         $this->Html = new HtmlHelper(new View());
 

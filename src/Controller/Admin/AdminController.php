@@ -1,112 +1,185 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
 use Cake\Http\Cookie\Cookie;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Response;
-use Cake\ORM\TableRegistry;
+use Cake\ORM\Table;
 
+/**
+ * @property \App\Controller\Component\AuthComponent $Auth
+ * @property \App\Controller\Component\EyPluginComponent $EyPlugin
+ * @property \App\Controller\Component\ServerComponent $Server
+ * @property \App\Controller\Component\HistoryComponent $History
+ */
 class AdminController extends AppController
 {
-    function index()
+    public function initialize(): void
     {
-        if ($this->isConnected and $this->Permissions->can('ACCESS_DASHBOARD')) {
-            $this->set('title_for_layout', $this->Lang->get('GLOBAL__HOME'));
-            $this->viewBuilder()->setLayout('admin');
-
-            $this->News = TableRegistry::getTableLocator()->get('News');
-            $nbr_news = $this->News->find()->count();
-
-            $this->Comment = TableRegistry::getTableLocator()->get('Comment');
-            $nbr_comments = $this->Comment->find('all', conditions: ['created LIKE' => date('Y-m-d') . '%'])->count();
-            if ($nbr_comments == 0) {
-                $nbr_comments = $this->Comment->find()->count();
-                $nbr_comments_type = "all";
-            } else {
-                $nbr_comments_type = "today";
-            }
-
-            $registered_users = $this->User->find()->count();
-            $registered_users_today = $this->User->find('all', ['conditions' => ['created LIKE' => date('Y-m-d') . '%']])->count();
-
-            $count_visits = $this->Visit->getVisitsCount();
-            $count_visits_before_before_yesterday = $this->Visit->getVisitsByDay(date('Y-m-d', strtotime('-3 day')))['count'];
-            $count_visits_before_yesterday = $this->Visit->getVisitsByDay(date('Y-m-d', strtotime('-2 day')))['count'];
-            $count_visits_yesterday = $this->Visit->getVisitsByDay(date('Y-m-d', strtotime('-1 day')))['count'];
-            $count_visits_today = $this->Visit->getVisitsByDay(date('Y-m-d'))['count'];
-            $purchase = [];
-            $purchase_today = [];
-            $items_solded = [];
-            if ($this->EyPlugin->isInstalled('eywek.shop')) {
-                $this->ItemsBuyHistory = TableRegistry::getTableLocator()->get('Shop.ItemsBuyHistory');
-                $purchase = $this->ItemsBuyHistory->find('all', order: 'id DESC')->count();
-                $purchase_today = $this->ItemsBuyHistory->find('all', conditions: ['created LIKE' => date('Y-m-d') . '%'], order: 'id DESC')->count();
-
-                $this->Item = TableRegistry::getTableLocator()->get('Shop.Item');
-                $findItems = $this->Item->find()->all();
-                $itemsNameByID = [];
-                foreach ($findItems as $value) {
-                    $itemsNameByID[$value['id']] = $value['name'];
-                }
-
-                $find_items_solded = $this->ItemsBuyHistory->find('all',
-                fields: 'COUNT(*),item_id',
-                order: 'COUNT(id) DESC',
-                group: 'item_id',
-                limit: 5)->all();
-                $i = 0;
-
-                foreach ($find_items_solded as $value) {
-                    $items_solded[$i]['count'] = $value[0]['COUNT(*)'];
-                    $items_solded[$i]['item_name'] = @$itemsNameByID[$value['item_id']];
-                    $i++;
-                }
-            }
-
-            $this->Server = TableRegistry::getTableLocator()->get('Server');
-            $servers = $this->Server->find()->all();
-
-            if ($this->request->is('ajax') && $this->Permissions->can('SEND_SERVER_COMMAND_FROM_DASHBOARD')) {
-                if ($this->request->getData('server_id') != null) {
-                    $this->ServerComponent = $this->loadComponent('Server');
-                    $this->autoRender = false;
-                    $this->response = $this->response->withType('application/json');
-                    if ($this->request->getData('cmd') != null) {
-                         $this->ServerComponent->send_command($this->request->getData('cmd'), $this->request->getData('server_id'));
-                    } else {
-                        $this->ServerComponent->send_command($this->request->getData('cmd2'), $this->request->getData('server_id'));
-                    }
-
-                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('SERVER__SEND_COMMAND_SUCCESS')]));
-                }
-            }
-
-            $this->ServerCmd = TableRegistry::getTableLocator()->get('ServerCmd');
-            $search_cmd = $this->ServerCmd->find()->all();
-            $this->set(compact(
-                'nbr_news',
-                'nbr_comments', 'nbr_comments_type',
-                'registered_users', 'registered_users_today',
-                'count_visits', 'count_visits_before_before_yesterday', 'count_visits_before_yesterday', 'count_visits_yesterday', 'count_visits_today',
-                'purchase', 'purchase_today', 'items_solded',
-                'servers',
-                'search_cmd'
-            ));
-        } else {
-            $this->redirect('/');
-        }
+        parent::initialize();
     }
 
-    function switchAdminDarkMode(): Response
+    public function index(): ?Response
     {
-        $this->autoRender = false;
-        if ($this->isConnected) {
-            $admin_dark_mode = (bool)$this->getRequest()->getCookie('use_admin_dark_mode');
-            return $this->response->withCookie(new Cookie('use_admin_dark_mode', (string)!$admin_dark_mode));
+        if (!($this->Auth->isConnected() && $this->Auth->can('ACCESS_DASHBOARD'))) {
+            return $this->redirect('/');
+        }
+
+        $this->set('title_for_layout', __('GLOBAL__HOME'));
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Admin')
+            ->setTemplate('index');
+
+        $nbr_news = $this->fetchTable('News')->find()->count();
+
+        $commentTable = $this->fetchTable('Comments');
+        $nbr_comments_today = $commentTable->find()
+            ->where(['created_at LIKE' => date('Y-m-d') . '%'])
+            ->count();
+
+        if ($nbr_comments_today === 0) {
+            $nbr_comments = $commentTable->find()->count();
+            $nbr_comments_type = 'all';
         } else {
+            $nbr_comments = $nbr_comments_today;
+            $nbr_comments_type = 'today';
+        }
+
+        $userTable = $this->fetchTable('Users');
+        $registered_users = $userTable->find()->count();
+        $registered_users_today = $userTable->find()
+            ->where(['created_at LIKE' => date('Y-m-d') . '%'])
+            ->count();
+
+        $visitTable = $this->fetchTable('Visits');
+        $count_visits = method_exists($visitTable, 'getVisitsCount') ? (int)$visitTable->getVisitsCount() : 0;
+
+        $count_visits_before_before_yesterday = $this->safeVisitCountByDay($visitTable, date('Y-m-d', strtotime('-3 day')));
+        $count_visits_before_yesterday = $this->safeVisitCountByDay($visitTable, date('Y-m-d', strtotime('-2 day')));
+        $count_visits_yesterday = $this->safeVisitCountByDay($visitTable, date('Y-m-d', strtotime('-1 day')));
+        $count_visits_today = $this->safeVisitCountByDay($visitTable, date('Y-m-d'));
+
+        $purchase = 0;
+        $purchase_today = 0;
+        $items_solded = [];
+
+        if ($this->EyPlugin->isInstalled('eywek.shop')) {
+            $itemsBuyHistoryTable = $this->fetchTable('Shop.ItemsBuyHistory');
+
+            $purchase = $itemsBuyHistoryTable->find()->count();
+
+            $purchase_today = $itemsBuyHistoryTable->find()
+                ->where(['created_at LIKE' => date('Y-m-d') . '%'])
+                ->count();
+
+            $itemTable = $this->fetchTable('Shop.Item');
+            $findItems = $itemTable->find()->all();
+
+            $itemsNameByID = [];
+            foreach ($findItems as $value) {
+                $itemsNameByID[(int)$value->get('id')] = (string)$value->get('name');
+            }
+
+            $find_items_solded = $itemsBuyHistoryTable->find()
+                ->select([
+                    'cnt' => $itemsBuyHistoryTable->find()->func()->count('*'),
+                    'item_id' => 'item_id',
+                ])
+                ->groupBy('item_id')
+                ->orderByDesc('cnt')
+                ->limit(5)
+                ->all();
+
+            $i = 0;
+            foreach ($find_items_solded as $row) {
+                $itemId = (int)$row->get('item_id');
+                $items_solded[$i] = [
+                    'count' => (int)$row->get('cnt'),
+                    'item_name' => $itemsNameByID[$itemId] ?? null,
+                ];
+                $i++;
+            }
+        }
+
+        $servers = $this->fetchTable('Servers')->find()->all();
+
+        if ($this->request->is('ajax') && $this->Auth->can('SEND_SERVER_COMMAND_FROM_DASHBOARD')) {
+            $serverId = $this->request->getData('server_id');
+            if (is_scalar($serverId) && (string)$serverId !== '') {
+                $this->disableAutoRender();
+
+                $cmd = $this->request->getData('cmd') ?? $this->request->getData('cmd2');
+                if (is_string($cmd) && $cmd !== '') {
+                    $this->Server->send_command($cmd, $serverId);
+                }
+
+                return $this->response
+                    ->withType('application/json')
+                    ->withStringBody(json_encode([
+                        'status' => true,
+                        'messages' => __('SERVER__SEND_COMMAND_SUCCESS'),
+                    ]));
+            }
+        }
+
+        $search_cmd = $this->fetchTable('ServerCmds')->find()->all();
+
+        $this->set(compact(
+            'nbr_news',
+            'nbr_comments',
+            'nbr_comments_type',
+            'registered_users',
+            'registered_users_today',
+            'count_visits',
+            'count_visits_before_before_yesterday',
+            'count_visits_before_yesterday',
+            'count_visits_yesterday',
+            'count_visits_today',
+            'purchase',
+            'purchase_today',
+            'items_solded',
+            'servers',
+            'search_cmd'
+        ));
+
+        $this->set('History', $this->History);
+        $this->set('Server', $this->Server);
+        $this->set('EyPlugin', $this->EyPlugin);
+
+        return null;
+    }
+
+    public function switchAdminDarkMode(): Response
+    {
+        $this->disableAutoRender();
+
+        if (!$this->Auth->isConnected()) {
             throw new ForbiddenException();
         }
+
+        $admin_dark_mode = (bool)$this->getRequest()->getCookie('use_admin_dark_mode');
+
+        return $this->response->withCookie(
+            new Cookie('use_admin_dark_mode', $admin_dark_mode ? '0' : '1')
+        );
     }
 
+    private function safeVisitCountByDay(Table $visitTable, string $day): int
+    {
+        if (!method_exists($visitTable, 'getVisitsByDay')) {
+            return 0;
+        }
+
+        $data = $visitTable->getVisitsByDay($day);
+        if (is_array($data) && isset($data['count'])) {
+            return (int)$data['count'];
+        }
+
+        return 0;
+    }
 }

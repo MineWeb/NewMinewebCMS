@@ -1,161 +1,265 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
 use Cake\Event\Event;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
-use Cake\ORM\TableRegistry;
+use Cake\Http\Response;
 use Cake\Utility\Text;
 
-class NewsController extends AppController {
-    function index()
+class NewsController extends AppController
+{
+    public function index(): ?Response
     {
-        if ($this->isConnected and $this->Permissions->can('MANAGE_NEWS')) {
-            $this->set('title_for_layout', $this->Lang->get('NEWS__LIST_PUBLISHED'));
-            $this->News = TableRegistry::getTableLocator()->get('News');
-            $view_news = $this->News->find()->all();
-            $this->set(compact('view_news'));
-        } else {
-            $this->redirect('/');
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NEWS'))) {
+            return $this->redirect(['_name' => 'home']);
         }
+
+        $this->set('title_for_layout', __('NEWS__LIST_PUBLISHED'));
+
+        $newsTable = $this->fetchTable('News');
+        $view_news = $newsTable->find()->all();
+
+        $this->set(compact('view_news'));
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/News')
+            ->setTemplate('index');
+
+        return null;
     }
 
-    function delete($id = false)
+    public function delete(int|string|null $id = null): Response
     {
-        if ($this->isConnected and $this->Permissions->can('MANAGE_NEWS')) {
-            if ($id) {
-                $event = new Event('beforeDeleteNews', $this, ['news_id' => $id, 'user' => $this->User->getAllFromCurrentUser()]);
-                $this->getEventManager()->dispatch($event);
-                if ($event->isStopped()) {
-                    return $event->getResult();
-                }
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NEWS'))) {
+            return $this->redirect(['_name' => 'home']);
+        }
 
-                $this->News = TableRegistry::getTableLocator()->get('News');
-                if ($this->News->delete($this->News->get($id))) {
-                    $this->Like = TableRegistry::getTableLocator()->get('Likes');
-                    $this->Comment = TableRegistry::getTableLocator()->get('Comment');
-                    $this->Like->deleteAll(['Likes.news_id' => $id]);
-                    $this->Comment->deleteAll(['Comment.news_id' => $id]);
-                    $this->History->set('DELETE_NEWS', 'news');
-                    $this->Flash->success($this->Lang->get('NEWS__SUCCESS_DELETE'));
-                }
+        if ($id === null) {
+            return $this->redirect(['_name' => 'admin_news_index']);
+        }
 
-                $this->redirect(['controller' => 'news', 'action' => 'index', 'admin' => true]);
-            } else {
-                $this->redirect(['controller' => 'news', 'action' => 'index', 'admin' => true]);
+        $event = new Event('beforeDeleteNews', $this, [
+            'news_id' => $id,
+            'user' => $this->User->getAllFromCurrentUser(),
+        ]);
+        $this->getEventManager()->dispatch($event);
+        if ($event->isStopped()) {
+            $result = $event->getResult();
+            if ($result instanceof Response) {
+                return $result;
             }
-        } else {
-            $this->redirect('/');
+
+            return $this->redirect(['_name' => 'admin_news_index']);
         }
+
+        $newsTable = $this->fetchTable('News');
+        $likesTable = $this->fetchTable('Likes');
+        $commentTable = $this->fetchTable('Comments');
+
+        $entity = $newsTable->get($id);
+        if ($newsTable->delete($entity)) {
+            $likesTable->deleteAll(['Likes.news_id' => $id]);
+            $commentTable->deleteAll(['Comment.news_id' => $id]);
+
+            $this->History->set('DELETE_NEWS', 'news');
+            $this->Flash->success(__('NEWS__SUCCESS_DELETE'));
+        }
+
+        return $this->redirect(['_name' => 'admin_news_index']);
     }
 
-    function add()
+    public function add(): ?Response
     {
-        if ($this->isConnected and $this->Permissions->can('MANAGE_NEWS')) {
-            $this->set('title_for_layout', $this->Lang->get('NEWS__ADD_NEWS'));
-        } else {
-            $this->redirect('/');
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NEWS'))) {
+            return $this->redirect(['_name' => 'home']);
         }
+
+        $this->set('title_for_layout', __('NEWS__ADD_NEWS'));
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/News')
+            ->setTemplate('add');
+
+        return null;
     }
 
-    function addAjax()
+    public function addAjax(): Response
     {
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
-        if ($this->isConnected and $this->Permissions->can('MANAGE_NEWS')) {
-            if ($this->request->is('post')) {
-                if (!empty($this->getRequest()->getData('title')) and !empty($this->getRequest()->getData('content')) and !empty($this->getRequest()->getData('slug'))) {
-                    $event = new Event('beforeAddNews', $this, ['news' => $this->request->getData(), 'user' => $this->User->getAllFromCurrentUser()]);
-                    $this->getEventManager()->dispatch($event);
-                    if ($event->isStopped()) {
-                        return $event->getResult();
-                    }
 
-                    $this->News = TableRegistry::getTableLocator()->get('News');
-                    $news = $this->News->newEntity([
-                        'title' => $this->getRequest()->getData('title'),
-                        'content' => $this->getRequest()->getData('content'),
-                        'user_id' => $this->User->getKey('id'),
-                        'updated' => date('Y-m-d H:i:s'),
-                        'comments' => 0,
-                        'likes' => 0,
-                        'img' => 0,
-                        'slug' => Text::slug($this->getRequest()->getData('slug'), '-'),
-                        'published' => $this->getRequest()->getData('published')
-                    ]);
-                    $this->News->save($news);
-
-                    $this->History->set('ADD_NEWS', 'news');
-                    $this->Flash->success($this->Lang->get('NEWS__SUCCESS_ADD'));
-                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('NEWS__SUCCESS_ADD')]));
-                } else {
-                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
-                }
-            } else {
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__BAD_REQUEST')]));
-            }
-        } else {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NEWS'))) {
             throw new ForbiddenException();
         }
-    }
 
-    function edit($id = false)
-    {
-        if ($this->isConnected and $this->Permissions->can('MANAGE_NEWS')) {
-            $this->set('title_for_layout', $this->Lang->get('NEWS__EDIT'));
-            if ($id) {
-                $this->News = TableRegistry::getTableLocator()->get('News');
-                $news = $this->News->find('all', conditions: ['id' => $id])->first();
-                if ($news != null) {
-                    $this->set(compact('news'));
-                } else {
-                    throw new NotFoundException();
-                }
-            } else {
-                throw new NotFoundException();
-            }
-        } else {
-            $this->redirect('/');
+        $request = $this->getRequest();
+
+        if (!$request->is('post')) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__BAD_REQUEST'),
+            ]));
         }
+
+        $title = (string)$request->getData('title', '');
+        $content = (string)$request->getData('content', '');
+        $slugRaw = (string)$request->getData('slug', '');
+        $published = $request->getData('published');
+
+        if ($title === '' || $content === '' || $slugRaw === '') {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+            ]));
+        }
+
+        $event = new Event('beforeAddNews', $this, [
+            'news' => $request->getData(),
+            'user' => $this->User->getAllFromCurrentUser(),
+        ]);
+        $this->getEventManager()->dispatch($event);
+        if ($event->isStopped()) {
+            $result = $event->getResult();
+            if ($result instanceof Response) {
+                return $result;
+            }
+
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__BAD_REQUEST'),
+            ]));
+        }
+
+        $newsTable = $this->fetchTable('News');
+
+        $entity = $newsTable->newEntity([
+            'title' => $title,
+            'content' => $content,
+            'user_id' => $this->User->get('id'),
+            'updated_at' => date('Y-m-d H:i:s'),
+            'comments' => 0,
+            'likes' => 0,
+            'img' => 0,
+            'slug' => Text::slug($slugRaw, '-'),
+            'published' => $published,
+        ]);
+
+        $newsTable->save($entity);
+
+        $this->History->set('ADD_NEWS', 'news');
+        $this->Flash->success(__('NEWS__SUCCESS_ADD'));
+
+        return $this->response->withStringBody(json_encode([
+            'status' => true,
+            'messages' => __('NEWS__SUCCESS_ADD'),
+        ]));
     }
 
-    function editAjax()
+    public function edit(int|string|null $id = null): ?Response
+    {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NEWS'))) {
+            return $this->redirect(['_name' => 'home']);
+        }
+
+        if ($id === null) {
+            throw new NotFoundException();
+        }
+
+        $newsTable = $this->fetchTable('News');
+        $news = $newsTable
+            ->find()
+            ->where(['id' => $id])
+            ->first();
+
+        if ($news === null) {
+            throw new NotFoundException();
+        }
+
+        $this->set('title_for_layout', __('NEWS__EDIT'));
+        $this->set('news', $news);
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/News')
+            ->setTemplate('edit');
+
+        return null;
+    }
+
+    public function editAjax(): Response
     {
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
-        if ($this->isConnected and $this->Permissions->can('MANAGE_NEWS')) {
-            if ($this->request->is('post')) {
-                if (!empty($this->getRequest()->getData('title')) and !empty($this->getRequest()->getData('content')) and !empty($this->getRequest()->getData('id')) and !empty($this->getRequest()->getData('slug'))) {
 
-                    $event = new Event('beforeEditNews', $this, ['news' => $this->request->getData(), 'news_id' => $this->getRequest()->getData('id'), 'user' => $this->User->getAllFromCurrentUser()]);
-                    $this->getEventManager()->dispatch($event);
-                    if ($event->isStopped()) {
-                        return $event->getResult();
-                    }
-
-                    $this->News = TableRegistry::getTableLocator()->get('News');
-                    $news = $this->News->get($this->request->getData('id'));
-                    $news->set([
-                        'title' => $this->getRequest()->getData('title'),
-                        'content' => $this->getRequest()->getData('content'),
-                        'updated' => date('Y-m-d H:i:s'),
-                        'slug' => Text::slug($this->getRequest()->getData('slug'), '-'),
-                        'published' => $this->getRequest()->getData('published')
-                    ]);
-                    $this->News->save($news);
-                    $this->History->set('EDIT_NEWS', 'news');
-                    $this->Flash->success($this->Lang->get('NEWS__SUCCESS_EDIT'));
-                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('NEWS__SUCCESS_EDIT')]));
-                } else {
-                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
-                }
-            } else {
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__BAD_REQUEST')]));
-            }
-        } else {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NEWS'))) {
             throw new ForbiddenException();
         }
 
+        $request = $this->getRequest();
+
+        if (!$request->is('post')) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__BAD_REQUEST'),
+            ]));
+        }
+
+        $id = $request->getData('id');
+        $title = (string)$request->getData('title', '');
+        $content = (string)$request->getData('content', '');
+        $slugRaw = (string)$request->getData('slug', '');
+        $published = $request->getData('published');
+
+        if ($id === null || $title === '' || $content === '' || $slugRaw === '') {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+            ]));
+        }
+
+        $event = new Event('beforeEditNews', $this, [
+            'news' => $request->getData(),
+            'news_id' => $id,
+            'user' => $this->User->getAllFromCurrentUser(),
+        ]);
+        $this->getEventManager()->dispatch($event);
+        if ($event->isStopped()) {
+            $result = $event->getResult();
+            if ($result instanceof Response) {
+                return $result;
+            }
+
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__BAD_REQUEST'),
+            ]));
+        }
+
+        $newsTable = $this->fetchTable('News');
+        $entity = $newsTable->get($id);
+
+        $entity->set([
+            'title' => $title,
+            'content' => $content,
+            'updated_at' => date('Y-m-d H:i:s'),
+            'slug' => Text::slug($slugRaw, '-'),
+            'published' => $published,
+        ]);
+
+        $newsTable->save($entity);
+
+        $this->History->set('EDIT_NEWS', 'news');
+        $this->Flash->success(__('NEWS__SUCCESS_EDIT'));
+
+        return $this->response->withStringBody(json_encode([
+            'status' => true,
+            'messages' => __('NEWS__SUCCESS_EDIT'),
+        ]));
     }
 }

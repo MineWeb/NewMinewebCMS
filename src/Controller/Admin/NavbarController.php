@@ -1,252 +1,395 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
-use Cake\Log\Log;
-use Cake\ORM\TableRegistry;
+use Cake\Http\Response;
 use Cake\Routing\Router;
 
 class NavbarController extends AppController
 {
-    public function index()
+    public function index(): ?Response
     {
-        if (!$this->Permissions->can('MANAGE_NAV'))
+        if (!$this->Auth->can('MANAGE_NAV')) {
             throw new ForbiddenException();
+        }
 
-        $this->set('title_for_layout', $this->Lang->get('NAVBAR__TITLE'));
+        $this->set('title_for_layout', __('NAVBAR__TITLE'));
 
-        $this->Navbar = TableRegistry::getTableLocator()->get('Navbar');
-        $navbars = $this->Navbar->find()
+        $navbarTable = $this->fetchTable('Navbars');
+        $navbars = $navbarTable
+            ->find()
             ->orderBy(['order_by'])
             ->toArray();
 
-        $this->Page = TableRegistry::getTableLocator()->get('Page');
-        $pages = $this->Page->find('all', fields: ['id', 'slug'])->all();
-        $pages_listed = [];
-        foreach ($pages as $value)
-            $pages_listed[$value['id']] = $value['slug'];
+        $pageTable = $this->fetchTable('Pages');
+        $pages = $pageTable
+            ->find('all')
+            ->select(['id', 'slug'])
+            ->all();
 
-        foreach ($navbars as $key => $value) {
-            if ($value['urlData']['type'] == "plugin") {
-                if (isset($value['urlData']['route']))
-                    $plugin = $this->EyPlugin->findPlugin('slug', $value['urlData']['id']);
-                else
-                    $plugin = $this->EyPlugin->findPlugin('DBid', $value['urlData']['id']);
+        $pagesListed = [];
+        foreach ($pages as $page) {
+            $pagesListed[$page['id']] = $page['slug'];
+        }
+
+        foreach ($navbars as $key => $nav) {
+            $urlData = $nav['urlData'] ?? [];
+
+            if (!is_array($urlData) || !isset($urlData['type'])) {
+                $navbars[$key]['url'] = '#';
+                continue;
+            }
+
+            if ($urlData['type'] === 'plugin') {
+                if (isset($urlData['route'])) {
+                    $plugin = $this->EyPlugin->findPlugin('slug', $urlData['id'] ?? null);
+                } else {
+                    $plugin = $this->EyPlugin->findPlugin('DBid', $urlData['id'] ?? null);
+                }
+
                 if (!empty($plugin)) {
-                    $navbars[$key]['url'] = (isset($value['urlData']['route'])) ? Router::url($value['urlData']['route']) : Router::url('/' . strtolower($plugin->slug));
+                    if (isset($urlData['route'])) {
+                        $navbars[$key]['url'] = Router::url($urlData['route']);
+                    } else {
+                        $navbars[$key]['url'] = Router::url('/' . strtolower((string)$plugin->slug));
+                    }
                 } else {
                     $navbars[$key]['url'] = false;
                 }
-            } else if ($value['urlData']['type'] == "page") {
-                if (isset($pages_listed[$value['url']['id']])) {
-                    $navbars[$key]['url'] = Router::url('/p/' . $pages_listed[$value['urlData']['id']]);
+            } elseif ($urlData['type'] === 'page') {
+                $pageId = $urlData['id'] ?? null;
+                if ($pageId !== null && isset($pagesListed[$pageId])) {
+                    $navbars[$key]['url'] = Router::url(['_name' => 'pages_index', $pagesListed[$pageId]]);
                 } else {
                     $navbars[$key]['url'] = '#';
                 }
-            } else if ($value['urlData']['type'] == "custom") {
-                $navbars[$key]['url'] = $value['urlData']['url'];
+            } elseif ($urlData['type'] === 'custom') {
+                $navbars[$key]['url'] = $urlData['url'] ?? '#';
             } else {
                 $navbars[$key]['url'] = '#';
             }
         }
-        $this->set(compact('navbars'));
+
+        $this->set('navbars', $navbars);
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Navbar')
+            ->setTemplate('index');
+
+        return null;
     }
 
-    public function saveAjax()
+    public function saveAjax(): Response
     {
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
-        if ($this->isConnected and $this->Permissions->can('MANAGE_NAV')) {
-            if ($this->request->is('post')) {
-                if (!empty($this->request->getData())) {
-                    $data = $this->getRequest()->getData('navbar_order');
-                    $data = explode('&', $data);
-                    $i = 1;
-                    foreach ($data as $value) {
-                        $data2[] = explode('=', $value);
-                        $data3 = substr($data2[0][0], 0, -2);
-                        $data1[$data3] = $i;
-                        unset($data3);
-                        unset($data2);
-                        $i++;
-                    }
-                    $data = $data1;
-                    $this->Navbar = TableRegistry::getTableLocator()->get('Navbar');
-                    foreach ($data as $key => $value) {
-                        $find = $this->Navbar->find('all', conditions: ['id' => $key])->first();
-                        if (!empty($find)) {
-                            $id = $find['id'];
-                            $nav = $this->Navbar->get($id);
-                            $nav->set([
-                                'order_by' => $value,
-                                'url' => $find['url'],
-                            ]);
-                            $this->Navbar->save($nav);
-                        } else {
-                            $error = 1;
-                        }
-                    }
-                    if (empty($error)) {
-                        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('NAVBAR__SAVE_SUCCESS')]));
-                    } else {
-                        return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
-                    }
-                } else {
-                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
-                }
-            } else {
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__BAD_REQUEST')]));
-            }
-        } else {
-            $this->redirect('/');
+
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NAV'))) {
+            return $this->redirect(['_name' => 'home']);
         }
-    }
 
-    public function delete($id = false)
-    {
-        $this->autoRender = false;
-        if ($this->isConnected and $this->Permissions->can('MANAGE_NAV')) {
-            if ($id) {
-                $this->Navbar = TableRegistry::getTableLocator()->get('Navbar');
-                try {
-                    $nav = $this->Navbar->get($id);
-                } catch (RecordNotFoundException $e) {
-                    throw new NotFoundException();
-                }
+        $request = $this->getRequest();
 
-                if ($this->Navbar->delete($nav)) {
-                    $this->History->set('DELETE_NAV', 'navbar');
-                    $this->Flash->success($this->Lang->get('NAVBAR__DELETE_SUCCESS'));
-                }
+        if (!$request->is('post')) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__BAD_REQUEST'),
+            ]));
+        }
+
+        $raw = (string)$request->getData('navbar_order', '');
+        if ($raw === '') {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+            ]));
+        }
+
+        $pairs = explode('&', $raw);
+        $orders = [];
+        $position = 1;
+
+        foreach ($pairs as $pair) {
+            $parts = explode('=', $pair, 2);
+            if (!isset($parts[0]) || $parts[0] === '') {
+                continue;
             }
 
-            $this->redirect(['controller' => 'navbar', 'action' => 'index', 'admin' => true]);
-        } else {
-            $this->redirect('/');
+            $key = $parts[0];
+            if (substr($key, -2) === '[]') {
+                $key = substr($key, 0, -2);
+            }
+
+            $orders[$key] = $position;
+            $position++;
         }
+
+        if (!$orders) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+            ]));
+        }
+
+        $navbarTable = $this->fetchTable('Navbars');
+        $error = false;
+
+        foreach ($orders as $id => $orderBy) {
+            $entity = $navbarTable
+                ->find()
+                ->where(['id' => $id])
+                ->first();
+
+            if ($entity === null) {
+                $error = true;
+                continue;
+            }
+
+            $entity->set('order_by', $orderBy);
+            $navbarTable->save($entity);
+        }
+
+        if ($error) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+            ]));
+        }
+
+        return $this->response->withStringBody(json_encode([
+            'status' => true,
+            'messages' => __('NAVBAR__SAVE_SUCCESS'),
+        ]));
     }
 
-    public function add()
+    public function delete(int|string|null $id = null): Response
     {
-        if (!$this->Permissions->can('MANAGE_NAV'))
-            throw new ForbiddenException();
-        $this->set('title_for_layout', $this->Lang->get('NAVBAR__ADD_LINK'));
+        $this->disableAutoRender();
 
-        $this->Page = TableRegistry::getTableLocator()->get('Page');
-        $url_pages = $this->Page->find('all');
-        foreach ($url_pages as $key => $value) {
-            $url_pages2[$value['id']] = $value['title'];
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NAV'))) {
+            return $this->redirect(['_name' => 'home']);
         }
-        $url_pages = (isset($url_pages2)) ? $url_pages2 : [];
-        $this->set('url_plugins', $this->EyPlugin->findPluginsLinks());
-        $this->set(compact('url_pages'));
-    }
 
-    public function addAjax()
-    {
-        if (!$this->Permissions->can('MANAGE_NAV'))
-            throw new ForbiddenException();
-        if (!$this->request->is('ajax'))
+        if ($id === null) {
+            return $this->redirect(['_name' => 'admin_navbar_index']);
+        }
+
+        $navbarTable = $this->fetchTable('Navbars');
+
+        try {
+            $nav = $navbarTable->get($id);
+        } catch (RecordNotFoundException) {
             throw new NotFoundException();
+        }
+
+        if ($navbarTable->delete($nav)) {
+            $this->History->set('DELETE_NAV', 'navbar');
+            $this->Flash->success(__('NAVBAR__DELETE_SUCCESS'));
+        }
+
+        return $this->redirect(['_name' => 'admin_navbar_index']);
+    }
+
+    public function add(): ?Response
+    {
+        if (!$this->Auth->can('MANAGE_NAV')) {
+            throw new ForbiddenException();
+        }
+
+        $this->set('title_for_layout', __('NAVBAR__ADD_LINK'));
+
+        $pageTable = $this->fetchTable('Pages');
+        $pages = $pageTable
+            ->find()
+            ->select(['id', 'title'])
+            ->all();
+
+        $urlPages = [];
+        foreach ($pages as $page) {
+            $urlPages[$page['id']] = $page['title'];
+        }
+
+        $this->set('url_pages', $urlPages);
+        $this->set('url_plugins', $this->EyPlugin->findPluginsLinks());
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Navbar')
+            ->setTemplate('add');
+
+        return null;
+    }
+
+    public function addAjax(): Response
+    {
+        if (!$this->Auth->can('MANAGE_NAV')) {
+            throw new ForbiddenException();
+        }
+
+        if (!$this->getRequest()->is('ajax')) {
+            throw new NotFoundException();
+        }
+
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
+        $request = $this->getRequest();
 
-        if (empty($this->getRequest()->getData('name')) || empty($this->getRequest()->getData('type')) || empty($this->getRequest()->getData('url')) || $this->getRequest()->getData('url') === "undefined")
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
+        $name = (string)$request->getData('name', '');
+        $type = (string)$request->getData('type', '');
+        $url = $request->getData('url');
+        $icon = (string)$request->getData('icon', '');
+        $openNewTabRaw = (string)$request->getData('open_new_tab', '');
 
-        $this->Navbar = TableRegistry::getTableLocator()->get('Navbar');
-        $order = $this->Navbar->find()
+        if ($name === '' || $type === '' || $url === null || $url === '' || $url === 'undefined') {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+            ]));
+        }
+
+        $navbarTable = $this->fetchTable('Navbars');
+
+        $last = $navbarTable
+            ->find()
             ->orderBy(['order_by' => 'DESC'])
             ->first();
 
-        $order = (empty($order)) ? 1 : intval($order['order_by']) + 1;
+        $order = $last === null ? 1 : ((int)$last['order_by'] + 1);
+        $openNewTab = $openNewTabRaw === 'true' ? 1 : 0;
 
-        $open_new_tab = ($this->getRequest()->getData('open_new_tab') == 'true') ? 1 : 0;
-
-        $nav = $this->Navbar->newEntity($this->extracted([
+        $data = [
             'order_by' => $order,
-            'name' => $this->getRequest()->getData('name'),
-            'icon' => $this->getRequest()->getData('icon'),
-            'type' => $this->getRequest()->getData('type'),
-            'url' => $this->getRequest()->getData('url'),
-            'open_new_tab' => $open_new_tab
-        ]));
-        $this->Navbar->save($nav);
+            'name' => $name,
+            'icon' => $icon,
+            'type' => $type,
+            'url' => $url,
+            'open_new_tab' => $openNewTab,
+        ];
+
+        $data = $this->extracted($data);
+
+        $entity = $navbarTable->newEntity($data);
+        $navbarTable->save($entity);
 
         $this->History->set('ADD_NAV', 'navbar');
+        $this->Flash->success(__('NAVBAR__ADD_SUCCESS'));
 
-        $this->Flash->success($this->Lang->get('NAVBAR__ADD_SUCCESS'));
-        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('NAVBAR__ADD_SUCCESS')]));
+        return $this->response->withStringBody(json_encode([
+            'status' => true,
+            'messages' => __('NAVBAR__ADD_SUCCESS'),
+        ]));
     }
 
-    public function edit($id = false)
+    public function edit(int|string|null $id = null): ?Response
     {
-        if (!$this->Permissions->can('MANAGE_NAV'))
+        if (!$this->Auth->can('MANAGE_NAV')) {
             throw new ForbiddenException();
-        if (!$id)
-            throw new NotFoundException();
-
-        $this->Navbar = TableRegistry::getTableLocator()->get('Navbar');
-        $nav = $this->Navbar->find('all', conditions: ['id' => $id])->first();
-        if (empty($nav))
-            throw new NotFoundException();
-
-        $this->set('title_for_layout', $this->Lang->get('NAVBAR__EDIT_TITLE'));
-
-        $this->Page = TableRegistry::getTableLocator()->get('Page');
-        $url_pages = $this->Page->find()->all();
-        foreach ($url_pages as $key => $value) {
-            $url_pages2[$value['id']] = $value['title'];
         }
-        $url_pages = (isset($url_pages2)) ? $url_pages2 : [];
 
-        $this->set(compact('url_pages', 'nav'));
+        if ($id === null) {
+            throw new NotFoundException();
+        }
+
+        $navbarTable = $this->fetchTable('Navbars');
+        $nav = $navbarTable
+            ->find()
+            ->where(['id' => $id])
+            ->first();
+
+        if ($nav === null) {
+            throw new NotFoundException();
+        }
+
+        $this->set('title_for_layout', __('NAVBAR__EDIT_TITLE'));
+
+        $pageTable = $this->fetchTable('Pages');
+        $pages = $pageTable
+            ->find()
+            ->select(['id', 'title'])
+            ->all();
+
+        $urlPages = [];
+        foreach ($pages as $page) {
+            $urlPages[$page['id']] = $page['title'];
+        }
+
+        $this->set('url_pages', $urlPages);
+        $this->set('nav', $nav);
         $this->set('url_plugins', $this->EyPlugin->findPluginsLinks());
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Navbar')
+            ->setTemplate('edit');
+
+        return null;
     }
 
-    public function editAjax($id)
+    public function editAjax(int|string $id): Response
     {
-        if (!$this->Permissions->can('MANAGE_NAV'))
+        if (!$this->Auth->can('MANAGE_NAV')) {
             throw new ForbiddenException();
-        if (!$this->request->is('ajax'))
+        }
+
+        if (!$this->getRequest()->is('ajax')) {
             throw new NotFoundException();
+        }
 
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        if (empty($this->getRequest()->getData('name')) || empty($this->getRequest()->getData('type')) || empty($this->getRequest()->getData('url')) || $this->getRequest()->getData('url') === "undefined")
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
+        $request = $this->getRequest();
 
-        $open_new_tab = ($this->getRequest()->getData('open_new_tab') == 'true') ? 1 : 0;
+        $name = (string)$request->getData('name', '');
+        $type = (string)$request->getData('type', '');
+        $url = $request->getData('url');
+        $icon = (string)$request->getData('icon', '');
+        $openNewTabRaw = (string)$request->getData('open_new_tab', '');
 
-        $this->Navbar = TableRegistry::getTableLocator()->get('Navbar');
-        $nav = $this->Navbar->get($id);
-        $nav->set($this->extracted([
-            'name' => $this->getRequest()->getData('name'),
-            'icon' => $this->getRequest()->getData('icon'),
-            'type' => $this->getRequest()->getData('type'),
-            'url' => $this->getRequest()->getData('url'),
-            'open_new_tab' => $open_new_tab
-        ]));
-        $this->Navbar->save($nav);
+        if ($name === '' || $type === '' || $url === null || $url === '' || $url === 'undefined') {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+            ]));
+        }
+
+        $openNewTab = $openNewTabRaw === 'true' ? 1 : 0;
+
+        $navbarTable = $this->fetchTable('Navbars');
+        $nav = $navbarTable->get($id);
+
+        $data = [
+            'name' => $name,
+            'icon' => $icon,
+            'type' => $type,
+            'url' => $url,
+            'open_new_tab' => $openNewTab,
+        ];
+
+        $data = $this->extracted($data);
+
+        $nav->set($data);
+        $navbarTable->save($nav);
 
         $this->History->set('EDIT_NAV', 'navbar');
+        $this->Flash->success(__('NAVBAR__EDIT_SUCCESS'));
 
-        $this->Flash->success($this->Lang->get('NAVBAR__EDIT_SUCCESS'));
-        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('NAVBAR__EDIT_SUCCESS')]));
+        return $this->response->withStringBody(json_encode([
+            'status' => true,
+            'messages' => __('NAVBAR__EDIT_SUCCESS'),
+        ]));
     }
 
-    /**
-     * @param array $data
-     * @throws \Exception
-     */
-    public function extracted(array $data)
+    private function extracted(array $data): array
     {
-        if ($data['type'] == "dropdown") {
+        if (($data['type'] ?? '') === 'dropdown') {
             $data['type'] = 2;
             $data['url'] = json_encode(['type' => 'submenu']);
             $data['submenu'] = json_encode($data['url']);
@@ -256,5 +399,4 @@ class NavbarController extends AppController
 
         return $data;
     }
-
 }

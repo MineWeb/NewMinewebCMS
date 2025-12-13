@@ -1,63 +1,105 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use Cake\Event\EventInterface;
+use Cake\Http\Response;
 use Cake\ORM\Table;
-use Cake\ORM\TableRegistry;
 
+/**
+ * @property \App\Model\Table\UsersTable $User
+ * @property \App\Model\Table\NotificationsTable $Notification
+ */
 class NotificationsController extends AppController
 {
-    private Table $Notification;
+    private Table $Notifications;
+
     public function beforeFilter(EventInterface $event): void
     {
         parent::beforeFilter($event);
 
-        if (!$this->getRequest()->getParam('admin') || $this->getRequest()->getParam('admin') && $this->getRequest()->getParam('action') != "index") {
-            $this->response = $this->response->withType('application/json');
-            $this->disableAutoRender();
-            $this->response = $this->response->withStringBody(json_encode([]));
-        }
+        $this->Notifications = $this->fetchTable('Notifications');
 
-        $this->Notification = TableRegistry::getTableLocator()->get('Notification');
+        $request = $this->getRequest();
+        $isAdminRequest = (bool)$request->getParam('admin');
+        $action = (string)$request->getParam('action');
+
+        if (!$isAdminRequest || ($action !== 'index')) {
+            $this->disableAutoRender();
+
+            $response = $this->response
+                ->withType('application/json')
+                ->withStringBody(json_encode([]));
+
+            $this->setResponse($response);
+
+            $event->stopPropagation();
+        }
     }
 
-    public function getAll($type = 'user')
+    public function getAll(string $type = 'user'): Response
     {
-        if ($this->isConnected) {
-            $notifications = $this->Notification->getFromUser($this->User->getKey('id'), $type);
+        $this->response = $this->response->withType('application/json');
+
+        if ($this->Auth->isConnected()) {
+            $notifications = $this->Notifications->getFromUser((int)$this->Auth->identity()?->get('id'), $type);
+
             return $this->response->withStringBody(json_encode($notifications));
         }
+
+        return $this->response->withStringBody(json_encode([]));
     }
 
-    public function clear($id = 0)
+    public function clear(int $id = 0): Response
     {
-        if ($this->isConnected) {
-            $notifications = $this->Notification->clearFromUser($id, $this->User->getKey('id'));
-            return $this->response->withStringBody(json_encode(['status' => $notifications]));
+        $this->response = $this->response->withType('application/json');
+
+        if ($this->Auth->isConnected()) {
+            $status = $this->Notifications->clearFromUser($id, (int)$this->User->get('id'));
+
+            return $this->response->withStringBody(json_encode(['status' => $status]));
         }
+
+        return $this->response->withStringBody(json_encode(['status' => false]));
     }
 
-    public function clearAll()
+    public function clearAll(): Response
     {
-        if ($this->isConnected) {
-            $notifications = $this->Notification->clearAllFromUser($this->User->getKey('id'));
-            return $this->response->withStringBody(json_encode(['status' => $notifications]));
+        $this->response = $this->response->withType('application/json');
+
+        if ($this->Auth->isConnected()) {
+            $status = $this->Notifications->clearAllFromUser((int)$this->User->get('id'));
+
+            return $this->response->withStringBody(json_encode(['status' => $status]));
         }
+
+        return $this->response->withStringBody(json_encode(['status' => false]));
     }
 
-    public function markAsSeen($id = 0)
+    public function markAsSeen(int $id = 0): Response
     {
-        if ($this->isConnected) {
-            $notifications = $this->Notification->markAsSeenFromUser($id, $this->User->getKey('id'));
-            return $this->response->withStringBody(json_encode(['status' => $notifications]));
+        $this->response = $this->response->withType('application/json');
+
+        if ($this->Auth->isConnected()) {
+            $status = $this->Notifications->markAsSeenFromUser($id, (int)$this->User->get('id'));
+
+            return $this->response->withStringBody(json_encode(['status' => $status]));
         }
+
+        return $this->response->withStringBody(json_encode(['status' => false]));
     }
 
-    public function markAllAsSeen()
+    public function markAllAsSeen(): Response
     {
-        if ($this->isConnected) {
-            $notifications = $this->Notification->markAllAsSeenFromUser($this->User->getKey('id'));
-            return $this->response->withStringBody(json_encode(['status' => $notifications]));
+        $this->response = $this->response->withType('application/json');
+
+        if ($this->Auth->isConnected()) {
+            $status = $this->Notifications->markAllAsSeenFromUser((int)$this->User->get('id'));
+
+            return $this->response->withStringBody(json_encode(['status' => $status]));
         }
+
+        return $this->response->withStringBody(json_encode(['status' => false]));
     }
 }

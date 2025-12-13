@@ -1,11 +1,5 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
-
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="<?= h($this->Seo->htmlLang()) ?>">
 
 <head>
 
@@ -14,7 +8,9 @@ use Cake\Routing\Router;
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="author" content="Eywek">
 
-    <?= $this->element('seo') ?>
+    <title><?= h($this->Seo->getTitle($title ?? $title_for_layout ?? null)) ?></title>
+    <?= $this->Seo->favicon() ?>
+    <?= $this->Seo->metaTags() ?>
 
     <!-- Font Awesome 5 -->
     <script src="https://kit.fontawesome.com/fb032ab5a6.js" crossorigin="anonymous"></script>
@@ -33,115 +29,117 @@ use Cake\Routing\Router;
     <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
 
+    <?= $this->Html->meta('csrf-token', $this->request->getAttribute('csrfToken')) ?>
+
 </head>
 
 <body><!-- grey.png -->
-<?php if (isset($Lang)) { ?>
-    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
-        <div class="mini-navbar mini-navbar-default">
-            <div class="container">
-                <div class="col-sm-12">
-                    <?= (isset($banner_server) && $banner_server) ? '<p>' . $banner_server . '</p>' : '<p class="text-center">' . $Lang->get('SERVER__STATUS_OFF') . '</p>' ?>
-                </div>
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="mini-navbar mini-navbar-default">
+        <div class="container">
+            <div class="col-sm-12">
+                <?= isset($banner_server) && $banner_server ? '<p>' . $banner_server . '</p>' : '<p class="text-center">' . __('SERVER__STATUS_OFF') . '</p>' ?>
             </div>
         </div>
-        <div class="container nav-content">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse"
-                        data-target="#bs-example-navbar-collapse-1">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand"
-                   href="<?= Router::url('/') ?>"><?= (isset($website_name)) ? $website_name : 'MineWeb' ?></a>
-            </div>
-            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                <ul class="nav navbar-nav navbar-right">
-                    <li class="li-nav">
-                        <a href="<?= Router::url('/') ?>"><?= $Lang->get('GLOBAL__HOME') ?></a>
-                    </li>
-                    <?php
-                    if (!empty($nav)) {
-                        $i = 0;
-                        foreach ($nav as $key => $value) { ?>
-                            <?php if (empty($value['submenu'])) { ?>
-                                <li class="li-nav<?php if ($this->getRequest()->getParam('controller') == $value['name']) { ?> actived<?php } ?>">
-                                    <a href="<?= $value['url'] ?>"<?= ($value['open_new_tab']) ? ' target="_blank"' : '' ?>>
-                                        <?php if (!empty($value['icon'])): ?>
-                                            <i class="<?= ((strpos($value['icon'], "fa-")) ? $value['icon'] : "fa fa-" . $value['icon']) ?>"></i>
-                                        <?php endif; ?>
-                                        <?= $value['name'] ?>
-                                    </a>
+    </div>
+    <div class="container nav-content">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand"
+               href="<?= $this->Url->build('/') ?>"><?= $website_name ?? 'MineWeb' ?></a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="li-nav">
+                    <a href="<?= $this->Url->build('/') ?>"><?= __('GLOBAL__HOME') ?></a>
+                </li>
+                <?php
+                if (!empty($nav)) {
+                    $i = 0;
+                    foreach ($nav as $key => $value) { ?>
+                        <?php if (empty($value['submenu'])) { ?>
+                            <li class="li-nav<?php if ($this->getRequest()->getParam('controller') == $value['name']) {
+                                ?> actived<?php
+                                             } ?>">
+                                <a href="<?= $value['url'] ?>"<?= $value['open_new_tab'] ? ' target="_blank"' : '' ?>>
+                                    <?php if (!empty($value['icon'])) : ?>
+                                        <i class="<?= (strpos($value['icon'], 'fa-') ? $value['icon'] : 'fa fa-' . $value['icon']) ?>"></i>
+                                    <?php endif; ?>
+                                    <?= $value['name'] ?>
+                                </a>
 
-                                </li>
-                            <?php } else { ?>
-                                <li class="dropdown">
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
-                                       aria-expanded="false"><?= $value['name'] ?> <span class="caret"></span></a>
-                                    <ul class="dropdown-menu" role="menu">
-                                        <?php
-                                        $submenu = json_decode($value['submenu']);
-                                        foreach ($submenu as $k => $v) {
-                                            ?>
-                                            <li>
-                                                <a href="<?= rawurldecode($v) ?>"<?= ($value['open_new_tab']) ? ' target="_blank"' : '' ?>><?= rawurldecode(str_replace('+', ' ', $k)) ?></a>
-                                            </li>
-                                        <?php } ?>
-                                    </ul>
-                                </li>
-                            <?php } ?>
-                            <?php
-                            $i++;
-                        }
-                    } ?>
-                    <li class="button">
-                        <div class="btn-group">
-                            <?php if (isset($isConnected) && $isConnected) { ?>
-                                <button type="button" class="btn btn-success"><?= $user['pseudo'] ?></button>
-                            <?php } else { ?>
-                                <button type="button" class="btn btn-success"><i class="fa fa-user"></i></button>
-                            <?php } ?>
-                            <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">
-                                <span class="caret"></span>
-                                <span class="notification-indicator"></span>
-                                <span class="sr-only">Toggle Dropdown</span>
-                            </button>
-                            <ul class="dropdown-menu" role="menu">
-                                <?php if ($isConnected) { ?>
-                                    <li>
-                                        <a href="<?= Router::url(['controller' => 'profile', 'action' => 'index', 'plugin' => false]) ?>"><?= $Lang->get('USER__PROFILE') ?></a>
-                                    </li>
-                                    <li style="position:relative;">
-                                        <a href="#notifications_modal" onclick="notification.markAllAsSeen(2)"
-                                           data-toggle="modal"><?= $Lang->get('NOTIFICATIONS__LIST') ?></a>
-                                        <span class="notification-indicator"></span>
-                                    </li>
-                                    <?php if ($Permissions->can('ACCESS_DASHBOARD')) { ?>
-                                        <li class="divider"></li>
+                            </li>
+                        <?php } else { ?>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                   aria-expanded="false"><?= $value['name'] ?> <span class="caret"></span></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <?php
+                                    $submenu = json_decode($value['submenu']);
+                                    foreach ($submenu as $k => $v) {
+                                        ?>
                                         <li>
-                                            <a href="<?= Router::url(['controller' => 'admin', 'action' => 'index', 'plugin' => false, 'admin' => true]) ?>"><?= $Lang->get('GLOBAL__ADMIN_PANEL') ?></a>
+                                            <a href="<?= rawurldecode($v) ?>"<?= $value['open_new_tab'] ? ' target="_blank"' : '' ?>><?= rawurldecode(str_replace('+', ' ', $k)) ?></a>
                                         </li>
                                     <?php } ?>
+                                </ul>
+                            </li>
+                        <?php } ?>
+                        <?php
+                        $i++;
+                    }
+                } ?>
+                <li class="button">
+                    <div class="btn-group">
+                        <?php if ($this->Auth->isConnected()) { ?>
+                            <button type="button" class="btn btn-success"><?= h((string)$this->Auth->username()) ?></button>
+                        <?php } else { ?>
+                            <button type="button" class="btn btn-success"><i class="fa fa-user"></i></button>
+                        <?php } ?>
+                        <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">
+                            <span class="caret"></span>
+                            <span class="notification-indicator"></span>
+                            <span class="sr-only">Toggle Dropdown</span>
+                        </button>
+                        <ul class="dropdown-menu" role="menu">
+                            <?php if ($this->Auth->isConnected()) { ?>
+                                <li>
+                                    <a href="<?= $this->Url->build(['_name' => 'user_profile']) ?>"><?= __('USER__PROFILE') ?></a>
+                                </li>
+                                <li style="position:relative;">
+                                    <a href="#notifications_modal" onclick="notification.markAllAsSeen(2)"
+                                       data-toggle="modal"><?= __('NOTIFICATIONS__LIST') ?></a>
+                                    <span class="notification-indicator"></span>
+                                </li>
+                                <?php if ($this->Auth->can('ACCESS_DASHBOARD')) { ?>
                                     <li class="divider"></li>
                                     <li>
-                                        <a href="<?= Router::url(['controller' => 'user', 'action' => 'logout', 'plugin' => false]) ?>"><?= $Lang->get('USER__LOGOUT') ?></a>
+                                        <a href="<?= $this->Url->build(['_name' => 'admin_index']) ?>"><?= __('GLOBAL__ADMIN_PANEL') ?></a>
                                     </li>
-                                <?php } else { ?>
-                                    <li><a href="#" data-toggle="modal"
-                                           data-target="#login"><?= $Lang->get('USER__LOGIN') ?></a></li>
-                                    <li><a href="#" data-toggle="modal"
-                                           data-target="#register"><?= $Lang->get('USER__REGISTER') ?></a></li>
                                 <?php } ?>
-                            </ul>
-                        </div>
-                    </li>
-                </ul>
-            </div>
+                                <li class="divider"></li>
+                                <li>
+                                    <a href="<?= $this->Url->build(['_name' => 'auth_logout']) ?>"><?= __('USER__LOGOUT') ?></a>
+                                </li>
+                            <?php } else { ?>
+                                <li><a href="#" data-toggle="modal"
+                                       data-target="#login"><?= __('USER__LOGIN') ?></a></li>
+                                <li><a href="#" data-toggle="modal"
+                                       data-target="#register"><?= __('USER__REGISTER') ?></a></li>
+                            <?php } ?>
+                        </ul>
+                    </div>
+                </li>
+            </ul>
         </div>
-    </nav>
-<?php } ?>
+    </div>
+</nav>
 <div class="nav-hop"></div>
 <?php
 $flash_messages = $this->Flash->render();
@@ -150,17 +148,15 @@ if (!empty($flash_messages)) {
 } ?>
 <?= $this->fetch('content'); ?>
 <!-- Footer -->
-<?php if (isset($Lang)) { ?>
-    <footer style="height: 50px;">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <p><?= $Lang->get('GLOBAL__FOOTER', ["{%year}" => date("Y")]) ?></p>
-                </div>
+<footer style="height: 50px;">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <p><?= __('GLOBAL__FOOTER', ['year' => date('Y')]) ?></p>
             </div>
         </div>
-    </footer>
-
+    </div>
+</footer>
 
 <?= $this->element('modals') ?>
 
@@ -170,39 +166,37 @@ if (!empty($flash_messages)) {
 <?= $this->Html->script('app') ?>
 <?= $this->Html->script('form') ?>
 <?= $this->Html->script('notification') ?>
-    <script>
-        <?php if($isConnected) { ?>
-        // Notifications
-        var notification = new $.Notification({
-            'url': {
-                'get': '<?= Router::url(['plugin' => false, 'controller' => 'notifications', 'action' => 'getAll']) ?>',
-                'clear': '<?= Router::url(['plugin' => false, 'controller' => 'notifications', 'action' => 'clear', 'NOTIF_ID']) ?>',
-                'clearAll': '<?= Router::url(['plugin' => false, 'controller' => 'notifications', 'action' => 'clearAll']) ?>',
-                'markAsSeen': '<?= Router::url(['plugin' => false, 'controller' => 'notifications', 'action' => 'markAsSeen', 'NOTIF_ID']) ?>',
-                'markAllAsSeen': '<?= Router::url(['plugin' => false, 'controller' => 'notifications', 'action' => 'markAllAsSeen', 'admin' => false]) ?>'
-            },
-            'messages': {
-                'markAsSeen': '<?= $Lang->get('NOTIFICATION__MARK_AS_SEEN') ?>',
-                'notifiedBy': '<?= $Lang->get('NOTIFICATION__NOTIFIED_BY') ?>'
-            }
-        });
-        <?php } ?>
+<script>
+    <?php if ($this->Auth->isConnected()) { ?>
+    // Notifications
+    let notification = new $.Notification({
+        'url': {
+            'get': '<?= $this->Url->build(['_name' => 'notifications_get_all']) ?>',
+            'clear': '<?= $this->Url->build(['_name' => 'notifications_clear', 'NOTIF_ID']) ?>',
+            'clearAll': '<?= $this->Url->build(['_name' => 'notifications_clear_all']) ?>',
+            'markAsSeen': '<?= $this->Url->build(['_name' => 'notifications_mark_as_seen', 'NOTIF_ID']) ?>',
+            'markAllAsSeen': '<?= $this->Url->build(['_name' => 'notifications_mark_all_as_seen']) ?>'
+        },
+        'messages': {
+            'markAsSeen': '<?= __('NOTIFICATION__MARK_AS_SEEN') ?>',
+            'notifiedBy': '<?= __('NOTIFICATION__NOTIFIED_BY') ?>'
+        }
+    });
+    <?php } ?>
 
-        // Config FORM/APP.JS
+    // Config FORM/APP.JS
 
-        var LIKE_URL = "<?= Router::url(['controller' => 'news', 'action' => 'like']) ?>";
-        var DISLIKE_URL = "<?= Router::url(['controller' => 'news', 'action' => 'dislike']) ?>";
+    let LIKE_URL = "<?= $this->Url->build(['_name' => 'news_like']) ?>";
+    let DISLIKE_URL = "<?= $this->Url->build(['_name' => 'news_dislike']) ?>";
 
-        var LOADING_MSG = "<?= $Lang->get('GLOBAL__LOADING') ?>";
-        var ERROR_MSG = "<?= $Lang->get('GLOBAL__ERROR') ?>";
-        var INTERNAL_ERROR_MSG = "<?= $Lang->get('ERROR__INTERNAL_ERROR') ?>";
-        var FORBIDDEN_ERROR_MSG = "<?= $Lang->get('ERROR__FORBIDDEN') ?>"
-        var SUCCESS_MSG = "<?= $Lang->get('GLOBAL__SUCCESS') ?>";
+    let LOADING_MSG = "<?= __('GLOBAL__LOADING') ?>";
+    let ERROR_MSG = "<?= __('GLOBAL__ERROR') ?>";
+    let INTERNAL_ERROR_MSG = "<?= __('ERROR__INTERNAL_ERROR') ?>";
+    let FORBIDDEN_ERROR_MSG = "<?= __('ERROR__FORBIDDEN') ?>";
+    let SUCCESS_MSG = "<?= __('GLOBAL__SUCCESS') ?>";
 
-        var CSRF_TOKEN = "<?= $csrfToken ?>";
-
-        $(".navbar-collapse").css({maxHeight: ($(window).height() - 130) - $(".navbar-header").height() + "px"});
-    </script>
+    $(".navbar-collapse").css({maxHeight: ($(window).height() - 130) - $(".navbar-header").height() + "px"});
+</script>
 
 <?php if (isset($google_analytics) && !empty($google_analytics)) { ?>
     <script>
@@ -222,8 +216,7 @@ if (!empty($flash_messages)) {
         ga('send', 'pageview');
     </script>
 <?php } ?>
-    <?= (isset($configuration_end_code)) ? $configuration_end_code : '' ?>
-<?php } ?>
+<?= $configuration_end_code ?? '' ?>
 </body>
 
 </html>

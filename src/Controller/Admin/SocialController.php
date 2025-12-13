@@ -1,198 +1,318 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
-use Cake\ORM\TableRegistry;
+use Cake\Http\Response;
 
 class SocialController extends AppController
 {
-    private $social_default = [
+    private array $social_default = [
         ['title' => 'Discord', 'extra' => 'fab fa-discord', 'color' => '#7289da'],
         ['title' => 'Twitter', 'extra' => 'fab fa-twitter', 'color' => '#00acee'],
         ['title' => 'Youtube', 'extra' => 'fab fa-youtube', 'color' => '#c4302b'],
-        ['title' => 'FaceBook', 'extra' => 'fab fa-facebook', 'color' => '#3b5998']
+        ['title' => 'FaceBook', 'extra' => 'fab fa-facebook', 'color' => '#3b5998'],
     ];
 
-    function index()
+    public function index(): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SOCIAL'))
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SOCIAL'))) {
             throw new ForbiddenException();
+        }
 
-        $this->set('title_for_layout', $this->Lang->get('SOCIAL__HOME'));
+        $this->set('title_for_layout', __('SOCIAL__HOME'));
 
-        $this->set('social_buttons', $this->SocialButton->find('all', ['order' => 'Social.order']));
+        $socialButtonTable = $this->fetchTable('SocialButtons');
+        $buttons = $socialButtonTable
+            ->find()
+            ->orderBy(['order' => 'ASC']);
+
+        $this->set('social_buttons', $buttons);
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Social')
+            ->setTemplate('index');
+
+        return null;
     }
 
-    public function saveAjax()
+    public function saveAjax(): Response
     {
-        $this->disableAutoRender();
-        $this->response = $this->response->withType('application/json');
-        if ($this->isConnected and $this->Permissions->can('MANAGE_SOCIAL')) {
-            if ($this->request->is('post')) {
-                if (!empty($this->request->getData())) {
-                    $data = $this->request->getData('social_button_order');
-                    $data = explode('&', $data);
-                    $i = 1;
-                    foreach ($data as $key => $value) {
-                        $data2[] = explode('=', $value);
-                        $data3 = substr($data2[0][0], 0, -2);
-                        $data1[$data3] = $i;
-                        unset($data3);
-                        unset($data2);
-                        $i++;
-                    }
-
-                    $data = $data1;
-                    foreach ($data as $key => $value) {
-                        $find = $this->SocialButton->find('all', array('conditions' => array('id' => $key)))->first();
-                        if (!empty($find)) {
-                            $id = $find['id'];
-                            $button = $this->SocialButton->get($id);
-                            $button->set(array(
-                                'order' => $value,
-                            ));
-                            $this->SocialButton->save($button);
-                        } else {
-                            $error = 1;
-                        }
-                    }
-                    if (empty($error)) {
-                        return $this->response->withStringBody(json_encode(array('statut' => true, 'msg' => $this->Lang->get('SOCIAL__SAVE_SUCCESS'))));
-                    } else {
-                        return $this->response->withStringBody(json_encode(array('statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS'))));
-                    }
-                } else {
-                    return $this->response->withStringBody(json_encode(array('statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS'))));
-                }
-            } else {
-                return $this->response->withStringBody(json_encode(array('statut' => false, 'msg' => $this->Lang->get('ERROR__BAD_REQUEST'))));
-            }
-        } else {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SOCIAL'))) {
             return $this->redirect('/');
         }
-    }
 
-    function add()
-    {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SOCIAL'))
-            throw new ForbiddenException();
+        $this->disableAutoRender();
+        $this->response = $this->response->withType('application/json');
+        $request = $this->getRequest();
 
-        $this->set('title_for_layout', $this->Lang->get('SOCIAL__HOME'));
-
-        $this->set('social_default', $this->social_default);
-
-        if ($this->request->is('post')) {
-            $this->disableAutoRender();
-            $this->response = $this->response->withType('application/json');
-
-            if (empty($this->request->getData('url')))
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
-            if (!empty($this->request->getData('img')) && !empty($this->request->getData('icon')) && empty($this->request->getData('type')))
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('SOCIAL__CANNOT_TOW_TYPE')]));
-
-            $extra = null;
-            if (!empty($this->request->getData('type'))) {
-                if ($this->request->getData('type') == "img") {
-                    $extra = $this->request->getData('img');
-                } else {
-                    $extra = $this->request->getData('icon');
-                }
-            }
-
-            $order = $this->SocialButton->find('all', ['order' => ['order' => 'DESC']])->first();
-            $order = (empty($order)) ? 1 : $order['order'] + 1;
-
-            $button = $this->SocialButton->newEntity([
-                'order' => $order,
-                'title' => $this->request->getData('title'),
-                'extra' => $extra,
-                'color' => $this->request->getData('color'),
-                'url' => $this->request->getData('url')
-            ]);
-            $this->SocialButton->save($button);
-
-            $this->History->set('ADD_SOCIAL', 'social network');
-            return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('SOCIAL__BUTTON_SUCCESS')]));
+        if (!$request->is('post')) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__BAD_REQUEST'),
+            ]));
         }
-    }
 
-    function edit($id = false)
-    {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SOCIAL'))
-            throw new ForbiddenException();
+        $raw = (string)$request->getData('social_button_order', '');
+        if ($raw === '') {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+            ]));
+        }
 
-        if (!$id)
-            throw new NotFoundException();
+        $pairs = explode('&', $raw);
+        $orderMap = [];
+        $position = 1;
 
-        $find = $this->SocialButton->find('all', ['order' => 'id desc', 'conditions' => ['id' => $id]])->first();
-        if (empty($find))
-            throw new NotFoundException();
+        foreach ($pairs as $pair) {
+            $parts = explode('=', $pair);
+            if (!isset($parts[0])) {
+                continue;
+            }
+            $key = $parts[0];
+            $id = substr($key, 0, -2);
+            if ($id !== '') {
+                $orderMap[$id] = $position;
+                $position++;
+            }
+        }
 
-        $this->set('title_for_layout', $this->Lang->get('SOCIAL__HOME'));
-        $this->layout = 'admin';
+        if (empty($orderMap)) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+            ]));
+        }
 
-        $social_button_type = null;
-        if (!empty($find['extra'])) {
-            if (strpos($find['extra'], 'fa-')) {
-                $social_button_type = 'fa';
+        $socialButtonTable = $this->fetchTable('SocialButtons');
+        $error = false;
+
+        foreach ($orderMap as $id => $order) {
+            $button = $socialButtonTable
+                ->find()
+                ->where(['id' => $id])
+                ->first();
+
+            if ($button) {
+                $entity = $socialButtonTable->get($button['id']);
+                $entity->set(['order' => $order]);
+                $socialButtonTable->save($entity);
             } else {
-                $social_button_type = 'img';
+                $error = true;
             }
         }
 
-
-        $this->set('social_button', $find);
-        $this->set('social_default', $this->social_default);
-        $this->set('social_button_type', $social_button_type);
-
-        if ($this->request->is('post')) {
-            $this->disableAutoRender();
-            $this->response = $this->response->withType('application/json');
-
-            if (empty($this->request->getData('url')))
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
-            if (!empty($this->request->getData('img')) && !empty($this->request->getData('icon')) && empty($this->request->getData('type')))
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('SOCIAL__CANNOT_TOW_TYPE')]));
-
-            $extra = null;
-            if (!empty($this->request->getData('type'))) {
-                if ($this->request->getData('type') == "img") {
-                    $extra = $this->request->getData('img');;
-                } else {
-                    $extra = $this->request->getData('icon');;
-                }
-            }
-
-            $button = $this->SocialButton->get($id);
-            $button->set([
-                'title' => $this->request->getData('title'),
-                'extra' => $extra,
-                'color' => $this->request->getData('color'),
-                'url' => $this->request->getData('url')
-            ]);
-            $this->SocialButton->save($button);
-
-            $this->History->set('EDIT_SOCIAL', 'social network');
-            return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('SOCIAL__BUTTON_EDIT_SUCCESS')]));
+        if ($error) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+            ]));
         }
+
+        return $this->response->withStringBody(json_encode([
+            'status' => true,
+            'messages' => __('SOCIAL__SAVE_SUCCESS'),
+        ]));
     }
 
-    public function delete($id = false)
+    public function add(): ?Response
+    {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SOCIAL'))) {
+            throw new ForbiddenException();
+        }
+
+        $this->set('title_for_layout', __('SOCIAL__HOME'));
+        $this->set('social_default', $this->social_default);
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Social')
+            ->setTemplate('add');
+
+        $request = $this->getRequest();
+
+        if (!$request->is('post')) {
+            return null;
+        }
+
+        $this->disableAutoRender();
+        $this->response = $this->response->withType('application/json');
+
+        $url = (string)$request->getData('url', '');
+
+        if ($url === '') {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+            ]));
+        }
+
+        if (!empty($request->getData('img')) && !empty($request->getData('icon')) && empty($request->getData('type'))) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('SOCIAL__CANNOT_TOW_TYPE'),
+            ]));
+        }
+
+        $extra = null;
+        $type = (string)$request->getData('type', '');
+
+        if ($type !== '') {
+            if ($type === 'img') {
+                $extra = $request->getData('img');
+            } else {
+                $extra = $request->getData('icon');
+            }
+        }
+
+        $socialButtonTable = $this->fetchTable('SocialButtons');
+
+        $last = $socialButtonTable
+            ->find()
+            ->orderBy(['order' => 'DESC'])
+            ->limit(1)
+            ->first();
+
+        $order = $last ? (int)$last['order'] + 1 : 1;
+
+        $button = $socialButtonTable->newEntity([
+            'order' => $order,
+            'title' => $request->getData('title'),
+            'extra' => $extra,
+            'color' => $request->getData('color'),
+            'url' => $url,
+        ]);
+
+        $socialButtonTable->save($button);
+
+        $this->History->set('ADD_SOCIAL', 'social network');
+
+        return $this->response->withStringBody(json_encode([
+            'status' => true,
+            'messages' => __('SOCIAL__BUTTON_SUCCESS'),
+        ]));
+    }
+
+    public function edit(int|string|null $id = null): ?Response
+    {
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SOCIAL'))) {
+            throw new ForbiddenException();
+        }
+
+        if ($id === null) {
+            throw new NotFoundException();
+        }
+
+        $socialButtonTable = $this->fetchTable('SocialButtons');
+
+        $button = $socialButtonTable
+            ->find()
+            ->where(['id' => $id])
+            ->orderBy(['id' => 'DESC'])
+            ->first();
+
+        if (!$button) {
+            throw new NotFoundException();
+        }
+
+        $this->set('title_for_layout', __('SOCIAL__HOME'));
+
+        $type = null;
+        if (!empty($button['extra'])) {
+            if (strpos((string)$button['extra'], 'fa-') !== false) {
+                $type = 'fa';
+            } else {
+                $type = 'img';
+            }
+        }
+
+        $this->set('social_button', $button);
+        $this->set('social_default', $this->social_default);
+        $this->set('social_button_type', $type);
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Social')
+            ->setTemplate('edit');
+
+        $request = $this->getRequest();
+
+        if (!$request->is('post')) {
+            return null;
+        }
+
+        $this->disableAutoRender();
+        $this->response = $this->response->withType('application/json');
+
+        $url = (string)$request->getData('url', '');
+
+        if ($url === '') {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+            ]));
+        }
+
+        if (!empty($request->getData('img')) && !empty($request->getData('icon')) && empty($request->getData('type'))) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('SOCIAL__CANNOT_TOW_TYPE'),
+            ]));
+        }
+
+        $extra = null;
+        $type = (string)$request->getData('type', '');
+
+        if ($type !== '') {
+            if ($type === 'img') {
+                $extra = $request->getData('img');
+            } else {
+                $extra = $request->getData('icon');
+            }
+        }
+
+        $entity = $socialButtonTable->get($id);
+        $entity->set([
+            'title' => $request->getData('title'),
+            'extra' => $extra,
+            'color' => $request->getData('color'),
+            'url' => $url,
+        ]);
+        $socialButtonTable->save($entity);
+
+        $this->History->set('EDIT_SOCIAL', 'social network');
+
+        return $this->response->withStringBody(json_encode([
+            'status' => true,
+            'messages' => __('SOCIAL__BUTTON_EDIT_SUCCESS'),
+        ]));
+    }
+
+    public function delete(int|string|null $id = null): Response
     {
         $this->disableAutoRender();
-        if ($this->isConnected and $this->Permissions->can('MANAGE_SOCIAL')) {
-            if ($id) {
-                if ($this->SocialButton->delete($this->SocialButton->get($id))) {
-                    $this->History->set('DELETE_SOCIAL', 'social network');
-                    $this->Flash->success($this->Lang->get('SOCIAL__BUTTON_DELETE_SUCCESS'));
-                }
-            }
 
-            $this->redirect(['controller' => 'social', 'action' => 'index', 'admin' => true]);
-        } else {
-            $this->redirect('/');
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SOCIAL'))) {
+            return $this->redirect('/');
         }
+
+        if ($id !== null) {
+            $socialButtonTable = $this->fetchTable('SocialButtons');
+            $button = $socialButtonTable->get($id);
+
+            if ($socialButtonTable->delete($button)) {
+                $this->History->set('DELETE_SOCIAL', 'social network');
+                $this->Flash->success(__('SOCIAL__BUTTON_DELETE_SUCCESS'));
+            }
+        }
+
+        return $this->redirect([
+            '_name' => 'admin_social_index',
+        ]);
     }
 }

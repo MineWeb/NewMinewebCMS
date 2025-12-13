@@ -1,4 +1,4 @@
-<?php use Cake\Routing\Router;
+<?php
 
 if (!isset($theme_config['slider']) || $theme_config['slider'] == "true") { ?>
     <header id="myCarousel" class="carousel slide transition-timer-carousel">
@@ -19,19 +19,22 @@ if (!isset($theme_config['slider']) || $theme_config['slider'] == "true") { ?>
                 } ?>
             <?php } else { ?>
                 <div class="item active">
-                    <div class="fill" style="background-image:url('https://via.placeholder.com/1905x420&text=1905x420');"></div>
+                    <div class="fill"
+                         style="background-image:url('https://via.placeholder.com/1905x420&text=1905x420');"></div>
                     <div class="carousel-caption">
                         <h2>Caption 1</h2>
                     </div>
                 </div>
                 <div class="item">
-                    <div class="fill" style="background-image:url('https://via.placeholder.com/1905x420&text=1905x420');"></div>
+                    <div class="fill"
+                         style="background-image:url('https://via.placeholder.com/1905x420&text=1905x420');"></div>
                     <div class="carousel-caption">
                         <h2>Caption 2</h2>
                     </div>
                 </div>
                 <div class="item">
-                    <div class="fill" style="background-image:url('https://via.placeholder.com/1905x420&text=1905x420');"></div>
+                    <div class="fill"
+                         style="background-image:url('https://via.placeholder.com/1905x420&text=1905x420');"></div>
                     <div class="carousel-caption">
                         <h2>Caption 3</h2>
                     </div>
@@ -54,7 +57,7 @@ if (!isset($theme_config['slider']) || $theme_config['slider'] == "true") { ?>
     <div class="row">
         <div class="col-lg-12">
             <h1 class="page-header animated fadeInRight home">
-                <?= $Lang->get('NEWS__LAST_TITLE') ?>
+                <?= __('NEWS__LAST_TITLE') ?>
             </h1>
         </div>
         <?php if (!empty($search_news)) { ?>
@@ -69,21 +72,22 @@ if (!isset($theme_config['slider']) || $theme_config['slider'] == "true") { ?>
                                         class="btn btn-primary like<?= ($v['liked']) ? ' active' : ''; ?>"<?= ($can_like) ? '' : ' disabled' ?>><?= $v['count_likes'] ?>
                                     <i class="fa fa-thumbs-up"></i></button>
                                 <button type="button" class="btn btn-primary"><?= $v['count_comments'] ?> <i
-                                            class="fa fa-comments"></i></button>
+                                        class="fa fa-comments"></i></button>
                             </div>
-                            <a href="<?= Router::url(['controller' => 'blog', 'action' => $v['slug']]) ?>"
-                               class="btn btn-success pull-right"><?= $Lang->get('NEWS__READ_MORE') ?> »</a>
+                            <a href="<?= $this->Url->build(['controller' => 'blog', 'action' => $v['slug']]) ?>"
+                               class="btn btn-success pull-right"><?= __('NEWS__READ_MORE') ?> »</a>
                         </div>
                     </li>
                 <?php } ?>
             </ul>
             <ol id="pagination"></ol>
         <?php } else {
-            echo '<center><h3>' . $Lang->get('NEWS__NONE_PUBLISHED') . '</h3></center>';
+            echo '<center><h3>' . __('NEWS__NONE_PUBLISHED') . '</h3></center>';
         } ?>
     </div>
     <div class="row btn-socials text-center">
         <?php
+        $findSocialButtons = $this->SocialButton->all();
         $howManyBtns = count($findSocialButtons);
 
         $maxBtnsByLine = 4;
@@ -95,11 +99,11 @@ if (!isset($theme_config['slider']) || $theme_config['slider'] == "true") { ?>
         foreach ($findSocialButtons as $key => $value) {
             echo '<div class="col-md-' . $col . ' text-center"><a class="btn btn-default btn-block btn-lg" style="background-color:' . $value['color'] . ';color:white;font-size:18px;" target="_blank" href="' . $value['url'] . '">';
 
-            if(!empty($value['extra'])) {
+            if (!empty($value['extra'])) {
                 if (strpos($value['extra'], 'fa-')) {
                     echo '<i class="' . $value['extra'] . '"></i>';
                 } else {
-                    echo '<img src="' . $value['extra'] . '" alt="' . $Lang->get("SOCIAL__BUTTON_IMG_ALT") . $value['title'] . '">';
+                    echo '<img src="' . $value['extra'] . '" alt="' . __("SOCIAL__BUTTON_IMG_ALT") . $value['title'] . '">';
                 }
             }
 

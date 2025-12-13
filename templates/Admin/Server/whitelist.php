@@ -1,47 +1,53 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <section class="content">
     <div class="row">
         <div class="col-md-12">
+
             <div class="card">
+
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('SERVER__WHITELIST') ?></h3>
+                    <h3 class="card-title"><?= __('SERVER__WHITELIST') ?></h3>
                 </div>
+
                 <div class="card-body">
 
-                    <?php foreach ($servers as $key => $value) { ?>
-                        <a href="<?= Router::url(['controller' => 'server', 'action' => 'whitelist', 'admin' => true, $value['id']]) ?>"
-                           class="btn btn-lg btn-success"><?= $value['name'] ?></a>
-                    <?php } ?>
+                    <?php foreach ($servers as $value): ?>
+                        <a
+                            href="<?= $this->Url->build(['_name' => 'admin_server_whitelist', (int)$value['id']]) ?>"
+                            class="btn btn-lg btn-success"
+                        >
+                            <?= h($value['name']) ?>
+                        </a>
+                    <?php endforeach; ?>
 
                     <hr>
 
-                    <?php if ($list != "NEED_SERVER_ON") { ?>
+                    <?php if ($list !== 'NEED_SERVER_ON'): ?>
                         <table class="table table-bordered dataTable">
                             <thead>
                             <tr>
-                                <th><?= $Lang->get('USER__USERNAME') ?></th>
+                                <th><?= __('USER__USERNAME') ?></th>
                             </tr>
                             </thead>
                             <tbody>
-                            <?php foreach ($list as $k => $v) { ?>
+                            <?php foreach ($list as $v): ?>
                                 <tr>
-                                    <td><?= $v ?></td>
+                                    <td><?= h($v) ?></td>
                                 </tr>
-                            <?php } ?>
+                            <?php endforeach; ?>
                             </tbody>
                         </table>
-                    <?php } else { ?>
+                    <?php else: ?>
                         <div class="card card-body bg-light">
-                            <div class="alert alert-danger"><?= $Lang->get('SERVER__MUST_BE_ON') ?></div>
+                            <div class="alert alert-danger">
+                                <?= __('SERVER__MUST_BE_ON') ?>
+                            </div>
                         </div>
-                    <?php } ?>
+                    <?php endif; ?>
 
                 </div>
+
             </div>
+
         </div>
     </div>
 </section>

@@ -1,26 +1,21 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <section class="content">
     <div class="row">
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('THEME__LIST') ?></h3>
+                    <h3 class="card-title"><?= __('THEME__LIST') ?></h3>
                 </div>
                 <div class="card-body">
 
                     <table class="table table-bordered">
                         <thead>
                         <tr>
-                            <th><?= $Lang->get('GLOBAL__NAME') ?></th>
-                            <th><?= $Lang->get('GLOBAL__AUTHOR') ?></th>
-                            <th><?= $Lang->get('GLOBAL__VERSION') ?></th>
-                            <th><?= $Lang->get('GLOBAL__STATUS') ?></th>
-                            <th><?= $Lang->get('THEME__SUPPORTED_STATUS') ?></th>
-                            <th><?= $Lang->get('GLOBAL__ACTIONS') ?></th>
+                            <th><?= __('GLOBAL__NAME') ?></th>
+                            <th><?= __('GLOBAL__AUTHOR') ?></th>
+                            <th><?= __('GLOBAL__VERSION') ?></th>
+                            <th><?= __('GLOBAL__STATUS') ?></th>
+                            <th><?= __('THEME__SUPPORTED_STATUS') ?></th>
+                            <th><?= __('GLOBAL__ACTIONS') ?></th>
                         </tr>
                         </thead>
                         <tbody>
@@ -30,70 +25,70 @@ use Cake\Routing\Router;
                             <td>N/A</td>
                             <td>
                                 <?php
-                                if ('default' == $Configuration->getKey('theme')) {
-                                    echo '<span class="label label-success">' . $Lang->get('GLOBAL__ENABLED') . '</span>';
+                                if ($this->Config->themeName() == 'default') {
+                                    echo '<span class="label label-success">' . __('GLOBAL__ENABLED') . '</span>';
                                 } else {
-                                    echo '<span class="label label-danger">' . $Lang->get('GLOBAL__DISABLED') . '</span>';
+                                    echo '<span class="label label-danger">' . __('GLOBAL__DISABLED') . '</span>';
                                 }
                                 ?>
                             </td>
                             <td>
-                                <span class="label label-success"><?= $Lang->get('GLOBAL__YES') ?></span>
+                                <span class="label label-success"><?= __('GLOBAL__YES') ?></span>
                             </td>
                             <td>
-                                <?php if ('default' != $Configuration->getKey('theme')) { ?>
-                                    <a href="<?= Router::url(['controller' => 'theme', 'action' => 'enable', 'default', 'admin' => true]) ?>"
-                                       class="btn btn-success"><?= $Lang->get('GLOBAL__ENABLE') ?></a>
+                                <?php if ($this->Config->themeName() != 'default') { ?>
+                                    <a href="<?= $this->Url->build(['_name' => 'admin_theme_enable', 'default']) ?>"
+                                       class="btn btn-success"><?= __('GLOBAL__ENABLE') ?></a>
                                 <?php } ?>
-                                <a href="<?= Router::url(['controller' => 'theme', 'action' => 'custom', 'default', 'admin' => true]) ?>"
-                                   class="btn btn-info"><?= $Lang->get('THEME__CUSTOMIZATION') ?></a>
-                                <a href="<?= Router::url(['controller' => 'theme', 'action' => 'custom_files', 'default', 'admin' => true]) ?>"
-                                   class="btn btn-primary"><?= $Lang->get('THEME__CUSTOM_FILES') ?></a>
+                                <a href="<?= $this->Url->build(['_name' => 'admin_theme_custom', 'default']) ?>"
+                                   class="btn btn-info"><?= __('THEME__CUSTOMIZATION') ?></a>
+                                <a href="<?= $this->Url->build(['_name' => 'admin_theme_custom_files', 'default']) ?>"
+                                   class="btn btn-primary"><?= __('THEME__CUSTOM_FILES') ?></a>
                             </td>
                         </tr>
-                        <?php if (!empty($themesInstalled)) {?>
-                            <?php foreach ($themesInstalled as $key => $value) {?>
+                        <?php if (!empty($themesInstalled)) { ?>
+                            <?php foreach ($themesInstalled as $key => $value) { ?>
                                 <tr>
                                     <td><?= $value->name ?></td>
                                     <td><?= $value->author ?></td>
                                     <td><?= $value->version ?></td>
                                     <td>
                                         <?php
-                                        if ($value->slug == $Configuration->getKey('theme')) {
-                                            echo '<span class="label label-success">' . $Lang->get('GLOBAL__ENABLED') . '</span>';
+                                        if ($value->slug == $this->Config->themeName()) {
+                                            echo '<span class="label label-success">' . __('GLOBAL__ENABLED') . '</span>';
                                         } else {
-                                            echo '<span class="label label-danger">' . $Lang->get('GLOBAL__DISABLED') . '</span>';
+                                            echo '<span class="label label-danger">' . __('GLOBAL__DISABLED') . '</span>';
                                         }
                                         ?>
                                     </td>
                                     <td>
                                         <?php
                                         if ($value->supported) {
-                                            echo '<span class="label label-success">' . $Lang->get('GLOBAL__YES') . '</span>';
+                                            echo '<span class="label label-success">' . __('GLOBAL__YES') . '</span>';
                                         } else {
-                                            echo '<span class="label label-danger">' . $Lang->get('GLOBAL__NO') . '</span><br>';
-                                            echo '<small><i>' . $Lang->get('THEME__SUPPORTED_EXPLAIN') . '</i></small>';
+                                            echo '<span class="label label-danger">' . __('GLOBAL__NO') . '</span><br>';
+                                            echo '<small><i>' . __('THEME__SUPPORTED_EXPLAIN') . '</i></small>';
                                         }
                                         ?>
                                     </td>
                                     <td>
-                                        <?php if ($value->slug != $Configuration->getKey('theme') && $value->valid) { ?>
-                                            <a href="<?= Router::url(['controller' => 'theme', 'action' => 'enable', $value->slug, 'admin' => true]) ?>"
-                                               class="btn btn-success"><?= $Lang->get('GLOBAL__ENABLE') ?></a>
+                                        <?php if ($value->slug != $this->Config->themeName() && $value->valid) { ?>
+                                            <a href="<?= $this->Url->build(['_name' => 'admin_theme_enable', $value->slug]) ?>"
+                                               class="btn btn-success"><?= __('GLOBAL__ENABLE') ?></a>
                                         <?php } ?>
-                                        <a onClick="confirmDel('<?= Router::url(['controller' => 'theme', 'action' => 'delete', $value->slug, 'admin' => true]) ?>')"
-                                           class="btn btn-danger"><?= $Lang->get('GLOBAL__DELETE') ?></a>
+                                        <a onClick="confirmDel('<?= $this->Url->build(['_name' => 'admin_theme_delete', $value->slug]) ?>')"
+                                           class="btn btn-danger"><?= __('GLOBAL__DELETE') ?></a>
                                         <?php if (file_exists(ROOT . '/templates/Themed/' . $value->slug . '/Config/view.php')) { ?>
-                                            <a href="<?= Router::url(['controller' => 'theme', 'action' => 'custom', $value->slug, 'admin' => true]) ?>"
-                                               class="btn btn-info"><?= $Lang->get('THEME__CUSTOMIZATION') ?></a>
+                                            <a href="<?= $this->Url->build(['_name' => 'admin_theme_custom', $value->slug]) ?>"
+                                               class="btn btn-info"><?= __('THEME__CUSTOMIZATION') ?></a>
                                         <?php } ?>
-                                        <a href="<?= Router::url(['controller' => 'theme', 'action' => 'custom_files', $value->slug, 'admin' => true]) ?>"
-                                           class="btn btn-primary"><?= $Lang->get('THEME__CUSTOM_FILES') ?></a>
+                                        <a href="<?= $this->Url->build(['_name' => 'admin_theme_custom_files', $value->slug]) ?>"
+                                           class="btn btn-primary"><?= __('THEME__CUSTOM_FILES') ?></a>
                                         <?php if (isset($value->lastVersion)) { ?>
                                             <?php if ($value->version !== $value->lastVersion) { ?>
                                                 <a <?= (explode('.', $value->lastVersion)[0] > explode('.', $value->version)[0] ? 'data-warning-update' : '') ?>
-                                                        href="<?= Router::url(['controller' => 'theme', 'action' => 'update', 'admin' => true, $value->slug]) ?>"
-                                                        class="btn btn-warning"><?= $Lang->get('GLOBAL__UPDATE') ?></a>
+                                                    href="<?= $this->Url->build(['_name' => 'admin_theme_update', $value->slug]) ?>"
+                                                    class="btn btn-warning"><?= __('GLOBAL__UPDATE') ?></a>
                                             <?php } ?>
                                         <?php } ?>
                                     </td>
@@ -111,18 +106,18 @@ use Cake\Routing\Router;
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('THEME__AVAILABLE') ?></h3>
+                    <h3 class="card-title"><?= __('THEME__AVAILABLE') ?></h3>
                 </div>
                 <div class="card-body">
 
-                    <?php if (!empty($themesAvailable)) {?>
+                    <?php if (!empty($themesAvailable)) { ?>
                         <table class="table table-bordered">
                             <thead>
                             <tr>
-                                <th><?= $Lang->get('GLOBAL__NAME') ?></th>
-                                <th><?= $Lang->get('GLOBAL__AUTHOR') ?></th>
-                                <th><?= $Lang->get('GLOBAL__VERSION') ?></th>
-                                <th><?= $Lang->get('GLOBAL__ACTIONS') ?></th>
+                                <th><?= __('GLOBAL__NAME') ?></th>
+                                <th><?= __('GLOBAL__AUTHOR') ?></th>
+                                <th><?= __('GLOBAL__VERSION') ?></th>
+                                <th><?= __('GLOBAL__ACTIONS') ?></th>
                             </tr>
                             </thead>
                             <tbody>
@@ -131,12 +126,12 @@ use Cake\Routing\Router;
                                     <td><?= $value['name'] ?></td>
                                     <td>
                                         <?php if ($value['free']) {
-                                            echo isset($value['author']) ? $value['author'] : '';
-                                        } else { // display contact
+                                            echo $value['author'] ?? '';
+                                        } else {
                                             foreach ($value['contact'] as $contact) {
                                                 if ($contact['type'] == 'discord') {
                                                     echo '<button class="btn btn-info" style="background-color: #7289da;border-color: #7289da;">Discord - ' . $contact['value'] . '</button>';
-                                                } else if ($contact['type'] === 'email') {
+                                                } elseif ($contact['type'] === 'email') {
                                                     echo '<button class="btn btn-info">Email - ' . $contact['value'] . '</button>';
                                                 } else {
                                                     echo '<button class="btn btn-warn">' . $contact['value'] . '</button>';
@@ -146,11 +141,11 @@ use Cake\Routing\Router;
                                         }
                                         ?>
                                     </td>
-                                    <td><?= isset($value['version']) ? $value['version'] : $Lang->get('THEME__NEED_PURCHASE') ?></td>
+                                    <td><?= $value['version'] ?? __('THEME__NEED_PURCHASE') ?></td>
                                     <td>
-                                        <?php if ($value['free']): ?>
-                                            <a href="<?= Router::url(['controller' => 'theme', 'action' => 'install', 'admin' => true, $value['slug']]) ?>"
-                                               class="btn btn-success"><?= $Lang->get('INSTALL__INSTALL') ?></a>
+                                        <?php if ($value['free']) : ?>
+                                            <a href="<?= $this->Url->build(['_name' => 'admin_theme_install', $value['slug']]) ?>"
+                                               class="btn btn-success"><?= __('INSTALL__INSTALL') ?></a>
                                         <?php endif; ?>
                                     </td>
                                 </tr>
@@ -158,8 +153,8 @@ use Cake\Routing\Router;
                             </tbody>
                         </table>
                     <?php } else { ?>
-                        <div class="alert alert-danger"><b><?= $Lang->get('GLOBAL__ERROR') ?>
-                                : </b><?= $Lang->get('THEME__NONE_AVAILABLE') ?></div>
+                        <div class="alert alert-danger"><b><?= __('GLOBAL__ERROR') ?>
+                                : </b><?= __('THEME__NONE_AVAILABLE') ?></div>
                     <?php } ?>
 
                 </div>
@@ -168,9 +163,22 @@ use Cake\Routing\Router;
     </div>
 </section>
 <script type="text/javascript">
-    $('a[data-warning-update]').on('click', function (e) {
-        e.preventDefault();
-        if (confirm("<?= $Lang->get('UPDATE__MAJOR_WARNING_EXTENSION') ?>"))
-            window.location = $(this).attr('href');
-    });
+    document.addEventListener('DOMContentLoaded', function () {
+        let links = document.querySelectorAll('a[data-warning-update]')
+        if (!links.length) {
+            return
+        }
+        for (let i = 0; i < links.length; i++) {
+            links[i].addEventListener('click', function (e) {
+                e.preventDefault()
+                let href = this.getAttribute('href')
+                if (!href) {
+                    return
+                }
+                if (confirm("<?= __('UPDATE__MAJOR_WARNING_EXTENSION') ?>")) {
+                    window.location.href = href
+                }
+            })
+        }
+    })
 </script>

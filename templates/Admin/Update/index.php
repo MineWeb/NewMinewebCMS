@@ -1,99 +1,115 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <section class="content">
     <div class="row">
         <div class="col-md-12">
+
             <div class="card">
                 <div class="card-header with-border">
                     <h3 class="card-title" style="width:100%;">
-                        <?= $Lang->get('GLOBAL__UPDATE') ?>
+                        <?= __('GLOBAL__UPDATE') ?>
                     </h3>
                 </div>
+
                 <div class="card-body">
 
-                    <div style="text-align: center;">
-                        <p class="text-center">
-                            <?= $Lang->get('UPDATE__LAST_VERSION') ?> : <?= $Update->lastVersion ?>
-                        </p>
-                        <p class="text-center">
-                            <?= $Lang->get('UPDATE__CMS_VERSION') ?> : <?= $Update->cmsVersion ?>
-                        </p>
+                    <div style="text-align:center">
 
-                        <?php
-                        if (explode('.', $Update->lastVersion)[0] > explode('.', $Update->cmsVersion)[0])
-                            echo '<div class="alert alert-warning">' . $Lang->get('UPDATE__MAJOR_WARNING') . '</div>';
-                        ?>
+                        <p><?= __('UPDATE__LAST_VERSION') ?> : <?= h($Update->lastVersion) ?></p>
+                        <p><?= __('UPDATE__CMS_VERSION') ?> : <?= h($Update->cmsVersion) ?></p>
+
+                        <?php if ((int)explode('.', $Update->lastVersion)[0] > (int)explode('.', $Update->cmsVersion)[0]): ?>
+                            <div class="alert alert-warning">
+                                <?= __('UPDATE__MAJOR_WARNING') ?>
+                            </div>
+                        <?php endif; ?>
+
                         <div class="btn-group">
-                            <button id="update"
-                                    class="btn btn-large btn-primary"><?= $Lang->get('GLOBAL__UPDATE') ?></button>
+
+                            <button id="btn-update" class="btn btn-large btn-primary">
+                                <?= __('GLOBAL__UPDATE') ?>
+                            </button>
+
                             <a class="btn btn-warning"
-                               href="<?= Router::url(['action' => 'clear_cache', 'admin' => true]) ?>"><?= $Lang->get('UPDATE__CLEAR_CACHE') ?></a>
-                            <a href="<?= Router::url(['action' => 'check', 'admin' => true]) ?>"
-                               class="btn btn-large btn-info"><?= $Lang->get('UPDATE__CHECK_STATUS') ?></a>
-                            <a href="https://github.com/MineWeb/MineWebCMS/releases" target="_blank"
-                               class="btn btn-large btn-default"><?= $Lang->get('UPDATE__VIEW_CHANGELOG') ?></a>
+                               href="<?= $this->Url->build(['_name' => 'admin_update_clear_cache']) ?>">
+                                <?= __('UPDATE__CLEAR_CACHE') ?>
+                            </a>
+
+                            <a class="btn btn-large btn-info"
+                               href="<?= $this->Url->build(['_name' => 'admin_update_check']) ?>">
+                                <?= __('UPDATE__CHECK_STATUS') ?>
+                            </a>
+
+                            <a href="https://github.com/MineWeb/MineWebCMS/releases"
+                               target="_blank"
+                               class="btn btn-large btn-default">
+                                <?= __('UPDATE__VIEW_CHANGELOG') ?>
+                            </a>
                         </div>
-                        <div id="update-msg"></div>
-                        <div class="progress progress-striped active" style="display:none;">
-                            <div class="bar" style="width: 40%;"></div>
+
+                        <div id="update-msg" style="margin-top:15px"></div>
+
+                        <div id="update-progress" class="progress progress-striped active" style="display:none;">
+                            <div class="bar" style="width:40%"></div>
                         </div>
+
                     </div>
-                    <br>
+
                 </div>
+
             </div>
+
         </div>
     </div>
 </section>
-<script>
-    function callMAJ(updaterUpdated) {
-        var inputs = {};
-        inputs["data[_Token][key]"] = '<?= $csrfToken ?>';
 
-        if (updaterUpdated === undefined || updaterUpdated.length == 0) {
-            updaterUpdated = '0';
-        }
+<script type="text/javascript">
 
-        $.ajax({
-            type: 'POST',
-            url: '<?= Router::url(['action' => 'update', 'admin' => true]) ?>/' + updaterUpdated,
-            data: inputs,
-            dataType: 'JSON',
-            success: function (data) {
+    async function callUpdate(step = '0') {
 
-                if (data.statut == "success") {
-                    $('#update-msg').empty().html('<div class="alert alert-success" style="margin-top:10px;margin-right:10px;margin-left:10px;"><a class="close" data-dismiss="alert">×</a><b><?= $Lang->get('GLOBAL__SUCCESS') ?> :</b> ' + data.msg + '</i></div>').fadeIn(500);
-                    $('#update').remove();
-                    window.location = '<?= Router::url(['action' => 'clear_cache', 'admin' => true]) ?>';
-                } else if (data.statut == "continue") {
-                    callMAJ('1');
-                } else if (data.statut == "error") {
-                    $('#update-msg').empty().html('<div class="alert alert-danger" style="margin-top:10px;margin-right:10px;margin-left:10px;"><a class="close" data-dismiss="alert">×</a><b><?= $Lang->get('GLOBAL__ERROR') ?> :</b> ' + data.msg + '</i></div>').fadeIn(500);
-                } else {
-                    alert('Error!');
-                }
+        const csrf = "<?= $this->request->getAttribute('csrfToken') ?>";
 
-            },
-            error: function () {
-                alert('Error!');
+        const url = "<?= $this->Url->build(['_name' => 'admin_update_update']) ?>/" + step;
+
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "X-CSRF-Token": csrf,
+                    "Accept": "application/json"
+                },
+                body: new FormData()
+            });
+
+            const data = await response.json();
+
+            if (data.statut === "success") {
+
+                document.getElementById('update-msg').innerHTML =
+                    '<div class="alert alert-success"><b><?= __('GLOBAL__SUCCESS') ?> :</b> ' + data.msg + '</div>';
+
+                window.location = "<?= $this->Url->build(['_name' => 'admin_update_clear_cache']) ?>";
+
+            } else if (data.statut === "continue") {
+
+                callUpdate('1');
+
+            } else if (data.statut === "error") {
+
+                document.getElementById('update-msg').innerHTML =
+                    '<div class="alert alert-danger"><b><?= __('GLOBAL__ERROR') ?> :</b> ' + data.msg + '</div>';
+
+            } else {
+                alert("Error");
             }
-        });
+
+        } catch (e) {
+            alert("Error");
+        }
     }
 
-    $('#update').click(function () {
-        $('#update').attr('disabled', 'disabled');
-        $('#update-msg').html('<br><div class="alert alert-info"><?= $Lang->get('UPDATE__LOADING') ?></div>').fadeIn(500);
-
-        callMAJ();
-    });
-
-    $('#forced_updates').on('change', function (e) {
-        e.preventDefault();
-
-        $.get('<?= Router::url(['action' => 'switchForceUpdates', 'admin' => true]) ?>');
-
+    document.getElementById("btn-update").addEventListener("click", () => {
+        const msg = document.getElementById("update-msg");
+        msg.innerHTML = '<div class="alert alert-info"><?= __('UPDATE__LOADING') ?></div>';
+        callUpdate();
     });
 
 </script>

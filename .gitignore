@@ -3,6 +3,7 @@
 /vendor/*
 /config/app.php
 /config/app_local.php
+/config/databases.json
 
 /tmp/*
 !/tmp/.gitkeep
@@ -33,8 +34,11 @@ Thumbs.db
 .gitmodules
 dev.json
 
+config/.env
+
 /config/update
 /config/install.txt
 /config/installed.txt
 /config/secure.txt
+/config/install.lock
 /config/bypass_compatibility

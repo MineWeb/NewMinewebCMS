@@ -1,147 +1,232 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <section class="content">
     <div class="row">
         <div class="col-md-12">
-            <div class="card">
-                <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('API__LABEL') ?></h3>
+
+            <div class="card card-outline card-primary">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-cogs mr-2"></i><?= __('API__LABEL') ?>
+                    </h3>
                 </div>
+
+                <?= $this->Form->create(null, [
+                    'url' => ['_name' => 'admin_api_save_ajax'],
+                    'data-ajax' => 'true',
+                    'data-redirect-url' => $this->Url->build(['_name' => 'admin_api_index']),
+                ]) ?>
+
                 <div class="card-body">
 
-                    <form action="#" method="post">
+                    <div class="ajax-msg"></div>
 
-                        <h3><?= $Lang->get('API__SKIN') ?></h3>
-                        <br>
+                    <div class="row">
+                        <div class="col-lg-6">
 
-                        <div class="ml-5">
-
-                            <div class="form-group">
-                                <label><?= $Lang->get('API__SKIN_LABEL') ?></label>
-                                <div class="radio">
-                                    <input type="radio" name="skins" value="1" <?= $config['skins'] ? 'checked="checked"' : '' ?>>
-                                    <label>
-                                        <?= $Lang->get('GLOBAL__ENABLED') ?>
-                                    </label>
+                            <div class="card card-outline card-info">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <i class="fas fa-user mr-2"></i><?= __('API__SKIN') ?>
+                                    </h3>
                                 </div>
 
-                                <div class="radio">
-                                    <input type="radio" name="skins" value="0" <?= !$config['skins'] ? 'checked="checked"' : '' ?>>
-                                    <label>
-                                        <?= $Lang->get('GLOBAL__DISABLED') ?>
-                                    </label>
+                                <div class="card-body">
+
+                                    <div class="form-group mb-4">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <span id="lbl_skins"
+                                                      class="font-weight-bold"><?= __('API__SKIN_LABEL') ?></span>
+                                                <div class="text-muted small"><?= __('GLOBAL__ENABLED') ?>
+                                                    / <?= __('GLOBAL__DISABLED') ?></div>
+                                            </div>
+
+                                            <div
+                                                class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                                <input
+                                                    type="checkbox"
+                                                    class="custom-control-input"
+                                                    id="skins"
+                                                    name="skins"
+                                                    value="1"
+                                                    aria-labelledby="lbl_skins"
+                                                    <?= !empty($config['skins']) ? 'checked' : '' ?>
+                                                >
+                                                <label class="custom-control-label" for="skins"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group mb-0">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <span id="lbl_premium"
+                                                      class="font-weight-bold"><?= __('API__SKIN_PREMIUM_LABEL') ?></span>
+                                                <div class="text-muted small"><?= __('API__SKIN_PREMIUM_DESC') ?></div>
+                                            </div>
+
+
+                                            <div
+                                                class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                                <input
+                                                    type="checkbox"
+                                                    class="custom-control-input"
+                                                    id="get_premium_skins"
+                                                    name="get_premium_skins"
+                                                    value="1"
+                                                    aria-labelledby="lbl_premium"
+                                                    <?= !empty($config['get_premium_skins']) ? 'checked' : '' ?>
+                                                >
+                                                <label class="custom-control-label" for="get_premium_skins"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
-                            <hr>
 
+                            <div class="skins_require" style="<?= empty($config['skins']) ? 'display: none;' : '' ?>">
 
-                            <div class="form-group">
-                                <label><?= $Lang->get('API__SKIN_PREMIUM_LABEL') ?></label>
-                                <em><?= $Lang->get('API__SKIN_PREMIUM_DESC') ?></em>
-                                <div class="radio">
-                                    <input type="radio" name="get_premium_skins"
-                                           value="1" <?= $config['get_premium_skins'] ? 'checked="checked"' : '' ?>>
-                                    <label>
-                                        <?= $Lang->get('GLOBAL__ENABLED') ?>
-                                    </label>
-                                </div>
-
-                                <div class="radio">
-                                    <input type="radio" name="get_premium_skins"
-                                           value="0" <?= !$config['get_premium_skins'] ? 'checked="checked"' : '' ?>>
-                                    <label>
-                                        <?= $Lang->get('GLOBAL__DISABLED') ?>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="skins_require" style="<?= !$config['skins'] ? 'display: none;' : '' ?>">
-
-                                <div class="form-group">
-                                    <hr>
-                                    <label><?= $Lang->get('API__USE_SKIN_RESTORER') ?></label>
-                                    <div class="radio">
-                                        <input type="radio" name="use_skin_restorer"
-                                               value="1" <?= $config['use_skin_restorer'] ? 'checked="checked"' : '' ?>>
-                                        <label>
-                                            <?= $Lang->get('GLOBAL__ENABLED') ?>
-                                        </label>
+                                <div class="card card-outline card-warning">
+                                    <div class="card-header">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-plug mr-2"></i><?= __('API__USE_SKIN_RESTORER') ?>
+                                        </h3>
                                     </div>
-                                    <div class="radio">
-                                        <input type="radio" name="use_skin_restorer"
-                                               value="0" <?= !$config['use_skin_restorer'] ? 'checked="checked"' : '' ?>>
-                                        <label>
-                                            <?= $Lang->get('GLOBAL__DISABLED') ?>
-                                        </label>
-                                    </div>
-                                </div>
 
-                                <div class="form-group">
-                                    <label><?= $Lang->get('API__SKIN_RESTORER_SERVER') ?></label>
-                                    <em><?= $Lang->get('API__SKIN_RESTORER_SERVER_DESC') ?></em>
-                                    <select class="form-control" name="servers">
-                                        <?php foreach ($get_all_servers as $key => $value) { ?>
-                                            <option value="<?= $key ?>"<?= (isset($selected_server) && in_array($key, $selected_server)) ? ' selected' : '' ?>><?= $value ?></option>
-                                        <?php } ?>
-                                    </select>
-                                    <hr>
-                                </div>
+                                    <div class="card-body">
 
+                                        <div class="form-group mb-4">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <div>
+                                                    <span id="lbl_skin_restorer"
+                                                          class="font-weight-bold"><?= __('API__USE_SKIN_RESTORER') ?></span>
+                                                    <div
+                                                        class="text-muted small"><?= __('API__SKIN_RESTORER_SERVER_DESC') ?></div>
+                                                </div>
 
-                                <div class="form-group">
-                                    <label><?= $Lang->get('API__SKIN_FREE') ?></label>
-                                    <div class="radio">
-                                        <input type="radio" name="skin_free"
-                                               value="1" <?= $config['skin_free'] ? 'checked="checked"' : '' ?>>
-                                        <label>
-                                            <?= $Lang->get('GLOBAL__ENABLED') ?>
-                                        </label>
-                                    </div>
-                                    <div class="radio">
-                                        <input type="radio" name="skin_free"
-                                               value="0" <?= !$config['skin_free'] ? 'checked="checked"' : '' ?>>
-                                        <label>
-                                            <?= $Lang->get('GLOBAL__DISABLED') ?>
-                                        </label>
-                                    </div>
-                                    <hr>
-                                </div>
-
-
-                                <div class="form-group">
-                                    <label><?= $Lang->get('API__FILENAME') ?></label>
-                                    <div class="input-group mb-3">
-
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text"><?= Router::url('/', true) ?></span>
+                                                <div
+                                                    class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                                    <input
+                                                        type="checkbox"
+                                                        class="custom-control-input"
+                                                        id="use_skin_restorer"
+                                                        name="use_skin_restorer"
+                                                        value="1"
+                                                        aria-labelledby="lbl_skin_restorer"
+                                                        <?= !empty($config['use_skin_restorer']) ? 'checked' : '' ?>
+                                                    >
+                                                    <label class="custom-control-label" for="use_skin_restorer"></label>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <input type="text" class="form-control" name="skin_filename"
-                                               value="<?= $config['skin_filename'] ?>"
-                                               placeholder="<?= $Lang->get('GLOBAL__DEFAULT') ?> : skins/{PLAYER}">
-                                        <div class="input-group-append">
-                                            <span class="input-group-text">.png</span>
+
+                                        <div class="form-group mb-0">
+                                            <label for="skin_restorer_server_id"
+                                                   class="font-weight-bold"><?= __('API__SKIN_RESTORER_SERVER') ?></label>
+                                            <select id="skin_restorer_server_id" class="form-control"
+                                                    name="skin_restorer_server_id">
+                                                <option value=""><?= __('GLOBAL__NONE') ?></option>
+                                                <?php foreach ($get_all_servers as $key => $value) { ?>
+                                                    <option
+                                                        value="<?= (int)$key ?>"<?= (int)($config['skin_restorer_server_id'] ?? 0) === (int)$key ? ' selected' : '' ?>>
+                                                        <?= h($value) ?>
+                                                    </option>
+                                                <?php } ?>
+                                            </select>
                                         </div>
+
                                     </div>
-                                    <hr>
                                 </div>
 
+                                <div class="card card-outline card-light">
+                                    <div class="card-header">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-file-image mr-2"></i><?= __('API__FILENAME') ?>
+                                        </h3>
+                                    </div>
 
-                                <div class="form-group">
-                                    <label><?= $Lang->get('API__FILE_SIZE') ?></label>
-                                    <div class="input-group mb-3">
+                                    <div class="card-body">
 
-                                        <input type="text" class="form-control" name="skin_width"
-                                               value="<?= $config['skin_width'] ?>"
-                                               placeholder="<?= $Lang->get('WIDTH') ?>">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text">X</span>
+                                        <div class="form-group mb-4">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <div>
+                                                    <span id="lbl_skin_free"
+                                                          class="font-weight-bold"><?= __('API__SKIN_FREE') ?></span>
+                                                    <div class="text-muted small"><?= __('GLOBAL__ENABLED') ?>
+                                                        / <?= __('GLOBAL__DISABLED') ?></div>
+                                                </div>
+
+                                                <div
+                                                    class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                                    <input
+                                                        type="checkbox"
+                                                        class="custom-control-input"
+                                                        id="skin_free"
+                                                        name="skin_free"
+                                                        value="1"
+                                                        aria-labelledby="lbl_skin_free"
+                                                        <?= !empty($config['skin_free']) ? 'checked' : '' ?>
+                                                    >
+                                                    <label class="custom-control-label" for="skin_free"></label>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <input type="text" class="form-control" name="skin_height"
-                                               value="<?= $config['skin_height'] ?>"
-                                               placeholder="<?= $Lang->get('HEIGHT') ?>">
+
+                                        <div class="form-group">
+                                            <label for="skin_filename"
+                                                   class="font-weight-bold"><?= __('API__FILENAME') ?></label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span
+                                                        class="input-group-text"><?= $this->Url->build('/', ['fullBase' => true]) ?></span>
+                                                </div>
+                                                <input
+                                                    id="skin_filename"
+                                                    type="text"
+                                                    class="form-control"
+                                                    name="skin_filename"
+                                                    value="<?= h((string)($config['skin_filename'] ?? '')) ?>"
+                                                    placeholder="<?= __('GLOBAL__DEFAULT') ?> : skins/{PLAYER}"
+                                                >
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text">.png</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group mb-0">
+                                            <label class="font-weight-bold"
+                                                   for="skin_width"><?= __('API__FILE_SIZE') ?></label>
+
+                                            <div class="row">
+                                                <div class="col-6 col-md-4">
+                                                    <input
+                                                        id="skin_width"
+                                                        type="text"
+                                                        class="form-control"
+                                                        name="skin_width"
+                                                        value="<?= h((string)($config['skin_width'] ?? '')) ?>"
+                                                        placeholder="<?= __('WIDTH') ?>"
+                                                        aria-label="<?= __('WIDTH') ?>"
+                                                    >
+                                                </div>
+                                                <div class="col-auto d-flex align-items-center px-0">
+                                                    <span class="text-muted">×</span>
+                                                </div>
+                                                <div class="col-6 col-md-4">
+                                                    <input
+                                                        id="skin_height"
+                                                        type="text"
+                                                        class="form-control"
+                                                        name="skin_height"
+                                                        value="<?= h((string)($config['skin_height'] ?? '')) ?>"
+                                                        placeholder="<?= __('HEIGHT') ?>"
+                                                        aria-label="<?= __('HEIGHT') ?>"
+                                                    >
+                                                </div>
+                                            </div>
+                                        </div>
+
                                     </div>
                                 </div>
 
@@ -149,120 +234,179 @@ use Cake\Routing\Router;
 
                         </div>
 
-                        <hr>
+                        <div class="col-lg-6">
 
-                        <h3><?= $Lang->get('API__CAPE') ?></h3>
-                        <br>
-                        <div class="ml-5">
-
-                            <div class="form-group">
-                                <label><?= $Lang->get('API__CAPE_LABEL') ?></label>
-                                <div class="radio">
-                                    <input type="radio" name="capes" value="1" <?= $config['capes'] ? 'checked="checked"' : '' ?>>
-                                    <label>
-                                        <?= $Lang->get('GLOBAL__ENABLED') ?>
-                                    </label>
+                            <div class="card card-outline card-secondary">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <i class="fas fa-mask mr-2"></i><?= __('API__CAPE') ?>
+                                    </h3>
                                 </div>
-                                <div class="radio">
-                                    <input type="radio" name="capes" value="0" <?= !$config['capes'] ? 'checked="checked"' : '' ?>>
-                                    <label>
-                                        <?= $Lang->get('GLOBAL__DISABLED') ?>
-                                    </label>
+
+                                <div class="card-body">
+
+                                    <div class="form-group mb-0">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <span id="lbl_capes"
+                                                      class="font-weight-bold"><?= __('API__CAPE_LABEL') ?></span>
+                                                <div class="text-muted small"><?= __('GLOBAL__ENABLED') ?>
+                                                    / <?= __('GLOBAL__DISABLED') ?></div>
+                                            </div>
+
+                                            <div
+                                                class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                                <input
+                                                    type="checkbox"
+                                                    class="custom-control-input"
+                                                    id="capes"
+                                                    name="capes"
+                                                    value="1"
+                                                    aria-labelledby="lbl_capes"
+                                                    <?= !empty($config['capes']) ? 'checked' : '' ?>
+                                                >
+                                                <label class="custom-control-label" for="capes"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
 
-                            <div class="capes_require" style="<?= !$config['capes'] ? 'display: none;' : '' ?>">
-                                <div class="form-group capes_require">
-                                    <hr>
-                                    <label><?= $Lang->get('API__CAPE_FREE') ?></label>
-                                    <div class="radio">
-                                        <input type="radio" name="cape_free"
-                                               value="1" <?= $config['cape_free'] ? 'checked="checked"' : '' ?>>
-                                        <label>
-                                            <?= $Lang->get('GLOBAL__ENABLED') ?>
-                                        </label>
+                            <div class="capes_require" style="<?= empty($config['capes']) ? 'display: none;' : '' ?>">
+
+                                <div class="card card-outline card-light">
+                                    <div class="card-header">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-unlock mr-2"></i><?= __('API__CAPE_FREE') ?>
+                                        </h3>
                                     </div>
-                                    <div class="radio">
-                                        <input type="radio" name="cape_free"
-                                               value="0" <?= !$config['cape_free'] ? 'checked="checked"' : '' ?>>
-                                        <label>
-                                            <?= $Lang->get('GLOBAL__DISABLED') ?>
-                                        </label>
+
+                                    <div class="card-body">
+
+                                        <div class="form-group mb-4">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <div>
+                                                    <span id="lbl_cape_free"
+                                                          class="font-weight-bold"><?= __('API__CAPE_FREE') ?></span>
+                                                    <div class="text-muted small"><?= __('GLOBAL__ENABLED') ?>
+                                                        / <?= __('GLOBAL__DISABLED') ?></div>
+                                                </div>
+
+                                                <div
+                                                    class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                                    <input
+                                                        type="checkbox"
+                                                        class="custom-control-input"
+                                                        id="cape_free"
+                                                        name="cape_free"
+                                                        value="1"
+                                                        aria-labelledby="lbl_cape_free"
+                                                        <?= !empty($config['cape_free']) ? 'checked' : '' ?>
+                                                    >
+                                                    <label class="custom-control-label" for="cape_free"></label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="cape_filename"
+                                                   class="font-weight-bold"><?= __('API__FILENAME') ?></label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span
+                                                        class="input-group-text"><?= $this->Url->build('/', ['fullBase' => true]) ?></span>
+                                                </div>
+                                                <input
+                                                    id="cape_filename"
+                                                    type="text"
+                                                    class="form-control"
+                                                    name="cape_filename"
+                                                    value="<?= h((string)($config['cape_filename'] ?? '')) ?>"
+                                                    placeholder="<?= __('GLOBAL__DEFAULT') ?> : capes/{PLAYER}"
+                                                >
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text">.png</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group mb-0">
+                                            <label class="font-weight-bold"
+                                                   for="cape_width"><?= __('API__FILE_SIZE') ?></label>
+
+                                            <div class="row">
+                                                <div class="col-6 col-md-4">
+                                                    <input
+                                                        id="cape_width"
+                                                        type="text"
+                                                        class="form-control"
+                                                        name="cape_width"
+                                                        value="<?= h((string)($config['cape_width'] ?? '')) ?>"
+                                                        placeholder="<?= __('WIDTH') ?>"
+                                                        aria-label="<?= __('WIDTH') ?>"
+                                                    >
+                                                </div>
+                                                <div class="col-auto d-flex align-items-center px-0">
+                                                    <span class="text-muted">×</span>
+                                                </div>
+                                                <div class="col-6 col-md-4">
+                                                    <input
+                                                        id="cape_height"
+                                                        type="text"
+                                                        class="form-control"
+                                                        name="cape_height"
+                                                        value="<?= h((string)($config['cape_height'] ?? '')) ?>"
+                                                        placeholder="<?= __('HEIGHT') ?>"
+                                                        aria-label="<?= __('HEIGHT') ?>"
+                                                    >
+                                                </div>
+                                            </div>
+                                        </div>
+
                                     </div>
-                                    <hr>
                                 </div>
 
-                                <div class="form-group capes_require">
-                                    <label><?= $Lang->get('API__FILENAME') ?></label>
-                                    <div class="input-group mb-3">
-                                        <div class="input-group-prepend">
-                                    <span class="input-group-text"><?= Router::url('/', true) ?></span>
-                                        </div>
-                                        <input type="text" class="form-control" name="cape_filename"
-                                               value="<?= $config['cape_filename'] ?>"
-                                               placeholder="<?= $Lang->get('GLOBAL__DEFAULT') ?> : capes/{PLAYER}">
-                                        <div class="input-group-append">
-                                            <span class="input-group-text">.png</span>
-                                        </div>
-                                    </div>
-                                    <hr>
-                                </div>
-
-                                <div class="input-group capes_require mb-3">
-                                    <input type="text" class="form-control" name="cape_width"
-                                           value="<?= $config['cape_width'] ?>"
-                                           placeholder="<?= $Lang->get('WIDTH') ?>">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">X</span>
-                                    </div>
-                                    <input type="text" class="form-control" name="cape_height"
-                                           value="<?= $config['cape_height'] ?>"
-                                           placeholder="<?= $Lang->get('HEIGHT') ?>">
-                                </div>
                             </div>
+
                         </div>
-
-                        <hr>
-
-                        <script>
-
-                            let skins = $('input[type=radio][name=skins]:checked');
-                            if (skins.val() === '0')
-                                $('.skins_require').slideUp();
-                            $('input[type=radio][name=skins]').change(function () {
-                                if (this.value === '0') {
-                                    $('.skins_require').slideUp();
-                                } else {
-                                    $('.skins_require').slideDown();
-
-                                }
-                            });
-
-
-                            let capes = $('input[type=radio][name=capes]:checked');
-                            if (capes.val() === '0')
-                                $('.capes_require').slideUp();
-                            $('input[type=radio][name=capes]').change(function () {
-                                if (this.value === '0') {
-                                    $('.capes_require').slideUp();
-                                } else {
-                                    $('.capes_require').slideDown();
-
-                                }
-                            });
-
-                        </script>
-
-                        <input type="hidden" name="data[_Token][key]" value="<?= $csrfToken ?>">
-
-                        <div class="float-right">
-                            <button class="btn btn-primary"
-                                    type="submit"><?= $Lang->get('GLOBAL__SUBMIT') ?></button>
-                        </div>
-                    </form>
+                    </div>
 
                 </div>
+
+                <div class="card-footer text-right">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-save mr-1"></i><?= __('GLOBAL__SUBMIT') ?>
+                    </button>
+                </div>
+
+                <?= $this->Form->end() ?>
+
             </div>
+
         </div>
     </div>
 </section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        function toggleCheckbox(id, selector) {
+            const checkbox = document.getElementById(id);
+            const blocks = document.querySelectorAll(selector);
+
+            function apply() {
+                blocks.forEach(function (el) {
+                    el.style.display = checkbox && checkbox.checked ? '' : 'none';
+                });
+            }
+
+            apply();
+            if (checkbox) {
+                checkbox.addEventListener('change', apply);
+            }
+        }
+
+        toggleCheckbox('skins', '.skins_require');
+        toggleCheckbox('capes', '.capes_require');
+    });
+</script>

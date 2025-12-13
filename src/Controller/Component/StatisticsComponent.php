@@ -1,72 +1,65 @@
 <?php
+
 namespace App\Controller\Component;
 
 use Cake\Controller\Component;
 use Cake\Controller\Controller;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
-
-/**
- * Composant des statistiques
- * @author Eywek
- * Avec l'aide de : http://openclassrooms.com/courses/des-statistiques-pour-votre-site
- **/
-
-/**
- * BDD
- *
- * -- Table visits --
- *
- * ip
- * created
- * referer
- * location
- *
- * -- Table rush_hours --
- *
- * created
- * visits
- *
- * -- connected --
- *
- * ip
- * created
- * location
- *
- **/
 
 class StatisticsComponent extends Component
 {
     private Controller $controller;
 
-    function initialize(array $config): void
+    public function initialize(array $config): void
     {
+        parent::initialize($config);
         $this->controller = $this->getController();
     }
 
-    function startup(Event $event)
+    public function startup(EventInterface $event): void
     {
-        $visit_check = $this->controller->getRequest()->getSession()->read("visit_check");
-        if (!isset($visit_check) or empty($visit_check)) {
-            $this->Visit = TableRegistry::getTableLocator()->get("Visit");
-            $this->Util = $this->controller->Util;
-            $ip = $this->Util->getIP();
-            $visits = $this->Visit->find('all', conditions: ['ip' => $ip, 'created LIKE' => date('Y-m-d') . '%'])->toArray();
-            if (empty($visits)) {
-                if (!empty($_SERVER['HTTP_REFERER'])) {
-                    $referer = htmlentities($_SERVER['HTTP_REFERER']);
-                } else {
-                    $referer = 'null';
-                }
-                $user_agent = (isset($_SERVER['HTTP_USER_AGENT'])) ? htmlentities($_SERVER['HTTP_USER_AGENT']) : 'null';
-                $language = (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) ? htmlentities($_SERVER['HTTP_ACCEPT_LANGUAGE']) : 'null';
-
-                $language = $language[0] . $language[1];
-                $visit = $this->Visit->newEntity(['ip' => $ip, 'referer' => $referer, 'lang' => $language, 'navigator' => $user_agent, 'page' => "http://" . htmlentities($_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'])]);
-                $this->Visit->save($visit);
-            }
-
-            $this->getController()->getRequest()->getSession()->write('visit_check', true);
+        if (headers_sent()) {
+            return;
         }
+
+        $request = $this->controller->getRequest();
+
+        if ($request->getAttribute('exception')) {
+            return;
+        }
+
+        $session = $request->getSession();
+        if ($session->check('visit_check')) {
+            return;
+        }
+
+        $this->Visit = TableRegistry::getTableLocator()->get('Visits');
+        $this->Util = $this->controller->Util;
+
+        $ip = $this->Util->getIP();
+        $visits = $this->Visit
+            ->find('all', conditions: ['ip' => $ip, 'created_at LIKE' => date('Y-m-d') . '%'])
+            ->toArray();
+
+        if (empty($visits)) {
+            $referer = !empty($_SERVER['HTTP_REFERER']) ? htmlentities($_SERVER['HTTP_REFERER']) : 'null';
+            $userAgent = isset($_SERVER['HTTP_USER_AGENT']) ? htmlentities($_SERVER['HTTP_USER_AGENT']) : 'null';
+            $languageHeader = isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? htmlentities($_SERVER['HTTP_ACCEPT_LANGUAGE']) : 'null';
+            $language = substr($languageHeader, 0, 2);
+            $page = 'http://' . htmlentities($_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
+
+            $visit = $this->Visit->newEntity([
+                'ip' => $ip,
+                'referer' => $referer,
+                'lang' => $language,
+                'navigator' => $userAgent,
+                'page' => $page,
+            ]);
+
+            $this->Visit->save($visit);
+        }
+
+        $session->write('visit_check', true);
     }
 }

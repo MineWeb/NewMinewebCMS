@@ -1,69 +1,88 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
 use Cake\Http\Exception\ForbiddenException;
+use Cake\Http\Response;
 use SplFileInfo;
 
 class LogController extends AppController
 {
-    function error()
+    public function error(): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can("PERMISSIONS__VIEW_WEBSITE_LOGS"))
+        if (!$this->Auth->isConnected() || !$this->Auth->can('PERMISSIONS__VIEW_WEBSITE_LOGS')) {
             throw new ForbiddenException();
+        }
 
-        $this->set('title_for_layout', $this->Lang->get("LOG__VIEW_ERROR"));
+        $this->set('title_for_layout', __('LOG__VIEW_ERROR'));
 
-        if (file_exists(LOGS . "error.log")) {
-            $errorFile = new SplFileInfo(LOGS . "error.log");
-            $fileObject = $errorFile->openFile();
+        $filePath = LOGS . 'error.log';
+        $errors = [];
 
-            $errorContent = $fileObject->fread($errorFile->getSize());
-            $errorContent = explode("\n", $errorContent);
-            $errors = [];
+        if (is_file($filePath)) {
+            $file = new SplFileInfo($filePath);
+            $handle = $file->openFile();
 
-            $errorNbr = 0;
-            foreach ($errorContent as $line) {
-                if ($line == "") {
-                    $errorNbr++;
+            $content = $handle->fread($file->getSize());
+            $lines = explode("\n", $content);
+
+            $index = 0;
+            foreach ($lines as $line) {
+                if (trim($line) === '') {
+                    $index++;
                     continue;
                 }
-
-                $errors[$errorNbr][] = $line;
+                $errors[$index][] = $line;
             }
-
-            $this->set("errorContent", $errors);
-            $fileObject = null;
         }
+
+        $this->set('errorContent', $errors);
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Log')
+            ->setTemplate('error');
+
+        return null;
     }
 
-    function debug()
+    public function debug(): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can("PERMISSIONS__VIEW_WEBSITE_LOGS"))
+        if (!$this->Auth->isConnected() || !$this->Auth->can('PERMISSIONS__VIEW_WEBSITE_LOGS')) {
             throw new ForbiddenException();
+        }
 
-        $this->set('title_for_layout', $this->Lang->get("LOG__VIEW_DEBUG"));
+        $this->set('title_for_layout', __('LOG__VIEW_DEBUG'));
 
-        if (file_exists(LOGS . "debug.log")) {
-            $debugFile = new SplFileInfo(LOGS . "debug.log");
-            $fileObject = $debugFile->openFile();
+        $filePath = LOGS . 'debug.log';
+        $debugs = [];
 
-            $debugContent = $fileObject->fread($debugFile->getSize());
-            $debugContent = explode("\n", $debugContent);
-            $debugs = [];
+        if (is_file($filePath)) {
+            $file = new SplFileInfo($filePath);
+            $handle = $file->openFile();
 
-            $debugNbr = 0;
-            foreach ($debugContent as $line) {
-                if ($line == "") {
-                    $debugNbr++;
+            $content = $handle->fread($file->getSize());
+            $lines = explode("\n", $content);
+
+            $index = 0;
+            foreach ($lines as $line) {
+                if (trim($line) === '') {
+                    $index++;
                     continue;
                 }
-
-                $debugs[$debugNbr][] = $line;
+                $debugs[$index][] = $line;
             }
-
-            $this->set("debugContent", $debugs);
-            $fileObject = null;
         }
+
+        $this->set('debugContent', $debugs);
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Log')
+            ->setTemplate('debug');
+
+        return null;
     }
 }

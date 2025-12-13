@@ -1,18 +1,33 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller;
 
-use Cake\ORM\TableRegistry;
+use Cake\Http\Response;
 
+/**
+ * @property \App\Model\Table\MaintenancesTable $Maintenance
+ */
 class MaintenanceController extends AppController
 {
-    function index($url = "")
+    public function index(string $url = ''): Response
     {
-        $this->set('title_for_layout', $this->Lang->get('MAINTENANCE__TITLE'));
-        $this->Maintenance = TableRegistry::getTableLocator()->get('Maintenance');
-        $check = $this->Maintenance->checkMaintenance("/" . $url, $this->Util);
-        if ($this->Permissions->can("BYPASS_MAINTENANCE") || !$check)
-            $this->redirect("/");
-        $msg = $check["reason"];
+        $this->set('title_for_layout', __('MAINTENANCE__TITLE'));
+
+        $this->Maintenance = $this->fetchTable('Maintenances');
+        $check = $this->Maintenance->checkMaintenance('/' . ltrim($url, '/'));
+
+        if (!$check) {
+            return $this->redirect('/');
+        }
+
+        $msg = $check['reason'] ?? '';
         $this->set(compact('msg'));
+
+        $this->viewBuilder()
+            ->setTemplatePath('Maintenance')
+            ->setTemplate('index');
+
+        return $this->render();
     }
 }

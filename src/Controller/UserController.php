@@ -1,643 +1,321 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use Cake\Event\Event;
-use Cake\Http\Cookie\Cookie;
-use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Exception\ForbiddenException;
-use Cake\Http\Exception\NotFoundException;
-use Cake\ORM\TableRegistry;
+use Cake\Http\Response;
 use Cake\Routing\Router;
-use DateTime;
 
+/**
+ * @property \App\Controller\Component\AuthComponent $Auth
+ * @property \App\Controller\Component\APIComponent $API
+ * @property \App\Controller\Component\UtilComponent $Util
+ * @property \App\Controller\Component\EyPluginComponent $EyPlugin
+ *
+ * @property \App\Model\Table\UsersTable $User
+ * @property \App\Model\Table\ServersTable $Server
+ * @property \App\Model\Table\ConfigurationsTable $Configuration
+ */
 class UserController extends AppController
 {
     public function initialize(): void
     {
         parent::initialize();
 
-        $this->loadComponent('Captcha');
         $this->loadComponent('API');
     }
 
-    function getCaptcha()
+    private function json(array $payload, int $status = 200): Response
     {
-        $this->disableAutoRender();
-        //generate random characters for captcha
-        $random = mt_rand(100, 99999);
-        //save characters in session
-        $this->getRequest()->getSession()->write('captcha_code', $random);
-        $settings = [
-            'characters' => $random,
-            'winHeight' => 50,         // captcha image height
-            'winWidth' => 220,           // captcha image width
-            'fontSize' => 25,          // captcha image characters fontsize
-            'fontPath' => WWW_ROOT . 'tahomabd.ttf',    // captcha image font
-            'noiseColor' => '#ccc',
-            'bgColor' => '#fff',
-            'noiseLevel' => '100',
-            'textColor' => '#000'
+        return $this->response
+            ->withStatus($status)
+            ->withType('application/json')
+            ->withStringBody((string)json_encode($payload));
+    }
+
+    private function clearAuthContext(): void
+    {
+        $this->getRequest()->getSession()->delete('auth_context');
+    }
+
+    public function profile(): Response
+    {
+        if (!$this->Auth->isConnected()) {
+            return $this->redirect(['_name' => 'home']);
+        }
+
+        $identity = $this->Auth->identity();
+        $userId = null;
+        $username = '';
+
+        if (is_object($identity) && method_exists($identity, 'get')) {
+            $id = $identity->get('id');
+            if (is_numeric($id)) {
+                $userId = (int)$id;
+            }
+
+            $p = $identity->get('username');
+            if (is_string($p)) {
+                $username = $p;
+            }
+        }
+
+        if ($userId === null) {
+            return $this->redirect(['_name' => 'home']);
+        }
+
+        $authTable = $this->fetchTable('UsersTwofactorauth');
+        $infos = $authTable
+            ->find()
+            ->where([
+                'user_id' => $userId,
+                'enabled' => true,
+            ])
+            ->first();
+
+        $this->set('twoFactorAuthStatus', !empty($infos));
+        $this->set('title_for_layout', $username);
+
+        $this->viewBuilder()->setLayout($this->config->get('layout'));
+
+        if ($this->EyPlugin->isInstalled('eywek.shop')) {
+            $itemsHistoryTable = $this->fetchTable('Shop.ItemsBuyHistory');
+            $histories = $itemsHistoryTable
+                ->find()
+                ->where(['user_id' => $userId])
+                ->orderBy(['ItemsBuyHistory.created_at' => 'DESC'])
+                ->all();
+
+            $this->set(compact('histories'));
+            $this->set('shop_active', true);
+        } else {
+            $this->set('shop_active', false);
+        }
+
+        $available_ranks = [
+            0 => __('USER__RANK_MEMBER'),
+            2 => __('USER__RANK_MODERATOR'),
+            3 => __('USER__RANK_ADMINISTRATOR'),
+            4 => __('USER__RANK_ADMINISTRATOR'),
         ];
-        $img = $this->Captcha->ShowImage($settings);
-        return $this->response->withBody($img);
+
+        $rankTable = $this->fetchTable('Ranks');
+        foreach ($rankTable->find()->all() as $value) {
+            $available_ranks[(int)$value['rank_id']] = (string)$value['name'];
+        }
+        $this->set(compact('available_ranks'));
+
+        $this->set('can_cape', $this->API->can_cape());
+        $this->set('can_skin', $this->API->can_skin());
+
+        $apiConfigTable = $this->fetchTable('ApiConfigurations');
+        $configAPI = $apiConfigTable->find()->first();
+
+        if ($configAPI !== null) {
+            $skin_width_max = (int)$configAPI['skin_width'];
+            $skin_height_max = (int)$configAPI['skin_height'];
+            $cape_width_max = (int)$configAPI['cape_width'];
+            $cape_height_max = (int)$configAPI['cape_height'];
+
+            $this->set(compact('skin_width_max', 'skin_height_max', 'cape_width_max', 'cape_height_max'));
+        }
+
+        $confirmed = '';
+        if (is_object($identity) && method_exists($identity, 'get')) {
+            $c = $identity->get('confirmed');
+            if (is_string($c)) {
+                $confirmed = $c;
+            }
+        }
+
+        if (
+            (bool)$this->config->get('confirm_mail_signup') &&
+            $confirmed !== '' &&
+            date('Y-m-d H:i:s', strtotime($confirmed)) !== $confirmed
+        ) {
+            $this->Flash->warning(__('USER__MSG_NOT_CONFIRMED_EMAIL', [
+                '{URL_RESEND_EMAIL}' => Router::url(['_name' => 'auth_resend_confirmation']),
+            ]));
+        }
+
+        $connected_by_microsoft = $this->getRequest()->getCookie('microsoft_user_id') !== null;
+        $this->set(compact('connected_by_microsoft'));
+
+        $this->viewBuilder()
+            ->setTemplatePath('User')
+            ->setTemplate('profile');
+
+        return $this->render();
     }
 
-    function ajaxRegister()
+    public function changePw(): Response
     {
         $this->disableAutoRender();
-        $this->response = $this->response->withType('application/json');
-        if ($this->request->is('Post')) { // si la requête est bien un post
-            $conditionsChecked = !empty($this->getRequest()->getData('condition')) || !$this->Configuration->getKey('condition');
-            if (!empty($this->getRequest()->getData('pseudo')) && !empty($this->getRequest()->getData('password')) && $conditionsChecked && !empty($this->getRequest()->getData('password_confirmation') && !empty($this->getRequest()->getData('email')))) { // si tout les champs sont bien remplis
-                //check uuid if needed
-                $this->request = $this->getRequest()->withData('', $this->getRequest()->getData('xss'));
-                if ($this->Configuration->getKey('check_uuid')) {
-                    $pseudoToUUID = file_get_contents("https://api.mojang.com/users/profiles/minecraft/" . htmlentities($this->getRequest()->getData('pseudo')));
-                    if (!$pseudoToUUID) {
-                        return $this->response->withStringBody(json_encode([
-                            'statut' => false,
-                            'msg' => $this->Lang->get('USER__ERROR_UUID')
-                        ]));
-                    }
 
-                    $this->request = $this->getRequest()->withData('uuid', json_decode($pseudoToUUID, true)['id']);
-                }
-                // Captcha
-                if ($this->Configuration->getKey('captcha_type') == "2" || $this->Configuration->getKey('captcha_type') == "3") { // ReCaptcha and h-captcha
-                    $validCaptcha = $this->Util->isValidReCaptcha($this->getRequest()->getData('recaptcha'), $this->Util->getIP(), $this->Configuration->getKey('captcha_secret'), $this->Configuration->getKey('captcha_type'));
-                } else {
-                    $captcha = $this->getRequest()->getSession()->read('captcha_code');
-                    $validCaptcha = (!empty($captcha) && $captcha == $this->getRequest()->getData('captcha'));
-                }
-                //
-                if ($validCaptcha) { // on check le captcha déjà
-                    $isValid = $this->User->validRegister($this->getRequest()->getData(), $this->Util);
-                    if ($isValid === true) { // on vérifie si y'a aucune erreur
-                        $eventData = $this->getRequest()->getData();
-                        $eventData['password'] = $this->Util->password($eventData['password'], $eventData['pseudo']);
-                        $event = new Event('beforeRegister', $this, ['data' => $eventData]);
-                        $this->getEventManager()->dispatch($event);
-                        if ($event->isStopped()) {
-                            return $event->getResult();
-                        }
-                        // we record
-                        $this->request = $this->request->withData('microsoft_user_id', null);
-                        $this->request = $this->request->withData('registered_by_microsoft', false);
-                        $userSession = $this->User->register($this->getRequest()->getData(), $this->Util);
-                        // We send the mail if in the configuration it is activated
-                        if ($this->Configuration->getKey('confirm_mail_signup')) {
-                            $confirmCode = substr(md5(uniqid()), 0, 12);
-                            $emailMsg = $this->Lang->get('EMAIL__CONTENT_CONFIRM_MAIL', [
-                                '{LINK}' => $this->Configuration->getKey('website_url') . "/user/confirm/$confirmCode",
-                                '{IP}' => $this->Util->getIP(),
-                                '{USERNAME}' => $this->getRequest()->getData('pseudo'),
-                                '{DATE}' => $this->Lang->date(date('Y-m-d H:i:s'))
-                            ]);
-                            $email = $this->Util->prepareMail(
-                                $this->getRequest()->getData('email'),
-                                $this->Lang->get('EMAIL__TITLE_CONFIRM_MAIL'),
-                                $emailMsg
-                            )->sendMail();
-                            if ($email) {
-                                $user = $this->User->get($userSession);
-                                $user->set(['confirmed' => $confirmCode]);
-                                $this->User->save($user);
-                            }
-                        }
-                        if (!$this->Configuration->getKey('confirm_mail_signup_block')) { // si on doit pas bloquer le compte si non confirmé
-                            // on prépare la connexion
-                            $this->getRequest()->getSession()->write('user', $userSession);
-                            $event = new Event('onLogin', $this, ['user' => $this->User->getAllFromCurrentUser(), 'register' => true]);
-                            $this->getEventManager()->dispatch($event);
-                            if ($event->isStopped()) {
-                                return $event->getResult();
-                            }
-                        }
-                        // on dis que c'est bon
-                        return $this->response->withStringBody(json_encode([
-                            'statut' => true,
-                            'msg' => $this->Lang->get('USER__REGISTER_SUCCESS')
-                        ]));
-                    } else { // si c'est pas bon, on envoie le message d'erreur retourné par l'étape de validation
-                        return $this->response->withStringBody(json_encode([
-                            'statut' => false,
-                            'msg' => $this->Lang->get($isValid)
-                        ]));
-                    }
-                } else {
-                    return $this->response->withStringBody(json_encode([
-                        'statut' => false,
-                        'msg' => $this->Lang->get('FORM__INVALID_CAPTCHA')
-                    ]));
-                }
-            } else {
-                return $this->response->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')
-                ]));
+        if (!$this->Auth->isConnected()) {
+            return $this->json([
+                'status' => false,
+                'messages' => __('USER__ERROR_MUST_BE_LOGGED'),
+            ], 403);
+        }
+
+        if (!$this->getRequest()->is('ajax')) {
+            return $this->json([
+                'status' => false,
+                'messages' => __('ERROR__BAD_REQUEST'),
+            ], 400);
+        }
+
+        $data = (array)$this->getRequest()->getData();
+
+        if (empty($data['password']) || empty($data['password_confirmation'])) {
+            return $this->json([
+                'status' => false,
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+            ], 400);
+        }
+
+        $identity = $this->Auth->identity();
+        $username = '';
+        $userId = null;
+
+        if (is_object($identity) && method_exists($identity, 'get')) {
+            $p = $identity->get('username');
+            if (is_string($p)) {
+                $username = $p;
             }
-        } else {
-            return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => $this->Lang->get('ERROR__BAD_REQUEST')
-            ]));
-        }
-    }
 
-    function ajaxLogin()
-    {
-        if (!$this->request->is('post'))
-            throw new BadRequestException();
-        if (empty($this->getRequest()->getData('pseudo')) || empty($this->getRequest()->getData('password')))
-            return $this->sendJSON(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]);
-        $this->autoRender = false;
-        $this->response->withType('json');
-        $this->Authentification = TableRegistry::getTableLocator()->get('Authentification');
-        $this->request = $this->request->withData('', $this->getRequest()->getData('xss'));
-        $user_login = $this->User->getAllFromUser($this->getRequest()->getData('pseudo'));
-
-        if (empty($user_login))
-            return $this->sendJSON(['statut' => false, 'msg' => $this->Lang->get('USER__ERROR_INVALID_CREDENTIALS')]);
-
-        $infos = $this->Authentification->find('all', conditions: ['user_id' => $user_login['id'], 'enabled' => true])->first();
-
-        $confirmEmailIsNeeded = ($this->Configuration->getKey('confirm_mail_signup') && $this->Configuration->getKey('confirm_mail_signup_block'));
-        $login = $this->User->login($user_login, $this->getRequest()->getData(), $confirmEmailIsNeeded, $this->Configuration->getKey('check_uuid'), $this);
-        if (!isset($login['status']) || $login['status'] !== true) {
-            return $this->sendJSON([
-                'statut' => false,
-                'msg' => $this->Lang->get($login, ['{URL_RESEND_EMAIL}' => Router::url(['action' => 'resend_confirmation'])])
-            ]);
-        }
-
-        $event = new Event('onLogin', $this, ['user' => $user_login]);
-        $this->getEventManager()->dispatch($event);
-        if ($event->isStopped())
-            return $event->getResult();
-        if ($infos) {
-            $this->getRequest()->getSession()->write('user_id_two_factor_auth', $user_login['id']);
-            return $this->sendJSON([
-                'statut' => true,
-                'msg' => $this->Lang->get('USER__REGISTER_LOGIN'),
-                'two-factor-auth' => true
-            ]);
-        } else {
-            if ($this->getRequest()->getData('remember_me')) {
-                $cookie = new Cookie('remember_me', [
-                    'pseudo' => $this->getRequest()->getData('pseudo'),
-                    'password' => $this->User->getFromUser('password', $this->getRequest()->getData('pseudo'))
-                ], new DateTime('+1 weeks'));
-                $this->response = $this->getResponse()->withCookie($cookie);
+            $id = $identity->get('id');
+            if (is_numeric($id)) {
+                $userId = (int)$id;
             }
-            $this->getRequest()->getSession()->write('user', $login['session']);
-            return $this->sendJSON(['statut' => true, 'msg' => $this->Lang->get('USER__REGISTER_LOGIN')]);
-        }
-    }
-
-    function confirm($code = false)
-    {
-        $this->autoRender = false;
-        if (isset($code)) {
-            $find = $this->User->find('all', ['conditions' => ['confirmed' => $code]])->first();
-            if (!empty($find)) {
-                $event = new Event('beforeConfirmAccount', $this, ['user_id' => $find['User']['id']]);
-                $this->getEventManager()->dispatch($event);
-                if ($event->isStopped()) {
-                    return $event->getResult();
-                }
-                $user = $this->User->get($find['User']['id']);
-                $user->set(['confirmed' => date('Y-m-d H:i:s')]);
-                $this->User->save($user);
-                $userSession = $find['User']['id'];
-                $this->Notification = TableRegistry::getTableLocator()->get('Notification');
-                $this->Notification->setToUser($this->Lang->get('USER__CONFIRM_NOTIFICATION'), $find['User']['id']);
-                $this->getRequest()->getSession()->write('user', $userSession);
-                $event = new Event('onLogin', $this, ['user' => $this->User->getAllFromCurrentUser(), 'confirmAccount' => true]);
-                $this->getEventManager()->dispatch($event);
-                if ($event->isStopped()) {
-                    return $event->getResult();
-                }
-                return $this->redirect(['action' => 'profile']);
-            } else {
-                throw new NotFoundException();
-            }
-        } else {
-            throw new NotFoundException();
-        }
-    }
-
-    function ajax_lostpasswd()
-    {
-        $this->layout = null;
-        $this->autoRender = false;
-        $this->response->withType('json');
-        if ($this->request->is('ajax')) {
-            if (!empty($this->getRequest()->getData('email'))) {
-                $this->User = TableRegistry::getTableLocator()->get('User');
-                if (filter_var($this->getRequest()->getData('email'), FILTER_VALIDATE_EMAIL)) {
-                    $search = $this->User->find('all', conditions: ['email' => $this->getRequest()->getData('email')])->first();
-                    if (!empty($search)) {
-                        if ($search['User']['registered_by_microsoft'])
-                            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('USER__AUTH_MICROSOFT_CANNOT_RESET_PASSWORD')]));
-                        $this->Lostpassword = TableRegistry::getTableLocator()->get('Lostpassword');
-                        $key = substr(md5(rand() . date('sihYdm')), 0, 10);
-                        $to = $this->getRequest()->getData('email');
-                        $subject = $this->Lang->get('USER__PASSWORD_RESET_LINK');
-                        $message = $this->Lang->get('USER__PASSWORD_RESET_EMAIL_CONTENT', [
-                            '{EMAIL}' => $this->getRequest()->getData('email'),
-                            '{PSEUDO}' => $search['User']['pseudo'],
-                            '{LINK}' => $this->Configuration->getKey('website_url') . "/?resetpasswd_$key"
-                        ]);
-                        $event = new Event('beforeSendResetPassMail', $this, ['user_id' => $search['User']['id'], 'key' => $key]);
-                        $this->getEventManager()->dispatch($event);
-                        if ($event->isStopped()) {
-                            return $event->getResult();
-                        }
-                        if ($this->Util->prepareMail($to, $subject, $message)->sendMail()) {
-                            $lostPass = $this->Lostpassword->newEntity([
-                                'email' => $this->getRequest()->getData('email'),
-                                'key' => $key
-                            ]);
-                            $this->Lostpassword->save($lostPass);
-                            $this->response->withStringBody(json_encode([
-                                'statut' => true,
-                                'msg' => $this->Lang->get('USER__PASSWORD_FORGOT_EMAIL_SUCCESS')
-                            ]));
-                        } else {
-                            $this->response->withStringBody(json_encode([
-                                'statut' => false,
-                                'msg' => $this->Lang->get('ERROR__INTERNAL_ERROR')
-                            ]));
-                        }
-                    } else {
-                        $this->response->withStringBody(json_encode([
-                            'statut' => false,
-                            'msg' => $this->Lang->get('USER__ERROR_NOT_FOUND')
-                        ]));
-                    }
-                } else {
-                    $this->response->withStringBody(json_encode([
-                        'statut' => false,
-                        'msg' => $this->Lang->get('USER__ERROR_EMAIL_NOT_VALID')
-                    ]));
-                }
-            } else {
-                $this->response->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')
-                ]));
-            }
-        } else {
-            $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => $this->Lang->get('ERROR__BAD_REQUEST')
-            ]));
         }
 
-        return null;
-    }
-
-    function ajax_resetpasswd()
-    {
-        $this->autoRender = false;
-        $this->response->withType('json');
-        if ($this->request->is('ajax')) {
-            if (!empty($this->getRequest()->getData('password')) and !empty($this->getRequest()->getData('password2')) and !empty($this->getRequest()->getData('email')) && !empty($this->getRequest()->getData('key'))) {
-                $this->request = $this->getRequest()->getData('xss');
-                $reset = $this->User->resetPass($this->request->getData(), $this);
-                if (isset($reset['status']) && $reset['status'] === true) {
-                    $this->getRequest()->getSession()->write('user', $reset['session']);
-                    $this->History->set('RESET_PASSWORD', 'user');
-                    $this->response->withStringBody(json_encode([
-                        'statut' => true,
-                        'msg' => $this->Lang->get('USER__PASSWORD_RESET_SUCCESS')
-                    ]));
-                } else {
-                    $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get($reset)]));
-                }
-            } else {
-                $this->response->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')
-                ]));
-            }
-        } else {
-            $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => $this->Lang->get('ERROR__BAD_REQUEST')
-            ]));
+        if ($username === '' || $userId === null) {
+            return $this->json([
+                'status' => false,
+                'messages' => __('USER__ERROR_MUST_BE_LOGGED'),
+            ], 403);
         }
-    }
 
-    function logout()
-    {
-        $this->autoRender = false;
-        $event = new Event('onLogout', $this, ['session' => $this->getRequest()->getSession()->read('user')]);
+        $password = $this->Util->password((string)$data['password'], $username);
+        $password_confirmation = $this->Util->password((string)$data['password_confirmation'], $username, $password);
+
+        if ($password !== $password_confirmation) {
+            return $this->json([
+                'status' => false,
+                'messages' => __('USER__ERROR_PASSWORDS_NOT_SAME'),
+            ], 400);
+        }
+
+        $event = new Event('beforeUpdatePassword', $this, [
+            'user' => $identity,
+            'new_password' => $password,
+        ]);
         $this->getEventManager()->dispatch($event);
         if ($event->isStopped()) {
-            return $event->getResult();
-        }
-
-        if ($this->getRequest()->getCookie('microsoft_user_id')) {
-            $this->getRequest()->getCookieCollection()->remove('microsoft_user_id');
-        }
-
-        if ($this->getRequest()->getCookie('remember_me')) {
-            $this->getRequest()->getCookieCollection()->remove('remember_me');
-        }
-        $this->getRequest()->getSession()->delete('user');
-        return $this->redirect($this->referer());
-    }
-
-    function uploadSkin()
-    {
-        $this->autoRender = false;
-        $this->response->withType('json');
-        if ($this->isConnected && $this->API->can_skin()) {
-            if ($this->request->is('post')) {
-                $username = $this->User->getKey('pseudo');
-                $this->ApiConfiguration = TableRegistry::getTableLocator()->get('ApiConfiguration');
-                $ApiConfiguration = $this->ApiConfiguration->find()->first();
-
-                $useSkinRestorer = $ApiConfiguration['use_skin_restorer'];
-                $serverSkinRestorerID = $ApiConfiguration['skin_restorer_server_id'];
-
-                if ($useSkinRestorer & !$this->Server->userIsConnected($username, $serverSkinRestorerID)) {
-                    $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('API__SKIN_RESTORER_NOT_CONNECTED')]));
-                    return;
-                }
-                $skin_max_size = 10000000; // octet
-
-                $target_config = $ApiConfiguration['skin_filename'];
-                $filename = substr($target_config, (strrpos($target_config, '/') + 1));
-                $filename = str_replace('{PLAYER}', $username, $filename);
-                $filename = str_replace('php', '', $filename);
-                $filename = str_replace('.', '', $filename);
-                $filename = $filename . '.png';
-                $target = substr($target_config, 0, (strrpos($target_config, '/') + 1));
-                $target = WWW_ROOT . '/' . $target;
-                $width_max = $ApiConfiguration['skin_width']; // pixel
-                $height_max = $ApiConfiguration['skin_height']; // pixel
-                $isValidImg = $this->Util->isValidImage($this->request, ['png'], $width_max, $height_max, $skin_max_size);
-                if (!$isValidImg['status']) {
-                    $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $isValidImg['msg']]));
-                    return;
-                }
-                if (!$this->Util->uploadImage($this->request, $target . $filename)) {
-                    $this->response->withStringBody(json_encode([
-                        'statut' => false,
-                        'msg' => $this->Lang->get('FORM__ERROR_WHEN_UPLOAD')
-                    ]));
-                    return;
-                }
-
-                $skinURL = Router::url(['action' => str_replace("{PLAYER}", $username, $ApiConfiguration['ApiConfiguration']['skin_filename']) . ".png", 'controller' => '', 'admin' => false], true);
-
-                $skinRestorerCommand = str_replace(['{PLAYER}', '{URL}'], [$username, $skinURL], "skin set {PLAYER} {URL}");
-                $this->Server->commands($skinRestorerCommand, $serverSkinRestorerID);
-
-                $this->response->withStringBody(json_encode([
-                    'statut' => true,
-                    'msg' => $this->Lang->get('API__UPLOAD_SKIN_SUCCESS')
-                ]));
+            $result = $event->getResult();
+            if ($result instanceof Response) {
+                return $result;
             }
-        } else {
-            throw new ForbiddenException();
-        }
-    }
 
-    function uploadCape()
-    {
-        $this->autoRender = false;
-        $this->response->withType('json');
-        if ($this->isConnected && $this->API->can_cape()) {
-            if ($this->request->is('post')) {
-                $cape_max_size = 10000000; // octet
-                $this->ApiConfiguration = TableRegistry::getTableLocator()->get('ApiConfiguration');
-                $ApiConfiguration = $this->ApiConfiguration->find()->first();
-                $target_config = $ApiConfiguration['cape_filename'];
-                $filename = substr($target_config, (strrpos($target_config, '/') + 1));
-                $filename = str_replace('{PLAYER}', $this->User->getKey('pseudo'), $filename);
-                $filename = str_replace('php', '', $filename);
-                $filename = str_replace('.', '', $filename);
-                $filename = $filename . '.png';
-                $target = substr($target_config, 0, (strrpos($target_config, '/') + 1));
-                $target = WWW_ROOT . '/' . $target;
-                $width_max = $ApiConfiguration['cape_width']; // pixel
-                $height_max = $ApiConfiguration['cape_height']; // pixel
-                $isValidImg = $this->Util->isValidImage($this->request, ['png'], $width_max, $height_max, $cape_max_size);
-                if (!$isValidImg['status']) {
-                    $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $isValidImg['msg']]));
-                    return;
-                }
-                if (!$this->Util->uploadImage($this->request, $target . $filename)) {
-                    $this->response->withStringBody(json_encode([
-                        'statut' => false,
-                        'msg' => $this->Lang->get('FORM__ERROR_WHEN_UPLOAD')
-                    ]));
-                    return;
-                }
-                $this->response->withStringBody(json_encode([
-                    'statut' => true,
-                    'msg' => $this->Lang->get('API__UPLOAD_CAPE_SUCCESS')
-                ]));
-            }
-        } else {
-            throw new ForbiddenException();
+            return $this->json((array)$result, 400);
         }
-    }
 
-    function profile()
-    {
-        if ($this->isConnected) {
-            // Check if user has twofactorauth enabled
-            $this->Authentification = TableRegistry::getTableLocator()->get('Authentification');
-            $infos = $this->Authentification->find('all', conditions: ['user_id' => $this->User->getKey('id'), 'enabled' => true])->first();
-            if (empty($infos)) // no two factor auth
-                $this->set('twoFactorAuthStatus', false);
-            else
-                $this->set('twoFactorAuthStatus', true);
-            $this->set('title_for_layout', $this->User->getKey('pseudo'));
-            $this->layout = $this->Configuration->getKey('layout');
-            if ($this->EyPlugin->isInstalled('eywek.shop')) {
-                $this->ItemsBuyHistory = TableRegistry::getTableLocator()->get('Shop.ItemsBuyHistory');
-                $histories = $this->ItemsBuyHistory->find('all',
-                recursive: 1,
-                order: 'ItemsBuyHistory.created DESC',
-                conditions: ['user_id' => $this->User->getKey('id')])->all();
-                $this->set(compact('histories'));
-                $this->set('shop_active', true);
-            } else {
-                $this->set('shop_active', false);
-            }
-            $available_ranks = [
-                0 => $this->Lang->get('USER__RANK_MEMBER'),
-                2 => $this->Lang->get('USER__RANK_MODERATOR'),
-                3 => $this->Lang->get('USER__RANK_ADMINISTRATOR'),
-                4 => $this->Lang->get('USER__RANK_ADMINISTRATOR')
-            ];
-            $this->Rank = TableRegistry::getTableLocator()->get('Rank');
-            $custom_ranks = $this->Rank->find()->all();
-            foreach ($custom_ranks as $value) {
-                $available_ranks[$value['rank_id']] = $value['name'];
-            }
-            $this->set(compact('available_ranks'));
-            $this->set('can_cape', $this->API->can_cape());
-            $this->set('can_skin', $this->API->can_skin());
-            $this->ApiConfiguration = TableRegistry::getTableLocator()->get('ApiConfiguration');
-            $configAPI = $this->ApiConfiguration->find()->first();
-            $skin_width_max = $configAPI['skin_width'];
-            $skin_height_max = $configAPI['skin_height'];
-            $cape_width_max = $configAPI['cape_width'];
-            $cape_height_max = $configAPI['cape_height'];
-            $this->set(compact('skin_width_max', 'skin_height_max', 'cape_width_max', 'cape_height_max'));
-            $confirmed = $this->User->getKey('confirmed');
-            if ($this->Configuration->getKey('confirm_mail_signup') && !empty($confirmed) && date('Y-m-d H:i:s', strtotime($confirmed)) != $confirmed) { // si ca ne correspond pas à une date -> compte non confirmé
-                $this->Flash->warning($this->Lang->get('USER__MSG_NOT_CONFIRMED_EMAIL', ['{URL_RESEND_EMAIL}' => Router::url(['action' => 'resend_confirmation'])]));
-            }
-            $connected_by_microsoft = false;
-            $microsoft_user_id = $this->getRequest()->getCookie('microsoft_user_id');
-            if (isset($microsoft_user_id))
-                $connected_by_microsoft = true;
-            $this->set(compact('connected_by_microsoft'));
-        } else {
-            $this->redirect('/');
-        }
-    }
-
-    function resend_confirmation()
-    {
-        if (!$this->isConnected && !$this->getRequest()->getSession()->check('email.confirm.user.id'))
-            throw new ForbiddenException();
-        if ($this->isConnected)
-            $user = $this->User->getAllFromCurrentUser();
-        else
-            $user = $this->User->find('all', ['conditions' => ['id' => $this->getRequest()->getSession()->read('email.confirm.user.id')]])->first();
-        $this->getRequest()->getSession()->delete('email.confirm.user.id');
-        if (!$user || empty($user))
-            throw new NotFoundException();
-        if (isset($user['User']))
-            $user = $user['User'];
-        $confirmed = $user['confirmed'];
-        if (!$this->Configuration->getKey('confirm_mail_signup') || empty($confirmed) || date('Y-m-d H:i:s', strtotime($confirmed)) == $confirmed)
-            throw new NotFoundException();
-        $emailMsg = $this->Lang->get('EMAIL__CONTENT_CONFIRM_MAIL', [
-            '{LINK}' => $this->Configuration->getKey('website_url') . "/user/confirm/$confirmed",
-            '{IP}' => $this->Util->getIP(),
-            '{USERNAME}' => $user['pseudo'],
-            '{DATE}' => $this->Lang->date(date('Y-m-d H:i:s'))
+        $userEntity = $this->User->get($userId);
+        $userEntity->set([
+            'password' => $password,
+            'password_hash' => $this->Util->getPasswordHashType(),
         ]);
-        $email = $this->Util->prepareMail(
-            $user['email'],
-            $this->Lang->get('EMAIL__TITLE_CONFIRM_MAIL'),
-            $emailMsg
-        )->sendMail();
-        if ($email)
-            $this->Flash->success($this->Lang->get('USER__CONFIRM_EMAIL_RESEND_SUCCESS'));
-        else
-            $this->Flash->error($this->Lang->get('USER__CONFIRM_EMAIL_RESEND_FAIL'));
-        if ($this->isConnected)
-            $this->redirect(['action' => 'profile']);
-        else
-            $this->redirect('/');
+        $this->User->save($userEntity);
+
+        $this->clearAuthContext();
+
+        return $this->json([
+            'status' => true,
+            'messages' => __('USER__PASSWORD_UPDATE_SUCCESS'),
+        ]);
     }
 
-    function changePw()
+    public function changeEmail(): Response
     {
-        $this->autoRender = false;
-        $this->response->withType('application/json');
-        if ($this->isConnected) {
-            if ($this->request->is('ajax')) {
-                if (!empty($this->getRequest()->getData('password')) and !empty($this->getRequest()->getData('password_confirmation'))) {
-                    $this->request = $this->request->withData('', $this->getRequest()->getData('xss'));
-                    $password = $this->Util->password($this->getRequest()->getData('password'), $this->User->getKey('pseudo'));
-                    $password_confirmation = $this->Util->password($this->getRequest()->getData('password_confirmation'), $this->User->getKey('pseudo'), $password);
-                    if ($password == $password_confirmation) {
-                        $event = new Event('beforeUpdatePassword', $this, ['user' => $this->User->getAllFromCurrentUser(), 'new_password' => $password]);
-                        $this->getEventManager()->dispatch($event);
-                        if ($event->isStopped()) {
-                            return $event->getResult();
-                        }
-                        $this->User->setKey('password', $password);
-                        $this->User->setKey('password_hash', $this->Util->getPasswordHashType());
-                        return $this->response->withStringBody(json_encode([
-                            'statut' => true,
-                            'msg' => $this->Lang->get('USER__PASSWORD_UPDATE_SUCCESS')
-                        ]));
-                    } else {
-                        return $this->response->withStringBody(json_encode([
-                            'statut' => false,
-                            'msg' => $this->Lang->get('USER__ERROR_PASSWORDS_NOT_SAME')
-                        ]));
-                    }
-                } else {
-                    return $this->response->withStringBody(json_encode([
-                        'statut' => false,
-                        'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')
-                    ]));
-                }
-            } else {
-                return $this->response->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => $this->Lang->get('ERROR__BAD_REQUEST')
-                ]));
-            }
-        } else {
-            return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => $this->Lang->get('USER__ERROR_MUST_BE_LOGGED')
-            ]));
-        }
-    }
+        $this->disableAutoRender();
 
-    function changeEmail()
-    {
-        $this->autoRender = false;
-        $this->response->withType('application/json');
-        if ($this->isConnected && $this->Permissions->can('EDIT_HIS_EMAIL')) {
-            if ($this->request->is('ajax')) {
-                if (!empty($this->getRequest()->getData('email')) and !empty($this->getRequest()->getData('email_confirmation'))) {
-                    if ($this->getRequest()->getData('email') == $this->getRequest()->getData('email_confirmation')) {
-                        if (filter_var($this->getRequest()->getData('email'), FILTER_VALIDATE_EMAIL)) {
-                            $event = new Event('beforeUpdateEmail', $this, [
-                                'user' => $this->User->getAllFromCurrentUser(),
-                                'new_email' => $this->getRequest()->getData('email_confirmation')
-                            ]);
-                            $this->getEventManager()->dispatch($event);
-                            if ($event->isStopped()) {
-                                return $event->getResult();
-                            }
-                            $this->User->setKey('email', htmlentities($this->getRequest()->getData('email')));
-                            return $this->response->withStringBody(json_encode([
-                                'statut' => true,
-                                'msg' => $this->Lang->get('USER__EMAIL_UPDATE_SUCCESS')
-                            ]));
-                        } else {
-                            return $this->response->withStringBody(json_encode([
-                                'statut' => false,
-                                'msg' => $this->Lang->get('USER__ERROR_EMAIL_NOT_VALID')
-                            ]));
-                        }
-                    } else {
-                        return $this->response->withStringBody(json_encode([
-                            'statut' => false,
-                            'msg' => $this->Lang->get('USER__ERROR_EMAIL_NOT_SAME')
-                        ]));
-                    }
-                } else {
-                    return $this->response->withStringBody(json_encode([
-                        'statut' => false,
-                        'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')
-                    ]));
-                }
-            } else {
-                return $this->response->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => $this->Lang->get('ERROR__BAD_REQUEST')
-                ]));
-            }
-        } else {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('EDIT_HIS_EMAIL')) {
             throw new ForbiddenException();
         }
+
+        if (!$this->getRequest()->is('ajax')) {
+            return $this->json([
+                'status' => false,
+                'messages' => __('ERROR__BAD_REQUEST'),
+            ], 400);
+        }
+
+        $data = (array)$this->getRequest()->getData();
+
+        if (empty($data['email']) || empty($data['email_confirmation'])) {
+            return $this->json([
+                'status' => false,
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+            ], 400);
+        }
+
+        if ((string)$data['email'] !== (string)$data['email_confirmation']) {
+            return $this->json([
+                'status' => false,
+                'messages' => __('USER__ERROR_EMAIL_NOT_SAME'),
+            ], 400);
+        }
+
+        if (!filter_var((string)$data['email'], FILTER_VALIDATE_EMAIL)) {
+            return $this->json([
+                'status' => false,
+                'messages' => __('USER__ERROR_EMAIL_NOT_VALID'),
+            ], 400);
+        }
+
+        $identity = $this->Auth->identity();
+        $userId = null;
+
+        if (is_object($identity) && method_exists($identity, 'get')) {
+            $id = $identity->get('id');
+            if (is_numeric($id)) {
+                $userId = (int)$id;
+            }
+        }
+
+        if ($userId === null) {
+            throw new ForbiddenException();
+        }
+
+        $event = new Event('beforeUpdateEmail', $this, [
+            'user' => $identity,
+            'new_email' => (string)$data['email_confirmation'],
+        ]);
+        $this->getEventManager()->dispatch($event);
+        if ($event->isStopped()) {
+            $result = $event->getResult();
+            if ($result instanceof Response) {
+                return $result;
+            }
+
+            return $this->json((array)$result, 400);
+        }
+
+        $newEmail = htmlentities((string)$data['email']);
+
+        $userEntity = $this->User->get($userId);
+        $userEntity->set(['email' => $newEmail]);
+        $this->User->save($userEntity);
+
+        $this->clearAuthContext();
+
+        return $this->json([
+            'status' => true,
+            'messages' => __('USER__EMAIL_UPDATE_SUCCESS'),
+        ]);
     }
 }

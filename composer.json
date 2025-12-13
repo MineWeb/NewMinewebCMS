@@ -1,31 +1,32 @@
 {
-    "name": "cakephp/app",
-    "description": "CakePHP skeleton app",
-    "homepage": "https://cakephp.org",
+    "name": "mineweb/mineweb-cms",
+    "description": "MineWeb CMS - Minecraft website & shop",
+    "homepage": "https://mineweb.org",
     "type": "project",
     "license": "MIT",
     "require": {
         "php": ">=8.1",
-        "cakephp/cakephp": "^5.0.1",
-        "cakephp/migrations": "^4.0.0",
+        "cakephp/cakephp": "^5.2.10",
+        "cakephp/migrations": "^4.9.1",
         "cakephp/plugin-installer": "^2.0",
-        "mobiledetect/mobiledetectlib": "^4.8.03",
+        "mobiledetect/mobiledetectlib": "^4.8.09",
         "ext-curl": "*",
         "ext-gd": "*",
         "ext-json": "*",
         "ext-pdo": "*",
         "ext-zip": "*",
+        "ext-openssl": "*",
         "htmlawed/htmlawed": "1.2.6",
         "robthree/twofactorauth": "1.8.2",
-        "symfony/service-contracts": "^3.1",
-        "xpaw/php-minecraft-query": "^4.0"
+        "symfony/service-contracts": "^3.6.1",
+        "xpaw/php-minecraft-query": "^4.0.1"
     },
     "require-dev": {
-        "cakephp/bake": "^3.0.0",
-        "cakephp/cakephp-codesniffer": "^5.0",
-        "cakephp/debug_kit": "^5.0.0",
+        "cakephp/bake": "^3.5.1",
+        "cakephp/cakephp-codesniffer": "^5.3.0",
+        "cakephp/debug_kit": "^5.2.1",
         "josegonzalez/dotenv": "^4.0",
-        "phpunit/phpunit": "^10.1.0"
+        "phpunit/phpunit": "^10.5.6 || ^11.5.46 || ^12.5.2"
     },
     "suggest": {
         "cakephp/repl": "Console tools for a REPL interface for CakePHP applications.",

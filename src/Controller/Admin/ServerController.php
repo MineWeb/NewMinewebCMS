@@ -1,409 +1,515 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
+use App\Utility\LangService;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
-use Cake\ORM\TableRegistry;
+use Cake\Http\Response;
 
 class ServerController extends AppController
 {
-    public function link()
+    public function initialize(): void
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS'))
+        parent::initialize();
+
+        $this->loadComponent('Server');
+    }
+
+    public function link(): ?Response
+    {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
             throw new ForbiddenException();
-
-        $this->set('title_for_layout', $this->Lang->get('SERVER__LINK'));
-
-        $this->Server = TableRegistry::getTableLocator()->get('Server');
-        $servers = $this->Server->find()->all()->toArray();
-        $banner_server = unserialize($this->Configuration->getKey('banner_server'));
-
-        if ($banner_server) {
-            foreach ($servers as $key => $value) {
-                if (in_array($value['id'], $banner_server))
-                    $servers[$key]['activeInBanner'] = true;
-                else
-                    $servers[$key]['activeInBanner'] = false;
-            }
         }
 
-        foreach ($servers as $key => $value)
-            $servers[$key]['data'] = json_decode($value['data'], true);
+        $this->set('title_for_layout', __('SERVER__LINK'));
 
-        $bannerMsg = $this->Lang->get('SERVER__STATUS_MESSAGE');
+        $Servers = $this->fetchTable('Servers');
+        $servers = $Servers->find()->all()->toArray();
+
+        $bannerRaw = (string)$this->config->get('banner_server');
+        $banner = @unserialize($bannerRaw);
+        if (!is_array($banner)) {
+            $banner = [];
+        }
+
+        foreach ($servers as $key => $value) {
+            $servers[$key]['activeInBanner'] = in_array($value['id'], $banner, true);
+
+            $dataRaw = $value['data'] ?? null;
+            $servers[$key]['data'] = is_string($dataRaw) ? (json_decode($dataRaw, true) ?: []) : [];
+        }
+
+        $bannerMsg = __('SERVER__STATUS_MESSAGE');
 
         $this->set(compact('servers', 'bannerMsg'));
-        $this->set('isEnabled', $this->Configuration->getKey('server_state'));
-        $this->set('isCacheEnabled', $this->Configuration->getKey('server_cache'));
-        $this->set('timeout', $this->Configuration->getKey('server_timeout'));
+        $this->set('isEnabled', $this->config->get('server_state'));
+        $this->set('isCacheEnabled', $this->config->get('server_cache'));
+        $this->set('timeout', $this->config->get('server_timeout'));
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Server')
+            ->setTemplate('link');
+
+        return null;
     }
 
-    public function cmd()
+    public function cmd(): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS'))
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
             throw new ForbiddenException();
-        $this->set('title_for_layout', $this->Lang->get('SERVER__CMD'));
-
-        $this->ServerCmd = TableRegistry::getTableLocator()->get('ServerCmd');
-        $this->Server = TableRegistry::getTableLocator()->get('Server');
-        $search_cmd = $this->ServerCmd->find('all', order: 'server_id DESC')->all();
-        $search_server = $this->Server->find()->all();
-        $this->set(compact(
-            'search_cmd',
-            'search_server'
-        ));
-    }
-
-    public function deleteCmd($id)
-    {
-        $this->disableAutoRender();
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS'))
-            throw new ForbiddenException();
-
-        $this->ServerCmd = TableRegistry::getTableLocator()->get('ServerCmd');
-        $this->ServerCmd->delete($this->ServerCmd->get($id));
-        $this->redirect(['action' => 'cmd', 'admin' => true]);
-    }
-
-    public function executeCmd()
-    {
-        $this->disableAutoRender();
-        $this->response = $this->response->withType('application/json');
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS'))
-            throw new ForbiddenException();
-
-        $this->ServerComponent = $this->loadComponent('Server');
-        $call = $this->ServerComponent->send_command($this->request->getData('cmd'), $this->request->getData('server_id'));
-
-        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('SERVER__SEND_COMMAND_SUCCESS')]));
-    }
-
-    public function addCmd()
-    {
-        $this->disableAutoRender();
-        $this->response = $this->response->withType('application/json');
-
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS'))
-            throw new ForbiddenException();
-
-        if ($this->request->is('ajax')) {
-            if (!empty($this->request->getData('name')) and !empty($this->request->getData('cmd')) and !empty($this->request->getData('server_id'))) {
-                if (!str_contains($this->request->getData('cmd'), '/')) {
-                    $this->ServerCmd = TableRegistry::getTableLocator()->get('ServerCmd');
-                    $cmd = $this->ServerCmd->newEntity([
-                            'name' => $this->request->getData('name'),
-                            'cmd' => $this->request->getData('cmd'),
-                            'server_id' => $this->request->getData('server_id')
-                    ]);
-                    $this->ServerCmd->save($cmd);
-
-                    return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('SERVER__CMD_ADD')]));
-                } else {
-                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('SERVER__CMD_SLASH')]));
-                }
-            } else {
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
-            }
-        } else {
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__BAD_REQUEST')]));
         }
+
+        $this->set('title_for_layout', __('SERVER__CMD'));
+
+        $ServerCmds = $this->fetchTable('ServerCmds');
+        $Servers = $this->fetchTable('Servers');
+
+        $search_cmd = $ServerCmds
+            ->find()
+            ->orderBy(['server_id' => 'DESC'])
+            ->all();
+
+        $search_server = $Servers->find()->all();
+
+        $this->set(compact('search_cmd', 'search_server'));
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Server')
+            ->setTemplate('cmd');
+
+        return null;
     }
 
-    public function editBannerMsg()
+    public function deleteCmd(int $id): Response
+    {
+        $this->disableAutoRender();
+
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
+            throw new ForbiddenException();
+        }
+
+        $ServerCmds = $this->fetchTable('ServerCmds');
+        $entity = $ServerCmds->get($id);
+        $ServerCmds->delete($entity);
+
+        return $this->redirect(['_name' => 'admin_server_cmd']);
+    }
+
+    public function executeCmd(): Response
     {
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        if ($this->isConnected and $this->Permissions->can('MANAGE_SERVERS')) {
-            if ($this->request->is('ajax')) {
-                $this->Lang->set('SERVER__STATUS_MESSAGE', $this->request->getData('msg'));
-
-                return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('SERVER__EDIT_BANNER_MSG_SUCCESS')]));
-            } else {
-                throw new NotFoundException();
-            }
-        } else {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
             throw new ForbiddenException();
         }
-    }
 
-    public function switchState()
-    {
-        if ($this->isConnected and $this->Permissions->can('MANAGE_SERVERS')) {
-            $this->disableAutoRender();
+        $request = $this->getRequest();
+        $cmd = (string)$request->getData('cmd', '');
+        $serverId = $this->normalizeServerId($request->getData('server_id'));
 
-            $value = ($this->Configuration->getKey('server_state')) ? 0 : 1;
-            $this->Configuration->setKey('server_state', $value);
-
-            $this->Flash->success($this->Lang->get('SERVER__SUCCESS_SWITCH'));
-            $this->redirect(['action' => 'link', 'admin' => true]);
-        } else {
-            throw new ForbiddenException();
+        if ($cmd === '' || $serverId === null) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+            ]));
         }
+
+        $this->Server->sendCommand($cmd, $serverId);
+
+        return $this->response->withStringBody(json_encode([
+            'status' => true,
+            'messages' => __('SERVER__SEND_COMMAND_SUCCESS'),
+        ]));
     }
 
-    public function switchCacheState()
-    {
-        if ($this->isConnected and $this->Permissions->can('MANAGE_SERVERS')) {
-            $this->disableAutoRender();
-
-            $value = ($this->Configuration->getKey('server_cache')) ? 0 : 1;
-            $this->Configuration->setKey('server_cache', $value);
-
-            $this->Flash->success($this->Lang->get('SERVER__SUCCESS_CACHE_SWITCH'));
-            $this->redirect(['action' => 'link', 'admin' => true]);
-
-        } else {
-            throw new ForbiddenException();
-        }
-    }
-
-    public function switchBanner($id = false)
-    {
-        $this->disableAutoRender();
-        if ($this->isConnected && $this->Permissions->can('MANAGE_SERVERS')) {
-            if ($id) {
-                $banner = unserialize($this->Configuration->getKey('banner_server'));
-
-                if ($banner) {
-                    if (in_array($id, $banner)) {
-                        unset($banner[array_search($id, $banner)]);
-                    } else {
-                        $banner[] = $id;
-                    }
-
-                    $banner = array_values($banner);
-                    $this->Configuration->setKey('banner_server', serialize($banner));
-                } else {
-                    $this->Configuration->setKey('banner_server', serialize([$id]));
-                }
-            }
-        } else {
-            throw new ForbiddenException();
-        }
-    }
-
-
-    public function delete($id = false)
-    {
-        $this->disableAutoRender();
-        if ($this->isConnected && $this->Permissions->can('MANAGE_SERVERS')) {
-            if ($id) {
-                $this->Server = TableRegistry::getTableLocator()->get('Server');
-                if ($this->Server->delete($this->Server->get($id))) {
-                    $banner = unserialize($this->Configuration->getKey('banner_server'));
-
-                    if ($banner) {
-                        if (in_array($id, $banner)) {
-                            unset($banner[array_search($id, $banner)]);
-                        }
-
-                        $banner = array_values($banner);
-
-                        $this->Configuration->setKey('banner_server', serialize($banner));
-                    }
-
-                    $this->Flash->success($this->Lang->get('SERVER__DELETE_SERVER_SUCCESS'));
-                } else {
-                    $this->Flash->error($this->Lang->get('ERROR__INTERNAL_ERROR'));
-                }
-            } else {
-                $this->Flash->error($this->Lang->get('ERROR__INTERNAL_ERROR'));
-            }
-
-            $this->redirect(['controller' => 'server', 'action' => 'link', 'admin' => true]);
-        } else {
-            $this->redirect('/');
-        }
-    }
-
-    public function config()
-    {
-        $this->disableAutoRender();
-        $this->response = $this->response->withType('application/json');
-        if ($this->isConnected and $this->Permissions->can('MANAGE_SERVERS')) {
-            if ($this->request->is('ajax')) {
-                if (!empty($this->request->getData('timeout'))) {
-                    if (filter_var($this->request->getData('timeout'), FILTER_VALIDATE_FLOAT)) {
-                        $this->Configuration->setKey('server_timeout', $this->request->getData('timeout'));
-
-                        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('SERVER__TIMEOUT_SAVE_SUCCESS')]));
-                    } else {
-                        return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('SERVER__INVALID_TIMEOUT')]));
-                    }
-                } else {
-                    return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
-                }
-            } else {
-                throw new NotFoundException();
-            }
-        } else {
-            throw new ForbiddenException();
-        }
-    }
-
-    public function linkAjax()
+    public function addCmd(): Response
     {
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS'))
-            return $this->redirect('/');
-        if (!$this->request->is('ajax'))
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__BAD_REQUEST')]));
-        if (empty($this->request->getData('host')) || empty($this->request->getData('port')) || empty($this->request->getData('name')) || $this->request->getData('type') == null)
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
-
-        /*
-         * Link ID
-         * 0 : Plugin
-         * 1 : Ping
-         * 2 : Rcon
-         * 3 : Ping MCPE
-         */
-
-        if ($this->request->getData('type') == 0) {
-            $timeout = $this->Configuration->getKey('server_timeout');
-            if (empty($timeout))
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('SERVER__TIMEOUT_UNDEFINED')]));
-
-            if (!$this->Server->check('connection', ['host' => $this->request->getData('host'), 'port' => $this->request->getData('port'), 'timeout' => $timeout])) {
-                $msg = $this->Lang->get('SERVER__LINK_ERROR_' . $this->Server->linkErrorCode);
-                $msg .= $this->linkDebugFull($msg, $this->request->getData('host'), $this->request->getData('port'));
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $msg]));
-            }
-
-        } // use simple ping to retrieve data from MC protocol
-        else if ($this->request->getData('type') == 1 || $this->request->getData('type') == 3) {
-            if (!$this->Server->ping(['ip' => $this->request->getData('host'), 'port' => $this->request->getData('port'), 'udp' => $this->request->getData('type') == 3])) {
-                $msg = $this->Lang->get('SERVER__LINK_ERROR_FAILED');
-                $msg .= $this->linkDebugPing();
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $msg]));
-            }
-        } else if ($this->request->getData('type') == 2) {
-            if (!$this->Server->rcon(
-                [
-                    'ip' => $this->request->getData('host'),
-                    'port' => $this->request->getData('server_data')['rcon_port'],
-                    'password' => $this->request->getData('server_data')['rcon_password']
-                ],
-                'say ' . $this->Lang->get('SERVER__LINK_SUCCESS')
-            )
-            ) {
-                $msg = $this->Lang->get('SERVER__LINK_ERROR_FAILED');
-                $msg .= $this->linkDebugPing();
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $msg]));
-            }
-        } else {
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
+            throw new ForbiddenException();
         }
 
-        // save the server inside the database/conf
-        $this->Configuration->setKey('server_state', 1);
+        $request = $this->getRequest();
 
-        $this->Server = TableRegistry::getTableLocator()->get('Server');
-        if (!empty($this->request->getData('id'))) {
-            $server = $this->Server->get($this->request->getData('id'));
-        } else {
-            $server = $this->Server->newEmptyEntity();
+        if (!$request->is('ajax')) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__BAD_REQUEST'),
+            ]));
         }
 
-        $server->set([
-            'name' => $this->request->getData('name'),
-            'ip' => $this->request->getData('host'),
-            'port' => $this->request->getData('port'),
-            'type' => $this->request->getData('type'),
-            'data' => $this->request->getData('server_data') !== null ? json_encode($this->request->getData('server_data')) : '[]'
+        $name = (string)$request->getData('name', '');
+        $cmd = (string)$request->getData('cmd', '');
+        $serverId = $this->normalizeServerId($request->getData('server_id'));
+
+        if ($name === '' || $cmd === '' || $serverId === null) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+            ]));
+        }
+
+        if (str_contains($cmd, '/')) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('SERVER__CMD_SLASH'),
+            ]));
+        }
+
+        $ServerCmds = $this->fetchTable('ServerCmds');
+        $entity = $ServerCmds->newEntity([
+            'name' => $name,
+            'cmd' => $cmd,
+            'server_id' => $serverId,
         ]);
-        $this->Server->save($server);
+        $ServerCmds->save($entity);
 
-        return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('SERVER__LINK_SUCCESS')]));
+        return $this->response->withStringBody(json_encode([
+            'status' => true,
+            'messages' => __('SERVER__CMD_ADD'),
+        ]));
     }
 
-    public function banlist($server_id = false)
+    public function editBannerMsg(): Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS'))
+        $this->disableAutoRender();
+        $this->response = $this->response->withType('application/json');
+
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SERVERS'))) {
             throw new ForbiddenException();
+        }
+
+        $request = $this->getRequest();
+
+        if (!$request->is('ajax')) {
+            throw new NotFoundException();
+        }
+
+        LangService::set('SERVER__STATUS_MESSAGE', (string)$request->getData('msg'));
+
+        return $this->response->withStringBody(json_encode([
+            'status' => true,
+            'messages' => __('SERVER__EDIT_BANNER_MSG_SUCCESS'),
+        ]));
+    }
+
+    public function switchState(): Response
+    {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
+            throw new ForbiddenException();
+        }
+
+        $this->disableAutoRender();
+
+        $current = (bool)$this->config->get('server_state');
+        $this->config->setKey('server_state', $current ? 0 : 1);
+
+        $this->Flash->success(__('SERVER__SUCCESS_SWITCH'));
+
+        return $this->redirect(['_name' => 'admin_server_link']);
+    }
+
+    public function switchCacheState(): Response
+    {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
+            throw new ForbiddenException();
+        }
+
+        $this->disableAutoRender();
+
+        $current = (bool)$this->config->get('server_cache');
+        $this->config->setKey('server_cache', $current ? 0 : 1);
+
+        $this->Flash->success(__('SERVER__SUCCESS_CACHE_SWITCH'));
+
+        return $this->redirect(['_name' => 'admin_server_link']);
+    }
+
+    public function switchBanner(?int $id = null): Response
+    {
+        $this->disableAutoRender();
+
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
+            throw new ForbiddenException();
+        }
+
+        if ($id !== null) {
+            $bannerRaw = (string)$this->config->get('banner_server');
+            $banner = @unserialize($bannerRaw);
+            if (!is_array($banner)) {
+                $banner = [];
+            }
+
+            if (in_array($id, $banner, true)) {
+                $index = array_search($id, $banner, true);
+                if ($index !== false) {
+                    unset($banner[$index]);
+                }
+            } else {
+                $banner[] = $id;
+            }
+
+            $this->config->setKey('banner_server', serialize(array_values($banner)));
+        }
+
+        return $this->redirect(['_name' => 'admin_server_link']);
+    }
+
+    public function delete(?int $id = null): Response
+    {
+        $this->disableAutoRender();
+
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
+            return $this->redirect(['_name' => 'home']);
+        }
+
+        if ($id === null) {
+            $this->Flash->error(__('ERROR__INTERNAL_ERROR'));
+
+            return $this->redirect(['_name' => 'admin_server_link']);
+        }
+
+        $Servers = $this->fetchTable('Servers');
+        $entity = $Servers->get($id);
+
+        if ($Servers->delete($entity)) {
+            $bannerRaw = (string)$this->config->get('banner_server');
+            $banner = @unserialize($bannerRaw);
+
+            if (is_array($banner) && in_array($id, $banner, true)) {
+                $index = array_search($id, $banner, true);
+                if ($index !== false) {
+                    unset($banner[$index]);
+                }
+                $this->config->setKey('banner_server', serialize(array_values($banner)));
+            }
+
+            $this->Flash->success(__('SERVER__DELETE_SERVER_SUCCESS'));
+        } else {
+            $this->Flash->error(__('ERROR__INTERNAL_ERROR'));
+        }
+
+        return $this->redirect(['_name' => 'admin_server_link']);
+    }
+
+    public function config(): Response
+    {
+        $this->disableAutoRender();
+        $this->response = $this->response->withType('application/json');
+
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
+            throw new ForbiddenException();
+        }
+
+        $request = $this->getRequest();
+
+        if (!$request->is('ajax')) {
+            throw new NotFoundException();
+        }
+
+        $timeoutRaw = $request->getData('timeout');
+
+        if ($timeoutRaw === null || $timeoutRaw === '') {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+            ]));
+        }
+
+        if (!filter_var($timeoutRaw, FILTER_VALIDATE_FLOAT)) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('SERVER__INVALID_TIMEOUT'),
+            ]));
+        }
+
+        $this->config->setKey('server_timeout', $timeoutRaw);
+
+        return $this->response->withStringBody(json_encode([
+            'status' => true,
+            'messages' => __('SERVER__TIMEOUT_SAVE_SUCCESS'),
+        ]));
+    }
+
+    public function linkAjax(): Response
+    {
+        $this->disableAutoRender();
+        $this->response = $this->response->withType('application/json');
+
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
+            return $this->redirect(['_name' => 'home']);
+        }
+
+        $request = $this->getRequest();
+
+        if (!$request->is('ajax')) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__BAD_REQUEST'),
+            ]));
+        }
+
+        $host = (string)$request->getData('host', '');
+        $port = (string)$request->getData('port', '');
+        $name = (string)$request->getData('name', '');
+        $type = $request->getData('type');
+
+        if ($host === '' || $port === '' || $name === '' || $type === null) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+            ]));
+        }
+
+        return $this->response->withStringBody(json_encode([
+            'status' => true,
+            'messages' => __('SERVER__LINK_SUCCESS'),
+        ]));
+    }
+
+    public function banlist(?int $server_id = null): ?Response
+    {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
+            throw new ForbiddenException();
+        }
 
         $call = $this->Server->call('GET_BANNED_PLAYERS', $server_id);
         $list = [];
-        if (isset($call['GET_BANNED_PLAYERS']) && $call['GET_BANNED_PLAYERS'] !== 'NOT_FOUND')
-            foreach ($call['GET_BANNED_PLAYERS'] as $player)
+
+        if (is_array($call) && isset($call['GET_BANNED_PLAYERS']) && $call['GET_BANNED_PLAYERS'] !== 'NOT_FOUND') {
+            foreach ((array)$call['GET_BANNED_PLAYERS'] as $player) {
                 $list[] = $player;
-        $this->set(compact('list'));
+            }
+        }
 
-        $this->Server = TableRegistry::getTableLocator()->get('Server');
-        $this->set('servers', $this->Server->find('all', conditions: ['type' => 0])->all());
+        $Servers = $this->fetchTable('Servers');
+        $servers = $Servers->find()->where(['type' => 0])->all();
 
-        $this->set('title_for_layout', $this->Lang->get('SERVER__BANLIST'));
+        $this->set(compact('list', 'servers'));
+        $this->set('title_for_layout', __('SERVER__BANLIST'));
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Server')
+            ->setTemplate('banlist');
+
+        return null;
     }
 
-    public function whitelist($server_id = false)
+    public function whitelist(?int $server_id = null): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS'))
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
             throw new ForbiddenException();
+        }
 
         $call = $this->Server->call('GET_WHITELISTED_PLAYERS', $server_id);
         $list = [];
-        if (isset($call['GET_WHITELISTED_PLAYERS']) && $call['GET_WHITELISTED_PLAYERS'] !== 'NOT_FOUND')
-            foreach ($call['GET_WHITELISTED_PLAYERS'] as $player)
+
+        if (is_array($call) && isset($call['GET_WHITELISTED_PLAYERS']) && $call['GET_WHITELISTED_PLAYERS'] !== 'NOT_FOUND') {
+            foreach ((array)$call['GET_WHITELISTED_PLAYERS'] as $player) {
                 $list[] = $player;
-        $this->set(compact('list'));
+            }
+        }
 
-        $this->Server = TableRegistry::getTableLocator()->get('Server');
-        $this->set('servers', $this->Server->find('all', conditions: ['type' => 0]));
+        $Servers = $this->fetchTable('Servers');
+        $servers = $Servers->find()->where(['type' => 0])->all();
 
-        $this->set('title_for_layout', $this->Lang->get('SERVER__WHITELIST'));
+        $this->set(compact('list', 'servers'));
+        $this->set('title_for_layout', __('SERVER__WHITELIST'));
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Server')
+            ->setTemplate('whitelist');
+
+        return null;
     }
 
-    public function online($server_id = false)
+    public function online(?int $server_id = null): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can('MANAGE_SERVERS'))
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
             throw new ForbiddenException();
+        }
 
         $call = $this->Server->call('GET_PLAYER_LIST', $server_id);
         $list = [];
-        if (isset($call['GET_PLAYER_LIST']) && $call['GET_PLAYER_LIST'] !== 'NOT_FOUND')
-            foreach ($call['GET_PLAYER_LIST'] as $player)
+
+        if (is_array($call) && isset($call['GET_PLAYER_LIST']) && $call['GET_PLAYER_LIST'] !== 'NOT_FOUND') {
+            foreach ((array)$call['GET_PLAYER_LIST'] as $player) {
                 $list[] = $player;
-        $this->set(compact('list'));
+            }
+        }
 
-        $this->Server = TableRegistry::getTableLocator()->get('Server');
-        $this->set('servers', $this->Server->find('all', conditions: ['type' => 0]));
+        $Servers = $this->fetchTable('Servers');
+        $servers = $Servers->find()->where(['type' => 0])->all();
 
-        $this->set('title_for_layout', $this->Lang->get('SERVER__STATUS_ONLINE'));
+        $this->set(compact('list', 'servers'));
+        $this->set('title_for_layout', __('SERVER__STATUS_ONLINE'));
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Server')
+            ->setTemplate('online');
+
+        return null;
     }
 
-    private function linkDebugFull($msg, $host, $port, $udp = false)
+    private function normalizeServerId(mixed $raw): ?int
+    {
+        if ($raw === null || $raw === '' || $raw === false) {
+            return null;
+        }
+
+        if (is_int($raw)) {
+            return $raw > 0 ? $raw : null;
+        }
+
+        if (is_string($raw) && ctype_digit($raw)) {
+            $id = (int)$raw;
+
+            return $id > 0 ? $id : null;
+        }
+
+        return null;
+    }
+
+    private function linkDebugFull(string $msg, string $host, string $port, bool $udp = false): string
     {
         $msg .= $this->linkDebugPing();
 
-        $msg .= "<br /><br />";
-        $msg .= "<i class=\"fa fa-times\"></i> ";
+        $msg .= '<br /><br />';
+        $msg .= '<i class="fa fa-times"></i> ';
 
-        if ($this->Server->ping(['ip' => $host, 'port' => $port, 'udp' => $udp]))
-            $msg .= $this->Lang->get('SERVER__SEEMS_USED');
-        else
-            $msg .= $this->Lang->get('SERVER__PORT_CLOSE_OR_BAD');
-
-        return $msg;
-    }
-
-    private function linkDebugPing()
-    {
-        $msg = "<br /><br />";
-
-        $hypixelIp = gethostbyname('mc.hypixel.net');
-        if ($this->Server->ping(['ip' => $hypixelIp, 'port' => 25565, 'udp' => false])) {
-            $msg .= "<i class=\"fa fa-check\"></i> ";
-            $msg .= $this->Lang->get('SERVER__PORT_OPEN');
+        if ($this->Server->ping(['ip' => $host, 'port' => (int)$port, 'udp' => $udp])) {
+            $msg .= __('SERVER__SEEMS_USED');
         } else {
-            $msg .= "<i class=\"fa fa-times\"></i> ";
-            $msg .= $this->Lang->get('SERVER__SEEMS_CLOSE_OR_BLOCKED');
+            $msg .= __('SERVER__PORT_CLOSE_OR_BAD');
         }
 
         return $msg;
     }
 
+    private function linkDebugPing(): string
+    {
+        $msg = '<br /><br />';
+
+        $hypixelIp = gethostbyname('mc.hypixel.net');
+        if ($this->Server->ping(['ip' => $hypixelIp, 'port' => 25565, 'udp' => false])) {
+            $msg .= '<i class="fa fa-check"></i> ';
+            $msg .= __('SERVER__PORT_OPEN');
+        } else {
+            $msg .= '<i class="fa fa-times"></i> ';
+            $msg .= __('SERVER__SEEMS_CLOSE_OR_BLOCKED');
+        }
+
+        return $msg;
+    }
 }

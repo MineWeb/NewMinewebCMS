@@ -1,83 +1,166 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
+use App\Utility\LangService;
+use Cake\Http\Response;
+use Cake\I18n\I18n;
+use Throwable;
 
+/**
+ * @property \App\Controller\Component\AuthComponent $Auth
+ * @property \App\Controller\Component\HistoryComponent $History
+ * @property \App\Service\ConfigurationService $config
+ */
 class ConfigurationController extends AppController
 {
-    public function index()
+    public function index(): ?Response
     {
-        if ($this->isConnected and $this->Permissions->can('MANAGE_CONFIGURATION')) {
-            $this->set('title_for_layout', $this->Lang->get('CONFIG__GENERAL_PREFERENCES'));
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_CONFIGURATION')) {
+            return $this->redirect('/');
+        }
 
-            $data = [];
+        $this->set('title_for_layout', __('CONFIG__GENERAL_PREFERENCES'));
 
-            if ($this->request->is('post')) {
-                foreach ($this->getRequest()->getData() as $k => $value) {
-                    $data[$k] = $value == "" ? null : $value;
-                }
-                $hash = $this->Configuration->getKey('passwords_hash');
-                $this->User->updateAll(
-                    ['password_hash' => "'$hash'"],
-                    ['password_hash IS NULL']
-                );
+        $config = $this->config->getAll();
+        if ($config !== null) {
+            $config['lang'] = I18n::getLocale();
+            $config['languages_available'] = $this->getAvailableLocales();
+        }
 
-                $data['end_layout_code'] = $this->getRequest()->getData('xss')['end_layout_code'];
+        $this->set('config', $config);
+        $this->set('shopIsInstalled', $this->EyPlugin->isInstalled('eywek.shop'));
 
-                $config = $this->Configuration->get(1);
-                $config->set($data);
-                $this->Configuration->save($config);
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Configuration')
+            ->setTemplate('index');
 
-                $this->History->set('EDIT_CONFIGURATION', 'configuration');
+        return null;
+    }
 
-                $this->Configuration->cacheQueries = false; //On désactive le cache
-                $this->Configuration->dataConfig = null;
-                $this->Lang->lang = $this->Lang->getLang(); // on refresh les messages
+    public function saveAjax(): Response
+    {
+        $this->disableAutoRender();
+        $this->response = $this->response->withType('application/json');
 
-                $this->Flash->success($this->Lang->get('CONFIG__EDIT_SUCCESS'));
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_CONFIGURATION')) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__FORBIDDEN'),
+            ]));
+        }
+
+        $request = $this->getRequest();
+
+        if (!$request->is('post') || !$request->is('ajax')) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__BAD_REQUEST'),
+            ]));
+        }
+
+        $data = [];
+        foreach ((array)$request->getData() as $key => $value) {
+            if ($key === '_csrfToken') {
+                continue;
+            }
+            $data[$key] = $value === '' ? null : $value;
+        }
+
+        try {
+            $hash = (string)$this->config->get('passwords_hash');
+            $Users = $this->fetchTable('Users');
+            $Users->updateAll(
+                ['password_hash' => $hash],
+                ['password_hash IS' => null]
+            );
+
+            $configEntity = $this->config->get(1);
+            if ($configEntity === null) {
+                $configEntity = $this->config->getEntity();
             }
 
-            $config = $this->Configuration->getAll();
+            $configEntity = $configEntity->patch($data);
+            $this->config->saveOrFail($configEntity);
 
-            $this->Configuration->cacheQueries = true; //On le réactive
+            $this->History->set('EDIT_CONFIGURATION', 'configuration');
+            $this->config->clearCache();
 
-            $config['lang'] = $this->Lang->getLang('config')['path'];
-
-            $config['languages_available'] = [];
-            foreach ($this->Lang->languages as $key => $value) {
-                $config['languages_available'][$key] = $value['name'];
-            }
-
-            $this->set('config', $config);
-
-            $this->set('shopIsInstalled', $this->EyPlugin->isInstalled('eywek.shop'));
-
-        } else {
-            $this->redirect('/');
+            return $this->response->withStringBody(json_encode([
+                'status' => true,
+                'messages' => __('CONFIG__EDIT_SUCCESS'),
+            ]));
+        } catch (Throwable) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__INTERNAL_ERROR'),
+            ]));
         }
     }
 
-    public function editLang()
+    public function editLang(): ?Response
     {
-        if ($this->isConnected and $this->Permissions->can('MANAGE_CONFIGURATION')) {
-            if ($this->request->is('post')) {
-                if (stripos($this->request->getData('GLOBAL__FOOTER'), '<a href="http://mineweb.org">mineweb.org</a>') === false) {
-                    $this->Flash->error($this->Lang->get('CONFIG__ERROR_SAVE_LANG'));
-                } else {
-                    $this->Lang->setAll($this->request->getData());
-                    $this->History->set('EDIT_LANG', 'lang');
-                    $this->Flash->success($this->Lang->get('CONFIG__EDIT_LANG_SUCCESS'));
-                }
-            }
-
-            $this->Lang->lang = $this->Lang->getLang(); // on refresh les messages
-
-            $this->set('messages', $this->Lang->lang['messages']);
-            $this->set('title_for_layout', $this->Lang->get('CONFIG__LANG_LABEL'));
-
-        } else {
-            $this->redirect('/');
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_CONFIGURATION')) {
+            return $this->redirect('/');
         }
+
+        $request = $this->getRequest();
+
+        if ($request->is('post')) {
+            $footer = (string)($request->getData('GLOBAL__FOOTER') ?? '');
+
+            if (stripos($footer, '<a href="http://mineweb.org">mineweb.org</a>') === false) {
+                $this->Flash->error(__('CONFIG__ERROR_SAVE_LANG'));
+            } else {
+                LangService::saveMany($request->getData());
+                $this->History->set('EDIT_LANG', 'lang');
+                $this->Flash->success(__('CONFIG__EDIT_LANG_SUCCESS'));
+            }
+        }
+
+        $messages = LangService::loadCurrentMessages();
+
+        $this->set('messages', $messages);
+        $this->set('title_for_layout', __('CONFIG__LANG_LABEL'));
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Configuration')
+            ->setTemplate('edit_lang');
+
+        return null;
     }
 
+    private function getAvailableLocales(): array
+    {
+        $path = ROOT . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'locales';
+
+        if (!is_dir($path)) {
+            return [];
+        }
+
+        $dirs = scandir($path);
+        if ($dirs === false) {
+            return [];
+        }
+
+        $available = [];
+
+        foreach ($dirs as $dir) {
+            if ($dir === '.' || $dir === '..') {
+                continue;
+            }
+
+            $fullPath = $path . DIRECTORY_SEPARATOR . $dir;
+
+            if (is_dir($fullPath)) {
+                $available[$dir] = $dir;
+            }
+        }
+
+        return $available;
+    }
 }

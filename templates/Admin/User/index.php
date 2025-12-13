@@ -1,14 +1,9 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <section class="content">
     <div class="row">
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('USER__LIST') ?></h3>
+                    <h3 class="card-title"><?= __('USER__LIST') ?></h3>
                 </div>
                 <div class="card-body">
                     <?php if ($type == '0') { ?>
@@ -16,105 +11,129 @@ use Cake\Routing\Router;
                                style="table-layout: fixed;word-wrap: break-word;" id="users">
                             <thead>
                             <tr>
-                                <th><?= $Lang->get('USER__TITLE') ?></th>
-                                <th><?= $Lang->get('USER__EMAIL') ?></th>
-                                <th><?= $Lang->get('GLOBAL__CREATED') ?></th>
-                                <th><?= $Lang->get('USER__RANK') ?></th>
-                                <th class="right"><?= $Lang->get('GLOBAL__ACTIONS') ?></th>
+                                <th scope="col"><?= __('USER__TITLE') ?></th>
+                                <th scope="col"><?= __('USER__EMAIL') ?></th>
+                                <th scope="col"><?= __('GLOBAL__CREATED') ?></th>
+                                <th scope="col"><?= __('USER__RANK') ?></th>
+                                <th scope="col" class="right"><?= __('GLOBAL__ACTIONS') ?></th>
                             </tr>
                             </thead>
                             <tbody>
                             </tbody>
                         </table>
                     <?php } else { ?>
-                        <form action="<?= Router::url(['action' => 'liveSearch', 'admin' => true]) ?>" method="search">
+                        <?= $this->Form->create(null, [
+                            'url' => ['_name' => 'admin_user_live_search'],
+                            'method' => 'get',
+                        ]) ?>
+                        <div class="form-group">
+                            <label for="user-search"><?= __('GLOBAL__SEARCH') ?></label>
+                            <input
+                                id="user-search"
+                                type="text"
+                                name="search"
+                                placeholder="username..."
+                                autocomplete="off"
+                                class="form-control"
+                            >
+                            <div class="list-group" style="display:none;"></div>
+                        </div>
+                        <?= $this->Form->end() ?>
 
-                            <div class="form-group">
-                                <label><?= $Lang->get('GLOBAL__SEARCH') ?></label>
-                                <input type="text" name="search" placeholder="Pseudo..." autocomplete="off"
-                                       class="form-control">
-                                <div class="list-group" style="display:none;">
-                                </div>
-                            </div>
-
-                        </form>
                     <?php } ?>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
 <script type="text/javascript">
-    <?php if($type == '0') { ?>
-    $(document).ready(function () {
-        $('#users').DataTable({
-            "paging": true,
-            "lengthChange": false,
-            "searching": false,
-            "ordering": false,
-            "info": false,
-            "autoWidth": false,
-            'searching': true,
-            "bProcessing": true,
-            "bServerSide": true,
-            "sAjaxSource": "<?= Router::url(['action' => 'get_users', 'admin' => true]) ?>",
-            "aoColumns": [
-                {mData: "User.pseudo", "bSearchable": true},
-                {mData: "User.email", "bSearchable": true},
-                {mData: "User.created", "bSearchable": true},
-                {mData: "User.rank", "bSearchable": false},
-                {mData: "actions", "bSearchable": false}
+    <?php if ($type == '0') { ?>
+    document.addEventListener("DOMContentLoaded", function () {
+        if (typeof DataTable === "undefined") {
+            return;
+        }
+
+        new DataTable("#users", {
+            paging: true,
+            lengthChange: false,
+            searching: true,
+            ordering: false,
+            info: false,
+            autoWidth: false,
+            processing: true,
+            serverSide: true,
+            ajax: "<?= $this->Url->build(['_name' => 'admin_user_get_users']) ?>",
+            columns: [
+                {data: "Users.username", searchable: true},
+                {data: "Users.email", searchable: true},
+                {data: "Users.created_at", searchable: true},
+                {data: "Users.rank", searchable: false},
+                {data: "actions", searchable: false}
             ]
         });
     });
     <?php } else { ?>
-    $('form[method="search"]').each(function (e) {
+    document.addEventListener("DOMContentLoaded", function () {
+        let forms = document.querySelectorAll('form[method="get"]');
 
-        $(this).on('submit', function (e) {
-            e.preventDefault();
-            var val = $(this).find('input[name="search"]').val();
-            window.location = '<?= Router::url(['action' => 'edit', 'admin' => true]) ?>/' + val;
-        });
+        forms.forEach(function (form) {
+            let searchInput = form.querySelector('input[name="search"]');
+            let listGroup = form.querySelector('.list-group');
+            let baseUrl = form.getAttribute('action');
 
-        var url = $(this).attr('action');
-        var form = $(this);
+            if (!searchInput) {
+                return;
+            }
 
-        $(this).find('input[name="search"]').keyup(function (e) {
-
-            var value = $(this).val();
-
-            $.ajax({
-                url: url + '/' + encodeURI(value),
-                method: 'GET',
-                dataType: 'JSON',
-                success: function (data) {
-
-                    form.find('.list-group').empty();
-
-                    if (data.status) {
-
-                        var users = data.data;
-
-                        for (var i = 0; i < users.length; i++) {
-
-                            console.log(users[i]);
-
-                            form.find('.list-group').prepend('<a href="<?= Router::url(['action' => 'edit', 'admin' => true]) ?>/' + users[i]['id'] + '" class="list-group-item">' + users[i]['pseudo'] + '</a>')
-
-                        }
-
-                        form.find('.list-group').slideDown(250);
-
-                    } else {
-                        form.find('.list-group').slideUp(250);
-                    }
-
-                },
-                error: function (data) {
-                    form.find('.list-group').slideUp(250);
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+                let val = searchInput.value || "";
+                if (!val) {
+                    return;
                 }
-            })
+                window.location.href = "<?= $this->Url->build(['_name' => 'admin_user_edit']) ?>/" + encodeURIComponent(val);
+            });
 
+            if (!listGroup) {
+                return;
+            }
+
+            searchInput.addEventListener('keyup', function () {
+                let value = searchInput.value || "";
+
+                fetch(baseUrl + '/' + encodeURIComponent(value), {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function (data) {
+                        listGroup.innerHTML = "";
+
+                        if (data.status) {
+                            let users = data.data || [];
+
+                            users.forEach(function (user) {
+                                let link = document.createElement('a');
+                                link.href = "<?= $this->Url->build(['_name' => 'admin_user_edit']) ?>/" + encodeURIComponent(user.id);
+                                link.className = 'list-group-item';
+                                link.textContent = user.username;
+                                listGroup.prepend(link);
+                            });
+
+                            listGroup.style.display = 'block';
+                        } else {
+                            listGroup.style.display = 'none';
+                        }
+                    })
+                    .catch(function () {
+                        listGroup.style.display = 'none';
+                    });
+            });
         });
     });
     <?php } ?>

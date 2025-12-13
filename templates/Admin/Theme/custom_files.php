@@ -1,50 +1,76 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <section class="content">
     <div class="row">
+
         <div class="col-md-3">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('THEME__CUSTOM_FILES_FILES') ?></h3>
+                    <h3 class="card-title"><?= __('THEME__CUSTOM_FILES_FILES') ?></h3>
                 </div>
+
                 <div class="card-body">
                     <ul>
-                        <?php
-                        foreach ($css_files as $file) {
-                            echo '<li class="file text-muted"><a href="#" class="viewFile" data-file="' . $file['basename'] . '" data-filename="' . $file['name'] . '">' . $file['basename'] . '</a></li>';
-
-                        }
-                        ?>
+                        <?php foreach ($css_files as $file): ?>
+                            <li class="file text-muted">
+                                <a
+                                    href="#"
+                                    class="viewFile"
+                                    data-file="<?= h($file['basename']) ?>"
+                                    data-filename="<?= h($file['name']) ?>"
+                                >
+                                    <?= h($file['basename']) ?>
+                                </a>
+                            </li>
+                        <?php endforeach; ?>
                     </ul>
                 </div>
             </div>
         </div>
+
+
         <div class="col-md-9">
             <div class="card">
+
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('THEME__CUSTOM_FILES_FILE_CONTENT') ?></h3>
+                    <h3 class="card-title"><?= __('THEME__CUSTOM_FILES_FILE_CONTENT') ?></h3>
                 </div>
+
                 <div class="card-body" style="position:relative;height:1000px;">
+
                     <p id="content">
-                        <i class="text-muted"><?= $Lang->get('THEME__CUSTOM_FILES_FILE_CONTENT_CHOOSE') ?></i>
+                        <i class="text-muted"><?= __('THEME__CUSTOM_FILES_FILE_CONTENT_CHOOSE') ?></i>
                     </p>
+
                     <div class="clearfix"></div>
-                    <form data-ajax="true" action="<?= Router::url(['action' => 'save_custom_file', $slug]) ?>"
-                          data-custom-function="getFileContent">
-                        <div class="ajax-msg"></div>
-                        <button id="saveButton" style="display:none;" type="submit"
-                                class="btn btn-primary"><?= $Lang->get('GLOBAL__SAVE') ?></button>
-                    </form>
+
+                    <?= $this->Form->create(null, [
+                        'url' => ['_name' => 'admin_theme_save_custom_file', $slug],
+                        'data-ajax' => 'true',
+                        'data-custom-function' => 'getFileContent'
+                    ]) ?>
+
+                    <div class="ajax-msg"></div>
+
+                    <button
+                        id="saveButton"
+                        type="submit"
+                        class="btn btn-primary"
+                        style="display:none;"
+                    >
+                        <?= __('GLOBAL__SAVE') ?>
+                    </button>
+
+                    <?= $this->Form->end() ?>
+
                 </div>
             </div>
         </div>
+
     </div>
 </section>
+
 <div style="height:30px"></div>
-<style media="screen">
+
+<style>
     #saveButton {
         bottom: -40px;
         position: absolute;
@@ -93,38 +119,38 @@ use Cake\Routing\Router;
 </style>
 
 <?= $this->Html->script('ace') ?>
-<script type="text/javascript">
-    $('.viewFile').on('click', function (e) {
-        e.preventDefault();
 
-        var btn = $(this);
-        var file = btn.attr('data-file');
-        var filename = btn.attr('data-filename');
+<script>
+    document.querySelectorAll('.viewFile').forEach(el => {
+        el.addEventListener('click', function (e) {
+            e.preventDefault();
 
-        $.ajax({
-            method: 'get',
-            url: '<?= Router::url(['action' => 'get_custom_file', $slug]) ?>' + file,
-            success: function (data) {
-                $('#content').html('<div id="editor">' + data + '</div>');
+            const file = this.dataset.file;
+            const filename = this.dataset.filename;
 
-                var editor = ace.edit("editor");
-                editor.setTheme("ace/theme/monokai");
-                editor.getSession().setMode("ace/mode/css");
+            fetch('<?= $this->Url->build(['_name' => 'admin_theme_get_custom_file', $slug]) ?>' + file)
+                .then(r => r.text())
+                .then(data => {
+                    document.querySelector('#content').innerHTML = '<div id="editor">' + data + '</div>';
 
-                $('#saveButton').attr('data-file', file).fadeIn(150);
+                    const editor = ace.edit("editor");
+                    editor.setTheme("ace/theme/monokai");
+                    editor.getSession().setMode("ace/mode/css");
 
-            },
-            error: function () {
-                alert('<?= $Lang->get('ERROR__INTERNAL_ERROR') ?>');
-            }
+                    const btn = document.querySelector('#saveButton');
+                    btn.dataset.file = file;
+                    btn.style.display = 'inline-block';
+                })
+                .catch(() => {
+                    alert('<?= __('ERROR__INTERNAL_ERROR') ?>');
+                });
         });
-
     });
 
     function getFileContent() {
         return {
-            'file': $('#saveButton').attr('data-file'),
-            'content': ace.edit("editor").getValue()
-        }
+            file: document.querySelector('#saveButton').dataset.file,
+            content: ace.edit("editor").getValue()
+        };
     }
 </script>

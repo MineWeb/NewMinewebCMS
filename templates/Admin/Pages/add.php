@@ -1,66 +1,108 @@
-<?php
-
-use Cake\Routing\Router;
-
-?>
 <section class="content">
     <div class="row">
         <div class="col-md-12">
+
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('PAGE__ADD') ?></h3>
+                    <h3 class="card-title"><?= __('PAGE__ADD') ?></h3>
                 </div>
+
                 <div class="card-body">
-                    <form action="<?= Router::url(['controller' => 'pages', 'action' => 'add_ajax', 'admin' => true]) ?>"
-                          method="post" data-ajax="true"
-                          data-redirect-url="<?= Router::url(['controller' => 'pages', 'action' => 'index', 'admin' => 'true']) ?>">
 
-                        <div class="ajax-msg"></div>
+                    <?= $this->Form->create(null, [
+                        'url' => ['_name' => 'admin_pages_add_ajax'],
+                        'data-ajax' => 'true',
+                        'data-redirect-url' => $this->Url->build(['_name' => 'admin_pages_index'])
+                    ]) ?>
 
-                        <div class="form-group">
-                            <label><?= $Lang->get('GLOBAL__TITLE') ?></label>
-                            <input name="title" class="form-control" placeholder="<?= $Lang->get('GLOBAL__TITLE') ?>"
-                                   type="text">
-                        </div>
+                    <div class="ajax-msg"></div>
 
-                        <div class="form-group">
-                            <label><?= $Lang->get('GLOBAL__SLUG') ?></label>
-                            <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text"><?= Router::url('/p/', true) ?></span>
-                                </div>
-                                <input name="slug" id="slug" class="form-control"
-                                       placeholder="<?= $Lang->get('GLOBAL__SLUG') ?>" type="text">
-                                <div class="input-group-append">
-                                    <a href="#" id="generate_slug"
-                                       class="btn btn-info"><?= $Lang->get('GLOBAL__GENERATE') ?></a>
-                                </div>
+                    <div class="form-group">
+                        <label for="title"><?= __('GLOBAL__TITLE') ?></label>
+                        <input
+                            id="title"
+                            name="title"
+                            class="form-control"
+                            placeholder="<?= __('GLOBAL__TITLE') ?>"
+                            type="text">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="slug"><?= __('GLOBAL__SLUG') ?></label>
+
+                        <div class="input-group mb-3">
+
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><?= h($this->Url->build('/p/', true)) ?></span>
                             </div>
-                        </div>
 
-                        <div class="form-group">
-                            <?= $this->Html->script('admin/tinymce/tinymce.min.js') ?>
-                            <script type="text/javascript">
-                                tinymce.init({
-                                    selector: "textarea",
-                                    height: 300,
-                                    width: '100%',
-                                    language: 'fr_FR',
-                                    plugins: "textcolor code image link",
-                                    toolbar: "fontselect fontsizeselect bold italic underline strikethrough image link forecolor backcolor alignleft aligncenter alignright alignjustify cut copy paste bullist numlist outdent indent blockquote code"
-                                });
-                            </script>
-                            <textarea id="editor" name="content" cols="30" rows="10"></textarea>
-                        </div>
+                            <input
+                                id="slug"
+                                name="slug"
+                                class="form-control"
+                                placeholder="<?= __('GLOBAL__SLUG') ?>"
+                                type="text">
 
-                        <div class="float-right">
-                            <a href="<?= Router::url(['controller' => 'pages', 'action' => 'admin_index', 'admin' => true]) ?>"
-                               class="btn btn-default"><?= $Lang->get('GLOBAL__CANCEL') ?></a>
-                            <button class="btn btn-primary" type="submit"><?= $Lang->get('GLOBAL__SUBMIT') ?></button>
+                            <div class="input-group-append">
+                                <a href="#" id="generate_slug" class="btn btn-info">
+                                    <?= __('GLOBAL__GENERATE') ?>
+                                </a>
+                            </div>
+
                         </div>
-                    </form>
+                    </div>
+
+                    <div class="form-group">
+                        <?= $this->Html->script('admin/tinymce/tinymce.min.js') ?>
+
+                        <script>
+                            tinymce.init({
+                                selector: "textarea",
+                                height: 300,
+                                width: "100%",
+                                language: "fr_FR",
+                                plugins: "textcolor code image link",
+                                toolbar: "fontselect fontsizeselect bold italic underline strikethrough image link forecolor backcolor alignleft aligncenter alignright alignjustify cut copy paste bullist numlist outdent indent blockquote code"
+                            });
+                        </script>
+
+                        <textarea id="editor" name="content" cols="30" rows="10"></textarea>
+                    </div>
+
+                    <div class="float-right">
+
+                        <a
+                            href="<?= $this->Url->build(['_name' => 'admin_pages_index']) ?>"
+                            class="btn btn-default"
+                        >
+                            <?= __('GLOBAL__CANCEL') ?>
+                        </a>
+
+                        <button class="btn btn-primary" type="submit">
+                            <?= __('GLOBAL__SUBMIT') ?>
+                        </button>
+
+                    </div>
+
+                    <?= $this->Form->end() ?>
+
                 </div>
             </div>
+
         </div>
     </div>
 </section>
+
+<script>
+    document.querySelector('#generate_slug')?.addEventListener('click', e => {
+        e.preventDefault();
+
+        const title = document.querySelector('#title')?.value || "";
+
+        document.querySelector('#slug').value = title
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "");
+    });
+</script>

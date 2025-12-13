@@ -1,53 +1,76 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
+use App\Utility\LangService;
 use Cake\Http\Exception\ForbiddenException;
-use Cake\Log\Log;
-use Cake\ORM\TableRegistry;
+use Cake\Http\Response;
 
 class HistoryController extends AppController
 {
-    public function index()
+    public function index(): ?Response
     {
-        if (!$this->Permissions->can('VIEW_WEBSITE_HISTORY'))
+        if (!$this->Auth->can('VIEW_WEBSITE_HISTORY')) {
             throw new ForbiddenException();
-        $this->set('title_for_layout', $this->Lang->get('HISTORY__VIEW_GLOBAL'));
+        }
+
+        $this->set('title_for_layout', __('HISTORY__VIEW_GLOBAL'));
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/History')
+            ->setTemplate('index');
+
+        return null;
     }
 
-    public function getAll()
+    public function getAll(): Response
     {
-        if (!$this->Permissions->can('VIEW_WEBSITE_HISTORY'))
+        if (!$this->Auth->can('VIEW_WEBSITE_HISTORY')) {
             throw new ForbiddenException();
+        }
+
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        $this->History = TableRegistry::getTableLocator()->get('History');
+        $historyTable = $this->fetchTable('Histories');
 
         $this->DataTable = $this->loadComponent('DataTable');
-        $this->DataTable->setTable($this->History);
+        $this->DataTable->setTable($historyTable);
+
         $this->paginate = [
-            'contain' => ['User'],
-            'fields' => ['History.id', 'User.pseudo', 'History.action', 'History.user_id', 'History.category', 'History.created'],
-            'order' => 'History.id DESC',
-            'recursive' => 1
+            'contain' => ['Users'],
+            'fields' => [
+                'Histories.id',
+                'Users.username',
+                'Histories.action',
+                'Histories.user_id',
+                'Histories.category',
+                'Histories.created_at',
+            ],
+            'order' => 'Histories.id DESC',
+            'recursive' => 1,
         ];
+
         $this->DataTable->mDataProp = true;
         $response = $this->DataTable->getResponse();
 
         $data = [];
-        foreach ($response["aaData"] as $history) {
+        foreach ($response['aaData'] as $history) {
             $data[] = [
-                "History" => [
-                    "action" => $this->Lang->history($history["action"]),
-                    "category" => $history["category"],
-                    "created" => $this->Lang->date($history["created"])
+                'Histories' => [
+                    'action' => LangService::history($history['action']),
+                    'category' => $history['category'],
+                    'created_at' => LangService::date($history['created_at']),
                 ],
-                "User" => $history["user"]
+                'Users' => $history['user'],
             ];
         }
 
-        $response["aaData"] = $data;
+        $response['aaData'] = $data;
+
         return $this->response->withStringBody(json_encode($response));
     }
 }

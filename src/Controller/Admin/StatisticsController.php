@@ -1,61 +1,69 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
 use Cake\Http\Exception\ForbiddenException;
+use Cake\Http\Response;
 
 class StatisticsController extends AppController
 {
-    function index()
+    public function index(): ?Response
     {
-        if ($this->isConnected and $this->Permissions->can('VIEW_STATISTICS')) {
-
-            $this->set('title_for_layout', $this->Lang->get('STATS__TITLE'));
-            $this->layout = 'admin';
-
-            $this->set('referers', $this->Visit->getGrouped('referer', 10));
-            $this->set('pages', $this->Visit->getGrouped('page', 10));
-            $this->set('language', $this->Visit->getGrouped('lang', 10));
-        } else {
-            $this->redirect('/');
+        if (!($this->Auth->isConnected() && $this->Auth->can('VIEW_STATISTICS'))) {
+            return $this->redirect('/');
         }
+
+        $this->set('title_for_layout', __('STATS__TITLE'));
+
+        $this->set('referers', $this->Visit->getGrouped('referer', 10));
+        $this->set('pages', $this->Visit->getGrouped('page', 10));
+        $this->set('language', $this->Visit->getGrouped('lang', 10));
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Statistics')
+            ->setTemplate('index');
+
+        return null;
     }
 
-    function getVisits()
+    public function getVisits(): Response
     {
-        if ($this->isConnected and $this->Permissions->can('VIEW_STATISTICS')) {
-            $this->response = $this->response->withType('application/json');
-
-            $this->disableAutoRender();
-
-            $visits = $this->Visit->getVisitRange(15);
-
-            if ($visits) {
-                foreach ($visits as $key => $value) {
-                    $oldDate = strtotime($key);
-                    $newDate = $oldDate * 1000;
-
-                    $visitsFormatted[] = [$newDate, intval($value)];
-                }
-
-                return $this->response->withStringBody(json_encode($visitsFormatted));
-            }
-
-        } else {
+        if (!($this->Auth->isConnected() && $this->Auth->can('VIEW_STATISTICS'))) {
             throw new ForbiddenException();
         }
+
+        $this->response = $this->response->withType('application/json');
+        $this->disableAutoRender();
+
+        $visits = $this->Visit->getVisitRange(15);
+        $visitsFormatted = [];
+
+        if ($visits) {
+            foreach ($visits as $date => $count) {
+                $timestamp = strtotime((string)$date);
+                if ($timestamp === false) {
+                    continue;
+                }
+                $visitsFormatted[] = [$timestamp * 1000, (int)$count];
+            }
+        }
+
+        return $this->response->withStringBody(json_encode($visitsFormatted));
     }
 
-    function reset()
+    public function reset(): Response
     {
         $this->disableAutoRender();
-        if ($this->isConnected and $this->Permissions->can('VIEW_STATISTICS')) {
-            $this->Visit->deleteAll(['1 = 1']);
 
-            $this->redirect(['action' => 'index', 'admin' => true]);
-        } else {
-            $this->redirect('/');
+        if (!($this->Auth->isConnected() && $this->Auth->can('VIEW_STATISTICS'))) {
+            return $this->redirect('/');
         }
-    }
 
+        $this->Visit->deleteAll(['1 = 1']);
+
+        return $this->redirect(['_name' => 'admin_statistics_index']);
+    }
 }

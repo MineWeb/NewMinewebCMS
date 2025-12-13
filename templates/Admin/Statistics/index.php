@@ -1,7 +1,5 @@
 <?php
 
-use Cake\Routing\Router;
-
 $colors = ['#1abc9c', '#2ecc71', '#3498db', '#e67e22', '#e74c3c'];
 $hosts = [];
 $ref_pie = [];
@@ -9,13 +7,11 @@ $i = 0;
 foreach ($referers as $ref => $visitcount) {
     $host = parse_url($ref, PHP_URL_HOST);
     if (!in_array($host, $hosts)) {
-        // Check page URL not null
         if ($host != 'null') {
             $hosts[] = $host;
         } else {
             $hosts[] = 'N/A';
         }
-        // Loop color if needed
         if (!isset($colors[$i])) {
             $i = 0;
         }
@@ -24,7 +20,6 @@ foreach ($referers as $ref => $visitcount) {
         $ref_pie['color'][] = $color;
         $ref_pie['value'][] = $visitcount;
         $ref_pie['label'][] = $host;
-        // Next color
         $i++;
     }
 }
@@ -33,7 +28,6 @@ $pages_pie = [];
 $i = 0;
 foreach ($pages as $page => $visitcount) {
     $page = addslashes(urldecode($page));
-    // Loop color if needed
     if (!isset($colors[$i])) {
         $i = 0;
     }
@@ -42,7 +36,6 @@ foreach ($pages as $page => $visitcount) {
     $pages_pie['color'][] = $color;
     $pages_pie['value'][] = $visitcount;
     $pages_pie['label'][] = $page;
-    // Next color
     $i++;
 }
 ?>
@@ -50,15 +43,15 @@ foreach ($pages as $page => $visitcount) {
     <div class="row">
 
         <div class="col-md-12">
-            <a href="<?= Router::url(['action' => 'reset', 'admin' => true]) ?>"
-               class="btn btn-info btn-block"><?= $Lang->get('STATS__RESET_LABEL') ?></a>
+            <a href="<?= $this->Url->build(['_name' => 'admin_statistics_reset']) ?>"
+               class="btn btn-info btn-block"><?= __('STATS__RESET_LABEL') ?></a>
         </div>
         <br><br>
 
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('STATS__VISITS_REFERING_WEBSITE') ?></h3>
+                    <h3 class="card-title"><?= __('STATS__VISITS_REFERING_WEBSITE') ?></h3>
                 </div>
                 <div class="card-body">
                     <canvas id="pieChart_referers" height="300"></canvas>
@@ -74,10 +67,10 @@ foreach ($pages as $page => $visitcount) {
                             },
                             options: {
                                 title: {
-                                    display: false,
+                                    display: false
                                 },
                                 responsive: false,
-                                legend: {display: false},
+                                legend: {display: false}
                             }
                         });
                     </script>
@@ -87,7 +80,7 @@ foreach ($pages as $page => $visitcount) {
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('STATS__VISITS_PAGES') ?></h3>
+                    <h3 class="card-title"><?= __('STATS__VISITS_PAGES') ?></h3>
                 </div>
                 <div class="card-body">
 
@@ -104,10 +97,10 @@ foreach ($pages as $page => $visitcount) {
                             },
                             options: {
                                 title: {
-                                    display: false,
+                                    display: false
                                 },
                                 responsive: false,
-                                legend: {display: false},
+                                legend: {display: false}
                             }
                         });
                     </script>
@@ -119,7 +112,7 @@ foreach ($pages as $page => $visitcount) {
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header with-border">
-                    <h3 class="card-title"><?= $Lang->get('GLOBAL__VISITORS') ?></h3>
+                    <h3 class="card-title"><?= __('GLOBAL__VISITORS') ?></h3>
                 </div>
                 <div class="card-body">
                     <?= $this->Html->script('highcharts') ?>
@@ -130,66 +123,75 @@ foreach ($pages as $page => $visitcount) {
     </div>
 </section>
 <script type="text/javascript">
-    $(function () {
-        $.getJSON('<?= Router::url(['action' => 'get_visits', 'admin' => true]) ?>', function (data) {
+    document.addEventListener('DOMContentLoaded', function () {
+        let url = '<?= $this->Url->build(['_name' => 'admin_statistics_get_visits']) ?>';
 
-            $('#visits').highcharts({
-                chart: {
-                    zoomType: 'x'
-                },
-                title: {
-                    text: ''
-                },
-                subtitle: {
-                    text: false
-                },
-                xAxis: {
-                    type: 'datetime',
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                Highcharts.chart('visits', {
+                    chart: {
+                        zoomType: 'x'
+                    },
                     title: {
-                        text: '<?= $Lang->get('GLOBAL__CREATED') ?>'
-                    }
-                },
-                yAxis: {
-                    title: {
-                        text: '<?= $Lang->get('GLOBAL__VISITORS') ?>'
-                    }
-                },
-                legend: {
-                    enabled: false
-                },
-                plotOptions: {
-                    area: {
-                        fillColor: {
-                            linearGradient: {
-                                x1: 0,
-                                y1: 0,
-                                x2: 0,
-                                y2: 1
+                        text: ''
+                    },
+                    subtitle: {
+                        text: false
+                    },
+                    xAxis: {
+                        type: 'datetime',
+                        title: {
+                            text: '<?= __('GLOBAL__CREATED') ?>'
+                        }
+                    },
+                    yAxis: {
+                        title: {
+                            text: '<?= __('GLOBAL__VISITORS') ?>'
+                        }
+                    },
+                    legend: {
+                        enabled: false
+                    },
+                    plotOptions: {
+                        area: {
+                            fillColor: {
+                                linearGradient: {
+                                    x1: 0,
+                                    y1: 0,
+                                    x2: 0,
+                                    y2: 1
+                                },
+                                stops: [
+                                    [0, Highcharts.getOptions().colors[0]],
+                                    [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+                                ]
                             },
-                            stops: [
-                                [0, Highcharts.getOptions().colors[0]],
-                                [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
-                            ]
-                        },
-                        marker: {
-                            radius: 2
-                        },
-                        lineWidth: 1,
-                        states: {
-                            hover: {
-                                lineWidth: 1
-                            }
-                        },
-                        threshold: null
-                    }
-                },
-
-                series: [{
-                    type: 'area',
-                    name: '<?= $Lang->get('GLOBAL__VISITORS') ?>',
-                    data: data
-                }]
+                            marker: {
+                                radius: 2
+                            },
+                            lineWidth: 1,
+                            states: {
+                                hover: {
+                                    lineWidth: 1
+                                }
+                            },
+                            threshold: null
+                        }
+                    },
+                    series: [{
+                        type: 'area',
+                        name: '<?= __('GLOBAL__VISITORS') ?>',
+                        data: data
+                    }]
+                });
             });
-        });
     });
 </script>

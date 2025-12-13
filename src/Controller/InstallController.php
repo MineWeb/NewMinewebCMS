@@ -1,74 +1,475 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller;
 
-use Cake\Event\Event;
+use App\Service\InstallState;
+use App\Service\UserAuthService;
+use Cake\Database\Connection;
+use Cake\Database\Driver\Mysql;
+use Cake\Database\Driver\Sqlite;
+use Cake\Datasource\ConnectionManager;
 use Cake\Event\EventInterface;
-use Cake\Http\Exception\NotFoundException;
-use Cake\ORM\TableRegistry;
+use Cake\Http\Response;
+use Cake\Log\Log;
+use Migrations\Migrations;
+use PDO;
+use PDOException;
+use Throwable;
 
-class InstallController extends AppController
+/**
+ * @property \App\Controller\Component\UtilComponent $Util
+ */
+class InstallController extends BaseController
 {
-    public function beforeFilter(EventInterface $event)
+    public function initialize(): void
+    {
+        parent::initialize();
+
+        $this->loadComponent('Util');
+        $this->viewBuilder()->setLayout('install');
+    }
+
+    public function beforeFilter(EventInterface $event): void
     {
         parent::beforeFilter($event);
-        if (file_exists(ROOT . DS . 'config' . DS . 'installed.txt'))
-            $this->redirect('/');
-    }
 
-    public function index()
-    {
-        $this->viewBuilder()
-            ->setLayout('install');
+        if (InstallState::isInstalled()) {
+            $this->setResponse($this->redirect(['_name' => 'home']));
+            $event->stopPropagation();
+            return;
+        }
 
-        $this->set('title_for_layout', $this->Lang->get('INSTALL__INSTALL'));
-        $users = TableRegistry::getTableLocator()->get('User');
-        $admin = $users->find()->first();
-        if (!empty($admin)) {
-            $this->set('admin_pseudo', $admin->get('pseudo'));
-            $this->set('admin_password', 1);
-            $this->set('admin_email', $admin->get('email'));
+        $path = (string)$this->request->getUri()->getPath();
+
+        if (strncmp($path, '/install', 8) !== 0 && $path !== '/') {
+            $this->setResponse($this->redirect(['_name' => 'install_index']));
+            $event->stopPropagation();
         }
     }
 
-    public function step1()
+    public function index(): Response
     {
-        $this->autoRender = false;
-        $this->response->withType('json');
-
-        if (!$this->request->is('ajax'))
-            throw new NotFoundException();
-        $ip = $this->Util->getIP();
-        if (file_exists(ROOT . DS . 'config' . DS . 'secure.txt')) {
-            $secure = json_decode(file_get_contents(ROOT . DS . 'config' . DS . 'secure.txt'), true);
-            if ($secure['ip'] != $ip)
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__IP_WRONG')]));
+        if (!InstallState::isDatabaseConfigured()) {
+            return $this->redirect(['_name' => 'install_database']);
         }
-        if (empty($this->request->getData('pseudo')) || empty($this->request->getData('password')) || empty($this->request->getData('password_confirmation')) || empty($this->request->getData('email')))
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
-        if ($this->request->getData('password') !== $this->request->getData('password_confirmation'))
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('USER__ERROR_PASSWORDS_NOT_SAME')]));
-        if (!filter_var($this->request->getData('email'), FILTER_VALIDATE_EMAIL))
-            return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('USER__ERROR_EMAIL_NOT_VALID')]));
 
-        $this->request = $this->request->withData('ip', $ip);
-        $this->request = $this->request->withData('rank', 4);
-        $this->request = $this->request->withData('password', $this->Util->password($this->request->getData('password'), $this->request->getData('pseudo')));
-
-        $userTable = TableRegistry::getTableLocator()->get("User");
-        $user = $userTable->newEntity($this->request->getData());
-        $userTable->save($user);
-
-        $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('USER__REGISTER_SUCCESS')]));
+        return $this->redirect(['_name' => 'install_user']);
     }
 
-    public function end()
+    public function database(): Response
     {
-        $this->autoRender = false;
-        if (!file_exists(ROOT . DS . 'config' . DS . 'installed.txt')) {
-            file_put_contents(ROOT . DS . 'config' . DS . 'installed.txt', "\n");
-            $this->redirect('/');
+        if ($this->request->is('post')) {
+            return $this->handleDatabasePost();
+        }
+
+        $this->set('title_for_layout', __('INSTALL__DB_TITLE'));
+
+        $dbConfigured = InstallState::isDatabaseConfigured();
+        $needDisplayDatabase = !$dbConfigured;
+
+        $compatible = [];
+        $help = [];
+
+        $compatible['chmod'] =
+            is_writable(ROOT . DIRECTORY_SEPARATOR . 'config') &&
+            is_writable(ROOT . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Data') &&
+            is_writable(ROOT . DIRECTORY_SEPARATOR . 'plugins') &&
+            is_writable(ROOT . DIRECTORY_SEPARATOR . 'tmp') &&
+            is_writable(ROOT . DIRECTORY_SEPARATOR . 'webroot' . DIRECTORY_SEPARATOR . 'js');
+
+        if (!$compatible['chmod']) {
+            $help['chmod'] = '';
+
+            if (!is_writable(ROOT . DIRECTORY_SEPARATOR . 'config')) {
+                $help['chmod'] .= __('INSTALL__DIR_NOT_WRITABLE_CONFIG') . '<br /><br />';
+            }
+
+            if (!is_writable(ROOT . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Data')) {
+                $help['chmod'] .= __('INSTALL__DIR_NOT_WRITABLE_DATA') . '<br /><br />';
+            }
+
+            if (!is_writable(ROOT . DIRECTORY_SEPARATOR . 'plugins')) {
+                $help['chmod'] .= __('INSTALL__DIR_NOT_WRITABLE_PLUGINS') . '<br /><br />';
+            }
+
+            if (!file_exists(ROOT . DIRECTORY_SEPARATOR . 'tmp')) {
+                $help['chmod'] .= __('INSTALL__DIR_MISSING_TMP') . '<br /><br />';
+            } elseif (!is_writable(ROOT . DIRECTORY_SEPARATOR . 'tmp')) {
+                $help['chmod'] .= __('INSTALL__DIR_NOT_WRITABLE_TMP') . '<br /><br />';
+            }
+
+            if (!is_writable(ROOT . DIRECTORY_SEPARATOR . 'webroot' . DIRECTORY_SEPARATOR . 'js')) {
+                $help['chmod'] .= __('INSTALL__DIR_NOT_WRITABLE_WEBROOT_JS') . '<br /><br />';
+            }
+        }
+
+        $compatible['pdo'] = in_array('pdo_mysql', get_loaded_extensions(), true);
+        $compatible['curl'] = extension_loaded('curl');
+        $compatible['gd2'] = function_exists('imagettftext');
+        $compatible['openZip'] = function_exists('zip_open');
+        $compatible['openSSL'] = extension_loaded('openssl');
+
+        if (!$compatible['pdo']) {
+            $help['pdo'] = __('INSTALL__EXT_PDO_MYSQL_MISSING');
+        }
+
+        if (!$compatible['curl']) {
+            $help['curl'] = __('INSTALL__EXT_CURL_MISSING');
+        }
+
+        if (!$compatible['gd2']) {
+            $help['gd2'] = __('INSTALL__EXT_GD2_MISSING');
+        }
+
+        if (!$compatible['openZip']) {
+            $help['openZip'] = __('INSTALL__EXT_ZIP_MISSING');
+        }
+
+        if (!$compatible['openSSL']) {
+            $help['openSSL'] = __('INSTALL__EXT_OPENSSL_MISSING');
+        }
+
+        $compatible['rewriteUrl'] = true;
+
+        $allowUrlFopen = false;
+        if (function_exists('ini_get') && ini_get('allow_url_fopen') === '1') {
+            $allowUrlFopen = true;
         } else {
-            $this->redirect(['controller' => 'install', 'action' => 'index']);
+            $context = stream_context_create(['http' => ['timeout' => 1]]);
+            $probe = @file_get_contents('https://google.fr', false, $context);
+            if ($probe !== false) {
+                $allowUrlFopen = true;
+            }
         }
+
+        $compatible['allowGetURL'] = $allowUrlFopen;
+
+        $needAffichCompatibility = in_array(false, $compatible, true);
+
+        if (file_exists(ROOT . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'bypass_compatibility')) {
+            $needAffichCompatibility = false;
+        }
+
+        if ($needAffichCompatibility) {
+            $needDisplayDatabase = false;
+        }
+
+        $this->set(compact(
+            'compatible',
+            'help',
+            'needAffichCompatibility',
+            'needDisplayDatabase',
+            'dbConfigured'
+        ));
+
+        $this->viewBuilder()
+            ->setTemplatePath('Install')
+            ->setTemplate('database');
+
+        return $this->render();
+    }
+
+    public function install(): Response
+    {
+        $this->disableAutoRender();
+
+        if (!$this->request->is('post')) {
+            return $this->response
+                ->withType('application/json')
+                ->withStringBody(json_encode([
+                    'status' => false,
+                    'messages' => __('ERROR__BAD_REQUEST'),
+                ]));
+        }
+
+        if (!InstallState::isDatabaseConfigured()) {
+            return $this->response
+                ->withType('application/json')
+                ->withStringBody(json_encode([
+                    'status' => false,
+                    'messages' => __('INSTALL__DB_NOT_CONFIGURED'),
+                ]));
+        }
+
+        $this->reloadConnectionFromDatabasesJson();
+        $this->runMigrations();
+
+        return $this->response
+            ->withType('application/json')
+            ->withStringBody(json_encode([
+                'status' => true,
+            ]));
+    }
+
+    private function handleDatabasePost(): Response
+    {
+        $this->disableAutoRender();
+
+        $type = (int)$this->request->getData('type');
+        $host = (string)$this->request->getData('host');
+        $database = (string)$this->request->getData('database');
+        $username = (string)$this->request->getData('login');
+        $password = (string)$this->request->getData('password');
+
+        if ($type === 0) {
+            if ($host === '' || $database === '' || $username === '') {
+                return $this->response
+                    ->withType('application/json')
+                    ->withStringBody(json_encode([
+                        'status' => false,
+                        'messages' => __('ERROR__FILL_ALL_FIELDS'),
+                    ]));
+            }
+
+            $dsn = 'mysql:host=' . $host . ';dbname=' . $database . ';charset=utf8mb4';
+
+            try {
+                new PDO($dsn, $username, $password, [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                ]);
+            } catch (PDOException $e) {
+                return $this->response
+                    ->withType('application/json')
+                    ->withStringBody(json_encode([
+                        'status' => false,
+                        'messages' => __('INSTALL__DB_MYSQL_CONNECT_ERROR', ['message' => $e->getMessage()]),
+                    ]));
+            }
+
+            $dbData = [
+                'driver' => 'Mysql',
+                'host' => $host,
+                'username' => $username,
+                'password' => $password,
+                'database' => $database,
+            ];
+
+            if (!InstallState::markDatabaseConfigured($dbData)) {
+                return $this->response
+                    ->withType('application/json')
+                    ->withStringBody(json_encode([
+                        'status' => false,
+                        'messages' => __('INSTALL__DB_WRITE_CONFIG_FAILED'),
+                    ]));
+            }
+
+            return $this->response
+                ->withType('application/json')
+                ->withStringBody(json_encode(['status' => true]));
+        }
+
+        if ($type === 1) {
+            if (!in_array('pdo_sqlite', get_loaded_extensions(), true)) {
+                return $this->response
+                    ->withType('application/json')
+                    ->withStringBody(json_encode([
+                        'status' => false,
+                        'messages' => __('INSTALL__EXT_PDO_SQLITE_MISSING'),
+                    ]));
+            }
+
+            $dbPath = ROOT . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Data' . DIRECTORY_SEPARATOR . 'database.db';
+            $dsn = 'sqlite:' . $dbPath;
+
+            try {
+                new PDO($dsn, null, null, [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                ]);
+            } catch (PDOException $e) {
+                return $this->response
+                    ->withType('application/json')
+                    ->withStringBody(json_encode([
+                        'status' => false,
+                        'messages' => __('INSTALL__DB_SQLITE_CONNECT_ERROR', ['message' => $e->getMessage()]),
+                    ]));
+            }
+
+            $dbData = [
+                'driver' => 'Sqlite',
+                'host' => '',
+                'username' => '',
+                'password' => '',
+                'database' => $dbPath,
+            ];
+
+            if (!InstallState::markDatabaseConfigured($dbData)) {
+                return $this->response
+                    ->withType('application/json')
+                    ->withStringBody(json_encode([
+                        'status' => false,
+                        'messages' => __('INSTALL__DB_WRITE_CONFIG_FAILED'),
+                    ]));
+            }
+
+            return $this->response
+                ->withType('application/json')
+                ->withStringBody(json_encode(['status' => true]));
+        }
+
+        return $this->response
+            ->withType('application/json')
+            ->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('INSTALL__DB_INVALID_TYPE'),
+            ]));
+    }
+
+    private function reloadConnectionFromDatabasesJson(): void
+    {
+        $file = InstallState::databasesFile();
+        $json = file_get_contents($file);
+        if ($json === false) {
+            return;
+        }
+
+        $data = json_decode($json, true);
+        if (!is_array($data)) {
+            return;
+        }
+
+        $driver = $data['driver'] ?? 'Mysql';
+
+        $config = [];
+
+        if ($driver === 'Mysql') {
+            $config = [
+                'className' => Connection::class,
+                'driver' => Mysql::class,
+                'host' => $data['host'] ?? 'localhost',
+                'username' => $data['username'] ?? '',
+                'password' => $data['password'] ?? '',
+                'database' => $data['database'] ?? '',
+                'encoding' => 'utf8mb4',
+                'timezone' => 'UTC',
+                'persistent' => false,
+            ];
+        } elseif ($driver === 'Sqlite') {
+            $config = [
+                'className' => Connection::class,
+                'driver' => Sqlite::class,
+                'database' => $data['database'] ?? '',
+            ];
+        }
+
+        if ($config !== []) {
+            ConnectionManager::drop('default');
+            ConnectionManager::setConfig('default', $config);
+        }
+    }
+
+    private function runMigrations(): void
+    {
+        $migrations = new Migrations();
+
+        try {
+            $migrations->migrate();
+            $migrations->seed([
+                'seed' => 'ConfigurationSeed',
+            ]);
+        } catch (Throwable $e) {
+            Log::error('Migration or seed failed: ' . $e->getMessage());
+        }
+    }
+
+    public function user(): Response
+    {
+        if (!InstallState::isDatabaseConfigured()) {
+            return $this->redirect(['_name' => 'install_database']);
+        }
+
+        $this->set('title_for_layout', __('INSTALL__ADMIN_TITLE'));
+
+        if ($this->request->is('post')) {
+            return $this->handleUserPost();
+        }
+
+        $this->viewBuilder()
+            ->setTemplatePath('Install')
+            ->setTemplate('user');
+
+        return $this->render();
+    }
+
+    private function handleUserPost(): Response
+    {
+        $this->disableAutoRender();
+
+        $data = $this->request->getData();
+
+        $ip = method_exists($this->Util, 'getIP')
+            ? (string)$this->Util->getIP()
+            : $this->request->clientIp();
+
+        if (empty($data['username']) || empty($data['password']) || empty($data['password_confirmation']) || empty($data['email'])) {
+            return $this->response
+                ->withType('application/json')
+                ->withStringBody(json_encode([
+                    'status' => false,
+                    'messages' => __('ERROR__FILL_ALL_FIELDS'),
+                ]));
+        }
+
+        if ($data['password'] !== $data['password_confirmation']) {
+            return $this->response
+                ->withType('application/json')
+                ->withStringBody(json_encode([
+                    'status' => false,
+                    'messages' => __('USER__ERROR_PASSWORDS_NOT_SAME'),
+                ]));
+        }
+
+        if (!filter_var((string)$data['email'], FILTER_VALIDATE_EMAIL)) {
+            return $this->response
+                ->withType('application/json')
+                ->withStringBody(json_encode([
+                    'status' => false,
+                    'messages' => __('USER__ERROR_EMAIL_NOT_VALID'),
+                ]));
+        }
+
+        $Users = $this->fetchTable('Users');
+        $existingAdmin = $Users->find()->first();
+
+        if ($existingAdmin) {
+            InstallState::markInstalled();
+
+            return $this->response
+                ->withType('application/json')
+                ->withStringBody(json_encode([
+                    'status' => true,
+                    'messages' => __('INSTALL__ADMIN_ALREADY_EXISTS'),
+                ]));
+        }
+
+        $auth = new UserAuthService();
+
+        $dataToSave = [
+            'username' => (string)$data['username'],
+            'email' => (string)$data['email'],
+            'password' => (string)$data['password'],
+            'rank' => 4,
+        ];
+
+        $userId = $auth->createUser($dataToSave, $ip);
+
+        if ($userId <= 0) {
+            return $this->response
+                ->withType('application/json')
+                ->withStringBody(json_encode([
+                    'status' => false,
+                    'messages' => __('ERROR__INTERNAL_ERROR'),
+                ]));
+        }
+
+        InstallState::markInstalled();
+
+        return $this->response
+            ->withType('application/json')
+            ->withStringBody(json_encode([
+                'status' => true,
+                'messages' => __('USER__REGISTER_SUCCESS'),
+                'redirect' => '/',
+            ]));
     }
 }

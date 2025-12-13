@@ -1,154 +1,260 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
+use App\Service\PermissionService;
 use Cake\Http\Exception\ForbiddenException;
-use Cake\ORM\TableRegistry;
+use Cake\Http\Response;
 
+/**
+ * @property \App\Controller\Component\AuthComponent $Auth
+ * @property \App\Controller\Component\DataTableComponent $DataTable
+ * @property \App\Model\Table\BansTable $Bans
+ * @property \App\Model\Table\UsersTable $Users
+ * @property \App\Model\Table\RanksTable $Ranks
+ */
 class BanController extends AppController
 {
-    function index()
+    private PermissionService $permissions;
+
+    public function initialize(): void
     {
-        if (!$this->isConnected || !$this->Permissions->can("MANAGE_BAN"))
-            throw new ForbiddenException();
+        parent::initialize();
 
-        $this->set('title_for_layout', $this->Lang->get("BAN__HOME"));
-        $banned_users = $this->Ban->find()->all();
+        $this->loadComponent('DataTable');
 
-        $this->set(compact("banned_users"));
+        $this->Bans = $this->fetchTable('Bans');
+        $this->Users = $this->fetchTable('Users');
+        $this->Ranks = $this->fetchTable('Ranks');
+
+        $this->permissions = new PermissionService();
     }
 
-    function add()
+    public function index(): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can("MANAGE_BAN"))
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_BAN')) {
             throw new ForbiddenException();
-
-        $this->set('title_for_layout', $this->Lang->get("BAN__HOME"));
-        $this->set('type', $this->Configuration->getKey('member_page_type'));
-
-        if ($this->request->is("post")) {
-            $this->autoRender = false;
-            $this->response = $this->response->withType('application/json');
-
-            if (empty($this->getRequest()->getData("reason")))
-                return $this->response->withStringBody(json_encode(['statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')]));
-
-            foreach ($this->request->getData() as $key => $v) {
-                if ($v != "on" || $key == "name" || strpos($key, "-ip"))
-                    continue;
-
-                $ban = $this->Ban->newEntity([
-                    "user_id" => $key,
-                    "reason" => $this->request->getData("reason")
-                ]);
-                if ($this->request->getData($key . "-ip") == "on")
-                    $ban->set([
-                        "ip" => $this->User->find("all", ["conditions" => ['id' => $key]])->first()['ip']
-                    ]);
-
-                $this->Ban->save($ban);
-            }
-
-            return $this->response->withStringBody(json_encode(['statut' => true, 'msg' => $this->Lang->get('BAN__SUCCESS')]));
         }
+
+        $this->set('title_for_layout', __('BAN__HOME'));
+
+        $banned_users = $this->Bans->find()->all();
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Ban')
+            ->setTemplate('index');
+
+        $this->set(compact('banned_users'));
+
+        return null;
     }
 
-    function unban($id = false)
+    public function add(): ?Response
     {
-        if (!$this->isConnected || !$this->Permissions->can("MANAGE_BAN"))
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_BAN')) {
             throw new ForbiddenException();
+        }
 
-        $this->Ban->delete($this->Ban->get($id));
-        $this->Flash->success($this->Lang->get('BAN__UNBAN_SUCCESS'));
-        $this->redirect(['controller' => 'ban', 'action' => 'index', 'admin' => true]);
-        return $this->response;
-    }
+        $this->set('title_for_layout', __('BAN__HOME'));
 
-    public function getUsersNotBan()
-    {
-        if ($this->isConnected and $this->Permissions->can('MANAGE_BAN')) {
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Ban')
+            ->setTemplate('add');
+
+        $request = $this->getRequest();
+
+        if ($request->is('post')) {
             $this->disableAutoRender();
             $this->response = $this->response->withType('application/json');
-            if ($this->request->is('ajax')) {
-                $available_ranks = [
-                    0 => ['label' => 'success', 'name' => $this->Lang->get('USER__RANK_MEMBER')],
-                    2 => ['label' => 'warning', 'name' => $this->Lang->get('USER__RANK_MODERATOR')],
-                    3 => ['label' => 'danger', 'name' => $this->Lang->get('USER__RANK_ADMINISTRATOR')],
-                    4 => ['label' => 'danger', 'name' => $this->Lang->get('USER__RANK_ADMINISTRATOR')]
-                ];
-                $this->Rank = TableRegistry::getTableLocator()->get('Rank');
-                $custom_ranks = $this->Rank->find()->all();
-                foreach ($custom_ranks as $value) {
-                    $available_ranks[$value['rank_id']] = [
-                        'label' => 'info',
-                        'name' => $value['name']
-                    ];
-                }
-                $this->DataTable = $this->loadComponent('DataTable');
-                $this->DataTable->setTable($this->User);
-                $this->paginate = [
-                    'fields' => ['User.id', 'User.pseudo', 'User.rank', 'User.ip'],
-                ];
-                $this->DataTable->mDataProp = true;
-                $response = $this->DataTable->getResponse();
-                $users = $response['aaData'];
-                $data = [];
-                foreach ($users as $value) {
-                    $checkIsBan = $this->Ban->find('all', ["conditions" => ['user_id' => $value['id']]])->first();
 
-                    if ($checkIsBan != null)
-                        continue;
-
-                    if ($this->Permissions->have($value['rank'], "BYPASS_BAN"))
-                        continue;
-
-                    $username = $value['pseudo'];
-                    $rank_label = (isset($available_ranks[$value['rank']])) ? $available_ranks[$value['rank']]['label'] : $available_ranks[0]['label'];
-                    $rank_name = (isset($available_ranks[$value['rank']])) ? $available_ranks[$value['rank']]['name'] : $available_ranks[0]['name'];
-                    $rank = '<span class="label label-' . $rank_label . '">' . $rank_name . '</span>';
-                    $checkbox = "<input type='checkbox' name=" . $value['id'] . ">";
-                    $banIpCheckbox = "<input type='checkbox' name=" . $value['id'] . "-ip>";
-                    $data[] = [
-                        'User' => [
-                            'pseudo' => $username,
-                            'ban' => $checkbox,
-                            'banIp' => $banIpCheckbox,
-                            'rank' => $rank,
-                            'ip' => $value['ip']
-                        ]
-                    ];
-                }
-                $response['aaData'] = $data;
-                return $this->response->withStringBody(json_encode($response));
+            $reason = (string)$request->getData('reason', '');
+            if ($reason === '') {
+                return $this->response->withStringBody(json_encode([
+                    'status' => false,
+                    'messages' => __('ERROR__FILL_ALL_FIELDS'),
+                ]));
             }
+
+            foreach ((array)$request->getData() as $key => $value) {
+                if ($value !== 'on' || $key === 'name' || str_contains((string)$key, '-ip')) {
+                    continue;
+                }
+
+                $userId = (int)$key;
+                if ($userId <= 0) {
+                    continue;
+                }
+
+                $ban = $this->Bans->newEntity([
+                    'user_id' => $userId,
+                    'reason' => $reason,
+                ]);
+
+                $ipFieldName = $userId . '-ip';
+                if ($request->getData($ipFieldName) === 'on') {
+                    $user = $this->Users->find()
+                        ->select(['id', 'ip'])
+                        ->where(['id' => $userId])
+                        ->first();
+
+                    if ($user !== null && isset($user->ip) && is_string($user->ip)) {
+                        $ban->ip = $user->ip;
+                    }
+                }
+
+                $this->Bans->save($ban);
+            }
+
+            return $this->response->withStringBody(json_encode([
+                'status' => true,
+                'messages' => __('BAN__SUCCESS'),
+            ]));
         }
+
+        return null;
     }
 
-    function liveSearch($query = false)
+    public function unban(int|string $id = 0): Response
+    {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_BAN')) {
+            throw new ForbiddenException();
+        }
+
+        $ban = $this->Bans->get((int)$id);
+        $this->Bans->delete($ban);
+
+        $this->Flash->success(__('BAN__UNBAN_SUCCESS'));
+
+        return $this->redirect(['_name' => 'admin_ban_index']);
+    }
+
+    public function getUsersNotBan(): Response
     {
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
-        if ($this->isConnected and $this->Permissions->can('MANAGE_BAN')) {
-            if ($query) {
-                $result = $this->User->find('all', ['conditions' => ['pseudo LIKE' => $query . '%']])->all();
-                foreach ($result as $value) {
-                    $checkIsBan = $this->Ban->find('all', ["conditions" => ['user_id' => $value['id']]])->first();
 
-                    if ($checkIsBan != null)
-                        continue;
-
-                    if ($this->Permissions->have($value['rank'], "BYPASS_BAN"))
-                        continue;
-
-                    $users[] = ['pseudo' => $value['pseudo'], 'id' => $value['id']];
-                }
-                $response = (empty($result)) ? ['status' => false] : ['status' => true, 'data' => $users];
-                return $this->response->withStringBody(json_encode($response));
-            } else {
-                return $this->response->withStringBody(json_encode(['status' => false]));
-            }
-        } else {
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_BAN')) {
             return $this->response->withStringBody(json_encode(['status' => false]));
         }
+
+        if (!$this->getRequest()->is('ajax')) {
+            return $this->response->withStringBody(json_encode(['status' => false]));
+        }
+
+        $available_ranks = [
+            0 => ['label' => 'success', 'name' => __('USER__RANK_MEMBER')],
+            2 => ['label' => 'warning', 'name' => __('USER__RANK_MODERATOR')],
+            3 => ['label' => 'danger', 'name' => __('USER__RANK_ADMINISTRATOR')],
+            4 => ['label' => 'danger', 'name' => __('USER__RANK_ADMINISTRATOR')],
+        ];
+
+        foreach ($this->Ranks->find()->all() as $rank) {
+            $rid = (int)($rank->rank_id ?? 0);
+            if ($rid <= 0) {
+                continue;
+            }
+
+            $available_ranks[$rid] = [
+                'label' => 'info',
+                'name' => (string)($rank->name ?? ''),
+            ];
+        }
+
+        $this->DataTable->setTable($this->Users);
+        $this->paginate = [
+            'fields' => ['Users.id', 'Users.username', 'Users.rank', 'Users.ip'],
+        ];
+        $this->DataTable->mDataProp = true;
+
+        $response = $this->DataTable->getResponse();
+        $users = $response['aaData'] ?? [];
+
+        $data = [];
+
+        foreach ($users as $value) {
+            $userId = (int)($value['id'] ?? 0);
+            $rankId = (int)($value['rank'] ?? 0);
+
+            if ($userId <= 0) {
+                continue;
+            }
+
+            if ($this->Bans->exists(['user_id' => $userId])) {
+                continue;
+            }
+
+            if ($this->permissions->have($rankId, 'BYPASS_BAN')) {
+                continue;
+            }
+
+            $rankConfig = $available_ranks[$rankId] ?? $available_ranks[0];
+
+            $data[] = [
+                'Users' => [
+                    'username' => (string)($value['username'] ?? ''),
+                    'ban' => "<input type='checkbox' name='{$userId}'>",
+                    'banIp' => "<input type='checkbox' name='{$userId}-ip'>",
+                    'rank' => "<span class=\"label label-{$rankConfig['label']}\">{$rankConfig['name']}</span>",
+                    'ip' => (string)($value['ip'] ?? ''),
+                ],
+            ];
+        }
+
+        $response['aaData'] = $data;
+
+        return $this->response->withStringBody(json_encode($response));
+    }
+
+    public function liveSearch(?string $query = null): Response
+    {
+        $this->disableAutoRender();
+        $this->response = $this->response->withType('application/json');
+
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_BAN'))) {
+            return $this->response->withStringBody(json_encode(['status' => false]));
+        }
+
+        if (!$query) {
+            return $this->response->withStringBody(json_encode(['status' => false]));
+        }
+
+        $banTable = $this->fetchTable('Bans');
+
+        $result = $this->Users
+            ->find('all', conditions: ['username LIKE' => $query . '%'])
+            ->all();
+
+        $users = [];
+        foreach ($result as $value) {
+            $checkIsBan = $banTable
+                ->find('all', conditions: ['user_id' => $value['id']])
+                ->first();
+
+            if ($checkIsBan !== null) {
+                continue;
+            }
+
+            if ($this->permissions->have($value['rank'], 'BYPASS_BAN')) {
+                continue;
+            }
+
+            $users[] = [
+                'username' => $value['username'],
+                'id' => $value['id'],
+            ];
+        }
+
+        if (empty($users)) {
+            return $this->response->withStringBody(json_encode(['status' => false]));
+        }
+
+        return $this->response->withStringBody(json_encode([
+            'status' => true,
+            'data' => $users,
+        ]));
     }
 }
