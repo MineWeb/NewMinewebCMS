@@ -116,7 +116,7 @@ class PluginController extends AppController
         if ($installed !== true) {
             return $this->response->withStringBody(json_encode([
                 'status' => 'error',
-                'message' => __($installed),
+                'messages' => __($installed),
             ]));
         }
 
@@ -136,7 +136,7 @@ class PluginController extends AppController
         if (!$plugin) {
             return $this->response->withStringBody(json_encode([
                 'status' => 'error',
-                'message' => __('ERROR__INTERNAL_ERROR'),
+                'messages' => __('ERROR__INTERNAL_ERROR'),
             ]));
         }
 

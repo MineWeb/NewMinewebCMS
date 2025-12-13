@@ -63,12 +63,7 @@ class InstallController extends BaseController
             return $this->handleDatabasePost();
         }
 
-        $titleKey = 'INSTALL__DATABASE_CONFIG';
-        $title = __($titleKey);
-        if ($title === $titleKey) {
-            $title = 'Configuration de la base de donnees';
-        }
-        $this->set('title_for_layout', $title);
+        $this->set('title_for_layout', __('INSTALL__DB_TITLE'));
 
         $dbConfigured = InstallState::isDatabaseConfigured();
         $needDisplayDatabase = !$dbConfigured;
@@ -87,25 +82,25 @@ class InstallController extends BaseController
             $help['chmod'] = '';
 
             if (!is_writable(ROOT . DIRECTORY_SEPARATOR . 'config')) {
-                $help['chmod'] .= 'Le dossier /config ne peut pas etre ecrit.<br /><br />';
+                $help['chmod'] .= __('INSTALL__DIR_NOT_WRITABLE_CONFIG') . '<br /><br />';
             }
 
             if (!is_writable(ROOT . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Data')) {
-                $help['chmod'] .= 'Le dossier /src/Data ne peut pas etre ecrit.<br /><br />';
+                $help['chmod'] .= __('INSTALL__DIR_NOT_WRITABLE_DATA') . '<br /><br />';
             }
 
             if (!is_writable(ROOT . DIRECTORY_SEPARATOR . 'plugins')) {
-                $help['chmod'] .= 'Le dossier /plugins ne peut pas etre ecrit.<br /><br />';
+                $help['chmod'] .= __('INSTALL__DIR_NOT_WRITABLE_PLUGINS') . '<br /><br />';
             }
 
             if (!file_exists(ROOT . DIRECTORY_SEPARATOR . 'tmp')) {
-                $help['chmod'] .= 'Le dossier /tmp n existe pas.<br /><br />';
+                $help['chmod'] .= __('INSTALL__DIR_MISSING_TMP') . '<br /><br />';
             } elseif (!is_writable(ROOT . DIRECTORY_SEPARATOR . 'tmp')) {
-                $help['chmod'] .= 'Le dossier /tmp ne peut pas etre ecrit.<br /><br />';
+                $help['chmod'] .= __('INSTALL__DIR_NOT_WRITABLE_TMP') . '<br /><br />';
             }
 
             if (!is_writable(ROOT . DIRECTORY_SEPARATOR . 'webroot' . DIRECTORY_SEPARATOR . 'js')) {
-                $help['chmod'] .= 'Le dossier /webroot/js ne peut pas etre ecrit.<br /><br />';
+                $help['chmod'] .= __('INSTALL__DIR_NOT_WRITABLE_WEBROOT_JS') . '<br /><br />';
             }
         }
 
@@ -116,23 +111,23 @@ class InstallController extends BaseController
         $compatible['openSSL'] = extension_loaded('openssl');
 
         if (!$compatible['pdo']) {
-            $help['pdo'] = 'L extension pdo_mysql n est pas activee.';
+            $help['pdo'] = __('INSTALL__EXT_PDO_MYSQL_MISSING');
         }
 
         if (!$compatible['curl']) {
-            $help['curl'] = 'L extension curl n est pas activee.';
+            $help['curl'] = __('INSTALL__EXT_CURL_MISSING');
         }
 
         if (!$compatible['gd2']) {
-            $help['gd2'] = 'L extension GD2 n est pas activee.';
+            $help['gd2'] = __('INSTALL__EXT_GD2_MISSING');
         }
 
         if (!$compatible['openZip']) {
-            $help['openZip'] = 'L extension zip n est pas activee.';
+            $help['openZip'] = __('INSTALL__EXT_ZIP_MISSING');
         }
 
         if (!$compatible['openSSL']) {
-            $help['openSSL'] = 'L extension OpenSSL n est pas activee.';
+            $help['openSSL'] = __('INSTALL__EXT_OPENSSL_MISSING');
         }
 
         $compatible['rewriteUrl'] = true;
@@ -184,7 +179,7 @@ class InstallController extends BaseController
                 ->withType('application/json')
                 ->withStringBody(json_encode([
                     'status' => false,
-                    'message' => 'Methode invalide',
+                    'messages' => __('ERROR__BAD_REQUEST'),
                 ]));
         }
 
@@ -193,7 +188,7 @@ class InstallController extends BaseController
                 ->withType('application/json')
                 ->withStringBody(json_encode([
                     'status' => false,
-                    'message' => 'La base de donnees n est pas configuree',
+                    'messages' => __('INSTALL__DB_NOT_CONFIGURED'),
                 ]));
         }
 
@@ -223,7 +218,7 @@ class InstallController extends BaseController
                     ->withType('application/json')
                     ->withStringBody(json_encode([
                         'status' => false,
-                        'message' => __('ERROR__FILL_ALL_FIELDS'),
+                        'messages' => __('ERROR__FILL_ALL_FIELDS'),
                     ]));
             }
 
@@ -238,7 +233,7 @@ class InstallController extends BaseController
                     ->withType('application/json')
                     ->withStringBody(json_encode([
                         'status' => false,
-                        'message' => 'Erreur lors de la connexion MySQL: ' . $e->getMessage(),
+                        'messages' => __('INSTALL__DB_MYSQL_CONNECT_ERROR', ['message' => $e->getMessage()]),
                     ]));
             }
 
@@ -255,7 +250,7 @@ class InstallController extends BaseController
                     ->withType('application/json')
                     ->withStringBody(json_encode([
                         'status' => false,
-                        'message' => 'Impossible d ecrire le fichier databases.json',
+                        'messages' => __('INSTALL__DB_WRITE_CONFIG_FAILED'),
                     ]));
             }
 
@@ -270,7 +265,7 @@ class InstallController extends BaseController
                     ->withType('application/json')
                     ->withStringBody(json_encode([
                         'status' => false,
-                        'message' => 'Vous devez avoir l extension pdo_sqlite',
+                        'messages' => __('INSTALL__EXT_PDO_SQLITE_MISSING'),
                     ]));
             }
 
@@ -286,7 +281,7 @@ class InstallController extends BaseController
                     ->withType('application/json')
                     ->withStringBody(json_encode([
                         'status' => false,
-                        'message' => 'Erreur lors de la connexion SQLite: ' . $e->getMessage(),
+                        'messages' => __('INSTALL__DB_SQLITE_CONNECT_ERROR', ['message' => $e->getMessage()]),
                     ]));
             }
 
@@ -303,7 +298,7 @@ class InstallController extends BaseController
                     ->withType('application/json')
                     ->withStringBody(json_encode([
                         'status' => false,
-                        'message' => 'Impossible d ecrire le fichier databases.json',
+                        'messages' => __('INSTALL__DB_WRITE_CONFIG_FAILED'),
                     ]));
             }
 
@@ -316,7 +311,7 @@ class InstallController extends BaseController
             ->withType('application/json')
             ->withStringBody(json_encode([
                 'status' => false,
-                'message' => 'Type de base de donnees invalide',
+                'messages' => __('INSTALL__DB_INVALID_TYPE'),
             ]));
     }
 
@@ -383,12 +378,7 @@ class InstallController extends BaseController
             return $this->redirect(['_name' => 'install_database']);
         }
 
-        $titleKey = 'INSTALL__ADMIN_CONFIG';
-        $title = __($titleKey);
-        if ($title === $titleKey) {
-            $title = 'Creation du compte administrateur';
-        }
-        $this->set('title_for_layout', $title);
+        $this->set('title_for_layout', __('INSTALL__ADMIN_TITLE'));
 
         if ($this->request->is('post')) {
             return $this->handleUserPost();
@@ -416,7 +406,7 @@ class InstallController extends BaseController
                 ->withType('application/json')
                 ->withStringBody(json_encode([
                     'status' => false,
-                    'message' => __('ERROR__FILL_ALL_FIELDS'),
+                    'messages' => __('ERROR__FILL_ALL_FIELDS'),
                 ]));
         }
 
@@ -425,7 +415,7 @@ class InstallController extends BaseController
                 ->withType('application/json')
                 ->withStringBody(json_encode([
                     'status' => false,
-                    'message' => __('USER__ERROR_PASSWORDS_NOT_SAME'),
+                    'messages' => __('USER__ERROR_PASSWORDS_NOT_SAME'),
                 ]));
         }
 
@@ -434,7 +424,7 @@ class InstallController extends BaseController
                 ->withType('application/json')
                 ->withStringBody(json_encode([
                     'status' => false,
-                    'message' => __('USER__ERROR_EMAIL_NOT_VALID'),
+                    'messages' => __('USER__ERROR_EMAIL_NOT_VALID'),
                 ]));
         }
 
@@ -448,7 +438,7 @@ class InstallController extends BaseController
                 ->withType('application/json')
                 ->withStringBody(json_encode([
                     'status' => true,
-                    'message' => __('INSTALL__ADMIN_ALREADY_EXISTS'),
+                    'messages' => __('INSTALL__ADMIN_ALREADY_EXISTS'),
                 ]));
         }
 
@@ -468,7 +458,7 @@ class InstallController extends BaseController
                 ->withType('application/json')
                 ->withStringBody(json_encode([
                     'status' => false,
-                    'message' => __('ERROR__INTERNAL_ERROR'),
+                    'messages' => __('ERROR__INTERNAL_ERROR'),
                 ]));
         }
 
@@ -478,7 +468,7 @@ class InstallController extends BaseController
             ->withType('application/json')
             ->withStringBody(json_encode([
                 'status' => true,
-                'message' => __('USER__REGISTER_SUCCESS'),
+                'messages' => __('USER__REGISTER_SUCCESS'),
                 'redirect' => '/',
             ]));
     }

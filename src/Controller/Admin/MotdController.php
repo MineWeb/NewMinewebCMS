@@ -113,7 +113,7 @@ class MotdController extends AppController
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
-            'message' => __('MOTD__EDIT_SUCCESS'),
+            'messages' => __('MOTD__EDIT_SUCCESS'),
         ]));
     }
 

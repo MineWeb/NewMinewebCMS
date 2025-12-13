@@ -298,7 +298,7 @@ class UserController extends AppController
         ) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -310,7 +310,7 @@ class UserController extends AppController
         if ($findUser === null) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('USER__EDIT_ERROR_UNKNOWN'),
+                'messages' => __('USER__EDIT_ERROR_UNKNOWN'),
             ]));
         }
 
@@ -329,7 +329,7 @@ class UserController extends AppController
         ) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('USER__EDIT_ERROR_YOURSELF'),
+                'messages' => __('USER__EDIT_ERROR_YOURSELF'),
             ]));
         }
 
@@ -375,7 +375,7 @@ class UserController extends AppController
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
-            'message' => __('USER__EDIT_SUCCESS'),
+            'messages' => __('USER__EDIT_SUCCESS'),
         ]));
     }
 

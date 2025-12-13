@@ -140,7 +140,7 @@ class NotificationsController extends AppController
         if ($content === '' || $userIdRaw === null || ($userIdRaw !== 'all' && $username === '')) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -163,7 +163,7 @@ class NotificationsController extends AppController
             if ($user_id <= 0) {
                 return $this->response->withStringBody(json_encode([
                     'status' => false,
-                    'message' => __('USER__EDIT_ERROR_UNKNOWN'),
+                    'messages' => __('USER__EDIT_ERROR_UNKNOWN'),
                 ]));
             }
 
@@ -172,7 +172,7 @@ class NotificationsController extends AppController
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
-            'message' => __('NOTIFICATION__SUCCESS_SET'),
+            'messages' => __('NOTIFICATION__SUCCESS_SET'),
         ]));
     }
 
@@ -310,7 +310,7 @@ class NotificationsController extends AppController
         if ($group === '') {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -319,7 +319,7 @@ class NotificationsController extends AppController
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
-            'message' => __('NOTIFICATION__SUCCESS_REMOVE'),
+            'messages' => __('NOTIFICATION__SUCCESS_REMOVE'),
         ]));
     }
 }

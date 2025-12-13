@@ -106,7 +106,7 @@ class SliderController extends AppController
         if (!$request->is('post')) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__BAD_REQUEST'),
+                'messages' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
@@ -118,7 +118,7 @@ class SliderController extends AppController
         if ($id === null || $title === '' || $subtitle === '') {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -136,7 +136,7 @@ class SliderController extends AppController
                 if (!$isValidImg['status']) {
                     return $this->response->withStringBody(json_encode([
                         'status' => false,
-                        'message' => $isValidImg['msg'],
+                        'messages' => $isValidImg['msg'],
                     ]));
                 }
 
@@ -148,7 +148,7 @@ class SliderController extends AppController
                 if (!$this->Util->uploadImage($request, $filePath)) {
                     return $this->response->withStringBody(json_encode([
                         'status' => false,
-                        'message' => __('FORM__ERROR_WHEN_UPLOAD'),
+                        'messages' => __('FORM__ERROR_WHEN_UPLOAD'),
                     ]));
                 }
 
@@ -168,7 +168,7 @@ class SliderController extends AppController
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
-            'message' => __('SLIDER__EDIT_SUCCESS'),
+            'messages' => __('SLIDER__EDIT_SUCCESS'),
         ]));
     }
 
@@ -201,7 +201,7 @@ class SliderController extends AppController
         if (!$request->is('post')) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('NOT_POST'),
+                'messages' => __('NOT_POST'),
             ]));
         }
 
@@ -211,7 +211,7 @@ class SliderController extends AppController
         if ($title === '' || $subtitle === '') {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -224,7 +224,7 @@ class SliderController extends AppController
             if (!$isValidImg['status']) {
                 return $this->response->withStringBody(json_encode([
                     'status' => false,
-                    'message' => $isValidImg['msg'],
+                    'messages' => $isValidImg['msg'],
                 ]));
             }
 
@@ -236,7 +236,7 @@ class SliderController extends AppController
             if (!$this->Util->uploadImage($request, $filePath)) {
                 return $this->response->withStringBody(json_encode([
                     'status' => false,
-                    'message' => __('FORM__ERROR_WHEN_UPLOAD'),
+                    'messages' => __('FORM__ERROR_WHEN_UPLOAD'),
                 ]));
             }
 
@@ -256,7 +256,7 @@ class SliderController extends AppController
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
-            'message' => __('SLIDER__ADD_SUCCESS'),
+            'messages' => __('SLIDER__ADD_SUCCESS'),
         ]));
     }
 }

@@ -116,7 +116,7 @@ class ServerController extends AppController
         if ($cmd === '' || $serverId === null) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -124,7 +124,7 @@ class ServerController extends AppController
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
-            'message' => __('SERVER__SEND_COMMAND_SUCCESS'),
+            'messages' => __('SERVER__SEND_COMMAND_SUCCESS'),
         ]));
     }
 
@@ -142,7 +142,7 @@ class ServerController extends AppController
         if (!$request->is('ajax')) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__BAD_REQUEST'),
+                'messages' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
@@ -153,14 +153,14 @@ class ServerController extends AppController
         if ($name === '' || $cmd === '' || $serverId === null) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
         if (str_contains($cmd, '/')) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('SERVER__CMD_SLASH'),
+                'messages' => __('SERVER__CMD_SLASH'),
             ]));
         }
 
@@ -174,7 +174,7 @@ class ServerController extends AppController
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
-            'message' => __('SERVER__CMD_ADD'),
+            'messages' => __('SERVER__CMD_ADD'),
         ]));
     }
 
@@ -197,7 +197,7 @@ class ServerController extends AppController
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
-            'message' => __('SERVER__EDIT_BANNER_MSG_SUCCESS'),
+            'messages' => __('SERVER__EDIT_BANNER_MSG_SUCCESS'),
         ]));
     }
 
@@ -320,14 +320,14 @@ class ServerController extends AppController
         if ($timeoutRaw === null || $timeoutRaw === '') {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
         if (!filter_var($timeoutRaw, FILTER_VALIDATE_FLOAT)) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('SERVER__INVALID_TIMEOUT'),
+                'messages' => __('SERVER__INVALID_TIMEOUT'),
             ]));
         }
 
@@ -335,7 +335,7 @@ class ServerController extends AppController
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
-            'message' => __('SERVER__TIMEOUT_SAVE_SUCCESS'),
+            'messages' => __('SERVER__TIMEOUT_SAVE_SUCCESS'),
         ]));
     }
 
@@ -353,7 +353,7 @@ class ServerController extends AppController
         if (!$request->is('ajax')) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__BAD_REQUEST'),
+                'messages' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
@@ -365,13 +365,13 @@ class ServerController extends AppController
         if ($host === '' || $port === '' || $name === '' || $type === null) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
-            'message' => __('SERVER__LINK_SUCCESS'),
+            'messages' => __('SERVER__LINK_SUCCESS'),
         ]));
     }
 

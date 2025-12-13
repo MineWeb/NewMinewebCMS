@@ -259,7 +259,7 @@ class ThemeController extends AppController
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
-            'message' => __('THEME__CUSTOM_FILES_FILE_CONTENT_SAVE_SUCCESS'),
+            'messages' => __('THEME__CUSTOM_FILES_FILE_CONTENT_SAVE_SUCCESS'),
         ]));
     }
 

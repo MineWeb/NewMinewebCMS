@@ -75,7 +75,7 @@ class BanController extends AppController
             if ($reason === '') {
                 return $this->response->withStringBody(json_encode([
                     'status' => false,
-                    'message' => __('ERROR__FILL_ALL_FIELDS'),
+                    'messages' => __('ERROR__FILL_ALL_FIELDS'),
                 ]));
             }
 
@@ -111,7 +111,7 @@ class BanController extends AppController
 
             return $this->response->withStringBody(json_encode([
                 'status' => true,
-                'message' => __('BAN__SUCCESS'),
+                'messages' => __('BAN__SUCCESS'),
             ]));
         }
 

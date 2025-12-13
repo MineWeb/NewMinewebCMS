@@ -122,7 +122,7 @@ class AdminController extends AppController
                     ->withType('application/json')
                     ->withStringBody(json_encode([
                         'status' => true,
-                        'message' => __('SERVER__SEND_COMMAND_SUCCESS'),
+                        'messages' => __('SERVER__SEND_COMMAND_SUCCESS'),
                     ]));
             }
         }

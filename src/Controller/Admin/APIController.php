@@ -55,7 +55,7 @@ class APIController extends AppController
         if (!$request->is('post')) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__BAD_REQUEST'),
+                'messages' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
@@ -82,7 +82,7 @@ class APIController extends AppController
         if ($cfg->hasErrors()) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
                 'errors' => $cfg->getErrors(),
             ]));
         }
@@ -94,7 +94,7 @@ class APIController extends AppController
 
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__INTERNAL'),
+                'messages' => __('ERROR__INTERNAL'),
             ]));
         }
 
@@ -102,7 +102,7 @@ class APIController extends AppController
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
-            'message' => __('CONFIG__EDIT_SUCCESS'),
+            'messages' => __('CONFIG__EDIT_SUCCESS'),
         ]));
     }
 }

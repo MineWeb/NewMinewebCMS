@@ -73,7 +73,7 @@ class SeoController extends AppController
                 if (!$isValidImg['status']) {
                     return $this->response->withStringBody(json_encode([
                         'status' => false,
-                        'message' => $isValidImg['msg'],
+                        'messages' => $isValidImg['msg'],
                     ]));
                 }
 
@@ -85,7 +85,7 @@ class SeoController extends AppController
                 if (!$this->Util->uploadImage($request, $filePath)) {
                     return $this->response->withStringBody(json_encode([
                         'status' => false,
-                        'message' => __('FORM__ERROR_WHEN_UPLOAD'),
+                        'messages' => __('FORM__ERROR_WHEN_UPLOAD'),
                     ]));
                 }
 
@@ -108,7 +108,7 @@ class SeoController extends AppController
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
-            'message' => __('SEO__EDIT_SUCCESS'),
+            'messages' => __('SEO__EDIT_SUCCESS'),
         ]));
     }
 
@@ -148,7 +148,7 @@ class SeoController extends AppController
                 if (!$isValidImg['status']) {
                     return $this->response->withStringBody(json_encode([
                         'status' => false,
-                        'message' => $isValidImg['msg'],
+                        'messages' => $isValidImg['msg'],
                     ]));
                 }
 
@@ -160,7 +160,7 @@ class SeoController extends AppController
                 if (!$this->Util->uploadImage($request, $filePath)) {
                     return $this->response->withStringBody(json_encode([
                         'status' => false,
-                        'message' => __('FORM__ERROR_WHEN_UPLOAD'),
+                        'messages' => __('FORM__ERROR_WHEN_UPLOAD'),
                     ]));
                 }
 
@@ -184,7 +184,7 @@ class SeoController extends AppController
         ) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -194,7 +194,7 @@ class SeoController extends AppController
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
-            'message' => __('SEO__PAGE_ADD_SUCCESS'),
+            'messages' => __('SEO__PAGE_ADD_SUCCESS'),
         ]));
     }
 
@@ -246,7 +246,7 @@ class SeoController extends AppController
                 if (!$isValidImg['status']) {
                     return $this->response->withStringBody(json_encode([
                         'status' => false,
-                        'message' => $isValidImg['msg'],
+                        'messages' => $isValidImg['msg'],
                     ]));
                 }
 
@@ -258,7 +258,7 @@ class SeoController extends AppController
                 if (!$this->Util->uploadImage($request, $filePath)) {
                     return $this->response->withStringBody(json_encode([
                         'status' => false,
-                        'message' => __('FORM__ERROR_WHEN_UPLOAD'),
+                        'messages' => __('FORM__ERROR_WHEN_UPLOAD'),
                     ]));
                 }
 
@@ -283,7 +283,7 @@ class SeoController extends AppController
         ) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -293,7 +293,7 @@ class SeoController extends AppController
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
-            'message' => __('SEO__EDIT_SUCCESS'),
+            'messages' => __('SEO__EDIT_SUCCESS'),
         ]));
     }
 

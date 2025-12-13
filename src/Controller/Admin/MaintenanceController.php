@@ -48,7 +48,7 @@ class MaintenanceController extends AppController
             if (!$this->getRequest()->getData('reason')) {
                 return $this->response->withStringBody(json_encode([
                     'status' => false,
-                    'message' => __('MAINTENANCE__ADD_REASON_EMPTY'),
+                    'messages' => __('MAINTENANCE__ADD_REASON_EMPTY'),
                 ]));
             }
 
@@ -57,7 +57,7 @@ class MaintenanceController extends AppController
 
             return $this->response->withStringBody(json_encode([
                 'status' => true,
-                'message' => __('MAINTENANCE__ADD_SUCCESS'),
+                'messages' => __('MAINTENANCE__ADD_SUCCESS'),
             ]));
         }
 
@@ -96,7 +96,7 @@ class MaintenanceController extends AppController
             if (!$this->getRequest()->getData('reason')) {
                 return $this->response->withStringBody(json_encode([
                     'status' => false,
-                    'message' => __('MAINTENANCE__ADD_REASON_EMPTY'),
+                    'messages' => __('MAINTENANCE__ADD_REASON_EMPTY'),
                 ]));
             }
 
@@ -106,7 +106,7 @@ class MaintenanceController extends AppController
 
             return $this->response->withStringBody(json_encode([
                 'status' => true,
-                'message' => __('MAINTENANCE__EDIT_SUCCESS'),
+                'messages' => __('MAINTENANCE__EDIT_SUCCESS'),
             ]));
         }
 

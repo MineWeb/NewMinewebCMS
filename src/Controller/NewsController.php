@@ -150,14 +150,14 @@ class NewsController extends AppController
         if (!$this->request->is('post')) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__BAD_REQUEST'),
+                'messages' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
         if (!$this->Auth->can('COMMENT_NEWS')) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('USER__ERROR_MUST_BE_LOGGED'),
+                'messages' => __('USER__ERROR_MUST_BE_LOGGED'),
             ]));
         }
 
@@ -167,7 +167,7 @@ class NewsController extends AppController
         if ($content === '' || $newsId <= 0) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -199,7 +199,7 @@ class NewsController extends AppController
         if ($userId === null) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('USER__ERROR_MUST_BE_LOGGED'),
+                'messages' => __('USER__ERROR_MUST_BE_LOGGED'),
             ]));
         }
 
@@ -213,7 +213,7 @@ class NewsController extends AppController
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
-            'message' => 'success',
+            'messages' => 'success',
         ]));
     }
 
@@ -225,7 +225,7 @@ class NewsController extends AppController
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
                     'status' => false,
-                    'message' => __('ERROR__BAD_REQUEST'),
+                    'messages' => __('ERROR__BAD_REQUEST'),
                 ]));
         }
 
@@ -233,7 +233,7 @@ class NewsController extends AppController
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
                     'status' => false,
-                    'message' => __('USER__ERROR_MUST_BE_LOGGED'),
+                    'messages' => __('USER__ERROR_MUST_BE_LOGGED'),
                 ]));
         }
 
@@ -250,7 +250,7 @@ class NewsController extends AppController
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
                     'status' => false,
-                    'message' => __('USER__ERROR_MUST_BE_LOGGED'),
+                    'messages' => __('USER__ERROR_MUST_BE_LOGGED'),
                 ]));
         }
 
@@ -259,7 +259,7 @@ class NewsController extends AppController
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
                     'status' => false,
-                    'message' => __('ERROR__BAD_REQUEST'),
+                    'messages' => __('ERROR__BAD_REQUEST'),
                 ]));
         }
 
@@ -276,7 +276,7 @@ class NewsController extends AppController
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
                     'status' => false,
-                    'message' => __('ERROR__INTERNAL_ERROR'),
+                    'messages' => __('ERROR__INTERNAL_ERROR'),
                 ]));
         }
 
@@ -312,7 +312,7 @@ class NewsController extends AppController
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
                     'status' => false,
-                    'message' => __('ERROR__BAD_REQUEST'),
+                    'messages' => __('ERROR__BAD_REQUEST'),
                 ]));
         }
 
@@ -320,7 +320,7 @@ class NewsController extends AppController
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
                     'status' => false,
-                    'message' => __('USER__ERROR_MUST_BE_LOGGED'),
+                    'messages' => __('USER__ERROR_MUST_BE_LOGGED'),
                 ]));
         }
 
@@ -337,7 +337,7 @@ class NewsController extends AppController
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
                     'status' => false,
-                    'message' => __('USER__ERROR_MUST_BE_LOGGED'),
+                    'messages' => __('USER__ERROR_MUST_BE_LOGGED'),
                 ]));
         }
 
@@ -346,7 +346,7 @@ class NewsController extends AppController
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
                     'status' => false,
-                    'message' => __('ERROR__BAD_REQUEST'),
+                    'messages' => __('ERROR__BAD_REQUEST'),
                 ]));
         }
 
@@ -363,7 +363,7 @@ class NewsController extends AppController
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
                     'status' => false,
-                    'message' => __('ERROR__INTERNAL_ERROR'),
+                    'messages' => __('ERROR__INTERNAL_ERROR'),
                 ]));
         }
 

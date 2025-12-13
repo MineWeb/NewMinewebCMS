@@ -147,7 +147,7 @@ class PermissionsController extends AppController
         if (!$request->is('ajax')) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__BAD_REQUEST'),
+                'messages' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
@@ -155,7 +155,7 @@ class PermissionsController extends AppController
         if ($name === '') {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -179,7 +179,7 @@ class PermissionsController extends AppController
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
-            'message' => __('USER__RANK_ADD_SUCCESS'),
+            'messages' => __('USER__RANK_ADD_SUCCESS'),
         ]));
     }
 

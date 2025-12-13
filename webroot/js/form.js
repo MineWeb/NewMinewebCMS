@@ -29,7 +29,7 @@ const AjaxForms = (() => {
             const check = window[checkName](payload);
             if (check && typeof check === "object" && check.status === false) {
                 resetRecaptcha(recaptchaAvailable);
-                ui.showError(check.message || INTERNAL_ERROR_MSG);
+                ui.showError(check.messages || INTERNAL_ERROR_MSG);
                 ui.restore();
                 return;
             }
@@ -40,13 +40,11 @@ const AjaxForms = (() => {
 
         const headers = {
             "X-Requested-With": "XMLHttpRequest",
+            "Accept": "application/json"
         };
 
         if (!isFormData) {
             headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8";
-            headers["Accept"] = "application/json";
-        } else {
-            headers["Accept"] = "application/json";
         }
 
         try {
@@ -54,7 +52,7 @@ const AjaxForms = (() => {
                 method: "POST",
                 credentials: "same-origin",
                 headers,
-                body: isFormData ? payload : toUrlEncoded(payload),
+                body: isFormData ? payload : toUrlEncoded(payload)
             });
 
             const json = await readJsonSafe(res);
@@ -69,7 +67,7 @@ const AjaxForms = (() => {
             if (json.status === true) {
                 const successPref = form.getAttribute("data-success-msg");
                 if (successPref === null || successPref === "true") {
-                    ui.showSuccess(json.message || SUCCESS_MSG);
+                    ui.showSuccess(json.messages || SUCCESS_MSG);
                 }
 
                 const cbName = form.getAttribute("data-callback-function");
@@ -90,7 +88,7 @@ const AjaxForms = (() => {
             resetRecaptcha(recaptchaAvailable);
 
             if (json.status === false) {
-                ui.showError(json.message || INTERNAL_ERROR_MSG);
+                ui.showError(json.messages || INTERNAL_ERROR_MSG);
                 ui.restore();
                 return;
             }
@@ -134,36 +132,46 @@ const AjaxForms = (() => {
             msgEl.style.display = "";
         }
 
+        function buildAlert(type, title, bodyHtml) {
+            const cls = type === "success" ? "alert-success" : type === "info" ? "alert-info" : "alert-danger";
+            const icon = type === "success" ? "fas fa-check" : type === "info" ? "fas fa-circle-notch" : "fas fa-times";
+            return (
+                '<div class="alert ' +
+                cls +
+                ' alert-dismissible">' +
+                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                '<span aria-hidden="true">&times;</span>' +
+                "</button>" +
+                '<h5 class="mb-1"><i class="' +
+                icon +
+                ' mr-2"></i>' +
+                escapeHtml(String(title)) +
+                "</h5>" +
+                bodyHtml +
+                "</div>"
+            );
+        }
+
         return {
             showLoading() {
                 setMsg(
-                    '<div class="alert alert-info"><a class="close" data-dismiss="alert">×</a>' +
-                    LOADING_MSG +
-                    " ...</div>"
+                    buildAlert(
+                        "info",
+                        LOADING_MSG,
+                        '<div class="mb-0">' + escapeHtml(String(LOADING_MSG)) + " ...</div>"
+                    )
                 );
                 setSubmitLoading();
             },
-            showSuccess(message) {
-                setMsg(
-                    '<div class="alert alert-success"><a class="close" data-dismiss="alert">×</a><i class="fa fa-exclamation"></i> <b>' +
-                    SUCCESS_MSG +
-                    " :</b> " +
-                    escapeHtml(String(message)) +
-                    "</i></div>"
-                );
+            showSuccess(messages) {
+                setMsg(buildAlert("success", SUCCESS_MSG, formatMessages(messages)));
             },
-            showError(message) {
-                setMsg(
-                    '<div class="alert alert-danger"><a class="close" data-dismiss="alert">×</a><i class="fa fa-times"></i> <b>' +
-                    ERROR_MSG +
-                    " :</b> " +
-                    escapeHtml(String(message)) +
-                    "</i></div>"
-                );
+            showError(messages) {
+                setMsg(buildAlert("danger", ERROR_MSG, formatMessages(messages)));
             },
             restore() {
                 restoreSubmit();
-            },
+            }
         };
     }
 
@@ -180,6 +188,25 @@ const AjaxForms = (() => {
             form.insertBefore(el, form.firstChild);
         }
         return el;
+    }
+
+    function formatMessages(messages) {
+        if (Array.isArray(messages)) {
+            if (messages.length === 1) {
+                return '<div class="mb-0">' + escapeHtml(String(messages[0])) + "</div>";
+            }
+            return (
+                '<ul class="mb-0 pl-3">' +
+                messages.map((m) => "<li>" + escapeHtml(String(m)) + "</li>").join("") +
+                "</ul>"
+            );
+        }
+
+        if (typeof messages === "string" || typeof messages === "number" || typeof messages === "boolean") {
+            return '<div class="mb-0">' + escapeHtml(String(messages)) + "</div>";
+        }
+
+        return '<div class="mb-0">' + escapeHtml(String(INTERNAL_ERROR_MSG)) + "</div>";
     }
 
     function buildPayload(form, recaptchaAvailable) {
@@ -296,8 +323,8 @@ const AjaxForms = (() => {
         const text = await res.text();
 
         if (!text) {
-            if (res.status === 403) return { status: false, message: FORBIDDEN_ERROR_MSG };
-            if (res.status === 400) return { status: false, message: INVALID_REQUEST_MSG || INTERNAL_ERROR_MSG };
+            if (res.status === 403) return { status: false, messages: FORBIDDEN_ERROR_MSG };
+            if (res.status === 400) return { status: false, messages: INVALID_REQUEST_MSG || INTERNAL_ERROR_MSG };
             return null;
         }
 
@@ -305,17 +332,17 @@ const AjaxForms = (() => {
             const json = JSON.parse(text);
 
             if (res.status === 403 && json && json.status === undefined) {
-                return { status: false, message: FORBIDDEN_ERROR_MSG };
+                return { status: false, messages: FORBIDDEN_ERROR_MSG };
             }
 
             if (res.status === 400 && json && json.status === undefined) {
-                return { status: false, message: INVALID_REQUEST_MSG || INTERNAL_ERROR_MSG };
+                return { status: false, messages: INVALID_REQUEST_MSG || INTERNAL_ERROR_MSG };
             }
 
             return json;
         } catch (e) {
-            if (res.status === 403) return { status: false, message: FORBIDDEN_ERROR_MSG };
-            if (res.status === 400) return { status: false, message: INVALID_REQUEST_MSG || INTERNAL_ERROR_MSG };
+            if (res.status === 403) return { status: false, messages: FORBIDDEN_ERROR_MSG };
+            if (res.status === 400) return { status: false, messages: INVALID_REQUEST_MSG || INTERNAL_ERROR_MSG };
             return null;
         }
     }
@@ -333,7 +360,7 @@ const AjaxForms = (() => {
     }
 
     function escapeHtml(str) {
-        return str
+        return String(str)
             .replaceAll("&", "&amp;")
             .replaceAll("<", "&lt;")
             .replaceAll(">", "&gt;")

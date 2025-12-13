@@ -49,7 +49,7 @@ class ConfigurationController extends AppController
         if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_CONFIGURATION')) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__FORBIDDEN'),
+                'messages' => __('ERROR__FORBIDDEN'),
             ]));
         }
 
@@ -58,7 +58,7 @@ class ConfigurationController extends AppController
         if (!$request->is('post') || !$request->is('ajax')) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__BAD_REQUEST'),
+                'messages' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
@@ -91,12 +91,12 @@ class ConfigurationController extends AppController
 
             return $this->response->withStringBody(json_encode([
                 'status' => true,
-                'message' => __('CONFIG__EDIT_SUCCESS'),
+                'messages' => __('CONFIG__EDIT_SUCCESS'),
             ]));
         } catch (Throwable) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__INTERNAL_ERROR'),
+                'messages' => __('ERROR__INTERNAL_ERROR'),
             ]));
         }
     }

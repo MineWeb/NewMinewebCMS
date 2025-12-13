@@ -157,14 +157,14 @@ class UserController extends AppController
         if (!$this->Auth->isConnected()) {
             return $this->json([
                 'status' => false,
-                'message' => __('USER__ERROR_MUST_BE_LOGGED'),
+                'messages' => __('USER__ERROR_MUST_BE_LOGGED'),
             ], 403);
         }
 
         if (!$this->getRequest()->is('ajax')) {
             return $this->json([
                 'status' => false,
-                'message' => __('ERROR__BAD_REQUEST'),
+                'messages' => __('ERROR__BAD_REQUEST'),
             ], 400);
         }
 
@@ -173,7 +173,7 @@ class UserController extends AppController
         if (empty($data['password']) || empty($data['password_confirmation'])) {
             return $this->json([
                 'status' => false,
-                'message' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ], 400);
         }
 
@@ -196,7 +196,7 @@ class UserController extends AppController
         if ($username === '' || $userId === null) {
             return $this->json([
                 'status' => false,
-                'message' => __('USER__ERROR_MUST_BE_LOGGED'),
+                'messages' => __('USER__ERROR_MUST_BE_LOGGED'),
             ], 403);
         }
 
@@ -206,7 +206,7 @@ class UserController extends AppController
         if ($password !== $password_confirmation) {
             return $this->json([
                 'status' => false,
-                'message' => __('USER__ERROR_PASSWORDS_NOT_SAME'),
+                'messages' => __('USER__ERROR_PASSWORDS_NOT_SAME'),
             ], 400);
         }
 
@@ -235,7 +235,7 @@ class UserController extends AppController
 
         return $this->json([
             'status' => true,
-            'message' => __('USER__PASSWORD_UPDATE_SUCCESS'),
+            'messages' => __('USER__PASSWORD_UPDATE_SUCCESS'),
         ]);
     }
 
@@ -250,7 +250,7 @@ class UserController extends AppController
         if (!$this->getRequest()->is('ajax')) {
             return $this->json([
                 'status' => false,
-                'message' => __('ERROR__BAD_REQUEST'),
+                'messages' => __('ERROR__BAD_REQUEST'),
             ], 400);
         }
 
@@ -259,21 +259,21 @@ class UserController extends AppController
         if (empty($data['email']) || empty($data['email_confirmation'])) {
             return $this->json([
                 'status' => false,
-                'message' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ], 400);
         }
 
         if ((string)$data['email'] !== (string)$data['email_confirmation']) {
             return $this->json([
                 'status' => false,
-                'message' => __('USER__ERROR_EMAIL_NOT_SAME'),
+                'messages' => __('USER__ERROR_EMAIL_NOT_SAME'),
             ], 400);
         }
 
         if (!filter_var((string)$data['email'], FILTER_VALIDATE_EMAIL)) {
             return $this->json([
                 'status' => false,
-                'message' => __('USER__ERROR_EMAIL_NOT_VALID'),
+                'messages' => __('USER__ERROR_EMAIL_NOT_VALID'),
             ], 400);
         }
 
@@ -315,7 +315,7 @@ class UserController extends AppController
 
         return $this->json([
             'status' => true,
-            'message' => __('USER__EMAIL_UPDATE_SUCCESS'),
+            'messages' => __('USER__EMAIL_UPDATE_SUCCESS'),
         ]);
     }
 }

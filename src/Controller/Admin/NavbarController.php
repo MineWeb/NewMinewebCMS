@@ -99,7 +99,7 @@ class NavbarController extends AppController
         if (!$request->is('post')) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__BAD_REQUEST'),
+                'messages' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
@@ -107,7 +107,7 @@ class NavbarController extends AppController
         if ($raw === '') {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -133,7 +133,7 @@ class NavbarController extends AppController
         if (!$orders) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -158,13 +158,13 @@ class NavbarController extends AppController
         if ($error) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
-            'message' => __('NAVBAR__SAVE_SUCCESS'),
+            'messages' => __('NAVBAR__SAVE_SUCCESS'),
         ]));
     }
 
@@ -250,7 +250,7 @@ class NavbarController extends AppController
         if ($name === '' || $type === '' || $url === null || $url === '' || $url === 'undefined') {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -283,7 +283,7 @@ class NavbarController extends AppController
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
-            'message' => __('NAVBAR__ADD_SUCCESS'),
+            'messages' => __('NAVBAR__ADD_SUCCESS'),
         ]));
     }
 
@@ -356,7 +356,7 @@ class NavbarController extends AppController
         if ($name === '' || $type === '' || $url === null || $url === '' || $url === 'undefined') {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'message' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -383,7 +383,7 @@ class NavbarController extends AppController
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
-            'message' => __('NAVBAR__EDIT_SUCCESS'),
+            'messages' => __('NAVBAR__EDIT_SUCCESS'),
         ]));
     }
 
