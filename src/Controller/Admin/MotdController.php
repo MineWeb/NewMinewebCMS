@@ -112,8 +112,8 @@ class MotdController extends AppController
         $this->History->set('EDIT_MOTD', 'motd');
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('MOTD__EDIT_SUCCESS'),
+            'status' => true,
+            'message' => __('MOTD__EDIT_SUCCESS'),
         ]));
     }
 

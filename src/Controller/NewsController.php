@@ -149,15 +149,15 @@ class NewsController extends AppController
 
         if (!$this->request->is('post')) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__BAD_REQUEST'),
+                'status' => false,
+                'message' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
         if (!$this->Auth->can('COMMENT_NEWS')) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('USER__ERROR_MUST_BE_LOGGED'),
+                'status' => false,
+                'message' => __('USER__ERROR_MUST_BE_LOGGED'),
             ]));
         }
 
@@ -166,8 +166,8 @@ class NewsController extends AppController
 
         if ($content === '' || $newsId <= 0) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -198,8 +198,8 @@ class NewsController extends AppController
 
         if ($userId === null) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('USER__ERROR_MUST_BE_LOGGED'),
+                'status' => false,
+                'message' => __('USER__ERROR_MUST_BE_LOGGED'),
             ]));
         }
 
@@ -212,8 +212,8 @@ class NewsController extends AppController
         $this->Comment->save($comment);
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => 'success',
+            'status' => true,
+            'message' => 'success',
         ]));
     }
 
@@ -224,16 +224,16 @@ class NewsController extends AppController
         if (!$this->request->is('post')) {
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => __('ERROR__BAD_REQUEST'),
+                    'status' => false,
+                    'message' => __('ERROR__BAD_REQUEST'),
                 ]));
         }
 
         if (!$this->Auth->can('LIKE_NEWS')) {
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => __('USER__ERROR_MUST_BE_LOGGED'),
+                    'status' => false,
+                    'message' => __('USER__ERROR_MUST_BE_LOGGED'),
                 ]));
         }
 
@@ -249,8 +249,8 @@ class NewsController extends AppController
         if ($userId === null) {
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => __('USER__ERROR_MUST_BE_LOGGED'),
+                    'status' => false,
+                    'message' => __('USER__ERROR_MUST_BE_LOGGED'),
                 ]));
         }
 
@@ -258,8 +258,8 @@ class NewsController extends AppController
         if ($newsId <= 0) {
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => __('ERROR__BAD_REQUEST'),
+                    'status' => false,
+                    'message' => __('ERROR__BAD_REQUEST'),
                 ]));
         }
 
@@ -275,8 +275,8 @@ class NewsController extends AppController
         if (!empty($already)) {
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => __('ERROR__INTERNAL_ERROR'),
+                    'status' => false,
+                    'message' => __('ERROR__INTERNAL_ERROR'),
                 ]));
         }
 
@@ -311,16 +311,16 @@ class NewsController extends AppController
         if (!$this->request->is('post')) {
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => __('ERROR__BAD_REQUEST'),
+                    'status' => false,
+                    'message' => __('ERROR__BAD_REQUEST'),
                 ]));
         }
 
         if (!$this->Auth->can('LIKE_NEWS')) {
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => __('USER__ERROR_MUST_BE_LOGGED'),
+                    'status' => false,
+                    'message' => __('USER__ERROR_MUST_BE_LOGGED'),
                 ]));
         }
 
@@ -336,8 +336,8 @@ class NewsController extends AppController
         if ($userId === null) {
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => __('USER__ERROR_MUST_BE_LOGGED'),
+                    'status' => false,
+                    'message' => __('USER__ERROR_MUST_BE_LOGGED'),
                 ]));
         }
 
@@ -345,8 +345,8 @@ class NewsController extends AppController
         if ($newsId <= 0) {
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => __('ERROR__BAD_REQUEST'),
+                    'status' => false,
+                    'message' => __('ERROR__BAD_REQUEST'),
                 ]));
         }
 
@@ -362,8 +362,8 @@ class NewsController extends AppController
         if (empty($already)) {
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => __('ERROR__INTERNAL_ERROR'),
+                    'status' => false,
+                    'message' => __('ERROR__INTERNAL_ERROR'),
                 ]));
         }
 

@@ -65,8 +65,8 @@ class PagesController extends AppController
 
         if (!$request->is('post')) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__BAD_REQUEST'),
+                'status' => false,
+                'message' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
@@ -76,8 +76,8 @@ class PagesController extends AppController
 
         if ($title === '' || $slugRaw === '' || $content === '') {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -97,8 +97,8 @@ class PagesController extends AppController
         $this->Flash->success(__('PAGE__ADD_SUCCESS'));
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('PAGE__ADD_SUCCESS'),
+            'status' => true,
+            'message' => __('PAGE__ADD_SUCCESS'),
         ]));
     }
 
@@ -176,8 +176,8 @@ class PagesController extends AppController
 
         if ($id === null || $title === '' || $slugRaw === '' || $content === '') {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -197,8 +197,8 @@ class PagesController extends AppController
         $this->Flash->success(__('PAGE__EDIT_SUCCESS'));
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('PAGE__EDIT_SUCCESS'),
+            'status' => true,
+            'message' => __('PAGE__EDIT_SUCCESS'),
         ]));
     }
 }

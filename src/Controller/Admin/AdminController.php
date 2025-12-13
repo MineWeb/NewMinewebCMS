@@ -121,8 +121,8 @@ class AdminController extends AppController
                 return $this->response
                     ->withType('application/json')
                     ->withStringBody(json_encode([
-                        'statut' => true,
-                        'msg' => __('SERVER__SEND_COMMAND_SUCCESS'),
+                        'status' => true,
+                        'message' => __('SERVER__SEND_COMMAND_SUCCESS'),
                     ]));
             }
         }

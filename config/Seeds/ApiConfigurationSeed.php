@@ -1,13 +1,19 @@
 <?php
 declare(strict_types=1);
 
-use Migrations\AbstractSeed;
+use Phinx\Seed\AbstractSeed;
 
 class ApiConfigurationSeed extends AbstractSeed
 {
     public function run(): void
     {
-        $data = [
+        $exists = $this->fetchRow('SELECT id FROM api_configurations LIMIT 1');
+
+        if ($exists !== false) {
+            return;
+        }
+
+        $this->table('api_configurations')->insert([
             [
                 'skins' => 0,
                 'skin_filename' => 'skins/{PLAYER}_skin',
@@ -23,10 +29,6 @@ class ApiConfigurationSeed extends AbstractSeed
                 'use_skin_restorer' => 0,
                 'skin_restorer_server_id' => null,
             ],
-        ];
-
-        $this->table('api_configurations')
-            ->insert($data)
-            ->saveData();
+        ])->saveData();
     }
 }

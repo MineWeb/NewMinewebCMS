@@ -20,15 +20,16 @@ const AjaxForms = (() => {
         const ui = getUI(form);
         ui.showLoading();
 
-        const recaptchaAvailable = typeof grecaptcha !== "undefined" && typeof grecaptcha.getResponse === "function";
-        let payload = buildPayload(form, recaptchaAvailable);
+        const recaptchaAvailable =
+            typeof grecaptcha !== "undefined" && typeof grecaptcha.getResponse === "function";
+        const payload = buildPayload(form, recaptchaAvailable);
 
         const checkName = form.getAttribute("data-checkData");
         if (checkName && typeof window[checkName] === "function") {
             const check = window[checkName](payload);
-            if (check && typeof check === "object" && check.statut === false) {
+            if (check && typeof check === "object" && check.status === false) {
                 resetRecaptcha(recaptchaAvailable);
-                ui.showError(check.msg || INTERNAL_ERROR_MSG);
+                ui.showError(check.message || INTERNAL_ERROR_MSG);
                 ui.restore();
                 return;
             }
@@ -37,11 +38,22 @@ const AjaxForms = (() => {
         const action = form.getAttribute("action") || "";
         const isFormData = payload instanceof FormData;
 
+        const headers = {
+            "X-Requested-With": "XMLHttpRequest",
+        };
+
+        if (!isFormData) {
+            headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8";
+            headers["Accept"] = "application/json";
+        } else {
+            headers["Accept"] = "application/json";
+        }
+
         try {
             const res = await fetch(action, {
                 method: "POST",
                 credentials: "same-origin",
-                headers: isFormData ? {} : { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+                headers,
                 body: isFormData ? payload : toUrlEncoded(payload),
             });
 
@@ -54,10 +66,10 @@ const AjaxForms = (() => {
                 return;
             }
 
-            if (json.statut === true) {
+            if (json.status === true) {
                 const successPref = form.getAttribute("data-success-msg");
                 if (successPref === null || successPref === "true") {
-                    ui.showSuccess(json.msg || SUCCESS_MSG);
+                    ui.showSuccess(json.message || SUCCESS_MSG);
                 }
 
                 const cbName = form.getAttribute("data-callback-function");
@@ -77,8 +89,8 @@ const AjaxForms = (() => {
 
             resetRecaptcha(recaptchaAvailable);
 
-            if (json.statut === false) {
-                ui.showError(json.msg || INTERNAL_ERROR_MSG);
+            if (json.status === false) {
+                ui.showError(json.message || INTERNAL_ERROR_MSG);
                 ui.restore();
                 return;
             }
@@ -176,7 +188,7 @@ const AjaxForms = (() => {
 
         if (customFnName && typeof window[customFnName] === "function") {
             const data = window[customFnName](form) || {};
-            ensureCsrf(data);
+            ensureCsrf(data, form);
             if (recaptchaAvailable && data.recaptcha === undefined) data.recaptcha = grecaptcha.getResponse();
             return data;
         }
@@ -228,6 +240,7 @@ const AjaxForms = (() => {
             if (!input) return;
 
             const type = (input.getAttribute("type") || "text").toLowerCase();
+
             if (type === "radio") {
                 const checked = form.querySelector(`input[name="${CSS.escape(name)}"][type="radio"]:checked`);
                 obj[name] = checked ? checked.value : "";
@@ -247,6 +260,8 @@ const AjaxForms = (() => {
     }
 
     function ensureCsrf(target, form) {
+        if (!form) return;
+
         const csrfInput =
             form.querySelector('input[name="_csrfToken"]') ||
             form.querySelector('input[name="data[_Token][key]"]');
@@ -281,18 +296,26 @@ const AjaxForms = (() => {
         const text = await res.text();
 
         if (!text) {
-            if (res.status === 403) return { statut: false, msg: FORBIDDEN_ERROR_MSG };
+            if (res.status === 403) return { status: false, message: FORBIDDEN_ERROR_MSG };
+            if (res.status === 400) return { status: false, message: INVALID_REQUEST_MSG || INTERNAL_ERROR_MSG };
             return null;
         }
 
         try {
             const json = JSON.parse(text);
-            if (res.status === 403 && json && json.statut === undefined) {
-                return { statut: false, msg: FORBIDDEN_ERROR_MSG };
+
+            if (res.status === 403 && json && json.status === undefined) {
+                return { status: false, message: FORBIDDEN_ERROR_MSG };
             }
+
+            if (res.status === 400 && json && json.status === undefined) {
+                return { status: false, message: INVALID_REQUEST_MSG || INTERNAL_ERROR_MSG };
+            }
+
             return json;
         } catch (e) {
-            if (res.status === 403) return { statut: false, msg: FORBIDDEN_ERROR_MSG };
+            if (res.status === 403) return { status: false, message: FORBIDDEN_ERROR_MSG };
+            if (res.status === 400) return { status: false, message: INVALID_REQUEST_MSG || INTERNAL_ERROR_MSG };
             return null;
         }
     }

@@ -297,8 +297,8 @@ class UserController extends AppController
             || ($rank === null && $rank !== 0 && $rank !== '0')
         ) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -309,8 +309,8 @@ class UserController extends AppController
 
         if ($findUser === null) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('USER__EDIT_ERROR_UNKNOWN'),
+                'status' => false,
+                'message' => __('USER__EDIT_ERROR_UNKNOWN'),
             ]));
         }
 
@@ -328,8 +328,8 @@ class UserController extends AppController
             && (string)$rank !== (string)$currentRank
         ) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('USER__EDIT_ERROR_YOURSELF'),
+                'status' => false,
+                'message' => __('USER__EDIT_ERROR_YOURSELF'),
             ]));
         }
 
@@ -374,8 +374,8 @@ class UserController extends AppController
         $this->Flash->success(__('USER__EDIT_SUCCESS'));
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('USER__EDIT_SUCCESS'),
+            'status' => true,
+            'message' => __('USER__EDIT_SUCCESS'),
         ]));
     }
 

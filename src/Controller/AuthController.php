@@ -60,23 +60,23 @@ class AuthController extends AppController
             empty($data['email']) ||
             ($conditionsRequired && empty($data['condition']))
         ) {
-            return $this->json(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')], 400);
+            return $this->json(['status' => false, 'message' => __('ERROR__FILL_ALL_FIELDS')], 400);
         }
 
         if ($data['password'] !== $data['password_confirmation']) {
-            return $this->json(['statut' => false, 'msg' => __('USER__ERROR_PASSWORDS_NOT_SAME')], 400);
+            return $this->json(['status' => false, 'message' => __('USER__ERROR_PASSWORDS_NOT_SAME')], 400);
         }
 
         if ($this->config->get('check_uuid')) {
             $username = (string)$data['username'];
             $res = @file_get_contents('https://api.mojang.com/users/profiles/minecraft/' . rawurlencode($username));
             if (!$res) {
-                return $this->json(['statut' => false, 'msg' => __('USER__ERROR_UUID')], 400);
+                return $this->json(['status' => false, 'message' => __('USER__ERROR_UUID')], 400);
             }
 
             $decoded = json_decode($res, true);
             if (!is_array($decoded) || empty($decoded['id'])) {
-                return $this->json(['statut' => false, 'msg' => __('USER__ERROR_UUID')], 400);
+                return $this->json(['status' => false, 'message' => __('USER__ERROR_UUID')], 400);
             }
 
             $data['uuid'] = (string)$decoded['id'];
@@ -96,7 +96,7 @@ class AuthController extends AppController
         }
 
         if (!$validCaptcha) {
-            return $this->json(['statut' => false, 'msg' => __('FORM__INVALID_CAPTCHA')], 400);
+            return $this->json(['status' => false, 'message' => __('FORM__INVALID_CAPTCHA')], 400);
         }
 
         $userId = $this->userAuth->createUser($data, $this->Util->getIP());
@@ -123,7 +123,7 @@ class AuthController extends AppController
             $this->clearAuthContext();
         }
 
-        return $this->json(['statut' => true, 'msg' => __('USER__REGISTER_SUCCESS')]);
+        return $this->json(['status' => true, 'message' => __('USER__REGISTER_SUCCESS')]);
     }
 
     public function login(): Response
@@ -137,12 +137,12 @@ class AuthController extends AppController
         $data = (array)$this->getRequest()->getData();
 
         if (empty($data['username']) || empty($data['password'])) {
-            return $this->json(['statut' => false, 'msg' => __('ERROR__FILL_ALL_FIELDS')], 400);
+            return $this->json(['status' => false, 'message' => __('ERROR__FILL_ALL_FIELDS')], 400);
         }
 
         $user = $this->User->find()->where(['username' => (string)$data['username']])->first();
         if (!$user) {
-            return $this->json(['statut' => false, 'msg' => __('USER__ERROR_INVALID_CREDENTIALS')], 400);
+            return $this->json(['status' => false, 'message' => __('USER__ERROR_INVALID_CREDENTIALS')], 400);
         }
 
         $login = $this->userAuth->attemptLogin(
@@ -154,13 +154,13 @@ class AuthController extends AppController
         );
 
         if (!is_array($login) || empty($login['status'])) {
-            return $this->json(['statut' => false, 'msg' => __((string)$login)], 400);
+            return $this->json(['status' => false, 'message' => __((string)$login)], 400);
         }
 
         $this->getRequest()->getSession()->write('user', (int)$login['session']);
         $this->clearAuthContext();
 
-        return $this->json(['statut' => true, 'msg' => __('USER__REGISTER_LOGIN')]);
+        return $this->json(['status' => true, 'message' => __('USER__REGISTER_LOGIN')]);
     }
 
     public function logout(): Response

@@ -258,8 +258,8 @@ class ThemeController extends AppController
         @file_put_contents($cssFolder . DS . $file, $content);
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('THEME__CUSTOM_FILES_FILE_CONTENT_SAVE_SUCCESS'),
+            'status' => true,
+            'message' => __('THEME__CUSTOM_FILES_FILE_CONTENT_SAVE_SUCCESS'),
         ]));
     }
 

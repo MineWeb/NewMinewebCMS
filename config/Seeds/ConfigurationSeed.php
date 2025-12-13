@@ -1,13 +1,19 @@
 <?php
 declare(strict_types=1);
 
-use Migrations\AbstractSeed;
+use Phinx\Seed\AbstractSeed;
 
 class ConfigurationSeed extends AbstractSeed
 {
     public function run(): void
     {
-        $data = [
+        $exists = $this->fetchRow('SELECT id FROM configurations LIMIT 1');
+
+        if ($exists !== false) {
+            return;
+        }
+
+        $this->table('configurations')->insert([
             [
                 'website_url' => 'https://domain.fr',
                 'name' => 'MineWeb',
@@ -44,10 +50,6 @@ class ConfigurationSeed extends AbstractSeed
                 'microsoft_client_id' => null,
                 'microsoft_client_secret' => null,
             ],
-        ];
-
-        $this->table('configurations')
-            ->insert($data)
-            ->saveData();
+        ])->saveData();
     }
 }

@@ -105,8 +105,8 @@ class SliderController extends AppController
 
         if (!$request->is('post')) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__BAD_REQUEST'),
+                'status' => false,
+                'message' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
@@ -117,8 +117,8 @@ class SliderController extends AppController
 
         if ($id === null || $title === '' || $subtitle === '') {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -135,8 +135,8 @@ class SliderController extends AppController
                 $isValidImg = $this->Util->isValidImage($request, ['png', 'jpg', 'jpeg']);
                 if (!$isValidImg['status']) {
                     return $this->response->withStringBody(json_encode([
-                        'statut' => false,
-                        'msg' => $isValidImg['msg'],
+                        'status' => false,
+                        'message' => $isValidImg['msg'],
                     ]));
                 }
 
@@ -147,8 +147,8 @@ class SliderController extends AppController
 
                 if (!$this->Util->uploadImage($request, $filePath)) {
                     return $this->response->withStringBody(json_encode([
-                        'statut' => false,
-                        'msg' => __('FORM__ERROR_WHEN_UPLOAD'),
+                        'status' => false,
+                        'message' => __('FORM__ERROR_WHEN_UPLOAD'),
                     ]));
                 }
 
@@ -167,8 +167,8 @@ class SliderController extends AppController
         $this->Flash->success(__('SLIDER__EDIT_SUCCESS'));
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('SLIDER__EDIT_SUCCESS'),
+            'status' => true,
+            'message' => __('SLIDER__EDIT_SUCCESS'),
         ]));
     }
 
@@ -200,8 +200,8 @@ class SliderController extends AppController
 
         if (!$request->is('post')) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('NOT_POST'),
+                'status' => false,
+                'message' => __('NOT_POST'),
             ]));
         }
 
@@ -210,8 +210,8 @@ class SliderController extends AppController
 
         if ($title === '' || $subtitle === '') {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -223,8 +223,8 @@ class SliderController extends AppController
             $isValidImg = $this->Util->isValidImage($request, ['png', 'jpg', 'jpeg']);
             if (!$isValidImg['status']) {
                 return $this->response->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => $isValidImg['msg'],
+                    'status' => false,
+                    'message' => $isValidImg['msg'],
                 ]));
             }
 
@@ -235,8 +235,8 @@ class SliderController extends AppController
 
             if (!$this->Util->uploadImage($request, $filePath)) {
                 return $this->response->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => __('FORM__ERROR_WHEN_UPLOAD'),
+                    'status' => false,
+                    'message' => __('FORM__ERROR_WHEN_UPLOAD'),
                 ]));
             }
 
@@ -255,8 +255,8 @@ class SliderController extends AppController
         $this->Flash->success(__('SLIDER__ADD_SUCCESS'));
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('SLIDER__ADD_SUCCESS'),
+            'status' => true,
+            'message' => __('SLIDER__ADD_SUCCESS'),
         ]));
     }
 }

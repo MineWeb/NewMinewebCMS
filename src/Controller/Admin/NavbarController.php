@@ -98,16 +98,16 @@ class NavbarController extends AppController
 
         if (!$request->is('post')) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__BAD_REQUEST'),
+                'status' => false,
+                'message' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
         $raw = (string)$request->getData('navbar_order', '');
         if ($raw === '') {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -132,8 +132,8 @@ class NavbarController extends AppController
 
         if (!$orders) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -157,14 +157,14 @@ class NavbarController extends AppController
 
         if ($error) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('NAVBAR__SAVE_SUCCESS'),
+            'status' => true,
+            'message' => __('NAVBAR__SAVE_SUCCESS'),
         ]));
     }
 
@@ -249,8 +249,8 @@ class NavbarController extends AppController
 
         if ($name === '' || $type === '' || $url === null || $url === '' || $url === 'undefined') {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -282,8 +282,8 @@ class NavbarController extends AppController
         $this->Flash->success(__('NAVBAR__ADD_SUCCESS'));
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('NAVBAR__ADD_SUCCESS'),
+            'status' => true,
+            'message' => __('NAVBAR__ADD_SUCCESS'),
         ]));
     }
 
@@ -355,8 +355,8 @@ class NavbarController extends AppController
 
         if ($name === '' || $type === '' || $url === null || $url === '' || $url === 'undefined') {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -382,8 +382,8 @@ class NavbarController extends AppController
         $this->Flash->success(__('NAVBAR__EDIT_SUCCESS'));
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('NAVBAR__EDIT_SUCCESS'),
+            'status' => true,
+            'message' => __('NAVBAR__EDIT_SUCCESS'),
         ]));
     }
 

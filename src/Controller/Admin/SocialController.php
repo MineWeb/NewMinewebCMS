@@ -52,16 +52,16 @@ class SocialController extends AppController
 
         if (!$request->is('post')) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__BAD_REQUEST'),
+                'status' => false,
+                'message' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
         $raw = (string)$request->getData('social_button_order', '');
         if ($raw === '') {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -84,8 +84,8 @@ class SocialController extends AppController
 
         if (empty($orderMap)) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -109,14 +109,14 @@ class SocialController extends AppController
 
         if ($error) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('SOCIAL__SAVE_SUCCESS'),
+            'status' => true,
+            'message' => __('SOCIAL__SAVE_SUCCESS'),
         ]));
     }
 
@@ -147,15 +147,15 @@ class SocialController extends AppController
 
         if ($url === '') {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
         if (!empty($request->getData('img')) && !empty($request->getData('icon')) && empty($request->getData('type'))) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('SOCIAL__CANNOT_TOW_TYPE'),
+                'status' => false,
+                'message' => __('SOCIAL__CANNOT_TOW_TYPE'),
             ]));
         }
 
@@ -193,8 +193,8 @@ class SocialController extends AppController
         $this->History->set('ADD_SOCIAL', 'social network');
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('SOCIAL__BUTTON_SUCCESS'),
+            'status' => true,
+            'message' => __('SOCIAL__BUTTON_SUCCESS'),
         ]));
     }
 
@@ -253,15 +253,15 @@ class SocialController extends AppController
 
         if ($url === '') {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
         if (!empty($request->getData('img')) && !empty($request->getData('icon')) && empty($request->getData('type'))) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('SOCIAL__CANNOT_TOW_TYPE'),
+                'status' => false,
+                'message' => __('SOCIAL__CANNOT_TOW_TYPE'),
             ]));
         }
 
@@ -288,8 +288,8 @@ class SocialController extends AppController
         $this->History->set('EDIT_SOCIAL', 'social network');
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('SOCIAL__BUTTON_EDIT_SUCCESS'),
+            'status' => true,
+            'message' => __('SOCIAL__BUTTON_EDIT_SUCCESS'),
         ]));
     }
 

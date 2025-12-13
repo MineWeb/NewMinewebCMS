@@ -140,6 +140,7 @@ return static function (RouteBuilder $routes): void {
 
         $builder->scope('/configuration', function (RouteBuilder $b): void {
             $b->connect('/', ['controller' => 'Configuration', 'action' => 'index'], ['_name' => 'admin_configuration_index']);
+            $b->connect('/save', ['controller' => 'Configuration', 'action' => 'saveAjax'], ['_name' => 'admin_configuration_save']);
             $b->connect('/edit-lang', ['controller' => 'Configuration', 'action' => 'editLang'], ['_name' => 'admin_configuration_edit_lang']);
         });
 

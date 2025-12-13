@@ -13,7 +13,6 @@
                             'method' => 'post',
                             'data-ajax' => 'true',
                             'data-upload-image' => 'true',
-                            'data-redirect-url' => $this->Url->build(['_name' => 'admin_ban_index']),
                         ]
                     ) ?>
 

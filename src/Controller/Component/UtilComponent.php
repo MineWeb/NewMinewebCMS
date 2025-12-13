@@ -309,13 +309,13 @@ class UtilComponent extends Component
         $msgInvalidHeight = __('FORM__INVALID_HEIGHT');
 
         if (!$img instanceof UploadedFile || $img->getClientFilename() === null || $img->getClientFilename() === '') {
-            return ['status' => false, 'msg' => $msgEmpty];
+            return ['status' => false, 'message' => $msgEmpty];
         }
 
         $uri = $img->getStream()->getMetadata('uri');
 
         if (!$img->getSize() || !$uri) {
-            return ['status' => false, 'msg' => $msgNotUploaded];
+            return ['status' => false, 'message' => $msgNotUploaded];
         }
 
         $extension = pathinfo($img->getClientFilename(), PATHINFO_EXTENSION);
@@ -323,13 +323,13 @@ class UtilComponent extends Component
         if (!in_array(strtolower((string)$extension), $extensions, true)) {
             $msg = str_replace('{LIST_EXTENSIONS}', implode(', ', $extensions), $msgInvalidExt);
 
-            return ['status' => false, 'msg' => $msg];
+            return ['status' => false, 'message' => $msg];
         }
 
         $infos = @getimagesize((string)$uri);
 
         if (!is_array($infos) || !isset($infos[0], $infos[1], $infos[2]) || $infos[2] < 1 || $infos[2] > 14) {
-            return ['status' => false, 'msg' => $msgInvalid];
+            return ['status' => false, 'message' => $msgInvalid];
         }
 
         if ($max_size) {
@@ -337,20 +337,20 @@ class UtilComponent extends Component
             if (is_int($size) && $size > $max_size) {
                 $msg = str_replace('{MAX_SIZE}', (string)$max_size, $msgTooHeavy);
 
-                return ['status' => false, 'msg' => $msg];
+                return ['status' => false, 'message' => $msg];
             }
         }
 
         if ($width_max && $infos[0] > $width_max) {
             $msg = str_replace('{MAX_WIDTH}', (string)$width_max, $msgInvalidWidth);
 
-            return ['status' => false, 'msg' => $msg];
+            return ['status' => false, 'message' => $msg];
         }
 
         if ($height_max && $infos[1] > $height_max) {
             $msg = str_replace('{MAX_HEIGHT}', (string)$height_max, $msgInvalidHeight);
 
-            return ['status' => false, 'msg' => $msg];
+            return ['status' => false, 'message' => $msg];
         }
 
         return [

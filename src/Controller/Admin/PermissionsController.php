@@ -146,16 +146,16 @@ class PermissionsController extends AppController
 
         if (!$request->is('ajax')) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__BAD_REQUEST'),
+                'status' => false,
+                'message' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
         $name = (string)$request->getData('name', '');
         if ($name === '') {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -178,8 +178,8 @@ class PermissionsController extends AppController
         $this->Flash->success(__('USER__RANK_ADD_SUCCESS'));
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('USER__RANK_ADD_SUCCESS'),
+            'status' => true,
+            'message' => __('USER__RANK_ADD_SUCCESS'),
         ]));
     }
 

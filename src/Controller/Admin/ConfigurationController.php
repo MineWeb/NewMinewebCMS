@@ -7,7 +7,13 @@ use App\Controller\AppController;
 use App\Utility\LangService;
 use Cake\Http\Response;
 use Cake\I18n\I18n;
+use Throwable;
 
+/**
+ * @property \App\Controller\Component\AuthComponent $Auth
+ * @property \App\Controller\Component\HistoryComponent $History
+ * @property \App\Service\ConfigurationService $config
+ */
 class ConfigurationController extends AppController
 {
     public function index(): ?Response
@@ -18,42 +24,7 @@ class ConfigurationController extends AppController
 
         $this->set('title_for_layout', __('CONFIG__GENERAL_PREFERENCES'));
 
-        $request = $this->getRequest();
-
-        if ($request->is('post')) {
-            $data = [];
-
-            foreach ($request->getData() as $key => $value) {
-                if ($key === '_csrfToken' || $key === 'xss') {
-                    continue;
-                }
-                $data[$key] = $value === '' ? null : $value;
-            }
-
-            $hash = (string)$this->config->get('passwords_hash');
-            $Users = $this->fetchTable('Users');
-            $Users->updateAll(
-                ['password_hash' => $hash],
-                ['password_hash IS' => null]
-            );
-
-            $configEntity = $this->config->get(1);
-            if ($configEntity === null) {
-                $configEntity = $this->config->getEntity();
-            }
-
-            $configEntity->set($data);
-            $this->config->saveOrFail($configEntity);
-
-            $this->History->set('EDIT_CONFIGURATION', 'configuration');
-
-            $this->config->clearCache();
-
-            $this->Flash->success(__('CONFIG__EDIT_SUCCESS'));
-        }
-
         $config = $this->config->getAll();
-
         if ($config !== null) {
             $config['lang'] = I18n::getLocale();
             $config['languages_available'] = $this->getAvailableLocales();
@@ -68,6 +39,66 @@ class ConfigurationController extends AppController
             ->setTemplate('index');
 
         return null;
+    }
+
+    public function saveAjax(): Response
+    {
+        $this->disableAutoRender();
+        $this->response = $this->response->withType('application/json');
+
+        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_CONFIGURATION')) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'message' => __('ERROR__FORBIDDEN'),
+            ]));
+        }
+
+        $request = $this->getRequest();
+
+        if (!$request->is('post') || !$request->is('ajax')) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'message' => __('ERROR__BAD_REQUEST'),
+            ]));
+        }
+
+        $data = [];
+        foreach ((array)$request->getData() as $key => $value) {
+            if ($key === '_csrfToken') {
+                continue;
+            }
+            $data[$key] = $value === '' ? null : $value;
+        }
+
+        try {
+            $hash = (string)$this->config->get('passwords_hash');
+            $Users = $this->fetchTable('Users');
+            $Users->updateAll(
+                ['password_hash' => $hash],
+                ['password_hash IS' => null]
+            );
+
+            $configEntity = $this->config->get(1);
+            if ($configEntity === null) {
+                $configEntity = $this->config->getEntity();
+            }
+
+            $configEntity = $configEntity->patch($data);
+            $this->config->saveOrFail($configEntity);
+
+            $this->History->set('EDIT_CONFIGURATION', 'configuration');
+            $this->config->clearCache();
+
+            return $this->response->withStringBody(json_encode([
+                'status' => true,
+                'message' => __('CONFIG__EDIT_SUCCESS'),
+            ]));
+        } catch (Throwable) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'message' => __('ERROR__INTERNAL_ERROR'),
+            ]));
+        }
     }
 
     public function editLang(): ?Response

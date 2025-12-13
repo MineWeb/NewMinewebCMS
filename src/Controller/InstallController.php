@@ -184,7 +184,7 @@ class InstallController extends BaseController
                 ->withType('application/json')
                 ->withStringBody(json_encode([
                     'status' => false,
-                    'msg' => 'Methode invalide',
+                    'message' => 'Methode invalide',
                 ]));
         }
 
@@ -193,7 +193,7 @@ class InstallController extends BaseController
                 ->withType('application/json')
                 ->withStringBody(json_encode([
                     'status' => false,
-                    'msg' => 'La base de donnees n est pas configuree',
+                    'message' => 'La base de donnees n est pas configuree',
                 ]));
         }
 
@@ -223,7 +223,7 @@ class InstallController extends BaseController
                     ->withType('application/json')
                     ->withStringBody(json_encode([
                         'status' => false,
-                        'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                        'message' => __('ERROR__FILL_ALL_FIELDS'),
                     ]));
             }
 
@@ -238,7 +238,7 @@ class InstallController extends BaseController
                     ->withType('application/json')
                     ->withStringBody(json_encode([
                         'status' => false,
-                        'msg' => 'Erreur lors de la connexion MySQL: ' . $e->getMessage(),
+                        'message' => 'Erreur lors de la connexion MySQL: ' . $e->getMessage(),
                     ]));
             }
 
@@ -255,7 +255,7 @@ class InstallController extends BaseController
                     ->withType('application/json')
                     ->withStringBody(json_encode([
                         'status' => false,
-                        'msg' => 'Impossible d ecrire le fichier databases.json',
+                        'message' => 'Impossible d ecrire le fichier databases.json',
                     ]));
             }
 
@@ -270,7 +270,7 @@ class InstallController extends BaseController
                     ->withType('application/json')
                     ->withStringBody(json_encode([
                         'status' => false,
-                        'msg' => 'Vous devez avoir l extension pdo_sqlite',
+                        'message' => 'Vous devez avoir l extension pdo_sqlite',
                     ]));
             }
 
@@ -286,7 +286,7 @@ class InstallController extends BaseController
                     ->withType('application/json')
                     ->withStringBody(json_encode([
                         'status' => false,
-                        'msg' => 'Erreur lors de la connexion SQLite: ' . $e->getMessage(),
+                        'message' => 'Erreur lors de la connexion SQLite: ' . $e->getMessage(),
                     ]));
             }
 
@@ -303,7 +303,7 @@ class InstallController extends BaseController
                     ->withType('application/json')
                     ->withStringBody(json_encode([
                         'status' => false,
-                        'msg' => 'Impossible d ecrire le fichier databases.json',
+                        'message' => 'Impossible d ecrire le fichier databases.json',
                     ]));
             }
 
@@ -316,7 +316,7 @@ class InstallController extends BaseController
             ->withType('application/json')
             ->withStringBody(json_encode([
                 'status' => false,
-                'msg' => 'Type de base de donnees invalide',
+                'message' => 'Type de base de donnees invalide',
             ]));
     }
 
@@ -415,8 +415,8 @@ class InstallController extends BaseController
             return $this->response
                 ->withType('application/json')
                 ->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                    'status' => false,
+                    'message' => __('ERROR__FILL_ALL_FIELDS'),
                 ]));
         }
 
@@ -424,8 +424,8 @@ class InstallController extends BaseController
             return $this->response
                 ->withType('application/json')
                 ->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => __('USER__ERROR_PASSWORDS_NOT_SAME'),
+                    'status' => false,
+                    'message' => __('USER__ERROR_PASSWORDS_NOT_SAME'),
                 ]));
         }
 
@@ -433,8 +433,8 @@ class InstallController extends BaseController
             return $this->response
                 ->withType('application/json')
                 ->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => __('USER__ERROR_EMAIL_NOT_VALID'),
+                    'status' => false,
+                    'message' => __('USER__ERROR_EMAIL_NOT_VALID'),
                 ]));
         }
 
@@ -447,8 +447,8 @@ class InstallController extends BaseController
             return $this->response
                 ->withType('application/json')
                 ->withStringBody(json_encode([
-                    'statut' => true,
-                    'msg' => __('INSTALL__ADMIN_ALREADY_EXISTS'),
+                    'status' => true,
+                    'message' => __('INSTALL__ADMIN_ALREADY_EXISTS'),
                 ]));
         }
 
@@ -467,8 +467,8 @@ class InstallController extends BaseController
             return $this->response
                 ->withType('application/json')
                 ->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => __('ERROR__INTERNAL_ERROR'),
+                    'status' => false,
+                    'message' => __('ERROR__INTERNAL_ERROR'),
                 ]));
         }
 
@@ -477,8 +477,8 @@ class InstallController extends BaseController
         return $this->response
             ->withType('application/json')
             ->withStringBody(json_encode([
-                'statut' => true,
-                'msg' => __('USER__REGISTER_SUCCESS'),
+                'status' => true,
+                'message' => __('USER__REGISTER_SUCCESS'),
                 'redirect' => '/',
             ]));
     }

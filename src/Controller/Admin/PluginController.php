@@ -115,8 +115,8 @@ class PluginController extends AppController
         $installed = $this->EyPlugin->download($slug, true);
         if ($installed !== true) {
             return $this->response->withStringBody(json_encode([
-                'statut' => 'error',
-                'msg' => __($installed),
+                'status' => 'error',
+                'message' => __($installed),
             ]));
         }
 
@@ -135,13 +135,13 @@ class PluginController extends AppController
 
         if (!$plugin) {
             return $this->response->withStringBody(json_encode([
-                'statut' => 'error',
-                'msg' => __('ERROR__INTERNAL_ERROR'),
+                'status' => 'error',
+                'message' => __('ERROR__INTERNAL_ERROR'),
             ]));
         }
 
         return $this->response->withStringBody(json_encode([
-            'statut' => 'success',
+            'status' => 'success',
             'plugin' => [
                 'name' => $plugin['name'],
                 'DBid' => $plugin['id'],

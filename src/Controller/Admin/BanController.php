@@ -74,8 +74,8 @@ class BanController extends AppController
             $reason = (string)$request->getData('reason', '');
             if ($reason === '') {
                 return $this->response->withStringBody(json_encode([
-                    'statut' => false,
-                    'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                    'status' => false,
+                    'message' => __('ERROR__FILL_ALL_FIELDS'),
                 ]));
             }
 
@@ -110,8 +110,8 @@ class BanController extends AppController
             }
 
             return $this->response->withStringBody(json_encode([
-                'statut' => true,
-                'msg' => __('BAN__SUCCESS'),
+                'status' => true,
+                'message' => __('BAN__SUCCESS'),
             ]));
         }
 

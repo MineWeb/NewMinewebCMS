@@ -115,16 +115,16 @@ class ServerController extends AppController
 
         if ($cmd === '' || $serverId === null) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
         $this->Server->sendCommand($cmd, $serverId);
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('SERVER__SEND_COMMAND_SUCCESS'),
+            'status' => true,
+            'message' => __('SERVER__SEND_COMMAND_SUCCESS'),
         ]));
     }
 
@@ -141,8 +141,8 @@ class ServerController extends AppController
 
         if (!$request->is('ajax')) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__BAD_REQUEST'),
+                'status' => false,
+                'message' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
@@ -152,15 +152,15 @@ class ServerController extends AppController
 
         if ($name === '' || $cmd === '' || $serverId === null) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
         if (str_contains($cmd, '/')) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('SERVER__CMD_SLASH'),
+                'status' => false,
+                'message' => __('SERVER__CMD_SLASH'),
             ]));
         }
 
@@ -173,8 +173,8 @@ class ServerController extends AppController
         $ServerCmds->save($entity);
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('SERVER__CMD_ADD'),
+            'status' => true,
+            'message' => __('SERVER__CMD_ADD'),
         ]));
     }
 
@@ -196,8 +196,8 @@ class ServerController extends AppController
         LangService::set('SERVER__STATUS_MESSAGE', (string)$request->getData('msg'));
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('SERVER__EDIT_BANNER_MSG_SUCCESS'),
+            'status' => true,
+            'message' => __('SERVER__EDIT_BANNER_MSG_SUCCESS'),
         ]));
     }
 
@@ -319,23 +319,23 @@ class ServerController extends AppController
 
         if ($timeoutRaw === null || $timeoutRaw === '') {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
         if (!filter_var($timeoutRaw, FILTER_VALIDATE_FLOAT)) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('SERVER__INVALID_TIMEOUT'),
+                'status' => false,
+                'message' => __('SERVER__INVALID_TIMEOUT'),
             ]));
         }
 
         $this->config->setKey('server_timeout', $timeoutRaw);
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('SERVER__TIMEOUT_SAVE_SUCCESS'),
+            'status' => true,
+            'message' => __('SERVER__TIMEOUT_SAVE_SUCCESS'),
         ]));
     }
 
@@ -352,8 +352,8 @@ class ServerController extends AppController
 
         if (!$request->is('ajax')) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__BAD_REQUEST'),
+                'status' => false,
+                'message' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
@@ -364,14 +364,14 @@ class ServerController extends AppController
 
         if ($host === '' || $port === '' || $name === '' || $type === null) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('SERVER__LINK_SUCCESS'),
+            'status' => true,
+            'message' => __('SERVER__LINK_SUCCESS'),
         ]));
     }
 

@@ -54,8 +54,8 @@ class APIController extends AppController
 
         if (!$request->is('post')) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__BAD_REQUEST'),
+                'status' => false,
+                'message' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
@@ -81,8 +81,8 @@ class APIController extends AppController
 
         if ($cfg->hasErrors()) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
                 'errors' => $cfg->getErrors(),
             ]));
         }
@@ -93,16 +93,16 @@ class APIController extends AppController
             Log::error('API Configuration save failed: ' . $e->getMessage());
 
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__INTERNAL'),
+                'status' => false,
+                'message' => __('ERROR__INTERNAL'),
             ]));
         }
 
         $this->History->set('EDIT_CONFIGURATION', 'api');
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('CONFIG__EDIT_SUCCESS'),
+            'status' => true,
+            'message' => __('CONFIG__EDIT_SUCCESS'),
         ]));
     }
 }

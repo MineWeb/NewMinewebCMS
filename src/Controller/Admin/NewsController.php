@@ -102,8 +102,8 @@ class NewsController extends AppController
 
         if (!$request->is('post')) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__BAD_REQUEST'),
+                'status' => false,
+                'message' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
@@ -114,8 +114,8 @@ class NewsController extends AppController
 
         if ($title === '' || $content === '' || $slugRaw === '') {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -131,8 +131,8 @@ class NewsController extends AppController
             }
 
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__BAD_REQUEST'),
+                'status' => false,
+                'message' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
@@ -156,8 +156,8 @@ class NewsController extends AppController
         $this->Flash->success(__('NEWS__SUCCESS_ADD'));
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('NEWS__SUCCESS_ADD'),
+            'status' => true,
+            'message' => __('NEWS__SUCCESS_ADD'),
         ]));
     }
 
@@ -205,8 +205,8 @@ class NewsController extends AppController
 
         if (!$request->is('post')) {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__BAD_REQUEST'),
+                'status' => false,
+                'message' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
@@ -218,8 +218,8 @@ class NewsController extends AppController
 
         if ($id === null || $title === '' || $content === '' || $slugRaw === '') {
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__FILL_ALL_FIELDS'),
+                'status' => false,
+                'message' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
@@ -236,8 +236,8 @@ class NewsController extends AppController
             }
 
             return $this->response->withStringBody(json_encode([
-                'statut' => false,
-                'msg' => __('ERROR__BAD_REQUEST'),
+                'status' => false,
+                'message' => __('ERROR__BAD_REQUEST'),
             ]));
         }
 
@@ -258,8 +258,8 @@ class NewsController extends AppController
         $this->Flash->success(__('NEWS__SUCCESS_EDIT'));
 
         return $this->response->withStringBody(json_encode([
-            'statut' => true,
-            'msg' => __('NEWS__SUCCESS_EDIT'),
+            'status' => true,
+            'message' => __('NEWS__SUCCESS_EDIT'),
         ]));
     }
 }
