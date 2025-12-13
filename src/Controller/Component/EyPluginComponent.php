@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Controller\Component;
 
+use App\Service\HttpService;
+use AppSchema;
 use Cake\Cache\Cache;
 use Cake\Controller\Component;
 use Cake\Controller\ComponentRegistry;
@@ -12,8 +14,10 @@ use Cake\Core\Plugin;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use Cake\Routing\Router;
+use CakeSchema;
 use Exception;
 use FilesystemIterator;
+use MainComponent;
 use PDOException;
 use PharIo\Version\Version;
 use PharIo\Version\VersionConstraintParser;
@@ -39,10 +43,13 @@ final class EyPluginComponent extends Component
     private mixed $Schema = null;
     private mixed $Main = null;
 
+    private HttpService $httpService;
+
     public function __construct(ComponentRegistry $registry, array $config = [])
     {
         $this->pluginsFolder = ROOT . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'Addons';
         $this->pluginsLoaded = (object)[];
+        $this->httpService = new HttpService();
         parent::__construct($registry, $config);
     }
 
@@ -271,7 +278,7 @@ final class EyPluginComponent extends Component
             return [];
         }
 
-        $class = new \AppSchema();
+        $class = new AppSchema();
         $tables = get_class_vars($class::class);
         $ignoredVars = ['name', 'path', 'file', 'connection', 'plugin', 'tables'];
 
@@ -357,7 +364,7 @@ final class EyPluginComponent extends Component
         $mainPath = $this->pluginsFolder . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component' . DIRECTORY_SEPARATOR . 'MainComponent.php';
         if (file_exists($mainPath)) {
             App::uses('MainComponent', 'Plugin' . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component');
-            $this->Main = new \MainComponent();
+            $this->Main = new MainComponent();
             $this->Main->onEnable();
         }
 
@@ -396,7 +403,7 @@ final class EyPluginComponent extends Component
         $replace_class_name = str_replace('AppSchema', 'AppUpdateSchema', $sourceSchema);
         file_put_contents($options['path'] . DIRECTORY_SEPARATOR . $options['file'], $replace_class_name);
 
-        $this->Schema = new \CakeSchema($options);
+        $this->Schema = new CakeSchema($options);
 
         $db = ConnectionManager::get('default');
         if (property_exists($db, 'cacheSources')) {
@@ -601,7 +608,7 @@ final class EyPluginComponent extends Component
         $mainPath = $this->pluginsFolder . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component' . DIRECTORY_SEPARATOR . 'MainComponent.php';
         if (file_exists($mainPath)) {
             App::uses('MainComponent', 'Plugin' . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component');
-            $this->Main = new \MainComponent();
+            $this->Main = new MainComponent();
             $this->Main->onDisable();
         }
 
@@ -824,12 +831,7 @@ final class EyPluginComponent extends Component
 
     public function getFreePlugins(bool $all = false, bool $removeInstalledPlugins = false): array|false
     {
-        $controller = $this->getController();
-        if (!$controller || !method_exists($controller, 'sendGetRequest')) {
-            return false;
-        }
-
-        $pluginsList = @json_decode((string)$controller->sendGetRequest($this->reference), true);
+        $pluginsList = @json_decode($this->httpService->sendGetRequest($this->reference), true);
 
         $plugins = [];
         if ($pluginsList) {
@@ -871,17 +873,12 @@ final class EyPluginComponent extends Component
 
     private function getPluginsFromRepoNames(array $repos): array|false
     {
-        $controller = $this->getController();
-        if (!$controller || !method_exists($controller, 'sendMultipleGetRequests')) {
-            return false;
-        }
-
         $urls = [];
         foreach ($repos as $repo) {
             $urls[] = 'https://raw.githubusercontent.com/' . $repo . '/master/config.json';
         }
 
-        $result = $controller->sendMultipleGetRequests($urls);
+        $result = $this->httpService->sendMultipleGetRequests($urls);
         if (!is_array($result)) {
             return false;
         }
@@ -951,12 +948,7 @@ final class EyPluginComponent extends Component
             return 'ERROR__PLUGIN_REQUIREMENTS';
         }
 
-        $controller = $this->getController();
-        if (!$controller || !method_exists($controller, 'sendGetRequest')) {
-            return 'ERROR__PLUGIN_CANT_BE_DOWNLOADED';
-        }
-
-        $zipContent = $controller->sendGetRequest('https://github.com/MineWeb/Plugin-' . $slug . '/archive/master.zip');
+        $zipContent = $this->httpService->sendGetRequest('https://github.com/MineWeb/Plugin-' . $slug . '/archive/master.zip');
         if (!$zipContent) {
             return 'ERROR__PLUGIN_CANT_BE_DOWNLOADED';
         }
@@ -1183,7 +1175,7 @@ final class EyPluginComponent extends Component
         if (file_exists($mainPath)) {
             App::uses('MainComponent', $this->pluginsFolder . DIRECTORY_SEPARATOR . $pluginName . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component');
             if (class_exists('MainComponent')) {
-                $this->Main = new \MainComponent();
+                $this->Main = new MainComponent();
                 $this->Main->onEnable();
             }
         }
@@ -1205,7 +1197,7 @@ final class EyPluginComponent extends Component
         if (file_exists($mainPath)) {
             App::uses('MainComponent', $this->pluginsFolder . DIRECTORY_SEPARATOR . $pluginName . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component');
             if (class_exists('MainComponent')) {
-                $this->Main = new \MainComponent();
+                $this->Main = new MainComponent();
                 $this->Main->onDisable();
             }
         }

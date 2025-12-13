@@ -29,9 +29,9 @@ require CAKE . 'functions.php';
 if (!env('APP_NAME') && file_exists(CONFIG . '.env')) {
     $dotenv = new Loader([CONFIG . '.env']);
     $dotenv->parse()
-        ->putenv()
-        ->toEnv()
-        ->toServer();
+        ->putenv(true)
+        ->toEnv(true)
+        ->toServer(true);
 }
 
 try {
