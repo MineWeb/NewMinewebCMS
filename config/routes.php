@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 use App\Middleware\RequireAdminMiddleware;
 use App\Middleware\RequireAuthMiddleware;
+use App\Middleware\RequireDashboardAccessMiddleware;
 use App\Middleware\RequireGuestMiddleware;
 use App\Service\InstallState;
 use Cake\Routing\RouteBuilder;
@@ -11,6 +12,7 @@ return static function (RouteBuilder $routes): void {
     $routes->registerMiddleware('auth', new RequireAuthMiddleware());
     $routes->registerMiddleware('guest', new RequireGuestMiddleware());
     $routes->registerMiddleware('admin', new RequireAdminMiddleware());
+    $routes->registerMiddleware('accessDashboard', new RequireDashboardAccessMiddleware());
 
     $installed = InstallState::isInstalled();
 
@@ -121,7 +123,7 @@ return static function (RouteBuilder $routes): void {
 
     // Admin only
     $routes->prefix('Admin', function (RouteBuilder $builder): void {
-        $builder->applyMiddleware('admin');
+        $builder->applyMiddleware('accessDashboard');
 
         $builder->connect('/', ['controller' => 'Admin', 'action' => 'index'], ['_name' => 'admin_index']);
         $builder->connect('/switch-admin-dark-mode', ['controller' => 'Admin', 'action' => 'switchAdminDarkMode'], ['_name' => 'admin_switch_dark_mode']);

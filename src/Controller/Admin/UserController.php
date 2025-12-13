@@ -6,7 +6,6 @@ namespace App\Controller\Admin;
 use App\Controller\AppController;
 use App\Model\Table\HistoriesTable;
 use App\Model\Table\UsersTable;
-use App\Service\ConfigurationService;
 use App\Service\UserAuthService;
 use App\Utility\LangService;
 use Cake\Event\Event;
