@@ -20,25 +20,34 @@
                 <i class="fa fa-thumbs-up"></i>
             </button>
             <br>
+
             <?php if ($this->Auth->can('COMMENT_NEWS')) { ?>
                 <div id="form-comment-fade-out">
                     <hr>
                     <div class="well">
                         <h4><?= __('NEWS__COMMENT_TITLE') ?> :</h4>
-                        <form method="POST" data-ajax="true"
-                              action="<?= $this->Url->build(['_name' => 'news_add_comment']) ?>"
-                              data-callback-function="addcomment" data-success-msg="false">
-                            <input name="news_id" value="<?= $news['id'] ?>" type="hidden">
-                            <div class="form-group">
-                                <textarea name="content" class="form-control" rows="3"></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary"><?= __('GLOBAL__SUBMIT') ?></button>
-                        </form>
+
+                        <?= $this->Form->create(null, [
+                            'type' => 'post',
+                            'url' => ['_name' => 'news_add_comment'],
+                            'data-ajax' => 'true',
+                            'data-callback-function' => 'addcomment',
+                            'data-success-msg' => 'false',
+                        ]) ?>
+                        <input name="news_id" value="<?= $news['id'] ?>" type="hidden">
+                        <div class="form-group">
+                            <textarea name="content" class="form-control" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><?= __('GLOBAL__SUBMIT') ?></button>
+                        <?= $this->Form->end() ?>
+
                     </div>
                 </div>
             <?php } ?>
+
             <hr>
             <div class="add-comment"></div>
+
             <?php foreach ($news['comment'] as $k => $v) { ?>
                 <div class="media comment" id="comment-<?= $v['id'] ?>">
                     <a class="pull-left" href="#">
@@ -66,6 +75,7 @@
                 </div>
             <?php } ?>
         </div>
+
         <div class="col-md-4">
             <div class="well">
                 <h4><?= __('NEWS__LAST_TITLE') ?></h4>
@@ -83,6 +93,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="well">
                 <h4><?= __('GLOBAL__INFORMATIONS') ?></h4>
                 <p><b><?= __('GLOBAL__UPDATED') ?> : </b><?= $this->Lang->date($news['updated_at']) ?></p>
@@ -92,7 +103,11 @@
         </div>
     </div>
 </div>
+
 <?= $Module->loadModules('news') ?>
+
+<?= $this->Html->meta('csrfToken', (string)$this->getRequest()->getAttribute('csrfToken')) ?>
+
 <script>
     <?php if (!empty($user)) { ?>
     function addcomment(data) {
@@ -126,6 +141,11 @@
     }
     <?php } ?>
 
+    function getCsrfToken() {
+        let meta = document.querySelector('meta[name="csrfToken"]');
+        return meta ? meta.getAttribute("content") : "";
+    }
+
     function attachCommentDeleteHandlers() {
         let buttons = document.querySelectorAll(".comment-delete");
         buttons.forEach(function (button) {
@@ -139,12 +159,12 @@
         let id = e.getAttribute("id");
         let params = new URLSearchParams();
         params.append("id", id);
-        params.append("data[_Token][key]", "<?= $csrfToken ?>");
 
         fetch("<?= $this->Url->build(['_name' => 'news_ajax_comment_delete']) ?>", {
             method: "POST",
             headers: {
-                "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+                "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                "X-CSRF-Token": getCsrfToken()
             },
             body: params.toString()
         })

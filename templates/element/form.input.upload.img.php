@@ -1,5 +1,5 @@
 <div class="form-group">
-    <label><?= (isset($title)) ? $title : __('FORM__UPLOAD_IMAGE') ?></label><br>
+    <label><?= $title ?? __('FORM__UPLOAD_IMAGE') ?></label><br>
     <div id="image_preview">
         <div class="thumbnail">
             <span class="file-input btn btn-primary btn-block btn-file"><span
@@ -9,16 +9,15 @@
                href="#galery"><?= __('FORM__CHOOSE_FROM_UPLOADED_FILES') ?>&hellip;</a>
             <button id="delete_upload_file"
                     class="btn btn-block btn-danger"><?= __('FORM__DELETE_UPLOADED_FILE') ?></button>
-            <?= (isset($img)) ? '<img src="' . $img . '" class="float-left" width="150" style="margin-top:10px;">' : $this->Html->image('form_img.png', ['class' => 'float-left', 'width' => '150', 'id' => 'img-form', 'style' => 'margin-top:10px;']) ?>
+            <?= isset($img) ? '<img src="' . $img . '" class="float-left" width="150" style="margin-top:10px;">' : $this->Html->image('form_img.png', ['class' => 'float-left', 'width' => '150', 'id' => 'img-form', 'style' => 'margin-top:10px;']) ?>
             <div class="caption float-right">
-                <h5 id="img-name"><?= (isset($filename)) ? $filename . '<input name="img_edit" value="1" type="hidden">' : '' ?></h5>
+                <h5 id="img-name"><?= isset($filename) ? $filename . '<input name="img_edit" value="1" type="hidden">' : '' ?></h5>
                 <p></p>
             </div>
             <div class="clearfix"></div>
         </div>
     </div>
 </div>
-<input name="data[_Token][key]" value="<?= $csrfToken ?>" type="hidden">
 <div class="clearfix"></div>
 
 
@@ -36,7 +35,7 @@
                     <?= __('GALLERY__PARAGRAPH') ?>
                 </p>
                 <?php
-                $files = findRecursive(ROOT . DS . 'webroot' . DS . 'img' . DS . 'uploads', array("png", "jpg", "jpeg", "gif"));
+                $files = findRecursive(ROOT . DS . 'webroot' . DS . 'img' . DS . 'uploads', ['png', 'jpg', 'jpeg', 'gif']);
 
                 foreach ($files as $path) {
                     $file = new SplFileObject($path);
