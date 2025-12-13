@@ -22,8 +22,17 @@ use Cake\Mailer\TransportFactory;
 use Cake\Routing\Router;
 use Cake\Utility\Security;
 use Detection\MobileDetect;
+use josegonzalez\Dotenv\Loader;
 
 require CAKE . 'functions.php';
+
+if (!env('APP_NAME') && file_exists(CONFIG . '.env')) {
+    $dotenv = new Loader([CONFIG . '.env']);
+    $dotenv->parse()
+        ->putenv()
+        ->toEnv()
+        ->toServer();
+}
 
 try {
     Configure::config('default', new PhpConfig());

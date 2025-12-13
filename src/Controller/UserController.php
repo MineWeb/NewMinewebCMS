@@ -85,7 +85,7 @@ class UserController extends AppController
             $histories = $itemsHistoryTable
                 ->find()
                 ->where(['user_id' => $userId])
-                ->orderBy(['ItemsBuyHistory.created' => 'DESC'])
+                ->orderBy(['ItemsBuyHistory.created_at' => 'DESC'])
                 ->all();
 
             $this->set(compact('histories'));

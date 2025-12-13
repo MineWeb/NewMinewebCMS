@@ -379,7 +379,7 @@
                     <?php foreach ($histories as $value) { ?>
                         <tr>
                             <td><?= h($value["ItemsBuyHistory"]["id"]) ?></td>
-                            <td><?= h($value["ItemsBuyHistory"]["created"]) ?></td>
+                            <td><?= h($value["ItemsBuyHistory"]["created_at"]) ?></td>
                             <td><?= h($value["Item"]["price"]) ?></td>
                             <td><?= h($value["Item"]["name"]) ?></td>
                         </tr>

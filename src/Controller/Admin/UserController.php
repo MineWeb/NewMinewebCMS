@@ -123,7 +123,7 @@ class UserController extends AppController
         $this->DataTable->setTable($this->Users);
 
         $this->paginate = [
-            'fields' => ['Users.id', 'Users.username', 'Users.email', 'Users.created', 'Users.rank'],
+            'fields' => ['Users.id', 'Users.username', 'Users.email', 'Users.created_at', 'Users.rank'],
         ];
 
         $this->DataTable->mDataProp = true;

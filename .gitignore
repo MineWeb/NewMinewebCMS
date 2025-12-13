@@ -42,6 +42,8 @@ Thumbs.db
 .gitmodules
 dev.json
 
+config/.env
+
 /config/update
 /config/install.txt
 /config/installed.txt

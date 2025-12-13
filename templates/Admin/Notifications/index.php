@@ -168,13 +168,13 @@
             serverSide: true,
             ajax: "<?= $this->Url->build(['_name' => 'admin_notifications_get_all']) ?>",
             columns: [
-                { data: "User.username" },
-                { data: "Notification.group" },
-                { data: "Notification.from", searchable: false },
-                { data: "Notification.content" },
-                { data: "Notification.type", searchable: false },
-                { data: "Notification.created" },
-                { data: "Notification.actions", searchable: false }
+                { data: "Users.username" },
+                { data: "Notifications.group" },
+                { data: "Notifications.from", searchable: false },
+                { data: "Notifications.content" },
+                { data: "Notifications.type", searchable: false },
+                { data: "Notifications.created_at" },
+                { data: "Notifications.actions", searchable: false }
             ]
         });
 

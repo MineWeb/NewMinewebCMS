@@ -20,7 +20,7 @@ final class WebsiteInfosService
     {
         return $this->fetchTable('Users')
             ->find()
-            ->where(['created LIKE' => date('Y-m-d') . '%'])
+            ->where(['created_at LIKE' => date('Y-m-d') . '%'])
             ->count();
     }
 

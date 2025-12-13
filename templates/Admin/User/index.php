@@ -57,10 +57,10 @@
             serverSide: true,
             ajax: "<?= $this->Url->build(['_name' => 'admin_user_get_users']) ?>",
             columns: [
-                {data: "User.username", searchable: true},
-                {data: "User.email", searchable: true},
-                {data: "User.created", searchable: true},
-                {data: "User.rank", searchable: false},
+                {data: "Users.username", searchable: true},
+                {data: "Users.email", searchable: true},
+                {data: "User.created_at", searchable: true},
+                {data: "Users.rank", searchable: false},
                 {data: "actions", searchable: false}
             ]
         });

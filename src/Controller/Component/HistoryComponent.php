@@ -59,7 +59,7 @@ class HistoryComponent extends Component
             $array['limit'] = $limit;
         }
         if ($date) {
-            $array['conditions']['created LIKE'] = $date . '%';
+            $array['conditions']['created_at LIKE'] = $date . '%';
         }
         if ($action) {
             $array['conditions']['action'] = $action;

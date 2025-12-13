@@ -48,7 +48,7 @@ class HistoryController extends AppController
                 'Histories.action',
                 'Histories.user_id',
                 'Histories.category',
-                'Histories.created',
+                'Histories.created_at',
             ],
             'order' => 'Histories.id DESC',
             'recursive' => 1,

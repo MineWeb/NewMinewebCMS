@@ -39,7 +39,7 @@ class StatisticsComponent extends Component
 
         $ip = $this->Util->getIP();
         $visits = $this->Visit
-            ->find('all', conditions: ['ip' => $ip, 'created LIKE' => date('Y-m-d') . '%'])
+            ->find('all', conditions: ['ip' => $ip, 'created_at LIKE' => date('Y-m-d') . '%'])
             ->toArray();
 
         if (empty($visits)) {

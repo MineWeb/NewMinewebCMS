@@ -266,6 +266,6 @@ class ConfigurationsTable extends Table
             return null;
         }
 
-        return $user->created;
+        return $user->created_at;
     }
 }

@@ -93,8 +93,8 @@ class VisitsTable extends Table
 
         $search = $this
             ->find()
-            ->select(['created_at' => 'DATE(created)', 'count' => 'COUNT(*)'])
-            ->groupBy('DATE(created)')
+            ->select(['created_at' => 'DATE(created_at)', 'count' => 'COUNT(*)'])
+            ->groupBy('DATE(created_at)')
             ->orderBy(['id' => 'DESC'])
             ->limit($limit)
             ->all();
@@ -109,7 +109,7 @@ class VisitsTable extends Table
     public function getVisitsByDay(string $day): array
     {
         $data = $this
-            ->find(conditions: ['created LIKE' => $day . '%'])
+            ->find(conditions: ['created_at LIKE' => $day . '%'])
             ->toArray();
 
         $data['count'] = count($data);

@@ -38,7 +38,7 @@ class AdminController extends AppController
 
         $commentTable = $this->fetchTable('Comments');
         $nbr_comments_today = $commentTable->find()
-            ->where(['created LIKE' => date('Y-m-d') . '%'])
+            ->where(['created_at LIKE' => date('Y-m-d') . '%'])
             ->count();
 
         if ($nbr_comments_today === 0) {
@@ -52,7 +52,7 @@ class AdminController extends AppController
         $userTable = $this->fetchTable('Users');
         $registered_users = $userTable->find()->count();
         $registered_users_today = $userTable->find()
-            ->where(['created LIKE' => date('Y-m-d') . '%'])
+            ->where(['created_at LIKE' => date('Y-m-d') . '%'])
             ->count();
 
         $visitTable = $this->fetchTable('Visits');
@@ -73,7 +73,7 @@ class AdminController extends AppController
             $purchase = $itemsBuyHistoryTable->find()->count();
 
             $purchase_today = $itemsBuyHistoryTable->find()
-                ->where(['created LIKE' => date('Y-m-d') . '%'])
+                ->where(['created_at LIKE' => date('Y-m-d') . '%'])
                 ->count();
 
             $itemTable = $this->fetchTable('Shop.Item');
