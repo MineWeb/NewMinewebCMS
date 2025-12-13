@@ -458,7 +458,7 @@ class InstallController extends BaseController
             'username' => (string)$data['username'],
             'email' => (string)$data['email'],
             'password' => (string)$data['password'],
-            'rank' => 2,
+            'rank' => 4,
         ];
 
         $userId = $auth->createUser($dataToSave, $ip);

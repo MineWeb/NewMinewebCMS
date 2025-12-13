@@ -27,45 +27,30 @@ final class AuthContextMiddleware implements MiddlewareInterface
             $userId = $session->read('user');
 
             if ($userId) {
-                $isConnected = true;
+                $Users = $this->fetchTable('Users');
+                $identity = $Users->find()->where(['id' => (int)$userId])->first();
 
-                $cached = $session->read('auth_context');
-                if (is_array($cached) && ($cached['user_id'] ?? null) === (int)$userId) {
-                    $identity = $cached['identity'] ?? null;
-                    $isAdmin = (bool)($cached['isAdmin'] ?? false);
-                    $permissions = is_array($cached['permissions'] ?? null) ? $cached['permissions'] : [];
-                } else {
-                    $Users = $this->fetchTable('Users');
-                    $identity = $Users->find()->where(['id' => (int)$userId])->first();
+                if ($identity) {
+                    $isConnected = true;
 
-                    if ($identity) {
-                        $rank = (int)($identity->get('rank') ?? 0);
-                        $isAdmin = ($rank === 3 || $rank === 4);
+                    $rank = (int)($identity->get('rank') ?? 0);
+                    $isAdmin = ($rank === 3 || $rank === 4);
 
-                        if ($isAdmin) {
-                            $permissions = ['*'];
-                        } else {
-                            $Permissions = $this->fetchTable('Permissions');
-                            $row = $Permissions->find()->where(['rank' => $rank])->first();
-
-                            if ($row) {
-                                $raw = (string)($row->get('permissions') ?? '');
-                                $decoded = json_decode($raw, true);
-                                $permissions = is_array($decoded) ? $decoded : [];
-                            }
-                        }
-
-                        $session->write('auth_context', [
-                            'user_id' => (int)$userId,
-                            'isAdmin' => $isAdmin,
-                            'permissions' => $permissions,
-                            'identity' => $identity,
-                        ]);
+                    if ($isAdmin) {
+                        $permissions = ['*'];
                     } else {
-                        $session->delete('user');
-                        $session->delete('auth_context');
-                        $isConnected = false;
+                        $Permissions = $this->fetchTable('Permissions');
+                        $row = $Permissions->find()->where(['rank' => $rank])->first();
+
+                        if ($row) {
+                            $raw = (string)($row->get('permissions') ?? '');
+                            $decoded = json_decode($raw, true);
+                            $permissions = is_array($decoded) ? $decoded : [];
+                        }
                     }
+                } else {
+                    $session->delete('user');
+                    $isConnected = false;
                 }
             }
         } catch (Throwable $e) {

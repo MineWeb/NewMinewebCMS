@@ -142,7 +142,7 @@ class UpdateComponent extends Component
 
             $target = ROOT . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Controller' . DIRECTORY_SEPARATOR . 'Component' . DIRECTORY_SEPARATOR . 'UpdateComponent.php';
             if (file_put_contents($target, $newContent) === false) {
-                $this->errorUpdate = __('UPDATE__FAILED_FILE', ['{FILE}' => $target]);
+                $this->errorUpdate = __('UPDATE__FAILED_FILE', ['FILE' => $target]);
                 Log::error('[Update] Failed to write updated UpdateComponent.php to ' . $target);
                 $zip->close();
                 return false;
@@ -180,7 +180,7 @@ class UpdateComponent extends Component
             }
 
             if (file_exists($targetPath) && !is_writable($targetPath)) {
-                $this->errorUpdate = __('UPDATE__FAILED_FILE', ['{FILE}' => $targetPath]);
+                $this->errorUpdate = __('UPDATE__FAILED_FILE', ['FILE' => $targetPath]);
                 Log::error('[Update] File not writable: ' . $targetPath);
                 $zip->close();
                 return false;
@@ -199,7 +199,7 @@ class UpdateComponent extends Component
             }
 
             if (file_put_contents($targetPath, $content) === false) {
-                $this->errorUpdate = __('UPDATE__FAILED_FILE', ['{FILE}' => $targetPath]);
+                $this->errorUpdate = __('UPDATE__FAILED_FILE', ['FILE' => $targetPath]);
                 Log::error('[Update] Failed to write file ' . $targetPath);
                 $zip->close();
                 return false;

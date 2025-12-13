@@ -133,7 +133,7 @@ class MaintenanceController extends AppController
         $maintenanceTable->saveOrFail($entity);
 
         $this->Flash->success(__('MAINTENANCE__DISABLED_PAGE', [
-            '{PAGE}' => $entity->url,
+            'PAGE' => $entity->url,
         ]));
 
         return $this->redirect(['_name' => 'admin_maintenance_index']);
@@ -154,7 +154,7 @@ class MaintenanceController extends AppController
         $maintenanceTable->saveOrFail($entity);
 
         $this->Flash->success(__('MAINTENANCE__ENABLED_PAGE', [
-            '{PAGE}' => $entity->url,
+            'PAGE' => $entity->url,
         ]));
 
         return $this->redirect(['_name' => 'admin_maintenance_index']);
@@ -175,7 +175,7 @@ class MaintenanceController extends AppController
         $maintenanceTable->delete($page);
 
         $this->Flash->success(__('MAINTENANCE__DELETED_PAGE', [
-            '{PAGE}' => $pageUrl,
+            'PAGE' => $pageUrl,
         ]));
 
         return $this->redirect(['_name' => 'admin_maintenance_index']);

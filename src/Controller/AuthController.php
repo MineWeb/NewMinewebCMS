@@ -105,10 +105,10 @@ class AuthController extends AppController
             $confirmCode = substr(md5(uniqid('', true)), 0, 12);
 
             $mail = __('EMAIL__CONTENT_CONFIRM_MAIL', [
-                '{LINK}' => $this->config->get('website_url') . '/auth/confirm/' . $confirmCode,
-                '{IP}' => $this->Util->getIP(),
-                '{USERNAME}' => (string)$data['username'],
-                '{DATE}' => FrozenTime::now()->i18nFormat('dd/MM/yyyy HH:mm'),
+                'LINK' => $this->config->get('website_url') . '/auth/confirm/' . $confirmCode,
+                'IP' => $this->Util->getIP(),
+                'USERNAME' => (string)$data['username'],
+                'DATE' => FrozenTime::now()->i18nFormat('dd/MM/yyyy HH:mm'),
             ]);
 
             if ($this->Util->prepareMail((string)$data['email'], __('EMAIL__TITLE_CONFIRM_MAIL'), $mail)->sendMail()) {

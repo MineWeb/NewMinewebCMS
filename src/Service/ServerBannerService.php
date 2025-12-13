@@ -38,13 +38,13 @@ final class ServerBannerService
             return null;
         }
 
-        return (string)__(
+        return __(
             'SERVER__STATUS_MESSAGE',
             [
-                '{MOTD}' => $serverInfos['getMOTD'] ?? null,
-                '{VERSION}' => $serverInfos['getVersion'] ?? null,
-                '{ONLINE}' => $serverInfos['GET_PLAYER_COUNT'],
-                '{ONLINE_LIMIT}' => $serverInfos['GET_MAX_PLAYERS'],
+                'MOTD' => $serverInfos['getMOTD'] ?? null,
+                'VERSION' => $serverInfos['getVersion'] ?? null,
+                'ONLINE' => $serverInfos['GET_PLAYER_COUNT'],
+                'ONLINE_LIMIT' => $serverInfos['GET_MAX_PLAYERS'],
             ]
         );
     }

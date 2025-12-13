@@ -38,7 +38,7 @@
     <div class="mini-navbar mini-navbar-default">
         <div class="container">
             <div class="col-sm-12">
-                <?= (isset($banner_server) && $banner_server) ? '<p>' . $banner_server . '</p>' : '<p class="text-center">' . __('SERVER__STATUS_OFF') . '</p>' ?>
+                <?= isset($banner_server) && $banner_server ? '<p>' . $banner_server . '</p>' : '<p class="text-center">' . __('SERVER__STATUS_OFF') . '</p>' ?>
             </div>
         </div>
     </div>
@@ -52,7 +52,7 @@
                 <span class="icon-bar"></span>
             </button>
             <a class="navbar-brand"
-               href="<?= $this->Url->build('/') ?>"><?= (isset($website_name)) ? $website_name : 'MineWeb' ?></a>
+               href="<?= $this->Url->build('/') ?>"><?= $website_name ?? 'MineWeb' ?></a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav navbar-right">
@@ -64,10 +64,12 @@
                     $i = 0;
                     foreach ($nav as $key => $value) { ?>
                         <?php if (empty($value['submenu'])) { ?>
-                            <li class="li-nav<?php if ($this->getRequest()->getParam('controller') == $value['name']) { ?> actived<?php } ?>">
-                                <a href="<?= $value['url'] ?>"<?= ($value['open_new_tab']) ? ' target="_blank"' : '' ?>>
-                                    <?php if (!empty($value['icon'])): ?>
-                                        <i class="<?= ((strpos($value['icon'], "fa-")) ? $value['icon'] : "fa fa-" . $value['icon']) ?>"></i>
+                            <li class="li-nav<?php if ($this->getRequest()->getParam('controller') == $value['name']) {
+                                ?> actived<?php
+                                             } ?>">
+                                <a href="<?= $value['url'] ?>"<?= $value['open_new_tab'] ? ' target="_blank"' : '' ?>>
+                                    <?php if (!empty($value['icon'])) : ?>
+                                        <i class="<?= (strpos($value['icon'], 'fa-') ? $value['icon'] : 'fa fa-' . $value['icon']) ?>"></i>
                                     <?php endif; ?>
                                     <?= $value['name'] ?>
                                 </a>
@@ -83,7 +85,7 @@
                                     foreach ($submenu as $k => $v) {
                                         ?>
                                         <li>
-                                            <a href="<?= rawurldecode($v) ?>"<?= ($value['open_new_tab']) ? ' target="_blank"' : '' ?>><?= rawurldecode(str_replace('+', ' ', $k)) ?></a>
+                                            <a href="<?= rawurldecode($v) ?>"<?= $value['open_new_tab'] ? ' target="_blank"' : '' ?>><?= rawurldecode(str_replace('+', ' ', $k)) ?></a>
                                         </li>
                                     <?php } ?>
                                 </ul>
@@ -150,7 +152,7 @@ if (!empty($flash_messages)) {
     <div class="container">
         <div class="row">
             <div class="col-lg-12">
-                <p><?= __('GLOBAL__FOOTER', ["{%year}" => date("Y")]) ?></p>
+                <p><?= __('GLOBAL__FOOTER', ['year' => date('Y')]) ?></p>
             </div>
         </div>
     </div>
@@ -214,7 +216,7 @@ if (!empty($flash_messages)) {
         ga('send', 'pageview');
     </script>
 <?php } ?>
-<?= (isset($configuration_end_code)) ? $configuration_end_code : '' ?>
+<?= $configuration_end_code ?? '' ?>
 </body>
 
 </html>
