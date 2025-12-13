@@ -59,7 +59,6 @@ class BanController extends AppController
         }
 
         $this->set('title_for_layout', __('BAN__HOME'));
-        $this->set('type', (string)$this->config->get('member_page_type'));
 
         $this->viewBuilder()
             ->setLayout('admin')

@@ -31,12 +31,17 @@ class ConfigurationController extends AppController
             }
 
             $hash = (string)$this->config->get('passwords_hash');
-            $this->User->updateAll(
+            $Users = $this->fetchTable('Users');
+            $Users->updateAll(
                 ['password_hash' => $hash],
                 ['password_hash IS' => null]
             );
 
             $configEntity = $this->config->get(1);
+            if ($configEntity === null) {
+                $configEntity = $this->config->getEntity();
+            }
+
             $configEntity->set($data);
             $this->config->saveOrFail($configEntity);
 

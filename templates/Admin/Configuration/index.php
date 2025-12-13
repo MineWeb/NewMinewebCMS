@@ -9,7 +9,7 @@
 
                     <?= $this->Form->create(null, [
                         'url' => ['_name' => 'admin_configuration_index'],
-                        'method' => 'post'
+                        'method' => 'post',
                     ]) ?>
 
                     <div class="nav-tabs-custom">
@@ -37,7 +37,7 @@
                                         'id' => 'website-url',
                                         'type' => 'text',
                                         'class' => 'form-control',
-                                        'value' => $config['website_url']
+                                        'value' => $config['website_url'],
                                     ]) ?>
                                 </div>
 
@@ -48,7 +48,7 @@
                                         'id' => 'config-name',
                                         'type' => 'text',
                                         'class' => 'form-control',
-                                        'value' => $config['name']
+                                        'value' => $config['name'],
                                     ]) ?>
                                 </div>
 
@@ -59,12 +59,11 @@
                                         'id' => 'config-email',
                                         'type' => 'text',
                                         'class' => 'form-control',
-                                        'value' => $config['email']
+                                        'value' => $config['email'],
                                     ]) ?>
                                 </div>
 
                                 <?php if ($shopIsInstalled) { ?>
-
                                     <div class="form-group">
                                         <label for="money-name-singular"><?= __('CONFIG__KEY_MONEY_NAME_SINGULAR') ?></label>
                                         <?= $this->Form->control('money_name_singular', [
@@ -72,7 +71,7 @@
                                             'id' => 'money-name-singular',
                                             'type' => 'text',
                                             'class' => 'form-control',
-                                            'value' => $config['money_name_singular']
+                                            'value' => $config['money_name_singular'],
                                         ]) ?>
                                     </div>
 
@@ -83,7 +82,7 @@
                                             'id' => 'money-name-plural',
                                             'type' => 'text',
                                             'class' => 'form-control',
-                                            'value' => $config['money_name_plural']
+                                            'value' => $config['money_name_plural'],
                                         ]) ?>
                                     </div>
 
@@ -102,7 +101,7 @@
                                                 'id' => 'config-lang',
                                                 'data-live-search' => 'true',
                                                 'class' => 'selectpicker',
-                                                'value' => $config['lang']
+                                                'value' => $config['lang'],
                                             ]
                                         ) ?>
                                         <a href="<?= $this->Url->build(['_name' => 'admin_configuration_edit_lang']) ?>"
@@ -123,13 +122,13 @@
                                                 'sha256' => 'sha256',
                                                 'sha1' => 'sha1',
                                                 'sha384' => 'sha384',
-                                                'sha512' => 'sha512'
+                                                'sha512' => 'sha512',
                                             ],
                                             [
                                                 'id' => 'config-passwords-hash',
                                                 'data-live-search' => 'true',
                                                 'class' => 'selectpicker',
-                                                'value' => $config['passwords_hash']
+                                                'value' => $config['passwords_hash'],
                                             ]
                                         ) ?>
                                     </div>
@@ -182,7 +181,7 @@
                                         'id' => 'microsoft-client-id',
                                         'type' => 'text',
                                         'class' => 'form-control',
-                                        'value' => $config['microsoft_client_id']
+                                        'value' => $config['microsoft_client_id'],
                                     ]) ?>
 
                                     <label for="microsoft-client-secret"><?= __('CONFIG__MICROSOFT_CLIENT_SECRET') ?></label>
@@ -191,7 +190,7 @@
                                         'id' => 'microsoft-client-secret',
                                         'type' => 'text',
                                         'class' => 'form-control',
-                                        'value' => $config['microsoft_client_secret']
+                                        'value' => $config['microsoft_client_secret'],
                                     ]) ?>
                                 </div>
 
@@ -205,7 +204,7 @@
                                             'id' => 'config-condition',
                                             'type' => 'text',
                                             'class' => 'form-control',
-                                            'value' => $config['condition']
+                                            'value' => $config['condition'],
                                         ]) ?>
                                     </div>
                                     <small class="text-danger"><?= __('CONFIG__CONDITION') ?></small>
@@ -220,13 +219,13 @@
                                             'session_type',
                                             [
                                                 'php' => __('CONFIG__KEY_SESSION_TYPE_PHP'),
-                                                'database' => __('CONFIG__KEY_SESSION_TYPE_DB')
+                                                'database' => __('CONFIG__KEY_SESSION_TYPE_DB'),
                                             ],
                                             [
                                                 'id' => 'config-session-type',
                                                 'data-live-search' => 'true',
                                                 'class' => 'selectpicker',
-                                                'value' => (!$config['session_type']) ? 'php' : $config['session_type']
+                                                'value' => $config['session_type'] ?: 'php',
                                             ]
                                         ) ?>
                                     </div>
@@ -260,7 +259,7 @@
                                             id="member-page-type-default"
                                             name="member_page_type"
                                             value="0"
-                                            <?= ($config['member_page_type'] == '0') ? 'checked' : '' ?>
+                                            <?= $config['member_page_type'] == '0' ? 'checked' : '' ?>
                                         >
                                         <label for="member-page-type-default"><?= __('CONFIG__KEY_MEMBER_PAGE_TYPE_DEFAULT') ?></label>
                                     </div>
@@ -270,7 +269,7 @@
                                             id="member-page-type-search"
                                             name="member_page_type"
                                             value="1"
-                                            <?= ($config['member_page_type'] == '1') ? 'checked' : '' ?>
+                                            <?= $config['member_page_type'] == '1' ? 'checked' : '' ?>
                                         >
                                         <label for="member-page-type-search"><?= __('CONFIG__KEY_MEMBER_PAGE_TYPE_SEARCH') ?></label>
                                     </div>
@@ -288,7 +287,7 @@
                                             id="confirm-mail-signup-enable"
                                             name="confirm_mail_signup"
                                             value="1"
-                                            <?= ($config['confirm_mail_signup'] == '1') ? 'checked' : '' ?>
+                                            <?= $config['confirm_mail_signup'] == '1' ? 'checked' : '' ?>
                                         >
                                         <label for="confirm-mail-signup-enable"><?= __('GLOBAL__ENABLE') ?></label>
                                     </div>
@@ -298,7 +297,7 @@
                                             id="confirm-mail-signup-disable"
                                             name="confirm_mail_signup"
                                             value="0"
-                                            <?= ($config['confirm_mail_signup'] == '0') ? 'checked' : '' ?>
+                                            <?= $config['confirm_mail_signup'] == '0' ? 'checked' : '' ?>
                                         >
                                         <label for="confirm-mail-signup-disable"><?= __('GLOBAL__DISABLE') ?></label>
                                     </div>
@@ -306,7 +305,7 @@
 
                                 <div
                                     id="confirm_mail_signup"
-                                    style="display:<?= ($config['confirm_mail_signup'] == '1') ? 'block' : 'none' ?>;"
+                                    style="display:<?= $config['confirm_mail_signup'] == '1' ? 'block' : 'none' ?>;"
                                 >
                                     <div class="form-group">
                                         <label><?= __('CONFIG__KEY_CONFIRM_MAIL_SIGNUP_BLOCK') ?></label>
@@ -316,7 +315,7 @@
                                                 id="confirm-mail-signup-block-enable"
                                                 name="confirm_mail_signup_block"
                                                 value="1"
-                                                <?= ($config['confirm_mail_signup_block'] == '1') ? 'checked' : '' ?>
+                                                <?= $config['confirm_mail_signup_block'] == '1' ? 'checked' : '' ?>
                                             >
                                             <label for="confirm-mail-signup-block-enable"><?= __('GLOBAL__ENABLE') ?></label>
                                         </div>
@@ -326,7 +325,7 @@
                                                 id="confirm-mail-signup-block-disable"
                                                 name="confirm_mail_signup_block"
                                                 value="0"
-                                                <?= ($config['confirm_mail_signup_block'] == '0') ? 'checked' : '' ?>
+                                                <?= $config['confirm_mail_signup_block'] == '0' ? 'checked' : '' ?>
                                             >
                                             <label for="confirm-mail-signup-block-disable"><?= __('GLOBAL__DISABLE') ?></label>
                                         </div>
@@ -343,7 +342,7 @@
                                             id="captcha-type-normal"
                                             name="captcha_type"
                                             value="1"
-                                            <?= ($config['captcha_type'] == '1') ? 'checked' : '' ?>
+                                            <?= $config['captcha_type'] == '1' ? 'checked' : '' ?>
                                         >
                                         <label for="captcha-type-normal"><?= __('GLOBAL__TYPE_NORMAL') ?></label>
                                     </div>
@@ -353,7 +352,7 @@
                                             id="captcha-type-google"
                                             name="captcha_type"
                                             value="2"
-                                            <?= ($config['captcha_type'] == '2') ? 'checked' : '' ?>
+                                            <?= $config['captcha_type'] == '2' ? 'checked' : '' ?>
                                         >
                                         <label for="captcha-type-google"><?= __('CONFIG__TYPE_CAPTCHA_GOOGLE') ?></label>
                                     </div>
@@ -364,7 +363,7 @@
                                             id="captcha-type-hcaptcha"
                                             name="captcha_type"
                                             value="3"
-                                            <?= ($config['captcha_type'] == '3') ? 'checked' : '' ?>
+                                            <?= $config['captcha_type'] == '3' ? 'checked' : '' ?>
                                         >
                                         <label for="captcha-type-hcaptcha"><?= __('CONFIG__TYPE_CAPTCHA_HCAPTCHA') ?></label>
                                     </div>
@@ -372,7 +371,7 @@
 
                                 <div
                                     id="captcha"
-                                    style="display:<?= ($config['captcha_type'] == '2' || $config['captcha_type'] == '3') ? 'block' : 'none' ?>;"
+                                    style="display:<?= $config['captcha_type'] == '2' || $config['captcha_type'] == '3' ? 'block' : 'none' ?>;"
                                 >
                                     <div class="form-group">
                                         <label for="captcha-sitekey"><?= __('CONFIG__KEY_CAPTCHA_SITEKEY') ?></label>
@@ -381,7 +380,7 @@
                                             'id' => 'captcha-sitekey',
                                             'type' => 'text',
                                             'class' => 'form-control',
-                                            'value' => $config['captcha_sitekey']
+                                            'value' => $config['captcha_sitekey'],
                                         ]) ?>
                                     </div>
 
@@ -392,7 +391,7 @@
                                             'id' => 'captcha-secret',
                                             'type' => 'text',
                                             'class' => 'form-control',
-                                            'value' => $config['captcha_secret']
+                                            'value' => $config['captcha_secret'],
                                         ]) ?>
                                     </div>
                                 </div>
@@ -407,7 +406,7 @@
                                         'type' => 'text',
                                         'class' => 'form-control',
                                         'value' => $config['google_analytics'],
-                                        'maxlength' => '15'
+                                        'maxlength' => '15',
                                     ]) ?>
                                 </div>
 
@@ -421,7 +420,7 @@
                                         'rows' => '5',
                                         'type' => 'text',
                                         'class' => 'form-control',
-                                        'value' => $config['end_layout_code']
+                                        'value' => $config['end_layout_code'],
                                     ]) ?>
                                 </div>
 
@@ -435,7 +434,7 @@
                                             id="email-send-type-normal"
                                             name="email_send_type"
                                             value="1"
-                                            <?= ($config['email_send_type'] == '1') ? 'checked' : '' ?>
+                                            <?= $config['email_send_type'] == '1' ? 'checked' : '' ?>
                                         >
                                         <label for="email-send-type-normal"><?= __('GLOBAL__TYPE_NORMAL') ?></label>
                                     </div>
@@ -445,7 +444,7 @@
                                             id="email-send-type-smtp"
                                             name="email_send_type"
                                             value="2"
-                                            <?= ($config['email_send_type'] == '2') ? 'checked' : '' ?>
+                                            <?= $config['email_send_type'] == '2' ? 'checked' : '' ?>
                                         >
                                         <label for="email-send-type-smtp"><?= __('SMTP') ?></label>
                                     </div>
@@ -453,7 +452,7 @@
 
                                 <div
                                     id="smtp-config"
-                                    style="display:<?= ($config['email_send_type'] == '1') ? 'none' : 'block' ?>;"
+                                    style="display:<?= $config['email_send_type'] == '1' ? 'none' : 'block' ?>;"
                                 >
                                     <div class="form-group">
                                         <label for="smtp-host"><?= __('CONFIG__KEY_SMTP_HOST') ?></label>
@@ -463,7 +462,7 @@
                                             'type' => 'text',
                                             'class' => 'form-control',
                                             'value' => $config['smtpHost'],
-                                            'autocomplete' => 'off'
+                                            'autocomplete' => 'off',
                                         ]) ?>
                                     </div>
 
@@ -475,7 +474,7 @@
                                             'type' => 'text',
                                             'class' => 'form-control',
                                             'value' => $config['smtpUsername'],
-                                            'autocomplete' => 'off'
+                                            'autocomplete' => 'off',
                                         ]) ?>
                                     </div>
 
@@ -487,7 +486,7 @@
                                             'type' => 'text',
                                             'class' => 'form-control',
                                             'value' => $config['smtpPort'],
-                                            'autocomplete' => 'off'
+                                            'autocomplete' => 'off',
                                         ]) ?>
                                     </div>
 
@@ -499,7 +498,7 @@
                                             'type' => 'password',
                                             'class' => 'form-control',
                                             'value' => $config['smtpPassword'],
-                                            'autocomplete' => 'off'
+                                            'autocomplete' => 'off',
                                         ]) ?>
                                     </div>
                                 </div>

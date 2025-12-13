@@ -33,8 +33,8 @@
 
                     <div class="col-sm-6">
                         <div class="form-group">
-                            <label><?= __('BAN__REASON') ?></label>
-                            <input type="text" class="form-control" name="reason">
+                            <label for="reason"><?= __('BAN__REASON') ?></label>
+                            <input type="text" class="form-control" id="reason" name="reason">
                         </div>
                     </div>
 
@@ -57,7 +57,6 @@
 </section>
 
 <script type="text/javascript">
-    <?php if ($type == '0') { ?>
     document.addEventListener("DOMContentLoaded", function () {
         if (typeof DataTable === "undefined") {
             return;
@@ -82,68 +81,4 @@
             ]
         });
     });
-    <?php } else { ?>
-    document.addEventListener("DOMContentLoaded", function () {
-        let forms = document.querySelectorAll('form[method="search"]');
-
-        forms.forEach(function (form) {
-            let searchInput = form.querySelector('input[name="search"]');
-            let listGroup = form.querySelector('.list-group');
-            let baseUrl = form.getAttribute('action');
-
-            if (!searchInput) {
-                return;
-            }
-
-            form.addEventListener('submit', function (event) {
-                event.preventDefault();
-                let val = searchInput.value || "";
-                if (!val) {
-                    return;
-                }
-                window.location.href = "<?= $this->Url->build(['_name' => 'admin_ban_edit']) ?>/" + encodeURIComponent(val);
-            });
-
-            if (!listGroup) {
-                return;
-            }
-
-            searchInput.addEventListener('keyup', function () {
-                let value = searchInput.value || "";
-
-                fetch(baseUrl + '/' + encodeURIComponent(value), {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                })
-                    .then(function (response) {
-                        return response.json();
-                    })
-                    .then(function (data) {
-                        listGroup.innerHTML = "";
-
-                        if (data.status) {
-                            let users = data.data || [];
-
-                            users.forEach(function (user) {
-                                let link = document.createElement('a');
-                                link.href = "<?= $this->Url->build(['_name' => 'admin_ban_edit']) ?>/" + encodeURIComponent(user.id);
-                                link.className = 'list-group-item';
-                                link.textContent = user.username;
-                                listGroup.prepend(link);
-                            });
-
-                            listGroup.style.display = 'block';
-                        } else {
-                            listGroup.style.display = 'none';
-                        }
-                    })
-                    .catch(function () {
-                        listGroup.style.display = 'none';
-                    });
-            });
-        });
-    });
-    <?php } ?>
 </script>

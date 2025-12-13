@@ -162,10 +162,6 @@ class ConfigurationsTable extends Table
             ->notEmptyString('confirm_mail_signup_block');
 
         $validator
-            ->integer('member_page_type')
-            ->notEmptyString('member_page_type');
-
-        $validator
             ->scalar('passwords_hash')
             ->maxLength('passwords_hash', 10)
             ->allowEmptyString('passwords_hash');

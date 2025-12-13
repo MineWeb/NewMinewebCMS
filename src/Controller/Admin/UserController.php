@@ -47,9 +47,8 @@ class UserController extends AppController
             return $this->redirect('/');
         }
 
-        $config = new ConfigurationService();
         $this->set('title_for_layout', __('USER__TITLE'));
-        $this->set('type', (string)$config->get('member_page_type'));
+        $this->set('type', (string)$this->config->get('member_page_type'));
 
         $this->viewBuilder()
             ->setLayout('admin')

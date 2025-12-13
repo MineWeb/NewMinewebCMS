@@ -126,8 +126,10 @@ return static function (RouteBuilder $routes): void {
         $builder->connect('/', ['controller' => 'Admin', 'action' => 'index'], ['_name' => 'admin_index']);
         $builder->connect('/switch-admin-dark-mode', ['controller' => 'Admin', 'action' => 'switchAdminDarkMode'], ['_name' => 'admin_switch_dark_mode']);
 
-        $builder->connect('/api', ['controller' => 'API', 'action' => 'index'], ['_name' => 'admin_api_index']);
-
+        $builder->scope('/api', function (RouteBuilder $b): void {
+            $b->connect('/', ['controller' => 'API', 'action' => 'index'], ['_name' => 'admin_api_index']);
+            $b->connect('/save-ajax', ['controller' => 'API', 'action' => 'saveAjax'], ['_name' => 'admin_api_save_ajax']);
+        });
         $builder->scope('/ban', function (RouteBuilder $b): void {
             $b->connect('/', ['controller' => 'Ban', 'action' => 'index'], ['_name' => 'admin_ban_index']);
             $b->connect('/add', ['controller' => 'Ban', 'action' => 'add'], ['_name' => 'admin_ban_add']);

@@ -9,9 +9,15 @@
                     </h3>
                 </div>
 
-                <?= $this->Form->create(null, ['url' => ['action' => 'index'], 'type' => 'post']) ?>
+                <?= $this->Form->create(null, [
+                    'url' => ['_name' => 'admin_api_save_ajax'],
+                    'data-ajax' => 'true',
+                    'data-redirect-url' => $this->Url->build(['_name' => 'admin_api_index']),
+                ]) ?>
 
                 <div class="card-body">
+
+                    <div class="ajax-msg"></div>
 
                     <div class="row">
                         <div class="col-lg-6">
@@ -28,12 +34,14 @@
                                     <div class="form-group mb-4">
                                         <div class="d-flex align-items-center justify-content-between">
                                             <div>
-                                                <span id="lbl_skins" class="font-weight-bold"><?= __('API__SKIN_LABEL') ?></span>
-                                                <div class="text-muted small"><?= __('GLOBAL__ENABLED') ?> / <?= __('GLOBAL__DISABLED') ?></div>
+                                                <span id="lbl_skins"
+                                                      class="font-weight-bold"><?= __('API__SKIN_LABEL') ?></span>
+                                                <div class="text-muted small"><?= __('GLOBAL__ENABLED') ?>
+                                                    / <?= __('GLOBAL__DISABLED') ?></div>
                                             </div>
 
-                                            <input type="hidden" name="skins" value="0">
-                                            <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                            <div
+                                                class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
                                                 <input
                                                     type="checkbox"
                                                     class="custom-control-input"
@@ -41,7 +49,7 @@
                                                     name="skins"
                                                     value="1"
                                                     aria-labelledby="lbl_skins"
-                                                    <?= $config['skins'] ? 'checked' : '' ?>
+                                                    <?= !empty($config['skins']) ? 'checked' : '' ?>
                                                 >
                                                 <label class="custom-control-label" for="skins"></label>
                                             </div>
@@ -51,12 +59,14 @@
                                     <div class="form-group mb-0">
                                         <div class="d-flex align-items-center justify-content-between">
                                             <div>
-                                                <span id="lbl_premium" class="font-weight-bold"><?= __('API__SKIN_PREMIUM_LABEL') ?></span>
+                                                <span id="lbl_premium"
+                                                      class="font-weight-bold"><?= __('API__SKIN_PREMIUM_LABEL') ?></span>
                                                 <div class="text-muted small"><?= __('API__SKIN_PREMIUM_DESC') ?></div>
                                             </div>
 
-                                            <input type="hidden" name="get_premium_skins" value="0">
-                                            <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+
+                                            <div
+                                                class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
                                                 <input
                                                     type="checkbox"
                                                     class="custom-control-input"
@@ -64,7 +74,7 @@
                                                     name="get_premium_skins"
                                                     value="1"
                                                     aria-labelledby="lbl_premium"
-                                                    <?= $config['get_premium_skins'] ? 'checked' : '' ?>
+                                                    <?= !empty($config['get_premium_skins']) ? 'checked' : '' ?>
                                                 >
                                                 <label class="custom-control-label" for="get_premium_skins"></label>
                                             </div>
@@ -74,7 +84,7 @@
                                 </div>
                             </div>
 
-                            <div class="skins_require" style="<?= !$config['skins'] ? 'display: none;' : '' ?>">
+                            <div class="skins_require" style="<?= empty($config['skins']) ? 'display: none;' : '' ?>">
 
                                 <div class="card card-outline card-warning">
                                     <div class="card-header">
@@ -88,12 +98,14 @@
                                         <div class="form-group mb-4">
                                             <div class="d-flex align-items-center justify-content-between">
                                                 <div>
-                                                    <span id="lbl_skin_restorer" class="font-weight-bold"><?= __('API__USE_SKIN_RESTORER') ?></span>
-                                                    <div class="text-muted small"><?= __('API__SKIN_RESTORER_SERVER_DESC') ?></div>
+                                                    <span id="lbl_skin_restorer"
+                                                          class="font-weight-bold"><?= __('API__USE_SKIN_RESTORER') ?></span>
+                                                    <div
+                                                        class="text-muted small"><?= __('API__SKIN_RESTORER_SERVER_DESC') ?></div>
                                                 </div>
 
-                                                <input type="hidden" name="use_skin_restorer" value="0">
-                                                <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                                <div
+                                                    class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
                                                     <input
                                                         type="checkbox"
                                                         class="custom-control-input"
@@ -101,7 +113,7 @@
                                                         name="use_skin_restorer"
                                                         value="1"
                                                         aria-labelledby="lbl_skin_restorer"
-                                                        <?= $config['use_skin_restorer'] ? 'checked' : '' ?>
+                                                        <?= !empty($config['use_skin_restorer']) ? 'checked' : '' ?>
                                                     >
                                                     <label class="custom-control-label" for="use_skin_restorer"></label>
                                                 </div>
@@ -109,11 +121,15 @@
                                         </div>
 
                                         <div class="form-group mb-0">
-                                            <label for="skin_restorer_server" class="font-weight-bold"><?= __('API__SKIN_RESTORER_SERVER') ?></label>
-                                            <select id="skin_restorer_server" class="form-control" name="servers">
+                                            <label for="skin_restorer_server_id"
+                                                   class="font-weight-bold"><?= __('API__SKIN_RESTORER_SERVER') ?></label>
+                                            <select id="skin_restorer_server_id" class="form-control"
+                                                    name="skin_restorer_server_id">
+                                                <option value=""><?= __('GLOBAL__NONE') ?></option>
                                                 <?php foreach ($get_all_servers as $key => $value) { ?>
-                                                    <option value="<?= $key ?>"<?= (isset($selected_server) && in_array($key, $selected_server)) ? ' selected' : '' ?>>
-                                                        <?= $value ?>
+                                                    <option
+                                                        value="<?= (int)$key ?>"<?= (int)($config['skin_restorer_server_id'] ?? 0) === (int)$key ? ' selected' : '' ?>>
+                                                        <?= h($value) ?>
                                                     </option>
                                                 <?php } ?>
                                             </select>
@@ -134,12 +150,14 @@
                                         <div class="form-group mb-4">
                                             <div class="d-flex align-items-center justify-content-between">
                                                 <div>
-                                                    <span id="lbl_skin_free" class="font-weight-bold"><?= __('API__SKIN_FREE') ?></span>
-                                                    <div class="text-muted small"><?= __('GLOBAL__ENABLED') ?> / <?= __('GLOBAL__DISABLED') ?></div>
+                                                    <span id="lbl_skin_free"
+                                                          class="font-weight-bold"><?= __('API__SKIN_FREE') ?></span>
+                                                    <div class="text-muted small"><?= __('GLOBAL__ENABLED') ?>
+                                                        / <?= __('GLOBAL__DISABLED') ?></div>
                                                 </div>
 
-                                                <input type="hidden" name="skin_free" value="0">
-                                                <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                                <div
+                                                    class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
                                                     <input
                                                         type="checkbox"
                                                         class="custom-control-input"
@@ -147,7 +165,7 @@
                                                         name="skin_free"
                                                         value="1"
                                                         aria-labelledby="lbl_skin_free"
-                                                        <?= $config['skin_free'] ? 'checked' : '' ?>
+                                                        <?= !empty($config['skin_free']) ? 'checked' : '' ?>
                                                     >
                                                     <label class="custom-control-label" for="skin_free"></label>
                                                 </div>
@@ -155,17 +173,19 @@
                                         </div>
 
                                         <div class="form-group">
-                                            <label for="skin_filename" class="font-weight-bold"><?= __('API__FILENAME') ?></label>
+                                            <label for="skin_filename"
+                                                   class="font-weight-bold"><?= __('API__FILENAME') ?></label>
                                             <div class="input-group">
                                                 <div class="input-group-prepend">
-                                                    <span class="input-group-text"><?= $this->Url->build('/', ['fullBase' => true]) ?></span>
+                                                    <span
+                                                        class="input-group-text"><?= $this->Url->build('/', ['fullBase' => true]) ?></span>
                                                 </div>
                                                 <input
                                                     id="skin_filename"
                                                     type="text"
                                                     class="form-control"
                                                     name="skin_filename"
-                                                    value="<?= $config['skin_filename'] ?>"
+                                                    value="<?= h((string)($config['skin_filename'] ?? '')) ?>"
                                                     placeholder="<?= __('GLOBAL__DEFAULT') ?> : skins/{PLAYER}"
                                                 >
                                                 <div class="input-group-append">
@@ -175,7 +195,8 @@
                                         </div>
 
                                         <div class="form-group mb-0">
-                                            <label class="font-weight-bold" for="skin_width"><?= __('API__FILE_SIZE') ?></label>
+                                            <label class="font-weight-bold"
+                                                   for="skin_width"><?= __('API__FILE_SIZE') ?></label>
 
                                             <div class="row">
                                                 <div class="col-6 col-md-4">
@@ -184,7 +205,7 @@
                                                         type="text"
                                                         class="form-control"
                                                         name="skin_width"
-                                                        value="<?= $config['skin_width'] ?>"
+                                                        value="<?= h((string)($config['skin_width'] ?? '')) ?>"
                                                         placeholder="<?= __('WIDTH') ?>"
                                                         aria-label="<?= __('WIDTH') ?>"
                                                     >
@@ -198,7 +219,7 @@
                                                         type="text"
                                                         class="form-control"
                                                         name="skin_height"
-                                                        value="<?= $config['skin_height'] ?>"
+                                                        value="<?= h((string)($config['skin_height'] ?? '')) ?>"
                                                         placeholder="<?= __('HEIGHT') ?>"
                                                         aria-label="<?= __('HEIGHT') ?>"
                                                     >
@@ -227,12 +248,14 @@
                                     <div class="form-group mb-0">
                                         <div class="d-flex align-items-center justify-content-between">
                                             <div>
-                                                <span id="lbl_capes" class="font-weight-bold"><?= __('API__CAPE_LABEL') ?></span>
-                                                <div class="text-muted small"><?= __('GLOBAL__ENABLED') ?> / <?= __('GLOBAL__DISABLED') ?></div>
+                                                <span id="lbl_capes"
+                                                      class="font-weight-bold"><?= __('API__CAPE_LABEL') ?></span>
+                                                <div class="text-muted small"><?= __('GLOBAL__ENABLED') ?>
+                                                    / <?= __('GLOBAL__DISABLED') ?></div>
                                             </div>
 
-                                            <input type="hidden" name="capes" value="0">
-                                            <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                            <div
+                                                class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
                                                 <input
                                                     type="checkbox"
                                                     class="custom-control-input"
@@ -240,7 +263,7 @@
                                                     name="capes"
                                                     value="1"
                                                     aria-labelledby="lbl_capes"
-                                                    <?= $config['capes'] ? 'checked' : '' ?>
+                                                    <?= !empty($config['capes']) ? 'checked' : '' ?>
                                                 >
                                                 <label class="custom-control-label" for="capes"></label>
                                             </div>
@@ -250,7 +273,7 @@
                                 </div>
                             </div>
 
-                            <div class="capes_require" style="<?= !$config['capes'] ? 'display: none;' : '' ?>">
+                            <div class="capes_require" style="<?= empty($config['capes']) ? 'display: none;' : '' ?>">
 
                                 <div class="card card-outline card-light">
                                     <div class="card-header">
@@ -264,12 +287,14 @@
                                         <div class="form-group mb-4">
                                             <div class="d-flex align-items-center justify-content-between">
                                                 <div>
-                                                    <span id="lbl_cape_free" class="font-weight-bold"><?= __('API__CAPE_FREE') ?></span>
-                                                    <div class="text-muted small"><?= __('GLOBAL__ENABLED') ?> / <?= __('GLOBAL__DISABLED') ?></div>
+                                                    <span id="lbl_cape_free"
+                                                          class="font-weight-bold"><?= __('API__CAPE_FREE') ?></span>
+                                                    <div class="text-muted small"><?= __('GLOBAL__ENABLED') ?>
+                                                        / <?= __('GLOBAL__DISABLED') ?></div>
                                                 </div>
 
-                                                <input type="hidden" name="cape_free" value="0">
-                                                <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                                <div
+                                                    class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
                                                     <input
                                                         type="checkbox"
                                                         class="custom-control-input"
@@ -277,7 +302,7 @@
                                                         name="cape_free"
                                                         value="1"
                                                         aria-labelledby="lbl_cape_free"
-                                                        <?= $config['cape_free'] ? 'checked' : '' ?>
+                                                        <?= !empty($config['cape_free']) ? 'checked' : '' ?>
                                                     >
                                                     <label class="custom-control-label" for="cape_free"></label>
                                                 </div>
@@ -285,17 +310,19 @@
                                         </div>
 
                                         <div class="form-group">
-                                            <label for="cape_filename" class="font-weight-bold"><?= __('API__FILENAME') ?></label>
+                                            <label for="cape_filename"
+                                                   class="font-weight-bold"><?= __('API__FILENAME') ?></label>
                                             <div class="input-group">
                                                 <div class="input-group-prepend">
-                                                    <span class="input-group-text"><?= $this->Url->build('/', ['fullBase' => true]) ?></span>
+                                                    <span
+                                                        class="input-group-text"><?= $this->Url->build('/', ['fullBase' => true]) ?></span>
                                                 </div>
                                                 <input
                                                     id="cape_filename"
                                                     type="text"
                                                     class="form-control"
                                                     name="cape_filename"
-                                                    value="<?= $config['cape_filename'] ?>"
+                                                    value="<?= h((string)($config['cape_filename'] ?? '')) ?>"
                                                     placeholder="<?= __('GLOBAL__DEFAULT') ?> : capes/{PLAYER}"
                                                 >
                                                 <div class="input-group-append">
@@ -305,7 +332,8 @@
                                         </div>
 
                                         <div class="form-group mb-0">
-                                            <label class="font-weight-bold" for="cape_width"><?= __('API__FILE_SIZE') ?></label>
+                                            <label class="font-weight-bold"
+                                                   for="cape_width"><?= __('API__FILE_SIZE') ?></label>
 
                                             <div class="row">
                                                 <div class="col-6 col-md-4">
@@ -314,7 +342,7 @@
                                                         type="text"
                                                         class="form-control"
                                                         name="cape_width"
-                                                        value="<?= $config['cape_width'] ?>"
+                                                        value="<?= h((string)($config['cape_width'] ?? '')) ?>"
                                                         placeholder="<?= __('WIDTH') ?>"
                                                         aria-label="<?= __('WIDTH') ?>"
                                                     >
@@ -328,7 +356,7 @@
                                                         type="text"
                                                         class="form-control"
                                                         name="cape_height"
-                                                        value="<?= $config['cape_height'] ?>"
+                                                        value="<?= h((string)($config['cape_height'] ?? '')) ?>"
                                                         placeholder="<?= __('HEIGHT') ?>"
                                                         aria-label="<?= __('HEIGHT') ?>"
                                                     >
