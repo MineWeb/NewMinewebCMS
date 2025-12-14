@@ -94,7 +94,7 @@
                         </select>
                     </div>
 
-                    <?php if ($EyPlugin->isInstalled('eywek.shop')) { ?>
+                    <?php if ($this->Plugin->isInstalled('eywek.shop')) { ?>
                         <div class="form-group">
                             <label for="user-money"><?= __('USER__MONEY') ?></label>
                             <input id="user-money"

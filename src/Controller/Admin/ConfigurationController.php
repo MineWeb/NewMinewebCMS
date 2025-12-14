@@ -31,7 +31,7 @@ class ConfigurationController extends AppController
         }
 
         $this->set('config', $config);
-        $this->set('shopIsInstalled', $this->EyPlugin->isInstalled('eywek.shop'));
+        $this->set('shopIsInstalled', $this->addons->isInstalled('eywek.shop'));
 
         $this->viewBuilder()
             ->setLayout('admin')

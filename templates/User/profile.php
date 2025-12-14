@@ -26,7 +26,7 @@
                 </p>
             </div>
 
-            <?php if ($EyPlugin->isInstalled('eywek.shop')) { ?>
+            <?php if ($this->Plugin->isInstalled('eywek.shop')) { ?>
                 <div class="section">
                     <p><b><?= __('USER__MONEY') ?> :</b> <span class="money"><?= h($user['money']) ?></span></p>
                 </div>
@@ -363,7 +363,7 @@
                 <?= $this->Form->end() ?>
             <?php } ?>
 
-            <?php if ($EyPlugin->isInstalled('eywek.shop')) { ?>
+            <?php if ($this->Plugin->isInstalled('eywek.shop')) { ?>
                 <hr>
                 <h3 class="text-center"><?= __('SHOP__HISTORY_PURCHASES') ?></h3>
                 <table class="table table-bordered" id="users">

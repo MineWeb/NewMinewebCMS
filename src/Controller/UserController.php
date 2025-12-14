@@ -12,7 +12,6 @@ use Cake\Routing\Router;
  * @property \App\Controller\Component\AuthComponent $Auth
  * @property \App\Controller\Component\APIComponent $API
  * @property \App\Controller\Component\UtilComponent $Util
- * @property \App\Controller\Component\EyPluginComponent $EyPlugin
  *
  * @property \App\Model\Table\UsersTable $User
  * @property \App\Model\Table\ServersTable $Server
@@ -80,7 +79,7 @@ class UserController extends AppController
 
         $this->viewBuilder()->setLayout($this->config->get('layout'));
 
-        if ($this->EyPlugin->isInstalled('eywek.shop')) {
+        if ($this->addons->isInstalled('eywek.shop')) {
             $itemsHistoryTable = $this->fetchTable('Shop.ItemsBuyHistory');
             $histories = $itemsHistoryTable
                 ->find()

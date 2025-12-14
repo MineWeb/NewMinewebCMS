@@ -10,6 +10,9 @@ use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
 use Cake\Routing\Router;
 
+/**
+ * @property \App\Controller\Component\HistoryComponent $History
+ */
 class NavbarController extends AppController
 {
     public function index(): ?Response
@@ -46,10 +49,12 @@ class NavbarController extends AppController
             }
 
             if ($urlData['type'] === 'plugin') {
+                $plugin = null;
+
                 if (isset($urlData['route'])) {
-                    $plugin = $this->EyPlugin->findPlugin('slug', $urlData['id'] ?? null);
+                    $plugin = $this->addons->findPlugin('slug', $urlData['id'] ?? null);
                 } else {
-                    $plugin = $this->EyPlugin->findPlugin('DBid', $urlData['id'] ?? null);
+                    $plugin = $this->addons->findPlugin('DBid', $urlData['id'] ?? null);
                 }
 
                 if (!empty($plugin)) {
@@ -216,7 +221,7 @@ class NavbarController extends AppController
         }
 
         $this->set('url_pages', $urlPages);
-        $this->set('url_plugins', $this->EyPlugin->findPluginsLinks());
+        $this->set('url_plugins', $this->addons->findPluginsLinks());
 
         $this->viewBuilder()
             ->setLayout('admin')
@@ -261,7 +266,7 @@ class NavbarController extends AppController
             ->orderBy(['order_by' => 'DESC'])
             ->first();
 
-        $order = $last === null ? 1 : ((int)$last['order_by'] + 1);
+        $order = $last === null ? 1 : (int)$last['order_by'] + 1;
         $openNewTab = $openNewTabRaw === 'true' ? 1 : 0;
 
         $data = [
@@ -322,7 +327,7 @@ class NavbarController extends AppController
 
         $this->set('url_pages', $urlPages);
         $this->set('nav', $nav);
-        $this->set('url_plugins', $this->EyPlugin->findPluginsLinks());
+        $this->set('url_plugins', $this->addons->findPluginsLinks());
 
         $this->viewBuilder()
             ->setLayout('admin')

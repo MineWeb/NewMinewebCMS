@@ -19,17 +19,16 @@ class MotdController extends AppController
         $this->set('title_for_layout', __('MOTD__TITLE'));
 
         $serverTable = $this->fetchTable('Servers');
-        $this->ServerComponent = $this->loadComponent('Server');
 
         $servers = $serverTable->findSelectableServers(false);
         $result = [];
 
         foreach ($servers as $id => $name) {
-            if (!$this->ServerComponent->online($id)) {
+            if (!$this->serverBridge->online($id)) {
                 continue;
             }
 
-            $call = $this->ServerComponent->call(['GET_MOTD' => []], $id);
+            $call = $this->serverBridge->call(['GET_MOTD' => []], $id);
             $motd = explode("\n", array_values($call)[0] ?? '');
 
             $result[$id] = [
@@ -62,7 +61,6 @@ class MotdController extends AppController
         $this->set('title_for_layout', __('MOTD__EDIT_TITLE'));
 
         $serverTable = $this->fetchTable('Servers');
-        $this->ServerComponent = $this->loadComponent('Server');
 
         $servers = $serverTable->findSelectableServers(false);
 
@@ -70,7 +68,7 @@ class MotdController extends AppController
             throw new NotFoundException();
         }
 
-        $call = $this->ServerComponent->call(['GET_MOTD' => []], $server_id);
+        $call = $this->serverBridge->call(['GET_MOTD' => []], $server_id);
         $motd = explode("\n", array_values($call)[0] ?? '');
 
         $data = [
@@ -108,7 +106,7 @@ class MotdController extends AppController
 
         $motd = trim($line1 . "\n" . $line2);
 
-        $this->Server->call(['SET_MOTD' => $motd], $server_id);
+        $this->serverBridge->call(['SET_MOTD' => $motd], $server_id);
         $this->History->set('EDIT_MOTD', 'motd');
 
         return $this->response->withStringBody(json_encode([
@@ -129,7 +127,7 @@ class MotdController extends AppController
             throw new NotFoundException();
         }
 
-        $this->Server->call(['SET_MOTD' => ''], $server_id);
+        $this->serverBridge->call(['SET_MOTD' => ''], $server_id);
         $this->History->set('RESET_MOTD', 'motd');
         $this->Flash->success(__('MOTD__RESET_SUCCESS'));
 

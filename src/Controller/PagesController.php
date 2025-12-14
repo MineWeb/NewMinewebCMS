@@ -211,7 +211,7 @@ class PagesController extends AppController
             $blockContent = $endParts[0];
 
             $connected = $this->Auth->isConnected() ? 1 : 0;
-            $server_online = $this->Server->online() ? 1 : 0;
+            $server_online = $this->serverBridge->online() ? 1 : 0;
 
             $condition = str_replace(
                 ['{isConnected}', '{isServerOnline}'],

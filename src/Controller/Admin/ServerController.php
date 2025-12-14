@@ -120,7 +120,7 @@ class ServerController extends AppController
             ]));
         }
 
-        $this->Server->sendCommand($cmd, $serverId);
+        $this->serverBridge->sendCommand($cmd, $serverId);
 
         return $this->response->withStringBody(json_encode([
             'status' => true,
@@ -381,7 +381,7 @@ class ServerController extends AppController
             throw new ForbiddenException();
         }
 
-        $call = $this->Server->call('GET_BANNED_PLAYERS', $server_id);
+        $call = $this->serverBridge->call('GET_BANNED_PLAYERS', $server_id);
         $list = [];
 
         if (is_array($call) && isset($call['GET_BANNED_PLAYERS']) && $call['GET_BANNED_PLAYERS'] !== 'NOT_FOUND') {
@@ -410,7 +410,7 @@ class ServerController extends AppController
             throw new ForbiddenException();
         }
 
-        $call = $this->Server->call('GET_WHITELISTED_PLAYERS', $server_id);
+        $call = $this->serverBridge->call('GET_WHITELISTED_PLAYERS', $server_id);
         $list = [];
 
         if (is_array($call) && isset($call['GET_WHITELISTED_PLAYERS']) && $call['GET_WHITELISTED_PLAYERS'] !== 'NOT_FOUND') {
@@ -439,7 +439,7 @@ class ServerController extends AppController
             throw new ForbiddenException();
         }
 
-        $call = $this->Server->call('GET_PLAYER_LIST', $server_id);
+        $call = $this->serverBridge->call('GET_PLAYER_LIST', $server_id);
         $list = [];
 
         if (is_array($call) && isset($call['GET_PLAYER_LIST']) && $call['GET_PLAYER_LIST'] !== 'NOT_FOUND') {
@@ -488,7 +488,7 @@ class ServerController extends AppController
         $msg .= '<br /><br />';
         $msg .= '<i class="fa fa-times"></i> ';
 
-        if ($this->Server->ping(['ip' => $host, 'port' => (int)$port, 'udp' => $udp])) {
+        if ($this->serverBridge->ping(['ip' => $host, 'port' => (int)$port, 'udp' => $udp])) {
             $msg .= __('SERVER__SEEMS_USED');
         } else {
             $msg .= __('SERVER__PORT_CLOSE_OR_BAD');
@@ -502,7 +502,7 @@ class ServerController extends AppController
         $msg = '<br /><br />';
 
         $hypixelIp = gethostbyname('mc.hypixel.net');
-        if ($this->Server->ping(['ip' => $hypixelIp, 'port' => 25565, 'udp' => false])) {
+        if ($this->serverBridge->ping(['ip' => $hypixelIp, 'port' => 25565, 'udp' => false])) {
             $msg .= '<i class="fa fa-check"></i> ';
             $msg .= __('SERVER__PORT_OPEN');
         } else {

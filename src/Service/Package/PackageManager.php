@@ -263,8 +263,11 @@ final class PackageManager
 
     public function updateAddon(string $slug): void
     {
-        $targetDir = rtrim((string)Configure::read('Update.addons.folder'), DS) . DS . $slug;
-        $manifestPath = $targetDir . DS . (string)Configure::read('Update.addons.manifest', 'manifest.json');
+        $addonsFolder = (string)Configure::read('Update.addons.folder', ROOT . DS . 'plugins' . DS . 'Addons');
+        $targetDir = rtrim($addonsFolder, DS) . DS . $slug;
+
+        $manifestFile = (string)Configure::read('Update.addons.manifest', 'manifest.json');
+        $manifestPath = $targetDir . DS . $manifestFile;
 
         $repo = '';
         $branch = (string)Configure::read('Update.addons.branch', '2.X');
@@ -291,7 +294,8 @@ final class PackageManager
             throw new PackageException('ERROR__PLUGIN_NOT_VALID');
         }
 
-        $targetDir = rtrim((string)Configure::read('Update.addons.folder'), DS) . DS . $slug;
+        $addonsFolder = (string)Configure::read('Update.addons.folder', ROOT . DS . 'plugins' . DS . 'Addons');
+        $targetDir = rtrim($addonsFolder, DS) . DS . $slug;
 
         if ($update && is_dir($targetDir)) {
             $local = $this->manifests->loadLocal($targetDir, $manifestFile);
@@ -366,10 +370,10 @@ final class PackageManager
 
     public function uninstallAddon(string $slug): void
     {
-        $targetDir = rtrim((string)Configure::read('Update.addons.folder'), DS) . DS . $slug;
+        $addonsFolder = (string)Configure::read('Update.addons.folder', ROOT . DS . 'plugins' . DS . 'Addons');
+        $targetDir = rtrim($addonsFolder, DS) . DS . $slug;
 
         $migrations = new Migrations(['plugin' => $slug]);
-
         $Plugins = $this->fetchTable('Plugins');
 
         try {
@@ -404,7 +408,8 @@ final class PackageManager
             throw new PackageException('THEME__ERROR_INSTALL_UNZIP');
         }
 
-        $targetDir = rtrim((string)Configure::read('Update.themes.folder'), DS) . DS . $slug;
+        $themesFolder = (string)Configure::read('Update.themes.folder', ROOT . DS . 'plugins' . DS . 'Themes');
+        $targetDir = rtrim($themesFolder, DS) . DS . $slug;
 
         if ($update && is_dir($targetDir)) {
             $local = $this->manifests->loadLocal($targetDir, $manifestFile);
@@ -447,7 +452,9 @@ final class PackageManager
 
     public function uninstallTheme(string $slug): void
     {
-        $targetDir = rtrim((string)Configure::read('Update.themes.folder'), DS) . DS . $slug;
+        $themesFolder = (string)Configure::read('Update.themes.folder', ROOT . DS . 'plugins' . DS . 'Themes');
+        $targetDir = rtrim($themesFolder, DS) . DS . $slug;
+
         if (is_dir($targetDir)) {
             $this->fs->deleteDir($targetDir);
             Cache::clearAll();
@@ -576,8 +583,12 @@ final class PackageManager
             return '';
         }
 
-        $themesDir = rtrim((string)Configure::read('Update.themes.folder'), DS);
+        $themesDir = rtrim((string)Configure::read('Update.themes.folder', ROOT . DS . 'plugins' . DS . 'Themes'), DS);
         $manifestFile = (string)Configure::read('Update.themes.manifest', 'manifest.json');
+
+        if (!is_dir($themesDir)) {
+            return '';
+        }
 
         $entries = scandir($themesDir) ?: [];
 

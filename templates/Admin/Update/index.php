@@ -13,10 +13,10 @@
 
                     <div style="text-align:center">
 
-                        <p><?= __('UPDATE__LAST_VERSION') ?> : <?= h($Update->lastVersion) ?></p>
-                        <p><?= __('UPDATE__CMS_VERSION') ?> : <?= h($Update->cmsVersion) ?></p>
+                        <p><?= __('UPDATE__LAST_VERSION') ?> : <?= h($this->Update->cmsLastVersion()) ?></p>
+                        <p><?= __('UPDATE__CMS_VERSION') ?> : <?= h($this->Update->cmsVersion()) ?></p>
 
-                        <?php if ((int)explode('.', $Update->lastVersion)[0] > (int)explode('.', $Update->cmsVersion)[0]): ?>
+                        <?php if ((int)explode('.', $this->Update->cmsLastVersion())[0] > (int)explode('.', $this->Update->cmsVersion())[0]): ?>
                             <div class="alert alert-warning">
                                 <?= __('UPDATE__MAJOR_WARNING') ?>
                             </div>

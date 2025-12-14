@@ -11,7 +11,7 @@
 
                 <div class="card-body">
                     <?php
-                    $pluginList = $EyPlugin->pluginsLoaded;
+                    $pluginList = $this->Plugin->pluginsLoaded();
                     if (!empty($pluginList)) {
                         ?>
                         <table class="table table-bordered" id="plugin-installed">
@@ -28,7 +28,7 @@
                             </thead>
                             <tbody>
                             <?php
-                            $versions = $EyPlugin->getPluginsLastVersion(array_map(function ($plugin) {
+                            $versions = $this->Plugin->getPluginsLastVersion(array_map(function ($plugin) {
                                 return $plugin->slug;
                             }, (array)$pluginList));
 
@@ -119,7 +119,7 @@
 
                 <div class="card-body">
                     <?php
-                    $free_plugins = $EyPlugin->getFreePlugins(true, true);
+                    $free_plugins = $this->Plugin->getFreePlugins(true, true);
 
                     if (!empty($free_plugins)) {
                         ?>

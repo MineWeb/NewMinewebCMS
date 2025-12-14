@@ -310,7 +310,7 @@ class UserController extends AppController
             $passwordUpdated = true;
         }
 
-        if ($this->EyPlugin->isInstalled('eywek.shop')) {
+        if ($this->addons->isInstalled('eywek.shop')) {
             $data['money'] = $request->getData('money');
         }
 

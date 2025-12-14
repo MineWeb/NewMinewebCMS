@@ -469,7 +469,7 @@ final class ServerBridgeService
         return $this->timeout;
     }
 
-    private function ping(array $config): array|false
+    public function ping(array $config): array|false
     {
         if (!isset($config['ip'], $config['port'])) {
             return false;

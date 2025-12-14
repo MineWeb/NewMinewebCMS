@@ -35,6 +35,9 @@ use Cake\View\View;
  * @property \App\View\Helper\ConfigHelper $Config
  * @property \App\View\Helper\SocialButtonHelper $SocialButtons
  * @property \App\View\Helper\ModuleHelper $Module
+ * @property \App\View\Helper\UpdateHelper $Update
+ * @property \App\View\Helper\PluginHelper $Plugin
+ * @property \App\View\Helper\ServerBridgeHelper $ServerBridge
  */
 class AppView extends View
 {
@@ -60,5 +63,8 @@ class AppView extends View
         $this->loadHelper('Config');
         $this->loadHelper('SocialButton');
         $this->loadHelper('Module');
+        $this->loadHelper('Update');
+        $this->loadHelper('Plugin');
+        $this->loadHelper('ServerBridge');
     }
 }

@@ -30,7 +30,7 @@
                     <span class="info-box-text"><?= __('USER__NBR_REGISTERED') ?></span>
                     <span class="info-box-number"><?= $registered_users ?></span>
                     <div class="progress">
-                        <div class="progress-bar" style="width:0%"></div>
+                        <div class="progress-bar" style="width:0"></div>
                     </div>
                     <span class="progress-description">
                         + <?= $registered_users_today ?> <?= __('GLOBAL__TODAY') ?>
@@ -48,7 +48,7 @@
                     <span class="info-box-text"><?= __('STATS__NBR_VISITS') ?></span>
                     <span class="info-box-number"><?= $count_visits ?></span>
                     <div class="progress">
-                        <div class="progress-bar" style="width:0%"></div>
+                        <div class="progress-bar" style="width:0"></div>
                     </div>
                     <span class="progress-description">
                         + <?= $count_visits_today ?> <?= __('GLOBAL__TODAY') ?>
@@ -57,7 +57,7 @@
             </div>
         </div>
 
-        <?php if ($EyPlugin->isInstalled('eywek.shop')) { ?>
+        <?php if ($this->Plugin->isInstalled('eywek.shop')) { ?>
             <div class="col-md-3 col-sm-6 col-12">
                 <div class="info-box bg-green">
                     <span class="info-box-icon">
@@ -67,7 +67,7 @@
                         <span class="info-box-text"><?= __('DASHBOARD__PURCHASES') ?></span>
                         <span class="info-box-number"><?= $purchase ?></span>
                         <div class="progress">
-                            <div class="progress-bar" style="width:0%"></div>
+                            <div class="progress-bar" style="width:0"></div>
                         </div>
                         <span class="progress-description">
                             + <?= $purchase_today ?> <?= __('GLOBAL__TODAY') ?>
@@ -86,7 +86,7 @@
                     <span class="info-box-text"><?= __('DASHBOARD__NEWS_WRITTEN') ?></span>
                     <span class="info-box-number"><?= $nbr_news ?></span>
                     <div class="progress">
-                        <div class="progress-bar" style="width:0%"></div>
+                        <div class="progress-bar" style="width:0"></div>
                     </div>
                     <span class="progress-description">
                         <?php
@@ -102,8 +102,8 @@
         </div>
     </div>
 
-    <?= $Theme->displayAvailableUpdate() ?>
-    <?= $EyPlugin->displayAvailableUpdate() ?>
+    <?= $this->Update->themesAvailableHtml() ?>
+    <?= $this->Update->pluginsAvailableHtml() ?>
 
     <div class="row">
         <div class="col-md-8">
@@ -159,7 +159,7 @@
                     <h3 class="card-title"><?= __('DASHBOARD__EARNINGS') ?></h3>
                 </div>
                 <div class="card-body">
-                    <?php if ($EyPlugin->isInstalled('eywek.shop')) { ?>
+                    <?php if ($this->Plugin->isInstalled('eywek.shop')) { ?>
                         <?php if (count($items_solded) >= 5) { ?>
                             <div class="alert alert-warning">
                                 <b><?= __('GLOBAL__INFORMATIONS') ?> :</b> <?= __('DASHBOARD__BIGGEST_SELLERS') ?>
@@ -239,7 +239,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <?php foreach ($History->get(false, 5) as $k => $v) { ?>
+                        <?php foreach ($History->get(false, 5) as $v) { ?>
                             <tr>
                                 <td><?= $this->Lang->history($v['action']) ?></td>
                                 <td><?= $v['category'] ?></td>
@@ -256,9 +256,7 @@
 
     <div class="row">
         <?php
-        $i = 0;
-        foreach ($servers as $key => $value) {
-            $i++;
+        foreach ($servers as $value) {
             ?>
             <div class="col-md-4">
                 <div class="card">
@@ -267,7 +265,7 @@
                     </div>
 
                     <div class="card-body">
-                        <?php if ($Server->online($value['id'])) { ?>
+                        <?php if ($this->ServerBridge->online($value['id'])) { ?>
                             <?php if ($value['type'] != 1 && $value['type'] != 3 && $this->Auth->can('SEND_SERVER_COMMAND_FROM_DASHBOARD')) { ?>
                                 <div class="text-center">
                                     <button
@@ -287,7 +285,7 @@
                             <button class="btn btn-block btn-success" type="button">
                                 <?= __('SERVER__STATUS_ONLINE') ?><br>
                                 <?php
-                                $get = $Server->call(['GET_PLAYER_COUNT' => [], 'GET_MAX_PLAYERS' => []], $value['id']);
+                                $get = $this->ServerBridge->call(['GET_PLAYER_COUNT' => [], 'GET_MAX_PLAYERS' => []], $value['id']);
                                 echo $get['GET_PLAYER_COUNT'] . '/' . $get['GET_MAX_PLAYERS'];
                                 ?>
                             </button>

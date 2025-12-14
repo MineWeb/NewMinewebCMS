@@ -3,14 +3,15 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\AddonService;
 use App\Service\ConfigurationService;
 use App\Service\LocaleService;
 use App\Service\PermissionService;
+use App\Service\ServerBridgeService;
 use Cake\Event\EventInterface;
 
 /**
  * @property \App\Controller\Component\AuthComponent $Auth
- * @property \App\Controller\Component\EyPluginComponent $EyPlugin
  * @property \App\Controller\Component\ThemeComponent $Theme
  * @property \App\Controller\Component\UtilComponent $Util
  */
@@ -21,7 +22,9 @@ class AppController extends BaseController
     public array $paginate = [];
 
     protected ConfigurationService $config;
-    private PermissionService $permissions;
+    protected PermissionService $permissions;
+    protected AddonService $addons;
+    protected ServerBridgeService $serverBridge;
 
     public function initialize(): void
     {
@@ -62,6 +65,8 @@ class AppController extends BaseController
 
         $this->config = new ConfigurationService();
         $this->permissions = new PermissionService();
+        $this->addons = new AddonService();
+        $this->serverBridge = new ServerBridgeService();
     }
 
     public function beforeFilter(EventInterface $event): void

@@ -157,7 +157,7 @@
 
     <div class="content-wrapper">
         <section class="content-header">
-            <?= $Update->available() ?>
+            <?= $this->Update->cmsAvailableHtml() ?>
             <?= (isset($admin_custom_message['messageHTML'])) ? $admin_custom_message['messageHTML'] : '' ?>
             <?php echo $this->Flash->render(); ?>
         </section>

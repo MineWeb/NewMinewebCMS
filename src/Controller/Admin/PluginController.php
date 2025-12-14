@@ -42,7 +42,7 @@ class PluginController extends AppController
         $pluginTable = $this->fetchTable('Plugins');
         $plugin = $pluginTable->find()->where(['id' => $id])->first();
 
-        if ($plugin && isset($plugin['name']) && $this->EyPlugin->delete((string)$plugin['name'])) {
+        if ($plugin && isset($plugin['name']) && $this->addons->delete((string)$plugin['name'])) {
             $this->History->set('DELETE_PLUGIN', 'plugin');
             $this->Flash->success(__('PLUGIN__DELETE_SUCCESS'));
         } else {
@@ -65,7 +65,7 @@ class PluginController extends AppController
             throw new NotFoundException();
         }
 
-        if ($this->EyPlugin->enable((int)$id)) {
+        if ($this->addons->enable((int)$id)) {
             $this->History->set('ENABLE_PLUGIN', 'plugin');
             $this->Flash->success(__('PLUGIN__ENABLE_SUCCESS'));
         } else {
@@ -85,7 +85,7 @@ class PluginController extends AppController
             throw new NotFoundException();
         }
 
-        if ($this->EyPlugin->disable((int)$id)) {
+        if ($this->addons->disable((int)$id)) {
             $this->History->set('DISABLE_PLUGIN', 'plugin');
             $this->Flash->success(__('PLUGIN__DISABLE_SUCCESS'));
         } else {
@@ -108,7 +108,7 @@ class PluginController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        $installed = $this->EyPlugin->download($slug, true);
+        $installed = $this->addons->download($slug, true);
         if ($installed !== true) {
             return $this->response->withStringBody(json_encode([
                 'status' => 'error',
@@ -157,7 +157,7 @@ class PluginController extends AppController
 
         $this->disableAutoRender();
 
-        $updated = $this->EyPlugin->update($slug);
+        $updated = $this->addons->update($slug);
 
         if ($updated === true) {
             Configure::write('Cache.disable', true);

@@ -4,14 +4,9 @@ declare(strict_types=1);
 namespace App\Controller\Component;
 
 use App\Service\HttpService;
-use App\Service\Package\Filesystem\FilesystemService;
-use App\Service\Package\Manifest\ManifestLoader;
 use App\Service\Package\PackageException;
 use App\Service\Package\PackageManager;
-use App\Service\Package\Requirement\RequirementChecker;
-use App\Service\Package\Source\GitHubSource;
-use App\Service\Package\UpdateStateStore;
-use App\Service\PermissionSynchronizer;
+use App\Service\Package\PackageManagerFactory;
 use Cake\Cache\Cache;
 use Cake\Controller\Component;
 use Cake\Controller\ComponentRegistry;
@@ -37,33 +32,7 @@ final class ThemeComponent extends Component
         $this->themesFolder = (string)Configure::read('Update.themes.folder', ROOT . DS . 'plugins' . DS . 'Themes');
         $this->marketUrl = (string)Configure::read('Update.themes.market', '');
 
-        $http = new HttpService();
-        $fs = new FilesystemService();
-        $github = new GitHubSource($http);
-        $manifests = new ManifestLoader($github);
-        $permSync = new PermissionSynchronizer();
-        $state = new UpdateStateStore(ROOT . DS . 'tmp' . DS . 'update' . DS . 'state.json');
-        $requirements = new RequirementChecker(fn() => $this->packages?->cmsCurrentVersion() ?? '0.0.0');
-
-        $this->packages = new PackageManager(
-            $http,
-            $fs,
-            $github,
-            $manifests,
-            $permSync,
-            $requirements,
-            $state
-        );
-    }
-
-    public function initialize(array $config): void
-    {
-        parent::initialize($config);
-
-        $controller = $this->getController();
-        if ($controller) {
-            $controller->set('Theme', $this);
-        }
+        $this->packages = (new PackageManagerFactory())->create();
     }
 
     public function getThemesOnAPI(bool $all = true, bool $deleteInstalledThemes = false): array
@@ -133,7 +102,7 @@ final class ThemeComponent extends Component
                 continue;
             }
 
-            $manifestPath = $path . DS . (string)Configure::read('Update.themes.manifest', 'manifest.json');
+            $manifestPath = $path . DS . Configure::read('Update.themes.manifest', 'manifest.json');
             if (!is_file($manifestPath)) {
                 continue;
             }
