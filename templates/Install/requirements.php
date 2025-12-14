@@ -6,9 +6,9 @@ $root = dirname(__DIR__, 2);
 $compatible = [];
 $help = [];
 
-$compatible['phpVersion'] = version_compare(PHP_VERSION, '8.1.0', '>=');
+$compatible['phpVersion'] = version_compare(PHP_VERSION, '8.2.0', '>=');
 if (!$compatible['phpVersion']) {
-    $help['phpVersion'] = 'Votre version de PHP est ' . PHP_VERSION . '. MineWebCMS requiert PHP 8.1.0 ou plus.';
+    $help['phpVersion'] = 'Votre version de PHP est ' . PHP_VERSION . '. MineWebCMS requiert PHP 8.2.0 ou plus.';
 }
 
 $compatible['intl'] = extension_loaded('intl');
@@ -259,7 +259,7 @@ if (!function_exists('affichImg')) {
                     </tr>
                 <?php endif; ?>
                 <tr>
-                    <td>Version de PHP >= 8.1.0</td>
+                    <td>Version de PHP >= 8.2.0</td>
                     <td><?= affichImg($compatible['phpVersion']) ?></td>
                 </tr>
                 <?php if (!$compatible['phpVersion'] && isset($help['phpVersion'])): ?>

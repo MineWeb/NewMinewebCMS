@@ -41,7 +41,7 @@ class InstallController extends BaseController
             return;
         }
 
-        $path = (string)$this->request->getUri()->getPath();
+        $path = $this->request->getUri()->getPath();
 
         if (strncmp($path, '/install', 8) !== 0 && $path !== '/') {
             $this->setResponse($this->redirect(['_name' => 'install_index']));
@@ -65,104 +65,6 @@ class InstallController extends BaseController
         }
 
         $this->set('title_for_layout', __('INSTALL__DB_TITLE'));
-
-        $dbConfigured = InstallState::isDatabaseConfigured();
-        $needDisplayDatabase = !$dbConfigured;
-
-        $compatible = [];
-        $help = [];
-
-        $compatible['chmod'] =
-            is_writable(ROOT . DIRECTORY_SEPARATOR . 'config') &&
-            is_writable(ROOT . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Data') &&
-            is_writable(ROOT . DIRECTORY_SEPARATOR . 'plugins') &&
-            is_writable(ROOT . DIRECTORY_SEPARATOR . 'tmp') &&
-            is_writable(ROOT . DIRECTORY_SEPARATOR . 'webroot' . DIRECTORY_SEPARATOR . 'js');
-
-        if (!$compatible['chmod']) {
-            $help['chmod'] = '';
-
-            if (!is_writable(ROOT . DIRECTORY_SEPARATOR . 'config')) {
-                $help['chmod'] .= __('INSTALL__DIR_NOT_WRITABLE_CONFIG') . '<br /><br />';
-            }
-
-            if (!is_writable(ROOT . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Data')) {
-                $help['chmod'] .= __('INSTALL__DIR_NOT_WRITABLE_DATA') . '<br /><br />';
-            }
-
-            if (!is_writable(ROOT . DIRECTORY_SEPARATOR . 'plugins')) {
-                $help['chmod'] .= __('INSTALL__DIR_NOT_WRITABLE_PLUGINS') . '<br /><br />';
-            }
-
-            if (!file_exists(ROOT . DIRECTORY_SEPARATOR . 'tmp')) {
-                $help['chmod'] .= __('INSTALL__DIR_MISSING_TMP') . '<br /><br />';
-            } elseif (!is_writable(ROOT . DIRECTORY_SEPARATOR . 'tmp')) {
-                $help['chmod'] .= __('INSTALL__DIR_NOT_WRITABLE_TMP') . '<br /><br />';
-            }
-
-            if (!is_writable(ROOT . DIRECTORY_SEPARATOR . 'webroot' . DIRECTORY_SEPARATOR . 'js')) {
-                $help['chmod'] .= __('INSTALL__DIR_NOT_WRITABLE_WEBROOT_JS') . '<br /><br />';
-            }
-        }
-
-        $compatible['pdo'] = in_array('pdo_mysql', get_loaded_extensions(), true);
-        $compatible['curl'] = extension_loaded('curl');
-        $compatible['gd2'] = function_exists('imagettftext');
-        $compatible['openZip'] = function_exists('zip_open');
-        $compatible['openSSL'] = extension_loaded('openssl');
-
-        if (!$compatible['pdo']) {
-            $help['pdo'] = __('INSTALL__EXT_PDO_MYSQL_MISSING');
-        }
-
-        if (!$compatible['curl']) {
-            $help['curl'] = __('INSTALL__EXT_CURL_MISSING');
-        }
-
-        if (!$compatible['gd2']) {
-            $help['gd2'] = __('INSTALL__EXT_GD2_MISSING');
-        }
-
-        if (!$compatible['openZip']) {
-            $help['openZip'] = __('INSTALL__EXT_ZIP_MISSING');
-        }
-
-        if (!$compatible['openSSL']) {
-            $help['openSSL'] = __('INSTALL__EXT_OPENSSL_MISSING');
-        }
-
-        $compatible['rewriteUrl'] = true;
-
-        $allowUrlFopen = false;
-        if (function_exists('ini_get') && ini_get('allow_url_fopen') === '1') {
-            $allowUrlFopen = true;
-        } else {
-            $context = stream_context_create(['http' => ['timeout' => 1]]);
-            $probe = @file_get_contents('https://google.fr', false, $context);
-            if ($probe !== false) {
-                $allowUrlFopen = true;
-            }
-        }
-
-        $compatible['allowGetURL'] = $allowUrlFopen;
-
-        $needAffichCompatibility = in_array(false, $compatible, true);
-
-        if (file_exists(ROOT . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'bypass_compatibility')) {
-            $needAffichCompatibility = false;
-        }
-
-        if ($needAffichCompatibility) {
-            $needDisplayDatabase = false;
-        }
-
-        $this->set(compact(
-            'compatible',
-            'help',
-            'needAffichCompatibility',
-            'needDisplayDatabase',
-            'dbConfigured'
-        ));
 
         $this->viewBuilder()
             ->setTemplatePath('Install')
