@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Component;
 
+use App\Service\HttpService;
 use Cake\Controller\Component;
 use Cake\Controller\ComponentRegistry;
 use Cake\Http\ServerRequest;
@@ -24,9 +25,12 @@ class ThemeComponent extends Component
     private $controller;
     private $EyPlugin;
 
+    private HttpService $httpService;
+
     public function __construct(ComponentRegistry $registry, array $config = [])
     {
         $this->themesFolder = ROOT . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'Themes';
+        $this->httpService = new HttpService();
         parent::__construct($registry, $config);
     }
 
@@ -120,7 +124,7 @@ class ThemeComponent extends Component
             return $this->themesAvailable[$type];
         }
 
-        $themesList = @json_decode($this->controller->sendGetRequest($this->reference), true);
+        $themesList = @json_decode($this->httpService->sendGetRequest($this->reference), true);
 
         $themes = [];
         if ($themesList) {
@@ -162,7 +166,7 @@ class ThemeComponent extends Component
     private function getThemeFromRepoName(string $repo)
     {
         $configUrl = 'https://raw.githubusercontent.com/' . $repo . '/master/Config/config.json';
-        $config = @json_decode($this->controller->sendGetRequest($configUrl), true);
+        $config = @json_decode($this->httpService->sendGetRequest($configUrl), true);
         if (!$config) {
             return false;
         }
@@ -176,7 +180,7 @@ class ThemeComponent extends Component
         foreach ($repos as $repo) {
             $urls[] = 'https://raw.githubusercontent.com/' . $repo . '/master/Config/config.json';
         }
-        $result = $this->controller->sendMultipleGetRequests($urls);
+        $result = $this->httpService->sendMultipleGetRequests($urls);
         $results = [];
         $i = 0;
         foreach ($result as $val) {
@@ -420,7 +424,7 @@ class ThemeComponent extends Component
 
             $updateFilePath = $this->getPath($slug) . DIRECTORY_SEPARATOR . 'update.json';
             if (file_exists($updateFilePath)) {
-                $updateFile = @json_decode($this->controller->sendGetRequest($updateFilePath));
+                $updateFile = @json_decode($this->httpService->sendGetRequest($updateFilePath));
                 if ($updateFile) {
                     foreach ($updateFile as $type => $value) {
                         if ($type === 'delete') {
@@ -441,7 +445,7 @@ class ThemeComponent extends Component
 
     private function download(string $slug)
     {
-        $zipContent = $this->controller->sendGetRequest('https://github.com/MineWeb/Theme-' . $slug . '/archive/master.zip');
+        $zipContent = $this->httpService->sendGetRequest('https://github.com/MineWeb/Theme-' . $slug . '/archive/master.zip');
         if (!$zipContent) {
             return 'THEME__ERROR_INSTALL_DOWNLOAD_FAILED';
         }

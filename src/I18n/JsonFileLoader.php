@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace App\I18n;
 
 class JsonFileLoader
@@ -27,3 +29,4 @@ class JsonFileLoader
         return $messages;
     }
 }
+
