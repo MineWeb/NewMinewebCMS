@@ -37,6 +37,7 @@ class InstallController extends BaseController
         if (InstallState::isInstalled()) {
             $this->setResponse($this->redirect(['_name' => 'home']));
             $event->stopPropagation();
+
             return;
         }
 
