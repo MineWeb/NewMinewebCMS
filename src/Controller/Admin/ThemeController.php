@@ -9,6 +9,9 @@ use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
 use SplFileInfo;
 
+/**
+ * @property \App\Controller\Component\HistoryComponent $History
+ */
 class ThemeController extends AppController
 {
     public function index(): ?Response
@@ -19,8 +22,8 @@ class ThemeController extends AppController
 
         $this->set('title_for_layout', __('THEME__LIST'));
 
-        $this->set('themesAvailable', $this->Theme->getThemesOnAPI(true, true));
-        $this->set('themesInstalled', $this->Theme->getThemesInstalled());
+        $this->set('themesAvailable', $this->themes->getThemesOnAPI(true, true));
+        $this->set('themesInstalled', $this->themes->getThemesInstalled());
 
         $this->viewBuilder()
             ->setLayout('admin')
@@ -69,7 +72,7 @@ class ThemeController extends AppController
             return $this->redirect(['_name' => 'admin_theme_index']);
         }
 
-        if ($this->Theme->delete($slug)) {
+        if ($this->themes->delete($slug)) {
             $this->History->set('DELETE_THEME', 'theme');
             $this->Flash->success(__('THEME__DELETE_SUCCESS'));
         } else {
@@ -91,7 +94,7 @@ class ThemeController extends AppController
             throw new NotFoundException();
         }
 
-        $error = $this->Theme->install($slug);
+        $error = $this->themes->install($slug);
 
         if ($error !== true) {
             $this->Flash->error(__((string)$error));
@@ -117,7 +120,7 @@ class ThemeController extends AppController
             throw new NotFoundException();
         }
 
-        $error = $this->Theme->install($slug, true);
+        $error = $this->themes->install($slug, true);
 
         if ($error !== true) {
             $this->Flash->error(__((string)$error));
@@ -143,7 +146,7 @@ class ThemeController extends AppController
 
         $this->set('title_for_layout', __('THEME__CUSTOMIZATION'));
 
-        [$themeName, $config] = $this->Theme->getCustomData($slug);
+        [$themeName, $config] = $this->themes->getCustomData($slug);
         $this->set(compact('config', 'themeName'));
 
         $this->viewBuilder()
@@ -154,7 +157,7 @@ class ThemeController extends AppController
         $request = $this->getRequest();
 
         if ($request->is('post')) {
-            if ($this->Theme->processCustomData($slug, $request)) {
+            if ($this->themes->processCustomData($slug, $request)) {
                 $this->Flash->success(__('THEME__CUSTOMIZATION_SUCCESS'));
             }
 
