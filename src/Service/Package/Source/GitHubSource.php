@@ -12,16 +12,21 @@ final class GitHubSource
     {
     }
 
-    public function rawUrl(string $repository, string $branch, string $path): string
+    public function rawUrl(string $repository, string $ref, string $path): string
     {
         $path = ltrim($path, '/');
 
-        return 'https://raw.githubusercontent.com/' . $repository . '/' . $branch . '/' . $path;
+        return 'https://raw.githubusercontent.com/' . $repository . '/' . $ref . '/' . $path;
     }
 
     public function branchZipUrl(string $repository, string $branch): string
     {
         return 'https://github.com/' . $repository . '/archive/refs/heads/' . $branch . '.zip';
+    }
+
+    public function tagZipUrl(string $repository, string $tag): string
+    {
+        return 'https://github.com/' . $repository . '/archive/refs/tags/' . $tag . '.zip';
     }
 
     public function apiUrl(string $path): string
@@ -50,9 +55,9 @@ final class GitHubSource
         return $headers;
     }
 
-    public function fetchRaw(string $repository, string $branch, string $path): array
+    public function fetchRaw(string $repository, string $ref, string $path): array
     {
-        $url = $this->rawUrl($repository, $branch, $path);
+        $url = $this->rawUrl($repository, $ref, $path);
 
         return $this->http->get($url, [
             'headers' => $this->githubHeaders(),

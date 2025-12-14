@@ -8,11 +8,11 @@ use App\Service\ConfigurationService;
 use App\Service\LangService;
 use App\Service\PermissionService;
 use App\Service\ServerBridgeService;
+use App\Service\ThemeService;
 use Cake\Event\EventInterface;
 
 /**
  * @property \App\Controller\Component\AuthComponent $Auth
- * @property \App\Controller\Component\ThemeComponent $Theme
  * @property \App\Controller\Component\UtilComponent $Util
  */
 class AppController extends BaseController
@@ -24,7 +24,9 @@ class AppController extends BaseController
     protected ConfigurationService $config;
     protected PermissionService $permissions;
     protected AddonService $addons;
+    protected ThemeService $themes;
     protected ServerBridgeService $serverBridge;
+
 
     public function initialize(): void
     {
@@ -67,6 +69,7 @@ class AppController extends BaseController
         $this->permissions = new PermissionService();
         $this->addons = new AddonService();
         $this->serverBridge = new ServerBridgeService();
+        $this->themes = new ThemeService();
     }
 
     public function beforeFilter(EventInterface $event): void

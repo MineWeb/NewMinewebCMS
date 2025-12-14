@@ -4,20 +4,18 @@ declare(strict_types=1);
 namespace App\View\Helper;
 
 use App\Service\AddonService;
-use App\Service\Package\PackageInfoService;
 use Cake\View\Helper;
+use Cake\View\View;
 
 final class PluginHelper extends Helper
 {
     private AddonService $addons;
-    private PackageInfoService $info;
 
-    public function __construct($view, array $config = [])
+    public function __construct(View $view, array $config = [])
     {
         parent::__construct($view, $config);
 
         $this->addons = new AddonService();
-        $this->info = new PackageInfoService();
     }
 
     public function pluginsLoaded(): object
@@ -47,32 +45,21 @@ final class PluginHelper extends Helper
 
     public function getPluginLastVersion(string $slug): string|false
     {
-        $v = $this->info->addonLatestVersion($slug);
-
-        return is_string($v) && $v !== '' ? $v : false;
+        return $this->addons->getPluginLastVersion($slug);
     }
 
     public function getPluginsLastVersion(array $slugs): array|false
     {
-        return $this->info->addonsLatestVersions($slugs);
+        return $this->addons->getPluginsLastVersion($slugs);
     }
 
     public function getFreePlugins(bool $all = false, bool $removeInstalledPlugins = false): array|false
     {
-        $installed = [];
-        if ($removeInstalledPlugins) {
-            foreach ((array)$this->addons->pluginsLoaded() as $p) {
-                if (is_object($p) && isset($p->slug)) {
-                    $installed[] = strtolower((string)$p->slug);
-                }
-            }
-        }
-
-        return $this->info->addonsMarketEntries($all, $removeInstalledPlugins, $installed);
+        return $this->addons->getFreePlugins($all, $removeInstalledPlugins);
     }
 
-    public function getPluginFromAPI(string $slug): array|bool
+    public function getPluginFromAPI(string $slug): mixed
     {
-        return $this->info->addonMarketEntry($slug);
+        return $this->addons->getPluginFromAPI($slug);
     }
 }

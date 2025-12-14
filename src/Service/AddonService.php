@@ -217,15 +217,15 @@ final class AddonService
         return $this->info()->addonMarketEntry($slug);
     }
 
-    public function download(string $slug): mixed
+    public function download(string $slug, bool $install = false): mixed
     {
         try {
-            $entry = $this->getPluginFromAPI($slug);
+            $entry = $this->info()->addonMarketEntry($slug);
             if ($entry === false || !is_array($entry)) {
                 return 'ERROR__PLUGIN_CANT_BE_DOWNLOADED';
             }
 
-            $this->packages()->installAddonFromMarket($slug, $entry);
+            $this->packages()->installOrUpdateAddonFromMarket($slug, $entry, false);
 
             Cache::clearAll();
             $this->reload();
@@ -241,7 +241,12 @@ final class AddonService
     public function update(string $slug): mixed
     {
         try {
-            $this->packages()->updateAddon($slug);
+            $entry = $this->info()->addonMarketEntry($slug);
+            if ($entry !== false && is_array($entry)) {
+                $this->packages()->installOrUpdateAddonFromMarket($slug, $entry, true);
+            } else {
+                $this->packages()->updateAddon($slug);
+            }
 
             Cache::clearAll();
             $this->reload();

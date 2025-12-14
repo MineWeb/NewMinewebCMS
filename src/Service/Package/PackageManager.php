@@ -30,6 +30,7 @@ final class PackageManager
         private readonly PermissionSynchronizer $permissionSync,
         private readonly RequirementChecker $requirements,
         private readonly UpdateStateStore $updateState,
+        private readonly LatestReleaseService $releases,
     ) {
     }
 
@@ -70,30 +71,14 @@ final class PackageManager
             return $cached;
         }
 
-        $res = $this->github->fetchLatestRelease($repo);
-        $status = (int)($res['status'] ?? 0);
-        $body = (string)($res['body'] ?? '');
-
-        if ($status < 200 || $status >= 300 || $body === '') {
+        $v = $this->releases->latestVersion($repo);
+        if (!is_string($v) || $v === '') {
             return null;
         }
 
-        $json = json_decode($body, true);
-        if (!is_array($json)) {
-            return null;
-        }
+        Cache::write($cacheKey, $v, 'default');
 
-        $tag = (string)($json['tag_name'] ?? $json['name'] ?? '');
-        $tag = ltrim($tag, 'v');
-        $tag = trim($tag);
-
-        if ($tag === '') {
-            return null;
-        }
-
-        Cache::write($cacheKey, $tag, 'default');
-
-        return $tag;
+        return $v;
     }
 
     public function clearCmsLatestCache(): void
@@ -251,14 +236,33 @@ final class PackageManager
         }
     }
 
-    public function installAddonFromMarket(string $slug, array $marketEntry): void
+    public function resolveRef(string $kind, string $repository, ?string $branchFallback = null): array
     {
-        $repo = (string)($marketEntry['repo'] ?? '');
-        if ($repo === '') {
-            $repo = sprintf((string)Configure::read('Update.addons.repoPattern'), $slug);
+        $kind = $kind === 'themes' ? 'themes' : 'addons';
+
+        $channel = (string)Configure::read('Update.' . $kind . '.channel', 'release');
+        $branchFallback = $branchFallback ?? (string)Configure::read('Update.' . $kind . '.branch', '2.X');
+
+        if ($channel === 'release') {
+            $tag = $this->releases->latestTag($repository);
+            if (is_string($tag) && $tag !== '') {
+                return ['release', $tag];
+            }
         }
 
-        $this->installOrUpdateAddon($slug, $repo, false);
+        return ['branch', $branchFallback];
+    }
+
+    public function installOrUpdateAddonFromMarket(string $slug, array $marketEntry, bool $update): void
+    {
+        [$repo, $channel, $ref] = $this->marketRepoChannelRef('addons', $slug, $marketEntry);
+
+        $this->installOrUpdateAddonInternal($slug, $repo, $update, $channel, $ref);
+    }
+
+    public function installAddonFromMarket(string $slug, array $marketEntry): void
+    {
+        $this->installOrUpdateAddonFromMarket($slug, $marketEntry, false);
     }
 
     public function updateAddon(string $slug): void
@@ -273,22 +277,99 @@ final class PackageManager
         $branch = (string)Configure::read('Update.addons.branch', '2.X');
 
         if (is_file($manifestPath)) {
-            $local = $this->manifests->loadLocal($targetDir, basename($manifestPath));
+            $local = $this->manifests->loadLocal($targetDir, $manifestFile);
             $repo = $local->repository;
             $branch = $local->branch ?: $branch;
         } else {
             $repo = sprintf((string)Configure::read('Update.addons.repoPattern'), $slug);
         }
 
-        $this->installOrUpdateAddon($slug, $repo, true);
+        [$channel, $ref] = $this->resolveRef('addons', $repo, $branch);
+
+        $this->installOrUpdateAddonInternal($slug, $repo, true, $channel, $ref);
     }
 
-    private function installOrUpdateAddon(string $slug, string $repository, bool $update): void
+    public function installOrUpdateThemeFromMarket(string $slug, array $marketEntry, bool $update): void
     {
-        $branch = (string)Configure::read('Update.addons.branch', '2.X');
+        [$repo, $channel, $ref] = $this->marketRepoChannelRef('themes', $slug, $marketEntry);
+
+        $this->installOrUpdateThemeInternal($slug, $repo, $update, $channel, $ref);
+    }
+
+    public function installOrUpdateTheme(string $slug, string $repository, bool $update): void
+    {
+        [$channel, $ref] = $this->resolveRef('themes', $repository);
+
+        $this->installOrUpdateThemeInternal($slug, $repository, $update, $channel, $ref);
+    }
+
+    public function uninstallAddon(string $slug): void
+    {
+        $addonsFolder = (string)Configure::read('Update.addons.folder', ROOT . DS . 'plugins' . DS . 'Addons');
+        $targetDir = rtrim($addonsFolder, DS) . DS . $slug;
+
+        $migrations = new Migrations(['plugin' => $slug]);
+        $Plugins = $this->fetchTable('Plugins');
+
+        try {
+            $migrations->rollback(['target' => 0]);
+        } catch (Throwable) {
+        }
+
+        $entity = $Plugins->find()->where(['name' => $slug])->first();
+        if ($entity) {
+            $Plugins->delete($entity);
+        }
+
+        $this->fs->deleteDir($targetDir);
+
+        $allowed = array_merge(
+            $this->permissionSync->corePermissions(),
+            (array)($this->allInstalledAddonPermissions())
+        );
+        $this->permissionSync->refreshAllowedPermissions($allowed);
+
+        Cache::clearAll();
+    }
+
+    public function uninstallTheme(string $slug): void
+    {
+        $themesFolder = (string)Configure::read('Update.themes.folder', ROOT . DS . 'plugins' . DS . 'Themes');
+        $targetDir = rtrim($themesFolder, DS) . DS . $slug;
+
+        if (is_dir($targetDir)) {
+            $this->fs->deleteDir($targetDir);
+            Cache::clearAll();
+        }
+    }
+
+    private function marketRepoChannelRef(string $kind, string $slug, array $marketEntry): array
+    {
+        $kind = $kind === 'themes' ? 'themes' : 'addons';
+
+        $repo = trim((string)($marketEntry['repo'] ?? ''));
+        if ($repo === '') {
+            $repo = sprintf((string)Configure::read('Update.' . $kind . '.repoPattern'), $slug);
+        }
+
+        $fetch = is_array($marketEntry['fetch'] ?? null) ? (array)$marketEntry['fetch'] : [];
+        $channel = (string)($fetch['channel'] ?? '');
+        $ref = (string)($fetch['ref'] ?? '');
+
+        if (($channel === 'release' || $channel === 'branch') && $ref !== '') {
+            return [$repo, $channel, $ref];
+        }
+
+        [$fallbackChannel, $fallbackRef] = $this->resolveRef($kind, $repo);
+
+        return [$repo, $fallbackChannel, $fallbackRef];
+    }
+
+    private function installOrUpdateAddonInternal(string $slug, string $repository, bool $update, string $channel, string $ref): void
+    {
         $manifestFile = (string)Configure::read('Update.addons.manifest', 'manifest.json');
 
-        $remote = $this->manifests->loadRemote($repository, $branch, $manifestFile);
+        $remote = $this->manifests->loadRemote($repository, $ref, $manifestFile);
 
         if ($remote->type !== PackageType::Addon || strcasecmp($remote->slug, $slug) !== 0) {
             throw new PackageException('ERROR__PLUGIN_NOT_VALID');
@@ -299,7 +380,6 @@ final class PackageManager
 
         if ($update && is_dir($targetDir)) {
             $local = $this->manifests->loadLocal($targetDir, $manifestFile);
-
             if (version_compare($local->version, $remote->version, '>=')) {
                 return;
             }
@@ -311,7 +391,7 @@ final class PackageManager
             fn(string $themeKey) => $this->resolveThemeVersion($themeKey)
         );
 
-        $staged = $this->downloadAndStageFromBranch($repository, $branch);
+        $staged = $this->downloadAndStage($repository, $ref, $channel);
 
         $stagedManifest = $this->manifests->loadLocal($staged, $manifestFile);
         if ($stagedManifest->type !== PackageType::Addon || strcasecmp($stagedManifest->slug, $slug) !== 0) {
@@ -368,41 +448,11 @@ final class PackageManager
         }
     }
 
-    public function uninstallAddon(string $slug): void
+    private function installOrUpdateThemeInternal(string $slug, string $repository, bool $update, string $channel, string $ref): void
     {
-        $addonsFolder = (string)Configure::read('Update.addons.folder', ROOT . DS . 'plugins' . DS . 'Addons');
-        $targetDir = rtrim($addonsFolder, DS) . DS . $slug;
-
-        $migrations = new Migrations(['plugin' => $slug]);
-        $Plugins = $this->fetchTable('Plugins');
-
-        try {
-            $migrations->rollback(['target' => 0]);
-        } catch (Throwable) {
-        }
-
-        $entity = $Plugins->find()->where(['name' => $slug])->first();
-        if ($entity) {
-            $Plugins->delete($entity);
-        }
-
-        $this->fs->deleteDir($targetDir);
-
-        $allowed = array_merge(
-            $this->permissionSync->corePermissions(),
-            (array)($this->allInstalledAddonPermissions())
-        );
-        $this->permissionSync->refreshAllowedPermissions($allowed);
-
-        Cache::clearAll();
-    }
-
-    public function installOrUpdateTheme(string $slug, string $repository, bool $update): void
-    {
-        $branch = (string)Configure::read('Update.themes.branch', '2.X');
         $manifestFile = (string)Configure::read('Update.themes.manifest', 'manifest.json');
 
-        $remote = $this->manifests->loadRemote($repository, $branch, $manifestFile);
+        $remote = $this->manifests->loadRemote($repository, $ref, $manifestFile);
 
         if ($remote->type !== PackageType::Theme || strcasecmp($remote->slug, $slug) !== 0) {
             throw new PackageException('THEME__ERROR_INSTALL_UNZIP');
@@ -413,7 +463,6 @@ final class PackageManager
 
         if ($update && is_dir($targetDir)) {
             $local = $this->manifests->loadLocal($targetDir, $manifestFile);
-
             if (version_compare($local->version, $remote->version, '>=')) {
                 return;
             }
@@ -425,7 +474,7 @@ final class PackageManager
             fn(string $themeKey) => $this->resolveThemeVersion($themeKey)
         );
 
-        $staged = $this->downloadAndStageFromBranch($repository, $branch);
+        $staged = $this->downloadAndStage($repository, $ref, $channel);
 
         $stagedManifest = $this->manifests->loadLocal($staged, $manifestFile);
         if ($stagedManifest->type !== PackageType::Theme || strcasecmp($stagedManifest->slug, $slug) !== 0) {
@@ -450,22 +499,13 @@ final class PackageManager
         }
     }
 
-    public function uninstallTheme(string $slug): void
+    private function downloadAndStage(string $repository, string $ref, string $channel): string
     {
-        $themesFolder = (string)Configure::read('Update.themes.folder', ROOT . DS . 'plugins' . DS . 'Themes');
-        $targetDir = rtrim($themesFolder, DS) . DS . $slug;
+        $zipUrl = $channel === 'release'
+            ? $this->github->tagZipUrl($repository, $ref)
+            : $this->github->branchZipUrl($repository, $ref);
 
-        if (is_dir($targetDir)) {
-            $this->fs->deleteDir($targetDir);
-            Cache::clearAll();
-        }
-    }
-
-    private function downloadAndStageFromBranch(string $repository, string $branch): string
-    {
-        $zipUrl = $this->github->branchZipUrl($repository, $branch);
-
-        $tmpBase = ROOT . DS . 'tmp' . DS . 'update' . DS . 'downloads' . DS . sha1($repository . '|' . $branch . '|' . microtime(true));
+        $tmpBase = ROOT . DS . 'tmp' . DS . 'update' . DS . 'downloads' . DS . sha1($repository . '|' . $ref . '|' . $channel . '|' . microtime(true));
         $zipPath = $tmpBase . DS . 'package.zip';
         $extractDir = $tmpBase . DS . 'extract';
 

@@ -4,38 +4,36 @@ declare(strict_types=1);
 namespace App\Service\Package;
 
 use App\Service\HttpService;
+use Cake\Cache\Cache;
 use Cake\Core\Configure;
 
 final class PackageInfoService
 {
-    private PackageManager $packages;
     private HttpService $http;
 
     private mixed $addonsMarket = null;
     private mixed $themesMarket = null;
 
-    private ?array $addonsMarketMap = null;
-    private ?array $themesMarketMap = null;
-
     private ?array $addonIndex = null;
     private ?array $themeIndex = null;
 
-    public function __construct(?PackageManagerFactory $factory = null, ?HttpService $http = null)
+    public function __construct(?HttpService $http = null)
     {
-        $factory ??= new PackageManagerFactory();
-
-        $this->packages = $factory->create();
         $this->http = $http ?? new HttpService();
     }
 
     public function cmsCurrentVersion(): string
     {
-        return $this->packages->cmsCurrentVersion();
+        $packages = (new PackageManagerFactory())->create();
+
+        return $packages->cmsCurrentVersion();
     }
 
     public function cmsLatestVersion(): string
     {
-        return $this->packages->cmsLatestVersion() ?: $this->cmsCurrentVersion();
+        $packages = (new PackageManagerFactory())->create();
+
+        return $packages->cmsLatestVersion() ?: $packages->cmsCurrentVersion();
     }
 
     public function cmsHasUpdate(): bool
@@ -55,16 +53,36 @@ final class PackageInfoService
         return $idx['versions'][$key] ?? null;
     }
 
-    public function addonLatestVersion(string $slug): ?string
+    public function themeInstalledVersion(string $key): ?string
     {
-        $slug = $this->normalizeKey($slug);
-        if ($slug === '') {
+        $key = $this->normalizeKey($key);
+        if ($key === '') {
             return null;
         }
 
-        $map = $this->addonsMarketVersionMap();
+        $idx = $this->themeIndex();
 
-        return $map[$slug] ?? null;
+        return $idx['versions'][$key] ?? null;
+    }
+
+    public function addonLatestVersion(string $slug): ?string
+    {
+        $entry = $this->addonMarketEntry($slug);
+        if (!is_array($entry)) {
+            return null;
+        }
+
+        return is_string($entry['version'] ?? null) ? (string)$entry['version'] : null;
+    }
+
+    public function themeLatestVersion(string $slug): ?string
+    {
+        $entry = $this->themeMarketEntry($slug);
+        if (!is_array($entry)) {
+            return null;
+        }
+
+        return is_string($entry['version'] ?? null) ? (string)$entry['version'] : null;
     }
 
     public function addonsLatestVersions(array $slugs): array
@@ -74,17 +92,11 @@ final class PackageInfoService
             $slugs
         ), static fn($v) => $v !== '')));
 
-        if ($slugs === []) {
-            return [];
-        }
-
-        $map = $this->addonsMarketVersionMap();
-
         $out = [];
         foreach ($slugs as $slug) {
-            $k = $this->normalizeKey($slug);
-            if ($k !== '' && isset($map[$k])) {
-                $out[$slug] = $map[$k];
+            $v = $this->addonLatestVersion($slug);
+            if (is_string($v) && $v !== '') {
+                $out[$slug] = $v;
             }
         }
 
@@ -111,51 +123,6 @@ final class PackageInfoService
         return version_compare($installed, $latest, '<');
     }
 
-    public function addonsHaveAnyUpdate(): bool
-    {
-        $idx = $this->addonIndex();
-        $map = $this->addonsMarketVersionMap();
-
-        foreach ($idx['slugs'] as $slugLower) {
-            $installed = $idx['versions'][$slugLower] ?? null;
-            $latest = $map[$slugLower] ?? null;
-
-            if (!is_string($installed) || $installed === '' || !is_string($latest) || $latest === '') {
-                continue;
-            }
-
-            if (version_compare($installed, $latest, '<')) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public function themeInstalledVersion(string $key): ?string
-    {
-        $key = $this->normalizeKey($key);
-        if ($key === '') {
-            return null;
-        }
-
-        $idx = $this->themeIndex();
-
-        return $idx['versions'][$key] ?? null;
-    }
-
-    public function themeLatestVersion(string $slug): ?string
-    {
-        $slug = $this->normalizeKey($slug);
-        if ($slug === '') {
-            return null;
-        }
-
-        $map = $this->themesMarketVersionMap();
-
-        return $map[$slug] ?? null;
-    }
-
     public function themeHasUpdate(string $keyOrSlug): bool
     {
         $installed = $this->themeInstalledVersion($keyOrSlug);
@@ -176,16 +143,41 @@ final class PackageInfoService
         return version_compare($installed, $latest, '<');
     }
 
-    public function themesHaveAnyUpdate(): bool
+    public function addonsHaveAnyUpdate(): bool
     {
-        $idx = $this->themeIndex();
-        $map = $this->themesMarketVersionMap();
+        $idx = $this->addonIndex();
 
         foreach ($idx['slugs'] as $slugLower) {
             $installed = $idx['versions'][$slugLower] ?? null;
-            $latest = $map[$slugLower] ?? null;
+            if (!is_string($installed) || $installed === '') {
+                continue;
+            }
 
-            if (!is_string($installed) || $installed === '' || !is_string($latest) || $latest === '') {
+            $latest = $this->addonLatestVersion($slugLower);
+            if (!is_string($latest) || $latest === '') {
+                continue;
+            }
+
+            if (version_compare($installed, $latest, '<')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function themesHaveAnyUpdate(): bool
+    {
+        $idx = $this->themeIndex();
+
+        foreach ($idx['slugs'] as $slugLower) {
+            $installed = $idx['versions'][$slugLower] ?? null;
+            if (!is_string($installed) || $installed === '') {
+                continue;
+            }
+
+            $latest = $this->themeLatestVersion($slugLower);
+            if (!is_string($latest) || $latest === '') {
                 continue;
             }
 
@@ -204,7 +196,7 @@ final class PackageInfoService
             return false;
         }
 
-        $plugins = [];
+        $out = [];
         foreach ($list as $entry) {
             if (!is_array($entry)) {
                 continue;
@@ -214,7 +206,12 @@ final class PackageInfoService
                 continue;
             }
 
-            $plugins[] = $entry;
+            $normalized = $this->normalizeMarketEntry($entry, 'addons');
+            if ($normalized === null) {
+                continue;
+            }
+
+            $out[] = $normalized;
         }
 
         if ($removeInstalledPlugins) {
@@ -224,7 +221,7 @@ final class PackageInfoService
             ), static fn($v) => $v !== '')));
 
             if ($installedSlugsLower !== []) {
-                $plugins = array_values(array_filter($plugins, static function ($p) use ($installedSlugsLower) {
+                $out = array_values(array_filter($out, static function ($p) use ($installedSlugsLower) {
                     $slug = strtolower((string)($p['slug'] ?? ''));
 
                     return $slug !== '' && !in_array($slug, $installedSlugsLower, true);
@@ -232,7 +229,50 @@ final class PackageInfoService
             }
         }
 
-        return $plugins;
+        return $out;
+    }
+
+    public function themesMarketEntries(bool $all = true, bool $removeInstalledThemes = false, array $installedSlugsLower = []): array|false
+    {
+        $list = $this->themesMarketRaw();
+        if ($list === false) {
+            return false;
+        }
+
+        $out = [];
+        foreach ($list as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+
+            if (!$all && empty($entry['free'])) {
+                continue;
+            }
+
+            $normalized = $this->normalizeMarketEntry($entry, 'themes');
+            if ($normalized === null) {
+                continue;
+            }
+
+            $out[] = $normalized;
+        }
+
+        if ($removeInstalledThemes) {
+            $installedSlugsLower = array_values(array_unique(array_filter(array_map(
+                static fn($v) => strtolower(trim((string)$v)),
+                $installedSlugsLower
+            ), static fn($v) => $v !== '')));
+
+            if ($installedSlugsLower !== []) {
+                $out = array_values(array_filter($out, static function ($t) use ($installedSlugsLower) {
+                    $slug = strtolower((string)($t['slug'] ?? ''));
+
+                    return $slug !== '' && !in_array($slug, $installedSlugsLower, true);
+                }));
+            }
+        }
+
+        return $out;
     }
 
     public function addonMarketEntry(string $slug): array|false
@@ -253,11 +293,90 @@ final class PackageInfoService
             }
 
             if ($this->normalizeKey((string)($entry['slug'] ?? '')) === $slug) {
-                return $entry;
+                $normalized = $this->normalizeMarketEntry($entry, 'addons');
+
+                return $normalized ?? false;
             }
         }
 
         return false;
+    }
+
+    public function themeMarketEntry(string $slug): array|false
+    {
+        $slug = $this->normalizeKey($slug);
+        if ($slug === '') {
+            return false;
+        }
+
+        $list = $this->themesMarketRaw();
+        if ($list === false) {
+            return false;
+        }
+
+        foreach ($list as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+
+            if ($this->normalizeKey((string)($entry['slug'] ?? '')) === $slug) {
+                $normalized = $this->normalizeMarketEntry($entry, 'themes');
+
+                return $normalized ?? false;
+            }
+        }
+
+        return false;
+    }
+
+    private function normalizeMarketEntry(array $entry, string $kind): ?array
+    {
+        $kind = $kind === 'themes' ? 'themes' : 'addons';
+
+        $slug = trim((string)($entry['slug'] ?? ''));
+        $repo = trim((string)($entry['repo'] ?? ''));
+
+        if ($slug === '' || $repo === '') {
+            return null;
+        }
+
+        $manifest = $entry['manifest'] ?? null;
+        if (!is_array($manifest)) {
+            return null;
+        }
+
+        $type = strtolower(trim((string)($manifest['type'] ?? '')));
+        if ($kind === 'addons' && $type !== 'addon') {
+            return null;
+        }
+        if ($kind === 'themes' && $type !== 'theme') {
+            return null;
+        }
+
+        $author = trim((string)($manifest['author'] ?? ''));
+        $version = trim((string)($manifest['version'] ?? ''));
+        if ($author === '' || $version === '') {
+            return null;
+        }
+
+        $fetch = is_array($entry['fetch'] ?? null) ? (array)$entry['fetch'] : [];
+        $channel = (string)($fetch['channel'] ?? '');
+        $ref = (string)($fetch['ref'] ?? '');
+
+        $requirements = is_array($manifest['requirements'] ?? null) ? (array)$manifest['requirements'] : [];
+
+        $out = $entry;
+        $out['slug'] = $slug;
+        $out['repo'] = $repo;
+        $out['author'] = $author;
+        $out['version'] = $version;
+        $out['id'] = strtolower($author . '.' . $slug);
+        $out['requirements'] = $requirements;
+        $out['fetch'] = ['channel' => $channel, 'ref' => $ref];
+        $out['compatible'] = (bool)($entry['compatible'] ?? false);
+        $out['compatible_error'] = is_string($entry['reason'] ?? null) ? (string)$entry['reason'] : null;
+
+        return $out;
     }
 
     private function normalizeKey(string $key): string
@@ -321,7 +440,7 @@ final class PackageInfoService
             }
 
             $path = $dir . DS . $manifestFile;
-            $m = $this->readManifest($path);
+            $m = $this->readLocalManifest($path);
             if ($m === null) {
                 continue;
             }
@@ -386,7 +505,7 @@ final class PackageInfoService
             }
 
             $path = $dir . DS . $manifestFile;
-            $m = $this->readManifest($path);
+            $m = $this->readLocalManifest($path);
             if ($m === null) {
                 continue;
             }
@@ -419,7 +538,7 @@ final class PackageInfoService
         return $this->themeIndex;
     }
 
-    private function readManifest(string $path): ?array
+    private function readLocalManifest(string $path): ?array
     {
         if (!is_file($path) || !is_readable($path)) {
             return null;
@@ -435,113 +554,175 @@ final class PackageInfoService
         return is_array($decoded) ? $decoded : null;
     }
 
+    private function cacheEnabled(string $kind): bool
+    {
+        $kind = $kind === 'themes' ? 'themes' : 'addons';
+
+        return (bool)Configure::read('Update.' . $kind . '.cache.enabled', true);
+    }
+
+    private function cacheTtl(string $kind): int
+    {
+        $kind = $kind === 'themes' ? 'themes' : 'addons';
+
+        $ttl = (int)Configure::read('Update.' . $kind . '.cache.ttl', 600);
+
+        return $ttl > 0 ? $ttl : 0;
+    }
+
+    private function marketSources(string $kind): array
+    {
+        $kind = $kind === 'themes' ? 'themes' : 'addons';
+        $cfg = Configure::read('Update.' . $kind . '.market');
+
+        if (is_string($cfg)) {
+            $cfg = [$cfg];
+        }
+
+        if (!is_array($cfg)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($cfg as $source) {
+            $source = trim((string)$source);
+            if ($source !== '') {
+                $out[] = $source;
+            }
+        }
+
+        return array_values(array_unique($out));
+    }
+
+    private function readSource(string $source): ?string
+    {
+        $source = trim($source);
+        if ($source === '') {
+            return null;
+        }
+
+        $parts = parse_url($source);
+        $scheme = is_array($parts) && isset($parts['scheme']) ? strtolower((string)$parts['scheme']) : '';
+
+        if ($scheme === 'http' || $scheme === 'https') {
+            return $this->http->sendGetRequest($source);
+        }
+
+        if ($scheme === 'file') {
+            $path = (string)($parts['path'] ?? '');
+            if ($path !== '' && is_file($path)) {
+                return (string)file_get_contents($path);
+            }
+
+            return null;
+        }
+
+        if (is_file($source)) {
+            return (string)file_get_contents($source);
+        }
+
+        $fallback = ROOT . DS . ltrim($source, DS);
+        if (is_file($fallback)) {
+            return (string)file_get_contents($fallback);
+        }
+
+        return null;
+    }
+
+    private function mergeSources(array $sources): array
+    {
+        $merged = [];
+        $seen = [];
+
+        foreach ($sources as $source) {
+            $raw = $this->readSource($source);
+            if (!is_string($raw) || $raw === '') {
+                continue;
+            }
+
+            $decoded = json_decode($raw, true);
+            if (!is_array($decoded)) {
+                continue;
+            }
+
+            foreach ($decoded as $entry) {
+                if (!is_array($entry)) {
+                    continue;
+                }
+
+                $slug = strtolower(trim((string)($entry['slug'] ?? '')));
+                if ($slug === '' || isset($seen[$slug])) {
+                    continue;
+                }
+
+                $seen[$slug] = true;
+                $merged[] = $entry;
+            }
+        }
+
+        return $merged;
+    }
+
     private function addonsMarketRaw(): array|false
     {
         if ($this->addonsMarket !== null) {
             return $this->addonsMarket;
         }
 
-        $url = (string)Configure::read('Update.addons.market', '');
-        if ($url === '') {
-            $this->addonsMarket = [];
+        $sources = $this->marketSources('addons');
+        $cacheKey = 'update_market_addons_' . sha1(implode('|', $sources));
 
-            return $this->addonsMarket;
+        if ($this->cacheEnabled('addons')) {
+            $pool = Cache::pool('default');
+            $cached = $pool->get($cacheKey);
+            if (is_array($cached)) {
+                $this->addonsMarket = $cached;
+
+                return $this->addonsMarket;
+            }
         }
 
-        $raw = $this->http->sendGetRequest($url);
-        $decoded = json_decode((string)$raw, true);
+        $this->addonsMarket = $this->mergeSources($sources);
 
-        $this->addonsMarket = is_array($decoded) ? $decoded : false;
+        if ($this->cacheEnabled('addons')) {
+            $ttl = $this->cacheTtl('addons');
+            $pool = Cache::pool('default');
+            $pool->set($cacheKey, $this->addonsMarket, $ttl);
+        }
 
         return $this->addonsMarket;
     }
 
+    /**
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
     private function themesMarketRaw(): array|false
     {
         if ($this->themesMarket !== null) {
             return $this->themesMarket;
         }
 
-        $url = (string)Configure::read('Update.themes.market', '');
-        if ($url === '') {
-            $this->themesMarket = [];
+        $sources = $this->marketSources('themes');
+        $cacheKey = 'update_market_themes_' . sha1(implode('|', $sources));
 
-            return $this->themesMarket;
+        if ($this->cacheEnabled('themes')) {
+            $pool = Cache::pool('default');
+            $cached = $pool->get($cacheKey);
+            if (is_array($cached)) {
+                $this->themesMarket = $cached;
+
+                return $this->themesMarket;
+            }
         }
 
-        $raw = $this->http->sendGetRequest($url);
-        $decoded = json_decode((string)$raw, true);
+        $this->themesMarket = $this->mergeSources($sources);
 
-        $this->themesMarket = is_array($decoded) ? $decoded : false;
+        if ($this->cacheEnabled('themes')) {
+            $ttl = $this->cacheTtl('themes');
+            $pool = Cache::pool('default');
+            $pool->set($cacheKey, $this->themesMarket, $ttl);
+        }
 
         return $this->themesMarket;
-    }
-
-    private function addonsMarketVersionMap(): array
-    {
-        if ($this->addonsMarketMap !== null) {
-            return $this->addonsMarketMap;
-        }
-
-        $list = $this->addonsMarketRaw();
-        if ($list === false) {
-            $this->addonsMarketMap = [];
-
-            return $this->addonsMarketMap;
-        }
-
-        $map = [];
-        foreach ($list as $entry) {
-            if (!is_array($entry)) {
-                continue;
-            }
-
-            $slug = $this->normalizeKey((string)($entry['slug'] ?? ''));
-            $version = trim((string)($entry['version'] ?? ''));
-
-            if ($slug === '' || $version === '') {
-                continue;
-            }
-
-            $map[$slug] = $version;
-        }
-
-        $this->addonsMarketMap = $map;
-
-        return $this->addonsMarketMap;
-    }
-
-    private function themesMarketVersionMap(): array
-    {
-        if ($this->themesMarketMap !== null) {
-            return $this->themesMarketMap;
-        }
-
-        $list = $this->themesMarketRaw();
-        if ($list === false) {
-            $this->themesMarketMap = [];
-
-            return $this->themesMarketMap;
-        }
-
-        $map = [];
-        foreach ($list as $entry) {
-            if (!is_array($entry)) {
-                continue;
-            }
-
-            $slug = $this->normalizeKey((string)($entry['slug'] ?? ''));
-            $version = trim((string)($entry['version'] ?? ''));
-
-            if ($slug === '' || $version === '') {
-                continue;
-            }
-
-            $map[$slug] = $version;
-        }
-
-        $this->themesMarketMap = $map;
-
-        return $this->themesMarketMap;
     }
 }

@@ -20,6 +20,7 @@ final class PackageManagerFactory
         $manifests = new ManifestLoader($github);
         $permSync = new PermissionSynchronizer();
         $state = new UpdateStateStore(ROOT . DS . 'tmp' . DS . 'update' . DS . 'state.json');
+        $releases = new LatestReleaseService($github);
 
         $packages = null;
 
@@ -34,7 +35,8 @@ final class PackageManagerFactory
             $manifests,
             $permSync,
             $requirements,
-            $state
+            $state,
+            $releases
         );
     }
 }

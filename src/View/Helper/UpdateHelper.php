@@ -6,12 +6,13 @@ namespace App\View\Helper;
 use App\Service\Package\PackageInfoService;
 use Cake\Routing\Router;
 use Cake\View\Helper;
+use Cake\View\View;
 
 final class UpdateHelper extends Helper
 {
     private PackageInfoService $info;
 
-    public function __construct($view, array $config = [])
+    public function __construct(View $view, array $config = [])
     {
         parent::__construct($view, $config);
 

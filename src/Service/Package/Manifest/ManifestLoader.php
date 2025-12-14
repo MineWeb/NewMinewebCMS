@@ -27,9 +27,9 @@ final class ManifestLoader
         return PackageManifest::fromJson($content);
     }
 
-    public function loadRemote(string $repository, string $branch, string $manifestPath = 'manifest.json'): PackageManifest
+    public function loadRemote(string $repository, string $ref, string $manifestPath = 'manifest.json'): PackageManifest
     {
-        $res = $this->github->fetchRaw($repository, $branch, $manifestPath);
+        $res = $this->github->fetchRaw($repository, $ref, $manifestPath);
 
         $status = (int)($res['status'] ?? 0);
         $body = (string)($res['body'] ?? '');
