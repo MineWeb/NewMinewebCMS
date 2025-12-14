@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
-use App\Utility\LangService;
+use App\Service\LangService;
 use Cake\Http\Response;
 use Cake\I18n\I18n;
 use Throwable;

@@ -5,7 +5,7 @@ namespace App\Controller;
 
 use App\Service\AddonService;
 use App\Service\ConfigurationService;
-use App\Service\LocaleService;
+use App\Service\LangService;
 use App\Service\PermissionService;
 use App\Service\ServerBridgeService;
 use Cake\Event\EventInterface;
@@ -75,7 +75,7 @@ class AppController extends BaseController
 
         $siteConfigLang = $this->config->get('lang');
 
-        $localeService = new LocaleService();
+        $localeService = new LangService();
 
         $locale = $localeService->resolveLocale($this->getRequest(), (string)$siteConfigLang);
 

@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
-use App\Utility\LangService;
+use App\Service\LangService;
 use Cake\Datasource\ResultSetInterface;
 use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;

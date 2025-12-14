@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
-use App\Utility\LangService;
+use App\Service\LangService;
 use Cake\Cache\Cache;
 use Cake\Core\Configure;
 use Cake\Http\Exception\ForbiddenException;

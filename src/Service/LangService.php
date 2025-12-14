@@ -1,16 +1,19 @@
 <?php
-namespace App\Utility;
+declare(strict_types=1);
 
-use Cake\I18n\I18n;
+namespace App\Service;
+
 use Cake\I18n\FrozenTime;
+use Cake\I18n\I18n;
+use Psr\Http\Message\ServerRequestInterface;
 
 class LangService
 {
-
     public static function history(string $action): string
     {
         $key = 'HISTORY__ACTION_' . $action;
         $translated = __($key);
+
         return $translated === $key ? $action : $translated;
     }
 
@@ -34,9 +37,9 @@ class LangService
                 'INFORMATIONS' => [
                     'name' => $locale,
                     'version' => '1.0.0',
-                    'author' => 'System'
+                    'author' => 'System',
                 ],
-                'MESSAGES' => []
+                'MESSAGES' => [],
             ];
         }
 
@@ -63,18 +66,24 @@ class LangService
                 'INFORMATIONS' => [
                     'name' => $locale,
                     'version' => '1.0.0',
-                    'author' => 'System'
+                    'author' => 'System',
                 ],
-                'MESSAGES' => []
+                'MESSAGES' => [],
             ];
         }
 
         $messages = $json['MESSAGES'] ?? [];
 
         foreach ($data as $key => $value) {
-            if (!is_string($key)) continue;
-            if (!is_scalar($value)) continue;
-            if ($key === '_csrfToken' || $key === 'xss') continue;
+            if (!is_string($key)) {
+                continue;
+            }
+            if (!is_scalar($value)) {
+                continue;
+            }
+            if ($key === '_csrfToken' || $key === 'xss') {
+                continue;
+            }
 
             $messages[$key] = (string)$value;
         }
@@ -99,5 +108,31 @@ class LangService
         }
 
         return $json['MESSAGES'] ?? [];
+    }
+
+    public function resolveLocale(ServerRequestInterface $request, ?string $defaultLocale = null): string
+    {
+        $cookie = $request->getCookie('language');
+
+        $header = $request->getHeaderLine('Accept-Language');
+        $headerLocale = $header ? substr($header, 0, 5) : null;
+
+        $cookie = $cookie ? str_replace('-', '_', $cookie) : null;
+        $headerLocale = $headerLocale ? str_replace('-', '_', $headerLocale) : null;
+
+        return $cookie ?: $defaultLocale ?: $headerLocale ?: 'fr_FR';
+    }
+
+    public function apply(string $locale): void
+    {
+        I18n::setLocale($locale);
+    }
+
+    public function htmlLang(string $locale): string
+    {
+        $lang = str_replace('_', '-', $locale);
+        $lang = strtolower(substr($lang, 0, 2));
+
+        return $lang ?: 'fr';
     }
 }
