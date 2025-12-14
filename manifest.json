@@ -1,0 +1,11 @@
+{
+    "type": "cms",
+    "slug": "MineWebCMS",
+    "name": "MineWebCMS",
+    "author": "MineWeb",
+    "version": "2.0.0",
+    "requirements": {
+        "php": ">=8.1",
+        "cakephp": "^5.0"
+    }
+}

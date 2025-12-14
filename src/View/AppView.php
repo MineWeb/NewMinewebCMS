@@ -34,6 +34,7 @@ use Cake\View\View;
  * @property \App\View\Helper\AdminUiHelper $AdminUi
  * @property \App\View\Helper\ConfigHelper $Config
  * @property \App\View\Helper\SocialButtonHelper $SocialButtons
+ * @property \App\View\Helper\ModuleHelper $Module
  */
 class AppView extends View
 {
@@ -58,5 +59,6 @@ class AppView extends View
         $this->loadHelper('AdminUi');
         $this->loadHelper('Config');
         $this->loadHelper('SocialButton');
+        $this->loadHelper('Module');
     }
 }

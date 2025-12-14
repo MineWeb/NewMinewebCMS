@@ -4,621 +4,345 @@ declare(strict_types=1);
 namespace App\Controller\Component;
 
 use App\Service\HttpService;
+use App\Service\Package\Filesystem\FilesystemService;
+use App\Service\Package\Manifest\ManifestLoader;
+use App\Service\Package\PackageException;
+use App\Service\Package\PackageManager;
+use App\Service\Package\Requirement\RequirementChecker;
+use App\Service\Package\Source\GitHubSource;
+use App\Service\Package\UpdateStateStore;
+use App\Service\PermissionSynchronizer;
+use Cake\Cache\Cache;
 use Cake\Controller\Component;
 use Cake\Controller\ComponentRegistry;
+use Cake\Core\Configure;
 use Cake\Http\ServerRequest;
 use Cake\Log\Log;
 use Cake\Routing\Router;
-use Exception;
-use PharIo\Version\Version;
-use PharIo\Version\VersionConstraintParser;
-use ZipArchive;
+use Throwable;
 
-class ThemeComponent extends Component
+final class ThemeComponent extends Component
 {
     public string $themesFolder;
+    private string $marketUrl;
+    private PackageManager $packages;
+
     private array $themesAvailable = [];
     private array $themesInstalled = [];
-    private array $alreadyCheckValid = [];
-    private string $reference = 'https://raw.githubusercontent.com/MineWeb/mineweb.org/gh-pages/market/themes.json';
-
-    private $controller;
-    private $EyPlugin;
-
-    private HttpService $httpService;
 
     public function __construct(ComponentRegistry $registry, array $config = [])
     {
-        $this->themesFolder = ROOT . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'Themes';
-        $this->httpService = new HttpService();
         parent::__construct($registry, $config);
+
+        $this->themesFolder = (string)Configure::read('Update.themes.folder', ROOT . DS . 'plugins' . DS . 'Themes');
+        $this->marketUrl = (string)Configure::read('Update.themes.market', '');
+
+        $http = new HttpService();
+        $fs = new FilesystemService();
+        $github = new GitHubSource($http);
+        $manifests = new ManifestLoader($github);
+        $permSync = new PermissionSynchronizer();
+        $state = new UpdateStateStore(ROOT . DS . 'tmp' . DS . 'update' . DS . 'state.json');
+        $requirements = new RequirementChecker(fn() => $this->packages?->cmsCurrentVersion() ?? '0.0.0');
+
+        $this->packages = new PackageManager(
+            $http,
+            $fs,
+            $github,
+            $manifests,
+            $permSync,
+            $requirements,
+            $state
+        );
     }
 
     public function initialize(array $config): void
     {
         parent::initialize($config);
 
-        $this->controller = $this->_registry->getController();
-        $this->controller->set('Theme', $this);
+        $controller = $this->getController();
+        if ($controller) {
+            $controller->set('Theme', $this);
+        }
+    }
 
-        $this->EyPlugin = $this->controller->EyPlugin ?? null;
+    public function getThemesOnAPI(bool $all = true, bool $deleteInstalledThemes = false): array
+    {
+        $key = $all ? 'all' : 'free';
+        if (isset($this->themesAvailable[$key])) {
+            return $this->themesAvailable[$key];
+        }
+
+        $raw = $this->marketUrl !== '' ? (new HttpService())->sendGetRequest($this->marketUrl) : '';
+        $list = json_decode($raw, true);
+        if (!is_array($list)) {
+            return $this->themesAvailable[$key] = [];
+        }
+
+        $themes = [];
+        foreach ($list as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+
+            if (!$all && empty($entry['free'])) {
+                continue;
+            }
+
+            $themes[] = $entry;
+        }
+
+        if ($deleteInstalledThemes) {
+            $installed = $this->getThemesInstalled(false);
+            $installedSlugs = [];
+            foreach ($installed as $t) {
+                $installedSlugs[] = strtolower((string)($t->slug ?? ''));
+            }
+
+            $themes = array_values(array_filter($themes, static function ($t) use ($installedSlugs) {
+                $slug = strtolower((string)($t['slug'] ?? ''));
+
+                return $slug !== '' && !in_array($slug, $installedSlugs, true);
+            }));
+        }
+
+        return $this->themesAvailable[$key] = $themes;
+    }
+
+    public function getThemesInstalled(bool $api = true): object
+    {
+        if (isset($this->themesInstalled[$api ? 1 : 0])) {
+            return $this->themesInstalled[$api ? 1 : 0];
+        }
+
+        $dir = rtrim($this->themesFolder, DS);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
+
+        $entries = scandir($dir) ?: [];
+        $out = (object)[];
+
+        foreach ($entries as $slug) {
+            if (!is_string($slug) || $slug === '.' || $slug === '..' || $slug === '.gitkeep') {
+                continue;
+            }
+
+            $path = $dir . DS . $slug;
+            if (!is_dir($path)) {
+                continue;
+            }
+
+            $manifestPath = $path . DS . (string)Configure::read('Update.themes.manifest', 'manifest.json');
+            if (!is_file($manifestPath)) {
+                continue;
+            }
+
+            $raw = (string)file_get_contents($manifestPath);
+            $m = json_decode($raw);
+            if (!is_object($m) || empty($m->slug)) {
+                continue;
+            }
+
+            $id = strtolower((string)($m->author ?? '') . '.' . (string)$m->slug);
+            $m->id = $id;
+
+            if ($api) {
+                $apiTheme = $this->getThemeFromAPI((string)$m->slug);
+                if (is_array($apiTheme) && isset($apiTheme['version'])) {
+                    $m->lastVersion = (string)$apiTheme['version'];
+                }
+            }
+
+            $out->{$id} = $m;
+        }
+
+        return $this->themesInstalled[$api ? 1 : 0] = $out;
+    }
+
+    private function getThemeFromAPI(string $slug): mixed
+    {
+        $all = $this->getThemesOnAPI(true, false);
+        foreach ($all as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+            if (strcasecmp((string)($entry['slug'] ?? ''), $slug) === 0) {
+                return $entry;
+            }
+        }
+
+        return false;
+    }
+
+    public function install(string $slug, bool $update = false)
+    {
+        try {
+            $entry = $this->getThemeFromAPI($slug);
+            if ($entry === false) {
+                return 'THEME__ERROR_INSTALL_DOWNLOAD_FAILED';
+            }
+
+            $repo = (string)($entry['repo'] ?? '');
+            if ($repo === '') {
+                $repo = sprintf((string)Configure::read('Update.themes.repoPattern'), $slug);
+            }
+
+            $this->packages->installOrUpdateTheme($slug, $repo, $update);
+
+            Cache::clearAll();
+
+            return true;
+        } catch (PackageException $e) {
+            return $e->messageKey === 'ERROR__PACKAGE_NOT_COMPATIBLE' ? 'THEME__ERROR_NOT_COMPATIBLE' : $e->messageKey;
+        } catch (Throwable) {
+            return 'THEME__ERROR_INSTALL_UNZIP';
+        }
+    }
+
+    public function delete(string $slug): bool
+    {
+        try {
+            $this->packages->uninstallTheme($slug);
+            Cache::clearAll();
+
+            return true;
+        } catch (Throwable) {
+            return false;
+        }
     }
 
     public function displayAvailableUpdate(): ?string
     {
         $themes = $this->getThemesInstalled(true);
-        if (!empty((array)$themes)) {
-            foreach ($themes as $value) {
-                if (isset($value->lastVersion) && $value->version !== $value->lastVersion) {
-                    return '<div class="alert alert-secondary">'
-                        . __('UPDATE__AVAILABLE_TYPE_THEME') . ' '
-                        . __('UPDATE__AVAILABLE') . ' '
-                        . __('UPDATE__THEME')
-                        . '<a href="'
-                        . Router::url(['_name' => 'admin_theme_index'])
-                        . '" style="margin-top: -6px;" class="btn float-right">'
-                        . __('GLOBAL__UPDATE_LOOK')
-                        . '</a></div>';
-                }
+        foreach ($themes as $value) {
+            if (isset($value->lastVersion) && isset($value->version) && (string)$value->version !== (string)$value->lastVersion) {
+                return '<div class="alert alert-secondary">'
+                    . __('UPDATE__AVAILABLE_TYPE_THEME') . ' '
+                    . __('UPDATE__AVAILABLE') . ' '
+                    . __('UPDATE__THEME')
+                    . '<a href="'
+                    . Router::url(['_name' => 'admin_theme_index'])
+                    . '" style="margin-top: -6px;" class="btn float-right">'
+                    . __('GLOBAL__UPDATE_LOOK')
+                    . '</a></div>';
             }
         }
 
         return null;
     }
 
-    public function getThemesInstalled(bool $api = true): object
-    {
-        if (!empty($this->themesInstalled[$api])) {
-            return $this->themesInstalled[$api];
-        }
-
-        $dir = $this->themesFolder;
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-
-        $themes = scandir($dir);
-        if ($themes === false) {
-            Log::error('Unable to scan theme folder.');
-            return $this->themesInstalled[$api] = (object)[];
-        }
-
-        $themesList = (object)[];
-        $bypassedFiles = ['.', '..', '.DS_Store', '__MACOSX', '.gitkeep'];
-
-        if ($api) {
-            $this->getThemesOnAPI();
-        }
-
-        foreach ($themes as $slug) {
-            if (in_array($slug, $bypassedFiles, true)) {
-                continue;
-            }
-
-            $config = $this->getThemeConfig($slug);
-            if (empty($config) || !isset($config->slug)) {
-                continue;
-            }
-
-            $id = strtolower($config->author . '.' . $config->slug);
-            $themesList->$id = $config;
-
-            $checkSupported = $this->checkSupported($slug);
-            $themesList->$id->supported = empty($checkSupported);
-            $themesList->$id->supportedErrors = $checkSupported;
-            $themesList->$id->valid = $this->isValid($slug);
-
-            $themeFromApi = $this->getThemeFromAPI($config->slug);
-            if ($themeFromApi && isset($themeFromApi['version'])) {
-                $themesList->$id->lastVersion = $themeFromApi['version'];
-            }
-        }
-
-        return $this->themesInstalled[$api] = $themesList;
-    }
-
-    public function getThemesOnAPI(bool $all = true, bool $deleteInstalledThemes = false): array
-    {
-        $type = $all ? 'all' : 'free';
-        if (!empty($this->themesAvailable[$type])) {
-            return $this->themesAvailable[$type];
-        }
-
-        $themesList = @json_decode($this->httpService->sendGetRequest($this->reference), true);
-
-        $themes = [];
-        if ($themesList) {
-            $freeThemes = [];
-            foreach ($themesList as $theme) {
-                if (!empty($theme['free'])) {
-                    $freeThemes[] = $theme;
-                } elseif ($all) {
-                    $themes[] = $theme;
-                }
-            }
-            $repos = array_column($freeThemes, 'repo');
-            $th = $this->getThemesFromRepoNames($repos);
-            if ($th) {
-                foreach ($th as $t) {
-                    $t['free'] = true;
-                    $themes[] = $t;
-                }
-            }
-        }
-
-        if ($deleteInstalledThemes) {
-            $installed = $this->getThemesInstalled();
-            $themeInstalledID = [];
-            foreach ($installed as $themeInstalled) {
-                $themeInstalledID[] = strtolower($themeInstalled->slug);
-            }
-            foreach ($themes as $key => $theme) {
-                if (isset($theme['slug']) && in_array(strtolower($theme['slug']), $themeInstalledID, true)) {
-                    unset($themes[$key]);
-                }
-            }
-        }
-
-        $this->themesAvailable[$type] = $themes;
-        return $themes;
-    }
-
-    private function getThemeFromRepoName(string $repo)
-    {
-        $configUrl = 'https://raw.githubusercontent.com/' . $repo . '/master/Config/config.json';
-        $config = @json_decode($this->httpService->sendGetRequest($configUrl), true);
-        if (!$config) {
-            return false;
-        }
-        $config['repo'] = $repo;
-        return $config;
-    }
-
-    private function getThemesFromRepoNames(array $repos): array
-    {
-        $urls = [];
-        foreach ($repos as $repo) {
-            $urls[] = 'https://raw.githubusercontent.com/' . $repo . '/master/Config/config.json';
-        }
-        $result = $this->httpService->sendMultipleGetRequests($urls);
-        $results = [];
-        $i = 0;
-        foreach ($result as $val) {
-            $json = json_decode($val, true);
-            if ($json === null) {
-                $i++;
-                continue;
-            }
-            $json['repo'] = $repos[$i] ?? null;
-            $results[] = $json;
-            $i++;
-        }
-        return $results;
-    }
-
-    public function getThemeConfig(string $slug, bool $array = false)
-    {
-        $path = $this->getPath($slug) . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . 'config.json';
-        if (strtolower($slug) === 'default' || !file_exists($path)) {
-            $configPath = ROOT . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'theme.default.json';
-            $config = @json_decode(@file_get_contents($configPath), $array);
-            if ($array) {
-                return ['slider' => true, 'configurations' => $config];
-            }
-            return (object)['slider' => true, 'configurations' => $config];
-        }
-        return @json_decode(@file_get_contents($path), $array);
-    }
-
-    public function getPath(string $slug): string
-    {
-        return $this->themesFolder . DIRECTORY_SEPARATOR . $slug;
-    }
-
-    public function checkSupported(string $slug): array
-    {
-        $config = $this->getThemeConfig($slug);
-        $supported = is_object($config) && isset($config->supported) && !empty($config->supported) ? $config->supported : null;
-        $errors = [];
-
-        $versionParser = new VersionConstraintParser();
-        if (is_array($supported)) {
-            foreach ($supported as $type => $version) {
-                if ($type === 'CMS') {
-                    $versionToCompare = trim((string)@file_get_contents(ROOT . DIRECTORY_SEPARATOR . 'VERSION'));
-                } else {
-                    if (!$this->EyPlugin) {
-                        continue;
-                    }
-                    $search = $this->EyPlugin->findPlugin('id', $type);
-                    if (empty($search)) {
-                        continue;
-                    }
-                    $versionToCompare = $search->version;
-                }
-
-                try {
-                    $neededVersion = $versionParser->parse($version);
-                } catch (Exception $e) {
-                    $errors[$type] = $e->getMessage();
-                    continue;
-                }
-
-                try {
-                    if (!$neededVersion->complies(new Version($versionToCompare))) {
-                        $errors[$type] = $version;
-                    }
-                } catch (Exception $exception) {
-                    if (isset($search)) {
-                        Log::error('Theme (' . $slug . ') check supported: Plugin (' . $search->slug . ') invalid version: ' . $versionToCompare);
-                    } else {
-                        Log::error('Theme (' . $slug . ') check supported: Invalid version : ' . $versionToCompare . ' (' . $type . ' => ' . $version . ')');
-                    }
-                }
-            }
-        }
-
-        return $errors;
-    }
-
-    private function isValid(string $slug): bool
-    {
-        $slugUc = ucfirst($slug);
-        $file = $this->themesFolder . DIRECTORY_SEPARATOR . $slugUc;
-
-        if (isset($this->alreadyCheckValid[$slugUc])) {
-            return $this->alreadyCheckValid[$slugUc];
-        }
-
-        if (!file_exists($file)) {
-            Log::error('Themes folder : ' . $file . ' does not exist. Theme not valid.');
-            $this->alreadyCheckValid[$slugUc] = false;
-            return false;
-        }
-        if (!is_dir($file)) {
-            Log::error('File : ' . $file . ' is not a folder. Theme not valid.');
-            $this->alreadyCheckValid[$slugUc] = false;
-            return false;
-        }
-
-        $neededFiles = ['Config/config.json'];
-        foreach ($neededFiles as $value) {
-            if (!file_exists($file . DIRECTORY_SEPARATOR . $value)) {
-                Log::error('Theme "' . $slugUc . '" not valid. Missing "' . $file . DIRECTORY_SEPARATOR . $value . '"');
-                $this->alreadyCheckValid[$slugUc] = false;
-                return false;
-            }
-        }
-
-        $needToBeJSON = ['Config/config.json'];
-        foreach ($needToBeJSON as $value) {
-            $content = @file_get_contents($file . DIRECTORY_SEPARATOR . $value);
-            $json = json_decode((string)$content);
-            if ($json === false || $json === null) {
-                Log::error('Theme "' . $slugUc . '" not valid. "' . $file . DIRECTORY_SEPARATOR . $value . '" is not valid JSON.');
-                $this->alreadyCheckValid[$slugUc] = false;
-                return false;
-            }
-        }
-
-        $configRaw = @file_get_contents($file . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . 'config.json');
-        $config = json_decode((string)$configRaw, true);
-        $needConfigKey = [
-            'name' => 'string',
-            'slug' => 'string',
-            'author' => 'string',
-            'version' => 'string',
-            'configurations' => 'array',
-            'supported' => 'array',
-        ];
-
-        foreach ($needConfigKey as $keyName => $type) {
-            $keyParts = explode('-', $keyName);
-            if (is_array($keyParts) && count($keyParts) > 1) {
-                $configKey = $config;
-                $multi = true;
-                foreach ($keyParts as $v) {
-                    if (is_array($configKey) && array_key_exists($v, $configKey)) {
-                        $configKey = $configKey[$v];
-                    } else {
-                        $multi = false;
-                        break;
-                    }
-                }
-            } else {
-                $configKey = $config[$keyParts[0]] ?? null;
-                $multi = null;
-            }
-
-            $exists = ($multi === true) || ($multi === null && $configKey !== null);
-            if ($exists) {
-                $function = 'is_' . $type;
-                if (!$function($configKey)) {
-                    $keyLabel = is_array($keyParts)
-                        ? '["' . implode('"]["', $keyParts) . '"]'
-                        : $keyName;
-                    Log::error('File : ' . $slugUc . ' is not a valid theme. Config key ' . $keyLabel . ' has wrong type (' . $type . ' required).');
-                    $this->alreadyCheckValid[$slugUc] = false;
-                    return false;
-                }
-            } else {
-                $keyLabel = is_array($keyParts)
-                    ? '["' . implode('"]["', $keyParts) . '"]'
-                    : $keyName;
-                Log::error('File : ' . $slugUc . ' is not a valid theme. Config key ' . $keyLabel . ' is missing.');
-                $this->alreadyCheckValid[$slugUc] = false;
-                return false;
-            }
-        }
-
-        try {
-            new Version($config['version']);
-        } catch (Exception $e) {
-            Log::error('File : ' . $slugUc . ' is not a valid theme. Version is not in a valid format.');
-            $this->alreadyCheckValid[$slugUc] = false;
-            return false;
-        }
-
-        return $this->alreadyCheckValid[$slugUc] = true;
-    }
-
-    private function getThemeFromAPI(string $slug)
-    {
-        if (isset($this->themesAvailable['all'])) {
-            foreach ($this->themesAvailable['all'] as $theme) {
-                if (isset($theme['slug']) && strtolower($theme['slug']) === strtolower($slug)) {
-                    return $theme;
-                }
-            }
-        }
-        return false;
-    }
-
-    public function getVersion(string $slug)
-    {
-        $config = $this->getThemeConfig($slug);
-        if (!$config) {
-            return false;
-        }
-        return $config->version ?? null;
-    }
-
-    public function getCurrentTheme(): array
-    {
-        $configuredTheme = $this->controller->Configuration->get('theme');
-        foreach ($this->getThemesInstalled(false) as $theme) {
-            if ($configuredTheme === $theme->slug && $theme->valid) {
-                return [$theme->slug, (array)$theme->configurations];
-            }
-        }
-        return ['default', $this->getThemeConfig('default', true)['configurations']];
-    }
-
-    public function install(string $slug, bool $update = false)
-    {
-        $download = $this->download($slug);
-        if ($download !== true) {
-            return $download;
-        }
-
-        if ($update) {
-            $oldConfigData = $this->getCustomData($slug);
-            $oldConfig = $oldConfigData ? $oldConfigData[1] : [];
-        }
-
-        $macFolder = $this->themesFolder . DIRECTORY_SEPARATOR . '__MACOSX';
-        if (file_exists($macFolder)) {
-            @rmdir($macFolder);
-        }
-
-        if ($update) {
-            $config = $this->getThemeConfig($slug, true);
-            if (isset($config['configurations'])) {
-                foreach ($config['configurations'] as $key => $value) {
-                    if (isset($oldConfig[$key])) {
-                        $config['configurations'][$key] = $oldConfig[$key];
-                    }
-                }
-            }
-            $this->setThemeConfig($slug, $config);
-
-            $updateFilePath = $this->getPath($slug) . DIRECTORY_SEPARATOR . 'update.json';
-            if (file_exists($updateFilePath)) {
-                $updateFile = @json_decode($this->httpService->sendGetRequest($updateFilePath));
-                if ($updateFile) {
-                    foreach ($updateFile as $type => $value) {
-                        if ($type === 'delete') {
-                            foreach ($value as $file) {
-                                $filePath = $this->getPath($slug) . DIRECTORY_SEPARATOR . $file;
-                                if (file_exists($filePath)) {
-                                    @unlink($filePath);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return true;
-    }
-
-    private function download(string $slug)
-    {
-        $zipContent = $this->httpService->sendGetRequest('https://github.com/MineWeb/Theme-' . $slug . '/archive/master.zip');
-        if (!$zipContent) {
-            return 'THEME__ERROR_INSTALL_DOWNLOAD_FAILED';
-        }
-
-        $zipFile = ROOT . DIRECTORY_SEPARATOR . 'tmp' . DIRECTORY_SEPARATOR . 'theme-' . $slug . '.zip';
-        $file = fopen($zipFile, 'w+');
-        if (!$file || fwrite($file, $zipContent) === false) {
-            if ($file) {
-                fclose($file);
-            }
-            Log::error('Error when downloading theme, save file failed.');
-            return 'THEME__ERROR_INSTALL_UNZIP';
-        }
-        fclose($file);
-
-        $zip = new ZipArchive();
-        $res = $zip->open($zipFile);
-        if ($res !== true) {
-            Log::error('Error when downloading theme, unable to open zip. CODE: ' . $res);
-            return 'THEME__ERROR_INSTALL_UNZIP';
-        }
-
-        $themeDir = ROOT . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . 'Themed' . DIRECTORY_SEPARATOR . $slug;
-        if (!file_exists($themeDir) && !mkdir($themeDir, 0755, true) && !is_dir($themeDir)) {
-            return 'THEME__ERROR_INSTALL_UNZIP';
-        }
-
-        for ($i = 0; $i < $zip->numFiles; $i++) {
-            $filename = $zip->getNameIndex($i);
-            $fileinfo = pathinfo($filename);
-            $stat = $zip->statIndex($i);
-
-            if ($fileinfo['basename'] === 'Theme-' . $slug . '-master') {
-                continue;
-            }
-
-            $target = 'zip://' . $zipFile . '#' . $filename;
-            $relative = substr($filename, strlen('Theme-' . $slug . '-master'));
-            $dest = $themeDir . $relative;
-
-            if ($stat['size'] === 0 && strpos($filename, '.') === false) {
-                if (!file_exists($dest) && !mkdir($dest, 0755, true) && !is_dir($dest)) {
-                    return 'THEME__ERROR_INSTALL_UNZIP';
-                }
-                continue;
-            }
-
-            if (!copy($target, $dest)) {
-                $zip->close();
-                return 'THEME__ERROR_INSTALL_UNZIP';
-            }
-        }
-        $zip->close();
-
-        @unlink($zipFile);
-        return true;
-    }
-
-    public function getCustomData(string $slug)
+    public function getCustomData(string $slug): array
     {
         $config = [];
+        $themeName = $slug;
+
         if ($slug === 'default') {
-            $config = json_decode((string)file_get_contents(ROOT . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'theme.default.json'), true);
+            $path = ROOT . DS . 'config' . DS . 'theme.default.json';
+            if (is_file($path)) {
+                $decoded = json_decode((string)file_get_contents($path), true);
+                if (is_array($decoded)) {
+                    $config = $decoded;
+                }
+            }
             $themeName = 'Bootstrap';
         } else {
-            $themesInstalled = $this->getThemesInstalled(false);
-            foreach ($themesInstalled as $data) {
-                if ($data->slug === $slug) {
-                    $themeName = $data->name;
-                    $config = $data->configurations;
+            $installed = $this->getThemesInstalled(false);
+            foreach ($installed as $t) {
+                if (isset($t->slug) && (string)$t->slug === $slug) {
+                    $themeName = (string)($t->name ?? $slug);
                     break;
                 }
             }
+
+            $override = $this->readThemeOverrideConfig($slug);
+            if (is_array($override)) {
+                $config = $override;
+            }
         }
 
-        if (isset($config)) {
-            $config = (array)$config;
-        }
-
-        return isset($themeName) ? [$themeName, $config] : false;
-    }
-
-    public function setThemeConfig(string $slug, array $config = [])
-    {
-        $path = $this->getPath($slug) . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . 'config.json';
-        if (strtolower($slug) === 'default' || !file_exists($path)) {
-            return @file_put_contents(
-                ROOT . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'theme.default.json',
-                json_encode($config)
-            );
-        }
-        return @file_put_contents($path, json_encode($config));
+        return [$themeName, $config];
     }
 
     public function processCustomData(string $slug, ServerRequest $request): bool
     {
-        if ($slug === 'default') {
-            $data = json_encode($request->getData(), JSON_PRETTY_PRINT);
-            $fp = @fopen(ROOT . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'theme.default.json', 'w+');
-            if (!$fp) {
-                Log::error('Unable to save theme config. File not writable.');
-                return false;
+        try {
+            $data = $request->getData();
+            if (!is_array($data)) {
+                $data = [];
             }
-            fwrite($fp, $data);
-            fclose($fp);
+
+            if ($slug === 'default') {
+                $path = ROOT . DS . 'config' . DS . 'theme.default.json';
+                file_put_contents($path, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+                return true;
+            }
+
+            $this->writeThemeOverrideConfig($slug, $data);
+
             return true;
+        } catch (Throwable $e) {
+            Log::error('Theme config save failed: ' . $e->getMessage());
+
+            return false;
+        }
+    }
+
+    private function themeOverrideConfigPath(string $slug): string
+    {
+        return ROOT . DS . 'config' . DS . 'themes' . DS . strtolower($slug) . '.json';
+    }
+
+    private function readThemeOverrideConfig(string $slug): ?array
+    {
+        $path = $this->themeOverrideConfigPath($slug);
+        if (!is_file($path)) {
+            return null;
         }
 
-        $this->Util = $this->controller->Util;
-        $this->Session = $this->controller->Session;
-        $this->Flash = $this->controller->Flash;
+        $decoded = json_decode((string)file_get_contents($path), true);
 
-        $finded = false;
-        $themesInstalled = $this->getThemesInstalled(false);
-        foreach ($themesInstalled as $data) {
-            if ($data->slug === $slug) {
-                $finded = true;
-                $config = $data->configurations;
-                break;
+        return is_array($decoded) ? $decoded : null;
+    }
+
+    private function writeThemeOverrideConfig(string $slug, array $data): void
+    {
+        $path = $this->themeOverrideConfigPath($slug);
+        $dir = dirname($path);
+
+        if (!is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
+
+        file_put_contents($path, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    }
+
+    public function getCurrentTheme(): array
+    {
+        $controller = $this->getController();
+        $configuredTheme = $controller->Configuration->get('theme');
+
+        $installed = $this->getThemesInstalled(false);
+        foreach ($installed as $t) {
+            if (isset($t->slug) && (string)$t->slug === (string)$configuredTheme) {
+                $cfg = $this->readThemeOverrideConfig((string)$t->slug) ?? [];
+
+                return [(string)$t->slug, $cfg];
             }
         }
 
-        if (!$finded) {
-            return false;
+        $defaultPath = ROOT . DS . 'config' . DS . 'theme.default.json';
+        $defaultCfg = is_file($defaultPath) ? json_decode((string)file_get_contents($defaultPath), true) : [];
+        if (!is_array($defaultCfg)) {
+            $defaultCfg = [];
         }
 
-        if ($request->getData('img_edit')) {
-            $checkIfImageAlreadyUploaded = $request->getData('img-uploaded') !== null;
-            if ($checkIfImageAlreadyUploaded) {
-                $request = $request->withData('logo', Router::url('/') . 'img/uploads/' . $request->getData('img-uploaded'));
-                $request = $request->withoutData('img-uploaded');
-            } else {
-                $isValidImg = $this->Util->isValidImage($request, ['png', 'jpg', 'jpeg']);
+        return ['default', $defaultCfg];
+    }
 
-                if (!$isValidImg['status'] && ($isValidImg['msg'] ?? '') !== __('FORM__EMPTY_IMG')) {
-                    $this->Flash->error($isValidImg['msg']);
-                    return false;
-                }
-
-                $infos = $isValidImg['infos'] ?? false;
-                if ($infos) {
-                    $urlImg = WWW_ROOT . 'img' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'theme_logo.' . $infos['extension'];
-
-                    if (!$this->Util->uploadImage($request, $urlImg)) {
-                        $this->Flash->error(__('FORM__ERROR_WHEN_UPLOAD'));
-                        return false;
-                    }
-
-                    $request = $request->withData(
-                        'logo',
-                        Router::url('/') . 'img/uploads/theme_logo.' . $infos['extension']
-                    );
-                } else {
-                    $request = $request->withData('logo', false);
-                }
-            }
-        } else {
-            $request = $request->withData('logo', $config->logo ?? null);
-        }
-
-        $jsonPath = $this->themesFolder . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . 'config.json';
-        $json = json_decode((string)file_get_contents($jsonPath));
-        $json->configurations = $request->getData();
-
-        $data = json_encode($json, JSON_PRETTY_PRINT);
-        $fp = @fopen($jsonPath, 'w+');
-        if (!$fp) {
-            Log::error('Unable to save theme config. File not writable.');
-            return false;
-        }
-        fwrite($fp, $data);
-        fclose($fp);
-
-        return true;
+    public function getPath(string $slug): string
+    {
+        return rtrim($this->themesFolder, DS) . DS . $slug;
     }
 }

@@ -5,6 +5,7 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'paths.php';
 require CORE_PATH . 'config' . DS . 'bootstrap.php';
 
 use App\I18n\JsonFileLoader;
+use App\Service\TranslationFileLocator;
 use Cake\Cache\Cache;
 use Cake\Core\Configure;
 use Cake\Core\Configure\Engine\PhpConfig;
@@ -43,6 +44,10 @@ try {
 
 if (file_exists(CONFIG . 'app_local.php')) {
     Configure::load('app_local');
+}
+
+if (file_exists(CONFIG . 'update.php')) {
+    Configure::load('update');
 }
 
 if (Configure::read('debug')) {
@@ -134,38 +139,19 @@ Configure::write('Install.installed', $installed);
 
 I18n::config('_fallback', function (string $domain, string $locale) {
     $loader = new JsonFileLoader();
+    $locator = new TranslationFileLocator();
 
-    $files = [];
+    $locale = str_replace('-', '_', $locale);
+    $domain = $domain !== '' ? $domain : 'default';
 
-    $basePath = ROOT . '/resources/locales/' . $locale . '/';
+    $cacheKey = 'i18n_pkg_' . sha1($locale . '|' . $domain . '|' . $locator->contextKey());
 
-    // App
-    $files[] = $basePath . $domain . '.json';
-    if ($domain !== 'default') {
-        $files[] = $basePath . 'default.json';
+    $messages = Cache::read($cacheKey);
+    if (!is_array($messages)) {
+        $files = $locator->locate($locale, $domain);
+        $messages = $loader->loadFiles($files);
+        Cache::write($cacheKey, $messages);
     }
-
-    // Plugins
-    foreach (glob(ROOT . '/plugins/*/*/resources/locales/' . $locale . '/' . $domain . '.json') ?: [] as $file) {
-        $files[] = $file;
-    }
-    if ($domain !== 'default') {
-        foreach (glob(ROOT . '/plugins/*/*/resources/locales/' . $locale . '/default.json') ?: [] as $file) {
-            $files[] = $file;
-        }
-    }
-
-    // Thèmes
-    foreach (glob(ROOT . '/templates/Themed/*/resources/locales/' . $locale . '/' . $domain . '.json') ?: [] as $file) {
-        $files[] = $file;
-    }
-    if ($domain !== 'default') {
-        foreach (glob(ROOT . '/templates/Themed/*/resources/locales/' . $locale . '/default.json') ?: [] as $file) {
-            $files[] = $file;
-        }
-    }
-
-    $messages = $loader->loadFiles($files);
 
     return new Package('default', null, $messages);
 });

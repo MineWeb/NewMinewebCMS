@@ -104,7 +104,7 @@
     </div>
 </div>
 
-<?= $Module->loadModules('news') ?>
+<?= $this->Module->load('news') ?>
 
 <?= $this->Html->meta('csrfToken', (string)$this->getRequest()->getAttribute('csrfToken')) ?>
 

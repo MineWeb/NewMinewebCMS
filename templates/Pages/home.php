@@ -115,5 +115,5 @@ if (!isset($theme_config['slider']) || $theme_config['slider'] == "true") { ?>
         ?>
     </div>
 
-    <?= $Module->loadModules('home') ?>
+    <?= $this->Module->load('home') ?>
 </div>

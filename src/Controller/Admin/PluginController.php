@@ -40,13 +40,9 @@ class PluginController extends AppController
         }
 
         $pluginTable = $this->fetchTable('Plugins');
+        $plugin = $pluginTable->find()->where(['id' => $id])->first();
 
-        $plugin = $pluginTable
-            ->find()
-            ->where(['id' => $id])
-            ->first();
-
-        if ($plugin && isset($plugin['name']) && !$this->EyPlugin->delete($plugin['name'])) {
+        if ($plugin && isset($plugin['name']) && $this->EyPlugin->delete((string)$plugin['name'])) {
             $this->History->set('DELETE_PLUGIN', 'plugin');
             $this->Flash->success(__('PLUGIN__DELETE_SUCCESS'));
         } else {
@@ -69,7 +65,7 @@ class PluginController extends AppController
             throw new NotFoundException();
         }
 
-        if ($this->EyPlugin->enable($id)) {
+        if ($this->EyPlugin->enable((int)$id)) {
             $this->History->set('ENABLE_PLUGIN', 'plugin');
             $this->Flash->success(__('PLUGIN__ENABLE_SUCCESS'));
         } else {
@@ -89,7 +85,7 @@ class PluginController extends AppController
             throw new NotFoundException();
         }
 
-        if ($this->EyPlugin->disable($id)) {
+        if ($this->EyPlugin->disable((int)$id)) {
             $this->History->set('DISABLE_PLUGIN', 'plugin');
             $this->Flash->success(__('PLUGIN__DISABLE_SUCCESS'));
         } else {
@@ -116,7 +112,7 @@ class PluginController extends AppController
         if ($installed !== true) {
             return $this->response->withStringBody(json_encode([
                 'status' => 'error',
-                'messages' => __($installed),
+                'messages' => __((string)$installed),
             ]));
         }
 
@@ -128,10 +124,7 @@ class PluginController extends AppController
         $pluginTable = $this->fetchTable('Plugins');
         $pluginTable->cacheQueries(false);
 
-        $plugin = $pluginTable
-            ->find()
-            ->where(['name' => $slug])
-            ->first();
+        $plugin = $pluginTable->find()->where(['name' => $slug])->first();
 
         if (!$plugin) {
             return $this->response->withStringBody(json_encode([
@@ -173,7 +166,7 @@ class PluginController extends AppController
             $this->History->set('UPDATE_PLUGIN', 'plugin');
             $this->Flash->success(__('PLUGIN__UPDATE_SUCCESS'));
         } else {
-            $this->Flash->error(__($updated));
+            $this->Flash->error(__((string)$updated));
         }
 
         return $this->redirect(['_name' => 'admin_plugin_index']);

@@ -1,0 +1,79 @@
+name: release-dist-auto
+
+on:
+  push:
+    branches:
+      - "2.X"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-dist-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, intl, pdo_mysql, curl, zip
+          coverage: none
+
+      - name: composer-install
+        run: composer install --no-dev --prefer-dist --optimize-autoloader
+
+      - name: resolve-version
+        run: |
+          VERSION="$(php -r '$m=json_decode(file_get_contents("manifest.json"),true); echo $m["version"] ?? "";')"
+          if [ -z "$VERSION" ]; then
+            echo "manifest.json version missing"
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "TAG=v$VERSION" >> $GITHUB_ENV
+
+      - name: check-tag-exists
+        run: |
+          if git rev-parse "${TAG}" >/dev/null 2>&1; then
+            echo "TAG_EXISTS=1" >> $GITHUB_ENV
+          else
+            echo "TAG_EXISTS=0" >> $GITHUB_ENV
+          fi
+
+      - name: create-tag
+        if: env.TAG_EXISTS == '0'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "${TAG}"
+          git push origin "${TAG}"
+
+      - name: build-dist
+        if: env.TAG_EXISTS == '0'
+        run: |
+          rm -rf tmp/cache tmp/sessions tmp/logs logs || true
+          mkdir -p dist
+          zip -r dist/minewebcms-dist.zip . \
+            -x ".git/*" \
+            -x ".github/*" \
+            -x "tests/*" \
+            -x "node_modules/*" \
+            -x "dist/*" \
+            -x "tmp/*" \
+            -x "logs/*"
+
+      - name: release
+        if: env.TAG_EXISTS == '0'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          name: ${{ env.TAG }}
+          files: dist/minewebcms-dist.zip
+          generate_release_notes: true

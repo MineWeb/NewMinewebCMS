@@ -3,87 +3,54 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-class HttpService
+use Cake\Http\Client;
+
+final class HttpService
 {
+    private Client $client;
+
+    public function __construct(?Client $client = null)
+    {
+        $this->client = $client ?? new Client([
+            'timeout' => 30,
+            'ssl_verify_peer' => true,
+            'ssl_verify_host' => true,
+        ]);
+    }
+
+    public function get(string $url, array $options = []): array
+    {
+        $headers = (array)($options['headers'] ?? []);
+        $response = $this->client->get($url, [], ['headers' => $headers]);
+
+        return [
+            'status' => $response->getStatusCode(),
+            'body' => (string)$response->getStringBody(),
+            'headers' => $response->getHeaders(),
+        ];
+    }
+
     public function sendGetRequest(string $url): string
     {
-        $ch = curl_init();
-        if ($ch === false) {
-            return '';
-        }
+        $res = $this->get($url);
 
-        curl_setopt_array($ch, [
-            CURLOPT_URL => $url,
-            CURLOPT_HTTPHEADER => ['User-Agent: MineWebCMS'],
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_SSL_VERIFYPEER => false,
-        ]);
-
-        $result = curl_exec($ch);
-        curl_close($ch);
-
-        return is_string($result) ? $result : '';
+        return (string)($res['body'] ?? '');
     }
 
     public function sendMultipleGetRequests(array|string $urls): array
     {
-        if (!is_array($urls)) {
-            $urls = [$urls];
-        }
+        $list = is_array($urls) ? $urls : [$urls];
+        $out = [];
 
-        $multi = curl_multi_init();
-
-        $channels = [];
-        $results = [];
-
-        foreach ($urls as $url) {
-            if (!is_string($url) || $url === '') {
+        foreach ($list as $url) {
+            $url = (string)$url;
+            if ($url === '') {
+                $out[] = '';
                 continue;
             }
-
-            $ch = curl_init();
-            if ($ch === false) {
-                continue;
-            }
-
-            curl_setopt_array($ch, [
-                CURLOPT_URL => $url,
-                CURLOPT_HTTPHEADER => ['User-Agent: MineWebCMS'],
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_SSL_VERIFYPEER => false,
-            ]);
-
-            curl_multi_add_handle($multi, $ch);
-            $channels[] = $ch;
+            $out[] = $this->sendGetRequest($url);
         }
 
-        $active = 0;
-
-        do {
-            $status = curl_multi_exec($multi, $active);
-        } while ($status === CURLM_CALL_MULTI_PERFORM);
-
-        while ($active && $status === CURLM_OK) {
-            if (curl_multi_select($multi) === -1) {
-                usleep(100);
-                continue;
-            }
-
-            do {
-                $status = curl_multi_exec($multi, $active);
-            } while ($status === CURLM_CALL_MULTI_PERFORM);
-        }
-
-        foreach ($channels as $ch) {
-            $content = curl_multi_getcontent($ch);
-            $results[] = is_string($content) ? $content : '';
-            curl_multi_remove_handle($multi, $ch);
-        }
-
-        curl_multi_close($multi);
-
-        return $results;
+        return $out;
     }
 }

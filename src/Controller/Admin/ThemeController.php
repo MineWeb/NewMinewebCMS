@@ -69,10 +69,12 @@ class ThemeController extends AppController
             return $this->redirect(['_name' => 'admin_theme_index']);
         }
 
-        clearDir(ROOT . '/templates/Themed/' . $slug);
-
-        $this->History->set('DELETE_THEME', 'theme');
-        $this->Flash->success(__('THEME__DELETE_SUCCESS'));
+        if ($this->Theme->delete($slug)) {
+            $this->History->set('DELETE_THEME', 'theme');
+            $this->Flash->success(__('THEME__DELETE_SUCCESS'));
+        } else {
+            $this->Flash->error(__('ERROR__INTERNAL_ERROR'));
+        }
 
         return $this->redirect(['_name' => 'admin_theme_index']);
     }
@@ -92,7 +94,7 @@ class ThemeController extends AppController
         $error = $this->Theme->install($slug);
 
         if ($error !== true) {
-            $this->Flash->error(__($error));
+            $this->Flash->error(__((string)$error));
 
             return $this->redirect(['_name' => 'admin_theme_index']);
         }
@@ -118,7 +120,7 @@ class ThemeController extends AppController
         $error = $this->Theme->install($slug, true);
 
         if ($error !== true) {
-            $this->Flash->error(__($error));
+            $this->Flash->error(__((string)$error));
 
             return $this->redirect(['_name' => 'admin_theme_index']);
         }
@@ -163,7 +165,7 @@ class ThemeController extends AppController
         }
 
         if ($slug !== 'default') {
-            return $this->render(DS . 'Themed' . DS . $slug . DS . 'Config' . DS . 'view');
+            return $this->render($slug . '.Config/view');
         }
 
         return null;
@@ -269,6 +271,6 @@ class ThemeController extends AppController
             return ROOT . DS . 'webroot' . DS . 'css';
         }
 
-        return ROOT . DS . 'templates' . DS . 'Themed' . DS . $slug . DS . 'webroot' . DS . 'css';
+        return ROOT . DS . 'plugins' . DS . 'Themes' . DS . $slug . DS . 'webroot' . DS . 'css';
     }
 }

@@ -10,11 +10,11 @@ use FilesystemIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
-class UpdateController extends AppController
+final class UpdateController extends AppController
 {
     public function index(): ?Response
     {
-        if (!$this->Auth->isConnected() || !$this->User->isAdmin()) {
+        if (!$this->Auth->isConnected() || !$this->Auth->isAdmin()) {
             throw new ForbiddenException();
         }
 
@@ -30,7 +30,7 @@ class UpdateController extends AppController
 
     public function clearCache(): Response
     {
-        if (!$this->Auth->isConnected() || !$this->User->isAdmin()) {
+        if (!$this->Auth->isConnected() || !$this->Auth->isAdmin()) {
             throw new ForbiddenException();
         }
 
@@ -38,6 +38,50 @@ class UpdateController extends AppController
 
         $cachePath = ROOT . DIRECTORY_SEPARATOR . 'tmp' . DIRECTORY_SEPARATOR . 'cache';
         $this->deleteDirectory($cachePath);
+
+        return $this->redirect(['_name' => 'admin_update_index']);
+    }
+
+    public function update(string $componentUpdated = '0'): Response
+    {
+        if (!$this->Auth->isConnected() || !$this->Auth->isAdmin()) {
+            throw new ForbiddenException();
+        }
+
+        $this->disableAutoRender();
+        $this->response = $this->response->withType('application/json');
+
+        $isApplyStep = $componentUpdated === '1';
+
+        if (!$this->Update->updateCMS($isApplyStep)) {
+            return $this->response->withStringBody(json_encode([
+                'status' => 'error',
+                'messages' => $this->Update->errorUpdate,
+            ]));
+        }
+
+        if (!$isApplyStep) {
+            return $this->response->withStringBody(json_encode([
+                'status' => 'continue',
+                'messages' => '',
+            ]));
+        }
+
+        return $this->response->withStringBody(json_encode([
+            'status' => 'success',
+            'messages' => __('UPDATE__SUCCESS'),
+        ]));
+    }
+
+    public function check(): Response
+    {
+        if (!$this->Auth->isConnected() || !$this->Auth->isAdmin()) {
+            throw new ForbiddenException();
+        }
+
+        $this->disableAutoRender();
+
+        $this->Update->clearLatestCache();
 
         return $this->redirect(['_name' => 'admin_update_index']);
     }
@@ -61,52 +105,5 @@ class UpdateController extends AppController
         }
 
         @rmdir($path);
-    }
-
-    public function update(string $componentUpdated = '0'): Response
-    {
-        if (!$this->Auth->isConnected() || !$this->User->isAdmin()) {
-            throw new ForbiddenException();
-        }
-
-        $this->disableAutoRender();
-        $this->response = $this->response->withType('application/json');
-
-        $isComponentUpdated = $componentUpdated === '1';
-
-        if (!$this->Update->updateCMS($isComponentUpdated)) {
-            return $this->response->withStringBody(json_encode([
-                'status' => 'error',
-                'messages' => $this->Update->errorUpdate,
-            ]));
-        }
-
-        if (!$isComponentUpdated) {
-            return $this->response->withStringBody(json_encode([
-                'status' => 'continue',
-                'messages' => '',
-            ]));
-        }
-
-        return $this->response->withStringBody(json_encode([
-            'status' => 'success',
-            'messages' => __('UPDATE__SUCCESS'),
-        ]));
-    }
-
-    public function check(): Response
-    {
-        if (!$this->Auth->isConnected() || !$this->User->isAdmin()) {
-            throw new ForbiddenException();
-        }
-
-        $this->disableAutoRender();
-
-        $file = ROOT . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'update';
-        if (is_file($file)) {
-            @unlink($file);
-        }
-
-        return $this->redirect(['_name' => 'admin_update_index']);
     }
 }

@@ -7,7 +7,7 @@
     <div class="panel panel-default">
         <div class="panel-body">
 
-            <?= $Module->loadModules('user_profile_messages') ?>
+            <?= $this->Module->load('user_profile_messages') ?>
 
             <div class="section">
                 <p><b><?= __('USER__USERNAME') ?> :</b> <?= h($this->Auth->username()) ?></p>
@@ -388,7 +388,7 @@
                 </table>
             <?php } ?>
 
-            <?= $Module->loadModules('user_profile') ?>
+            <?= $this->Module->load('user_profile') ?>
         </div>
     </div>
 </div>

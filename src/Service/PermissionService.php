@@ -12,26 +12,70 @@ final class PermissionService
     use LocatorAwareTrait;
 
     private array $roleCache = [];
+    private ?array $permissionsCache = null;
 
     public function list(): array
     {
-        $list = Configure::read('Permissions.list', []);
-        if (!is_array($list)) {
-            return [];
+        if ($this->permissionsCache !== null) {
+            return $this->permissionsCache;
         }
 
+        $core = Configure::read('Permissions.list', []);
+        $core = is_array($core) ? $core : [];
+
         $out = [];
-        foreach ($list as $v) {
+        foreach ($core as $v) {
             $s = trim((string)$v);
             if ($s !== '') {
                 $out[] = $s;
             }
         }
 
+        if (InstallState::isInstalled()) {
+            try {
+                $Plugins = $this->fetchTable('Plugins');
+                $rows = $Plugins->find()->select(['name'])->all();
+
+                $addonsFolder = (string)Configure::read('Update.addons.folder', ROOT . DS . 'plugins' . DS . 'Addons');
+                $manifestFile = (string)Configure::read('Update.addons.manifest', 'manifest.json');
+
+                foreach ($rows as $row) {
+                    $slug = (string)$row->get('name');
+                    if ($slug === '') {
+                        continue;
+                    }
+
+                    $path = rtrim($addonsFolder, DS) . DS . $slug . DS . $manifestFile;
+                    if (!is_file($path)) {
+                        continue;
+                    }
+
+                    $raw = (string)file_get_contents($path);
+                    $m = json_decode($raw, true);
+                    if (!is_array($m)) {
+                        continue;
+                    }
+
+                    $available = $m['permissions']['available'] ?? [];
+                    if (!is_array($available)) {
+                        continue;
+                    }
+
+                    foreach ($available as $p) {
+                        $p = trim((string)$p);
+                        if ($p !== '') {
+                            $out[] = $p;
+                        }
+                    }
+                }
+            } catch (Throwable) {
+            }
+        }
+
         $out = array_values(array_unique($out));
         sort($out);
 
-        return $out;
+        return $this->permissionsCache = $out;
     }
 
     public function isSuper(int $roleId): bool
@@ -97,6 +141,7 @@ final class PermissionService
     {
         if ($roleId === null) {
             $this->roleCache = [];
+            $this->permissionsCache = null;
 
             return;
         }

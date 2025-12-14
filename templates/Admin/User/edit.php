@@ -123,7 +123,7 @@
                                disabled>
                     </div>
 
-                    <?= $Module->loadModules('admin_user_edit_form') ?>
+                    <?= $this->Module->load('admin_user_edit_form') ?>
 
                     <div class="float-right">
                         <a href="<?= $this->Url->build(['_name' => 'admin_user_index']) ?>"
@@ -168,5 +168,5 @@
         </div>
     </div>
 
-    <?= $Module->loadModules('admin_user_edit') ?>
+    <?= $this->Module->load('admin_user_edit') ?>
 </section>
