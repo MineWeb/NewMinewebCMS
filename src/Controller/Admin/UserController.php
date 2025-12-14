@@ -7,7 +7,7 @@ use App\Controller\AppController;
 use App\Model\Table\HistoriesTable;
 use App\Model\Table\UsersTable;
 use App\Service\LangService;
-use App\Service\RoleService;
+use App\Service\PermissionService;
 use App\Service\UserAuthService;
 use Cake\Event\Event;
 use Cake\Http\Exception\ForbiddenException;
@@ -410,7 +410,7 @@ class UserController extends AppController
             $slug = (string)($r->slug ?? '');
 
             $label = 'info';
-            if ($slug === RoleService::ADMIN_SLUG) {
+            if ($slug === PermissionService::ADMIN_SLUG) {
                 $label = 'danger';
             } elseif ((int)($r->is_default ?? 0) === 1) {
                 $label = 'primary';

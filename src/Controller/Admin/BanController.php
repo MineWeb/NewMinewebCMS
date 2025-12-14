@@ -4,27 +4,29 @@ declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
+use App\Model\Table\BansTable;
+use App\Model\Table\UsersTable;
 use App\Service\PermissionService;
-use App\Service\RoleService;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Response;
 
+/**
+ * @property \App\Controller\Component\DataTableComponent $DataTable
+ */
 class BanController extends AppController
 {
-    private PermissionService $permissions;
-    private RoleService $roleService;
+    protected PermissionService $permissions;
+    private UsersTable $Users;
+    private BansTable $Bans;
 
     public function initialize(): void
     {
         parent::initialize();
 
-        $this->loadComponent('DataTable');
-
         $this->Bans = $this->fetchTable('Bans');
         $this->Users = $this->fetchTable('Users');
 
         $this->permissions = new PermissionService();
-        $this->roleService = new RoleService();
     }
 
     public function index(): ?Response
@@ -264,7 +266,7 @@ class BanController extends AppController
             $slug = (string)($r->slug ?? '');
 
             $label = 'info';
-            if ($slug === RoleService::ADMIN_SLUG) {
+            if ($slug === PermissionService::ADMIN_SLUG) {
                 $label = 'danger';
             } elseif ((int)($r->is_default ?? 0) === 1) {
                 $label = 'primary';

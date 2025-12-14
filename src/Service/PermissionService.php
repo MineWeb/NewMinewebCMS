@@ -14,6 +14,8 @@ final class PermissionService
     private array $roleCache = [];
     private ?array $permissionsCache = null;
 
+    public const ADMIN_SLUG = 'admin';
+
     public function list(): array
     {
         if ($this->permissionsCache !== null) {
