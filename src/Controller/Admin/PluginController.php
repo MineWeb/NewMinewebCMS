@@ -11,6 +11,9 @@ use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
 
+/**
+ * @property \App\Controller\Component\HistoryComponent $History
+ */
 class PluginController extends AppController
 {
     public function index(): ?Response
@@ -112,7 +115,9 @@ class PluginController extends AppController
         if ($installed !== true) {
             return $this->response->withStringBody(json_encode([
                 'status' => 'error',
+                'statut' => 'error',
                 'messages' => __((string)$installed),
+                'msg' => __((string)$installed),
             ]));
         }
 
@@ -129,12 +134,15 @@ class PluginController extends AppController
         if (!$plugin) {
             return $this->response->withStringBody(json_encode([
                 'status' => 'error',
+                'statut' => 'error',
                 'messages' => __('ERROR__INTERNAL_ERROR'),
+                'msg' => __('ERROR__INTERNAL_ERROR'),
             ]));
         }
 
         return $this->response->withStringBody(json_encode([
             'status' => 'success',
+            'statut' => 'success',
             'plugin' => [
                 'name' => $plugin['name'],
                 'DBid' => $plugin['id'],

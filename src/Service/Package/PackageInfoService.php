@@ -119,14 +119,14 @@ final class PackageInfoService
     {
         $e = $this->marketEntry('addons', $slug);
 
-        return $e ?? false;
+        return $e === null ? false : $e;
     }
 
     public function themeMarketEntry(string $slug): array|false
     {
         $e = $this->marketEntry('themes', $slug);
 
-        return $e ?? false;
+        return $e === null ? false : $e;
     }
 
     private function installedVersion(string $kind, string $key): ?string
@@ -207,7 +207,9 @@ final class PackageInfoService
                 continue;
             }
 
-            if (!$all && empty($entry['free'])) {
+            $free = isset($entry['free']) ? (bool)$entry['free'] : true;
+
+            if (!$all && !$free) {
                 continue;
             }
 
@@ -379,9 +381,6 @@ final class PackageInfoService
         return $this->themesMarketRaw();
     }
 
-    /**
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     */
     private function addonsMarketRaw(): array|false
     {
         if ($this->addonsMarket !== null) {
@@ -412,9 +411,6 @@ final class PackageInfoService
         return $this->addonsMarket;
     }
 
-    /**
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     */
     private function themesMarketRaw(): array|false
     {
         if ($this->themesMarket !== null) {
@@ -466,7 +462,12 @@ final class PackageInfoService
                 }
 
                 $slug = strtolower(trim((string)($entry['slug'] ?? '')));
-                if ($slug === '' || isset($seen[$slug])) {
+                if ($slug === '') {
+                    continue;
+                }
+
+                $seenKey = $slug . '|' . (string)($meta['key'] ?? '');
+                if (isset($seen[$seenKey])) {
                     continue;
                 }
 
@@ -475,7 +476,7 @@ final class PackageInfoService
                     continue;
                 }
 
-                $seen[$slug] = true;
+                $seen[$seenKey] = true;
                 $merged[] = $normalized;
             }
         }
@@ -526,6 +527,12 @@ final class PackageInfoService
 
         $requirements = is_array($manifest['requirements'] ?? null) ? (array)$manifest['requirements'] : [];
 
+        $free = isset($entry['free']) ? (bool)$entry['free'] : true;
+
+        $purchaseUrl = $entry['purchase_url'] ?? $entry['purchaseUrl'] ?? $entry['buy_url'] ?? null;
+        $purchaseUrl = is_string($purchaseUrl) ? trim($purchaseUrl) : '';
+        $purchaseUrl = $purchaseUrl !== '' ? $purchaseUrl : null;
+
         $out = $entry;
         $out['slug'] = $slug;
         $out['repo'] = $repo;
@@ -537,6 +544,8 @@ final class PackageInfoService
         $out['compatible'] = (bool)($entry['compatible'] ?? false);
         $out['compatible_error'] = is_string($entry['reason'] ?? null) ? (string)$entry['reason'] : null;
         $out['market'] = $marketMeta;
+        $out['free'] = $free;
+        $out['purchase_url'] = $purchaseUrl;
 
         return $out;
     }

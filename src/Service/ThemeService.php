@@ -67,6 +67,39 @@ final class ThemeService
         $entries = scandir($dir) ?: [];
         $out = (object)[];
 
+        $lastVersions = null;
+        if ($api) {
+            $slugs = [];
+            foreach ($entries as $slug) {
+                if (!is_string($slug) || $slug === '.' || $slug === '..' || $slug === '.gitkeep') {
+                    continue;
+                }
+                $path = $dir . DS . $slug;
+                if (!is_dir($path)) {
+                    continue;
+                }
+                $manifestPath = $path . DS . $this->manifestFile;
+                if (!is_file($manifestPath)) {
+                    continue;
+                }
+                $raw = (string)file_get_contents($manifestPath);
+                $m = json_decode($raw);
+                if (!is_object($m) || empty($m->slug)) {
+                    continue;
+                }
+                $slugs[] = (string)$m->slug;
+            }
+
+            $slugs = array_values(array_unique(array_filter(array_map(
+                static fn($v) => strtolower(trim((string)$v)),
+                $slugs
+            ), static fn($v) => $v !== '')));
+
+            if ($slugs !== []) {
+                $lastVersions = $this->themesLatestVersions($slugs);
+            }
+        }
+
         foreach ($entries as $slug) {
             if (!is_string($slug) || $slug === '.' || $slug === '..' || $slug === '.gitkeep') {
                 continue;
@@ -91,10 +124,10 @@ final class ThemeService
             $id = strtolower((string)($m->author ?? '') . '.' . (string)$m->slug);
             $m->id = $id;
 
-            if ($api && isset($m->slug)) {
-                $last = $this->info->themeLatestVersion((string)$m->slug);
-                if (is_string($last) && $last !== '') {
-                    $m->lastVersion = $last;
+            if ($api && isset($m->slug) && is_array($lastVersions)) {
+                $key = strtolower((string)$m->slug);
+                if (isset($lastVersions[$key]) && is_string($lastVersions[$key]) && $lastVersions[$key] !== '') {
+                    $m->lastVersion = $lastVersions[$key];
                 }
             }
 
@@ -243,5 +276,38 @@ final class ThemeService
         }
 
         file_put_contents($path, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    }
+
+    private function themesLatestVersions(array $slugsLower): array
+    {
+        $out = [];
+
+        $list = $this->info->themesMarketEntries();
+        if (!is_array($list)) {
+            return $out;
+        }
+
+        foreach ($list as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+
+            $slug = strtolower(trim((string)($entry['slug'] ?? '')));
+            if ($slug === '' || !in_array($slug, $slugsLower, true)) {
+                continue;
+            }
+
+            $version = (string)($entry['version'] ?? '');
+            $version = trim($version);
+            if ($version === '') {
+                continue;
+            }
+
+            if (!isset($out[$slug]) || version_compare($out[$slug], $version, '<')) {
+                $out[$slug] = $version;
+            }
+        }
+
+        return $out;
     }
 }

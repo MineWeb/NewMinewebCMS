@@ -12,6 +12,9 @@ final class MarketConfigService
         $kind = $this->normalizeKind($kind);
 
         $defaults = new MarketDefinition(
+            key: 'defaults',
+            name: 'market',
+            url: '',
             source: 'internal://defaults',
             repoPattern: $this->defaultRepoPattern($kind),
             channel: $this->defaultChannel($kind),
@@ -127,7 +130,7 @@ final class MarketConfigService
 
         $c = trim((string)Configure::read('Update.' . $kind . '.channel', 'release'));
 
-        return ($c === 'release' || $c === 'branch') ? $c : 'release';
+        return $c === 'release' || $c === 'branch' ? $c : 'release';
     }
 
     public function defaultBranch(string $kind): string

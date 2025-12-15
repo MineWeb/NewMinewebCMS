@@ -1,115 +1,187 @@
 <section class="content">
-    <div class="row">
-        <div class="col-md-12">
+    <div class="container-fluid">
+        <?php
+        $latest = (string)$this->Update->cmsLastVersion();
+        $current = (string)$this->Update->cmsVersion();
 
-            <div class="card">
-                <div class="card-header with-border">
-                    <h3 class="card-title" style="width:100%;">
-                        <?= __('GLOBAL__UPDATE') ?>
-                    </h3>
-                </div>
+        $latestMajor = (int)explode('.', $latest)[0];
+        $currentMajor = (int)explode('.', $current)[0];
+        $isMajor = $latestMajor > $currentMajor;
 
-                <div class="card-body">
+        $clearCacheUrl = $this->Url->build(['_name' => 'admin_update_clear_cache']);
+        $checkUrl = $this->Url->build(['_name' => 'admin_update_check']);
+        $updateUrl = $this->Url->build(['_name' => 'admin_update_update']);
+        $changelogUrl = 'https://github.com/MineWeb/MineWebCMS/releases';
+        ?>
 
-                    <div style="text-align:center">
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-outline card-primary shadow-sm">
+                    <div class="card-header">
+                        <h3 class="card-title d-flex align-items-center">
+                            <i class="fas fa-sync-alt mr-2"></i>
+                            <?= __('GLOBAL__UPDATE') ?>
+                        </h3>
 
-                        <p><?= __('UPDATE__LAST_VERSION') ?> : <?= h($this->Update->cmsLastVersion()) ?></p>
-                        <p><?= __('UPDATE__CMS_VERSION') ?> : <?= h($this->Update->cmsVersion()) ?></p>
-
-                        <?php if ((int)explode('.', $this->Update->cmsLastVersion())[0] > (int)explode('.', $this->Update->cmsVersion())[0]): ?>
-                            <div class="alert alert-warning">
-                                <?= __('UPDATE__MAJOR_WARNING') ?>
-                            </div>
-                        <?php endif; ?>
-
-                        <div class="btn-group">
-
-                            <button id="btn-update" class="btn btn-large btn-primary">
-                                <?= __('GLOBAL__UPDATE') ?>
+                        <div class="card-tools">
+                            <button id="btn-update" type="button" class="btn btn-primary btn-sm">
+                                <i class="fas fa-download mr-1"></i><?= __('GLOBAL__UPDATE') ?>
                             </button>
-
-                            <a class="btn btn-warning"
-                               href="<?= $this->Url->build(['_name' => 'admin_update_clear_cache']) ?>">
-                                <?= __('UPDATE__CLEAR_CACHE') ?>
-                            </a>
-
-                            <a class="btn btn-large btn-info"
-                               href="<?= $this->Url->build(['_name' => 'admin_update_check']) ?>">
-                                <?= __('UPDATE__CHECK_STATUS') ?>
-                            </a>
-
-                            <a href="https://github.com/MineWeb/MineWebCMS/releases"
-                               target="_blank"
-                               class="btn btn-large btn-default">
-                                <?= __('UPDATE__VIEW_CHANGELOG') ?>
-                            </a>
                         </div>
-
-                        <div id="update-msg" style="margin-top:15px"></div>
-
-                        <div id="update-progress" class="progress progress-striped active" style="display:none;">
-                            <div class="bar" style="width:40%"></div>
-                        </div>
-
                     </div>
 
+                    <div class="card-body">
+                        <div class="overlay-wrapper">
+                            <div id="update-overlay" class="overlay dark d-none">
+                                <i class="fas fa-2x fa-sync-alt fa-spin"></i>
+                            </div>
+
+                            <div class="row align-items-stretch">
+                                <div class="col-lg-6 d-flex">
+                                    <div class="info-box bg-light w-100 h-100 mb-3">
+                                        <span class="info-box-icon bg-info elevation-1">
+                                            <i class="fas fa-code-branch"></i>
+                                        </span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text text-muted text-uppercase"><?= __('UPDATE__CMS_VERSION') ?></span>
+                                            <span class="info-box-number"><?= h($current) ?></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 d-flex">
+                                    <div class="info-box bg-light w-100 h-100 mb-3">
+                                        <span class="info-box-icon bg-success elevation-1">
+                                            <i class="fas fa-cloud-download-alt"></i>
+                                        </span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text text-muted text-uppercase"><?= __('UPDATE__LAST_VERSION') ?></span>
+                                            <span class="info-box-number"><?= h($latest) ?></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <?php if ($isMajor) { ?>
+                                <div class="callout callout-warning mb-3">
+                                    <h5 class="mb-2 d-flex align-items-center">
+                                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                                        <?= __('UPDATE__MAJOR_WARNING') ?>
+                                    </h5>
+                                    <p class="mb-0"><?= __('UPDATE__MAJOR_WARNING_EXTENSION') ?></p>
+                                </div>
+                            <?php } ?>
+
+                            <div id="update-msg"></div>
+
+                            <div class="mt-3">
+                                <div id="update-progress" class="progress progress-sm d-none">
+                                    <div id="update-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer d-flex flex-wrap justify-content-end align-items-center">
+                        <div class="btn-group">
+                            <a class="btn btn-outline-secondary btn-sm" href="<?= h($checkUrl) ?>">
+                                <i class="fas fa-search mr-1"></i><?= __('UPDATE__CHECK_STATUS') ?>
+                            </a>
+                            <a class="btn btn-outline-secondary btn-sm" href="<?= h($clearCacheUrl) ?>">
+                                <i class="fas fa-broom mr-1"></i><?= __('UPDATE__CLEAR_CACHE') ?>
+                            </a>
+                            <a class="btn btn-outline-secondary btn-sm" target="_blank" rel="noopener noreferrer" href="<?= h($changelogUrl) ?>">
+                                <i class="fas fa-external-link-alt mr-1"></i><?= __('UPDATE__VIEW_CHANGELOG') ?>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-
             </div>
-
         </div>
     </div>
 </section>
 
 <script type="text/javascript">
-
-    async function callUpdate(step = '0') {
+    (function () {
+        const btn = document.getElementById('btn-update');
+        const msg = document.getElementById('update-msg');
+        const progress = document.getElementById('update-progress');
+        const bar = document.getElementById('update-progress-bar');
+        const overlay = document.getElementById('update-overlay');
 
         const csrf = "<?= $this->request->getAttribute('csrfToken') ?>";
+        const baseUrl = "<?= $updateUrl ?>";
+        const clearCacheUrl = "<?= $clearCacheUrl ?>";
 
-        const url = "<?= $this->Url->build(['_name' => 'admin_update_update']) ?>/" + step;
+        function setMsg(type, html) {
+            msg.innerHTML = '<div class="alert alert-' + type + ' mb-0">' + html + '</div>';
+        }
 
-        try {
+        function setBusy(busy) {
+            if (busy) {
+                btn.setAttribute('disabled', 'disabled');
+                btn.classList.add('disabled');
+                overlay.classList.remove('d-none');
+                progress.classList.remove('d-none');
+                bar.style.width = '12%';
+                return;
+            }
+
+            btn.removeAttribute('disabled');
+            btn.classList.remove('disabled');
+            overlay.classList.add('d-none');
+            bar.style.width = '0%';
+            progress.classList.add('d-none');
+        }
+
+        async function callUpdate(step) {
+            const url = baseUrl + '/' + String(step || '0');
+
             const response = await fetch(url, {
-                method: "POST",
+                method: 'POST',
                 headers: {
-                    "X-CSRF-Token": csrf,
-                    "Accept": "application/json"
+                    'X-CSRF-Token': csrf,
+                    'Accept': 'application/json'
                 },
                 body: new FormData()
             });
 
-            const data = await response.json();
-
-            if (data.statut === "success") {
-
-                document.getElementById('update-msg').innerHTML =
-                    '<div class="alert alert-success"><b><?= __('GLOBAL__SUCCESS') ?> :</b> ' + data.msg + '</div>';
-
-                window.location = "<?= $this->Url->build(['_name' => 'admin_update_clear_cache']) ?>";
-
-            } else if (data.statut === "continue") {
-
-                callUpdate('1');
-
-            } else if (data.statut === "error") {
-
-                document.getElementById('update-msg').innerHTML =
-                    '<div class="alert alert-danger"><b><?= __('GLOBAL__ERROR') ?> :</b> ' + data.msg + '</div>';
-
-            } else {
-                alert("Error");
-            }
-
-        } catch (e) {
-            alert("Error");
+            return response.json();
         }
-    }
 
-    document.getElementById("btn-update").addEventListener("click", () => {
-        const msg = document.getElementById("update-msg");
-        msg.innerHTML = '<div class="alert alert-info"><?= __('UPDATE__LOADING') ?></div>';
-        callUpdate();
-    });
+        async function runUpdate() {
+            try {
+                setBusy(true);
+                setMsg('info', "<?= addslashes(__('UPDATE__LOADING')) ?>");
 
+                let data = await callUpdate('0');
+
+                if (data && data.statut === 'continue') {
+                    bar.style.width = '55%';
+                    data = await callUpdate('1');
+                }
+
+                if (data && data.statut === 'success') {
+                    bar.style.width = '100%';
+                    setMsg('success', '<b><?= addslashes(__('GLOBAL__SUCCESS')) ?> :</b> ' + (data.msg || ''));
+                    window.location = clearCacheUrl;
+                    return;
+                }
+
+                if (data && data.statut === 'error') {
+                    setMsg('danger', '<b><?= addslashes(__('GLOBAL__ERROR')) ?> :</b> ' + (data.msg || ''));
+                    setBusy(false);
+                    return;
+                }
+
+                setMsg('danger', '<b><?= addslashes(__('GLOBAL__ERROR')) ?> :</b> <?= addslashes(__('ERROR__INTERNAL_ERROR')) ?>');
+                setBusy(false);
+            } catch (e) {
+                setMsg('danger', '<b><?= addslashes(__('GLOBAL__ERROR')) ?> :</b> <?= addslashes(__('ERROR__INTERNAL_ERROR')) ?>');
+                setBusy(false);
+            }
+        }
+
+        btn.addEventListener('click', runUpdate);
+    })();
 </script>
