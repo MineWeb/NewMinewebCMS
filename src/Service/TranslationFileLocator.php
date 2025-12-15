@@ -8,19 +8,23 @@ use Cake\Core\Configure;
 final class TranslationFileLocator
 {
     private ?string $theme = null;
+    private ?array $addons = null;
 
     public function locate(string $locale, string $domain): array
     {
         $locale = $this->normalizeLocale($locale);
         $domain = $this->normalizeDomain($domain);
 
-        $files = [];
+        $files = array_merge(
+            $this->appFiles($locale, $domain),
+            $this->addonFiles($locale, $domain),
+            $this->themeFiles($locale, $domain),
+        );
 
-        $files = array_merge($files, $this->appFiles($locale, $domain));
-        $files = array_merge($files, $this->addonFiles($locale, $domain));
-        $files = array_merge($files, $this->themeFiles($locale, $domain));
-
-        return array_values(array_unique(array_filter($files, static fn($p) => is_string($p) && $p !== '' && is_file($p))));
+        return array_values(array_unique(array_filter(array_map(
+            static fn($p) => is_string($p) ? trim($p) : '',
+            $files
+        ), static fn($p) => $p !== '' && is_file($p))));
     }
 
     public function contextKey(): string
@@ -28,9 +32,7 @@ final class TranslationFileLocator
         $addons = $this->enabledAddons();
         sort($addons);
 
-        $theme = $this->activeTheme();
-
-        return sha1($theme . '|' . implode(',', $addons));
+        return sha1($this->activeTheme() . '|' . implode(',', $addons));
     }
 
     public function activeTheme(): string
@@ -66,9 +68,13 @@ final class TranslationFileLocator
 
     private function enabledAddons(): array
     {
+        if ($this->addons !== null) {
+            return $this->addons;
+        }
+
         $runtime = Configure::read('RuntimePlugins.addons', []);
         if (!is_array($runtime)) {
-            return [];
+            return $this->addons = [];
         }
 
         $addonsFolder = rtrim((string)Configure::read('Update.addons.folder', ROOT . DS . 'plugins' . DS . 'Addons'), DS);
@@ -82,25 +88,17 @@ final class TranslationFileLocator
             if (!is_dir($addonsFolder . DS . $slug)) {
                 continue;
             }
-            $out[] = $slug;
+            $out[$slug] = true;
         }
 
-        return array_values(array_unique($out));
+        $this->addons = array_keys($out);
+
+        return $this->addons;
     }
 
     private function appFiles(string $locale, string $domain): array
     {
-        $base = ROOT . DS . 'resources' . DS . 'locales' . DS . $locale;
-
-        $files = [
-            $base . DS . $domain . '.json',
-        ];
-
-        if ($domain !== 'default') {
-            $files[] = $base . DS . 'default.json';
-        }
-
-        return $files;
+        return $this->domainFiles(ROOT . DS . 'resources' . DS . 'locales' . DS . $locale, $domain);
     }
 
     private function addonFiles(string $locale, string $domain): array
@@ -108,14 +106,11 @@ final class TranslationFileLocator
         $addonsFolder = rtrim((string)Configure::read('Update.addons.folder', ROOT . DS . 'plugins' . DS . 'Addons'), DS);
 
         $files = [];
-
         foreach ($this->enabledAddons() as $slug) {
-            $base = $addonsFolder . DS . $slug . DS . 'resources' . DS . 'locales' . DS . $locale;
-
-            $files[] = $base . DS . $domain . '.json';
-            if ($domain !== 'default') {
-                $files[] = $base . DS . 'default.json';
-            }
+            $files = array_merge(
+                $files,
+                $this->domainFiles($addonsFolder . DS . $slug . DS . 'resources' . DS . 'locales' . DS . $locale, $domain)
+            );
         }
 
         return $files;
@@ -130,11 +125,12 @@ final class TranslationFileLocator
 
         $themesFolder = rtrim((string)Configure::read('Update.themes.folder', ROOT . DS . 'plugins' . DS . 'Themes'), DS);
 
-        $base = $themesFolder . DS . $theme . DS . 'resources' . DS . 'locales' . DS . $locale;
+        return $this->domainFiles($themesFolder . DS . $theme . DS . 'resources' . DS . 'locales' . DS . $locale, $domain);
+    }
 
-        $files = [
-            $base . DS . $domain . '.json',
-        ];
+    private function domainFiles(string $base, string $domain): array
+    {
+        $files = [$base . DS . $domain . '.json'];
 
         if ($domain !== 'default') {
             $files[] = $base . DS . 'default.json';

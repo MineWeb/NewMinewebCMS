@@ -12,7 +12,7 @@ final class JsonFileLoader
         $messages = [];
 
         foreach ($files as $file) {
-            $file = (string)$file;
+            $file = is_string($file) ? trim($file) : '';
             if ($file === '' || !is_file($file)) {
                 continue;
             }
@@ -30,24 +30,25 @@ final class JsonFileLoader
 
     private function loadFileCached(string $file): array
     {
-        $mtime = @filemtime($file);
-        $key = 'i18n_json_' . sha1($file . '|' . ($mtime ?: 0));
-
+        $key = 'i18n_json_' . sha1($file);
         $cached = Cache::read($key);
-        if (is_array($cached)) {
-            return $cached;
+
+        $mtime = @filemtime($file) ?: 0;
+
+        if (is_array($cached) && isset($cached['mtime'], $cached['data']) && (int)$cached['mtime'] === (int)$mtime && is_array($cached['data'])) {
+            return $cached['data'];
         }
 
         $raw = @file_get_contents($file);
-        if (!is_string($raw) || $raw === '') {
-            Cache::write($key, []);
+        if (!is_string($raw) || trim($raw) === '') {
+            Cache::write($key, ['mtime' => $mtime, 'data' => []]);
 
             return [];
         }
 
         $decoded = json_decode($raw, true);
         if (!is_array($decoded)) {
-            Cache::write($key, [], 'default');
+            Cache::write($key, ['mtime' => $mtime, 'data' => []]);
 
             return [];
         }
@@ -62,7 +63,7 @@ final class JsonFileLoader
             }
         }
 
-        Cache::write($key, $clean);
+        Cache::write($key, ['mtime' => $mtime, 'data' => $clean]);
 
         return $clean;
     }
