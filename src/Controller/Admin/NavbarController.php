@@ -8,11 +8,8 @@ use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
-use Cake\Routing\Router;
+use Cake\ORM\Table;
 
-/**
- * @property \App\Controller\Component\HistoryComponent $History
- */
 class NavbarController extends AppController
 {
     public function index(): ?Response
@@ -59,9 +56,9 @@ class NavbarController extends AppController
 
                 if (!empty($plugin)) {
                     if (isset($urlData['route'])) {
-                        $navbars[$key]['url'] = Router::url($urlData['route']);
+                        $navbars[$key]['url'] = \Cake\Routing\Router::url($urlData['route']);
                     } else {
-                        $navbars[$key]['url'] = Router::url('/' . strtolower((string)$plugin->slug));
+                        $navbars[$key]['url'] = \Cake\Routing\Router::url('/' . strtolower((string)$plugin->slug));
                     }
                 } else {
                     $navbars[$key]['url'] = false;
@@ -69,7 +66,7 @@ class NavbarController extends AppController
             } elseif ($urlData['type'] === 'page') {
                 $pageId = $urlData['id'] ?? null;
                 if ($pageId !== null && isset($pagesListed[$pageId])) {
-                    $navbars[$key]['url'] = Router::url(['_name' => 'pages_index', $pagesListed[$pageId]]);
+                    $navbars[$key]['url'] = \Cake\Routing\Router::url(['_name' => 'pages_index', $pagesListed[$pageId]]);
                 } else {
                     $navbars[$key]['url'] = '#';
                 }
@@ -96,7 +93,10 @@ class NavbarController extends AppController
         $this->response = $this->response->withType('application/json');
 
         if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_NAV'))) {
-            return $this->redirect(['_name' => 'home']);
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('FORBIDDEN'),
+            ]));
         }
 
         $request = $this->getRequest();
@@ -108,34 +108,35 @@ class NavbarController extends AppController
             ]));
         }
 
-        $raw = (string)$request->getData('navbar_order', '');
-        if ($raw === '') {
-            return $this->response->withStringBody(json_encode([
-                'status' => false,
-                'messages' => __('ERROR__FILL_ALL_FIELDS'),
-            ]));
+        $contentType = strtolower((string)$request->getHeaderLine('Content-Type'));
+        $order = [];
+
+        if (strpos($contentType, 'application/json') !== false) {
+            $payload = (array)$request->getData();
+            $order = isset($payload['order']) && is_array($payload['order']) ? $payload['order'] : [];
+        } else {
+            $raw = (string)$request->getData('navbar_order', '');
+            if ($raw !== '') {
+                $pairs = explode('&', $raw);
+                foreach ($pairs as $pair) {
+                    $parts = explode('=', $pair, 2);
+                    $key = $parts[0] ?? '';
+                    if ($key === '') {
+                        continue;
+                    }
+                    if (substr($key, -2) === '[]') {
+                        $key = substr($key, 0, -2);
+                    }
+                    $order[] = $key;
+                }
+            }
         }
 
-        $pairs = explode('&', $raw);
-        $orders = [];
-        $position = 1;
+        $order = array_values(array_filter($order, function ($v) {
+            return is_string($v) && $v !== '' && ctype_digit($v);
+        }));
 
-        foreach ($pairs as $pair) {
-            $parts = explode('=', $pair, 2);
-            if (!isset($parts[0]) || $parts[0] === '') {
-                continue;
-            }
-
-            $key = $parts[0];
-            if (substr($key, -2) === '[]') {
-                $key = substr($key, 0, -2);
-            }
-
-            $orders[$key] = $position;
-            $position++;
-        }
-
-        if (!$orders) {
+        if (!$order) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
                 'messages' => __('ERROR__FILL_ALL_FIELDS'),
@@ -143,27 +144,22 @@ class NavbarController extends AppController
         }
 
         $navbarTable = $this->fetchTable('Navbars');
-        $error = false;
 
-        foreach ($orders as $id => $orderBy) {
-            $entity = $navbarTable
-                ->find()
-                ->where(['id' => $id])
-                ->first();
-
-            if ($entity === null) {
-                $error = true;
-                continue;
-            }
-
-            $entity->set('order_by', $orderBy);
-            $navbarTable->save($entity);
-        }
-
-        if ($error) {
+        try {
+            $navbarTable->getConnection()->transactional(function () use ($navbarTable, $order) {
+                $pos = 1;
+                foreach ($order as $id) {
+                    $navbarTable->updateAll(
+                        ['order_by' => $pos],
+                        ['id' => (int)$id]
+                    );
+                    $pos++;
+                }
+            });
+        } catch (\Throwable) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__INTERNAL_ERROR'),
             ]));
         }
 

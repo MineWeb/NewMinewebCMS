@@ -344,6 +344,7 @@
         "NAVBAR__LINK_TYPE_PLUGIN": "Plugin",
         "NAVBAR__LINK_TYPE_PAGE": "Page",
         "NAVBAR__LINK_TYPE_CUSTOM": "Personnalisé",
+        "NAVBAR__ORDER_HELP": "Glissez et déposez les éléments pour modifier l’ordre de la barre de navigation. Les changements sont enregistrés automatiquement.",
         "SEO__TITLE": "SEO",
 
         "SEO__CALLOUT": "SEO",

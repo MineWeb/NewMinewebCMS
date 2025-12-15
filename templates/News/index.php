@@ -142,7 +142,7 @@
     <?php } ?>
 
     function getCsrfToken() {
-        let meta = document.querySelector('meta[name="csrfToken"]');
+        let meta = document.querySelector('meta[name="csrf-token"]');
         return meta ? meta.getAttribute("content") : "";
     }
 

@@ -24,6 +24,8 @@
     <style>
         footer li { display:inline; padding:0 2px }
     </style>
+
+    <?= $this->Html->meta('csrf-token', $this->request->getAttribute('csrfToken')) ?>
 </head>
 
 <body class="hold-transition sidebar-mini layout-fixed <?= h($this->AdminUi->bodyClass()) ?> ">
