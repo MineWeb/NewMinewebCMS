@@ -6,6 +6,7 @@ namespace App\Service\Package;
 use App\Service\HttpService;
 use App\Service\Package\Filesystem\FilesystemService;
 use App\Service\Package\Manifest\ManifestLoader;
+use App\Service\Package\Market\MarketConfigService;
 use App\Service\Package\Requirement\RequirementChecker;
 use App\Service\Package\Source\GitHubSource;
 use App\Service\PermissionSynchronizer;
@@ -21,6 +22,7 @@ final class PackageManagerFactory
         $permSync = new PermissionSynchronizer();
         $state = new UpdateStateStore(ROOT . DS . 'tmp' . DS . 'update' . DS . 'state.json');
         $releases = new LatestReleaseService($github);
+        $markets = new MarketConfigService();
 
         $packages = null;
 
@@ -36,7 +38,8 @@ final class PackageManagerFactory
             $permSync,
             $requirements,
             $state,
-            $releases
+            $releases,
+            $markets,
         );
     }
 }
