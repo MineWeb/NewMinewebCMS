@@ -12,8 +12,10 @@ use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Mailer\Mailer;
 use Cake\Mailer\TransportFactory;
+use Cake\Routing\Router;
 use Exception;
 use Laminas\Diactoros\UploadedFile;
+use Psr\Http\Message\UploadedFileInterface;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Throwable;
@@ -277,5 +279,63 @@ final class UtilComponent extends Component
         }
 
         return false;
+    }
+
+    public function handleImageField(
+        ServerRequest $request,
+        string $field,
+        string $uploadSubdir,
+        array $allowedExtensions,
+    ): array {
+        $payload = (array)$request->getData($field);
+        $edit = !empty($payload['edit']);
+
+        if (!$edit) {
+            return ['status' => true];
+        }
+
+        $uploadedName = trim((string)($payload['uploaded'] ?? ''));
+        $uploadedUrl = trim((string)($payload['url'] ?? ''));
+
+        if ($uploadedName !== '') {
+            if ($uploadedUrl !== '') {
+                return ['status' => true, 'url' => $uploadedUrl];
+            }
+
+            $safeName = basename($uploadedName);
+
+            return ['status' => true, 'url' => Router::url('/img/uploads/' . $safeName, true)];
+        }
+
+        $file = $payload['file'] ?? null;
+        if (!($file instanceof UploadedFileInterface)) {
+            return ['status' => true];
+        }
+
+        if (method_exists($file, 'getError') && $file->getError() !== UPLOAD_ERR_OK) {
+            return ['status' => true];
+        }
+
+        $ext = strtolower((string)pathinfo((string)$file->getClientFilename(), PATHINFO_EXTENSION));
+        if ($ext === '' || !in_array($ext, $allowedExtensions, true)) {
+            return ['status' => false, 'messages' => __('FORM__INVALID_IMAGE')];
+        }
+
+        $dirFs = WWW_ROOT . 'img' . DS . 'uploads' . DS . $uploadSubdir . DS;
+        if (!is_dir($dirFs)) {
+            @mkdir($dirFs, 0775, true);
+        }
+
+        $time = date('Y-m-d_His');
+        $fileName = $time . '.' . $ext;
+        $filePath = $dirFs . $fileName;
+
+        try {
+            $file->moveTo($filePath);
+        } catch (Throwable) {
+            return ['status' => false, 'messages' => __('FORM__ERROR_WHEN_UPLOAD')];
+        }
+
+        return ['status' => true, 'url' => Router::url('/img/uploads/' . $uploadSubdir . '/' . $fileName, true)];
     }
 }

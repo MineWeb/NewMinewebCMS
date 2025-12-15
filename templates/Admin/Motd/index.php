@@ -34,7 +34,7 @@
                             <a class="btn btn-info"
                                href="<?= $this->Url->build([
                                    '_name' => 'admin_motd_edit',
-                                   'pass' => [$server['id']]
+                                   $server['id']
                                ]) ?>">
                                 <?= __('GLOBAL__EDIT') ?>
                             </a>
@@ -42,7 +42,7 @@
                             <a class="btn btn-danger"
                                onClick="confirmDel('<?= $this->Url->build([
                                    '_name' => 'admin_motd_reset',
-                                   'pass' => [$server['id']]
+                                   $server['id']
                                ]) ?>')">
                                 <?= __('MOTD__RESET') ?>
                             </a>

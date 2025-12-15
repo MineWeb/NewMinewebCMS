@@ -7,12 +7,7 @@ use App\Controller\AppController;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
-use Cake\Routing\Router;
 
-/**
- * @property \App\Controller\Component\AuthComponent $Auth
- * @property \App\Controller\Component\UtilComponent $Util
- */
 class SeoController extends AppController
 {
     public function index(): ?Response
@@ -25,15 +20,9 @@ class SeoController extends AppController
 
         $seoTable = $this->fetchTable('Seo');
 
-        $default = $seoTable
-            ->find()
-            ->where(['page IS' => null])
-            ->first();
+        $default = $seoTable->find()->where(['page IS' => null])->first();
 
-        $seo_other = $seoTable
-            ->find()
-            ->where(['page IS NOT' => null])
-            ->all();
+        $seo_other = $seoTable->find()->where(['page IS NOT' => null])->all();
 
         $this->set(compact('default', 'seo_other'));
 
@@ -56,64 +45,33 @@ class SeoController extends AppController
 
         $seoTable = $this->fetchTable('Seo');
 
-        $default = $seoTable
-            ->find()
-            ->where(['page IS' => null])
-            ->first();
+        $default = $seoTable->find()->where(['page IS' => null])->first();
 
         $request = $this->getRequest();
 
-        if (!$request->getData('img_edit')) {
-            $alreadyUploaded = $request->getData('img-uploaded') !== null;
-
-            if ($alreadyUploaded) {
-                $request = $request->withData(
-                    'favicon_url',
-                    Router::url('/') . 'img' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . $request->getData('img-uploaded')
-                );
-                $this->setRequest($request);
-            } else {
-                $isValidImg = $this->Util->isValidImage($request, ['png', 'jpg', 'jpeg']);
-                if (!$isValidImg['status']) {
-                    return $this->response->withStringBody(json_encode([
-                        'status' => false,
-                        'messages' => $isValidImg['msg'],
-                    ]));
-                }
-
-                $infos = $isValidImg['infos'];
-                $time = date('Y-m-d_His');
-
-                $filePath = WWW_ROOT . 'img' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'favicons' . DIRECTORY_SEPARATOR . $time . '.' . $infos['extension'];
-
-                if (!$this->Util->uploadImage($request, $filePath)) {
-                    return $this->response->withStringBody(json_encode([
-                        'status' => false,
-                        'messages' => __('FORM__ERROR_WHEN_UPLOAD'),
-                    ]));
-                }
-
-                $request = $request->withData(
-                    'favicon_url',
-                    Router::url('/') . 'img' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'favicons' . DIRECTORY_SEPARATOR . $time . '.' . $infos['extension']
-                );
-                $this->setRequest($request);
-            }
+        $faviconResult = $this->Util->handleImageField($request, 'favicon', 'favicons', ['png', 'jpg', 'jpeg']);
+        if (($faviconResult['status'] ?? false) === false) {
+            return $this->jsonError($faviconResult['messages'] ?? __('FORM__ERROR_WHEN_SAVE'));
         }
 
-        if ($default === null) {
-            $seo = $seoTable->newEmptyEntity();
-        } else {
-            $seo = $seoTable->get($default['id']);
+        $faviconDelete = (int)($request->getData('favicon.delete') ?? 0) === 1;
+        if ($faviconDelete) {
+            $request = $request->withData('favicon_url', '');
+            $this->setRequest($request);
+        } elseif (!empty($faviconResult['url'])) {
+            $request = $request->withData('favicon_url', $faviconResult['url']);
+            $this->setRequest($request);
         }
 
-        $seo->set($this->getRequest()->getData());
-        $seoTable->save($seo);
+        $seo = $default === null ? $seoTable->newEmptyEntity() : $seoTable->get((int)$default['id']);
 
-        return $this->response->withStringBody(json_encode([
-            'status' => true,
-            'messages' => __('SEO__EDIT_SUCCESS'),
-        ]));
+        $seo = $seoTable->patchEntity($seo, $this->getRequest()->getData());
+
+        if (!$seoTable->save($seo)) {
+            return $this->jsonError($seo->getErrors() ?: __('FORM__ERROR_WHEN_SAVE'));
+        }
+
+        return $this->jsonOk(__('SEO__EDIT_SUCCESS'));
     }
 
     public function add(): ?Response
@@ -138,42 +96,18 @@ class SeoController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        if (!$request->getData('img_edit')) {
-            $alreadyUploaded = $request->getData('img-uploaded') !== null;
+        $faviconResult = $this->Util->handleImageField($request, 'favicon', 'favicons', ['png', 'jpg', 'jpeg']);
+        if (($faviconResult['status'] ?? false) === false) {
+            return $this->jsonError($faviconResult['messages'] ?? __('FORM__ERROR_WHEN_SAVE'));
+        }
 
-            if ($alreadyUploaded) {
-                $request = $request->withData(
-                    'favicon_url',
-                    Router::url('/') . 'img' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . $request->getData('img-uploaded')
-                );
-                $this->setRequest($request);
-            } else {
-                $isValidImg = $this->Util->isValidImage($request, ['png', 'jpg', 'jpeg']);
-                if (!$isValidImg['status']) {
-                    return $this->response->withStringBody(json_encode([
-                        'status' => false,
-                        'messages' => $isValidImg['msg'],
-                    ]));
-                }
-
-                $infos = $isValidImg['infos'];
-                $time = date('Y-m-d_His');
-
-                $filePath = WWW_ROOT . 'img' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'favicons' . DIRECTORY_SEPARATOR . $time . '.' . $infos['extension'];
-
-                if (!$this->Util->uploadImage($request, $filePath)) {
-                    return $this->response->withStringBody(json_encode([
-                        'status' => false,
-                        'messages' => __('FORM__ERROR_WHEN_UPLOAD'),
-                    ]));
-                }
-
-                $request = $request->withData(
-                    'favicon_url',
-                    Router::url('/') . 'img' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'favicons' . DIRECTORY_SEPARATOR . $time . '.' . $infos['extension']
-                );
-                $this->setRequest($request);
-            }
+        $faviconDelete = (int)($request->getData('favicon.delete') ?? 0) === 1;
+        if ($faviconDelete) {
+            $request = $request->withData('favicon_url', '');
+            $this->setRequest($request);
+        } elseif (!empty($faviconResult['url'])) {
+            $request = $request->withData('favicon_url', $faviconResult['url']);
+            $this->setRequest($request);
         }
 
         $page = (string)$this->getRequest()->getData('page', '');
@@ -184,23 +118,20 @@ class SeoController extends AppController
                 (string)$this->getRequest()->getData('title', '') === ''
                 && (string)$this->getRequest()->getData('description', '') === ''
                 && (string)$this->getRequest()->getData('favicon_url', '') === ''
-                && (string)$this->getRequest()->getData('img-url', '') === ''
+                && (string)$this->getRequest()->getData('img_url', '') === ''
             )
         ) {
-            return $this->response->withStringBody(json_encode([
-                'status' => false,
-                'messages' => __('ERROR__FILL_ALL_FIELDS'),
-            ]));
+            return $this->jsonError(__('ERROR__FILL_ALL_FIELDS'));
         }
 
         $seoTable = $this->fetchTable('Seo');
         $entity = $seoTable->newEntity($this->getRequest()->getData());
-        $seoTable->save($entity);
 
-        return $this->response->withStringBody(json_encode([
-            'status' => true,
-            'messages' => __('SEO__PAGE_ADD_SUCCESS'),
-        ]));
+        if (!$seoTable->save($entity)) {
+            return $this->jsonError($entity->getErrors() ?: __('FORM__ERROR_WHEN_SAVE'));
+        }
+
+        return $this->jsonOk(__('SEO__PAGE_ADD_SUCCESS'));
     }
 
     public function edit(int|string|null $id = null): ?Response
@@ -211,11 +142,7 @@ class SeoController extends AppController
 
         $seoTable = $this->fetchTable('Seo');
 
-        $page = $seoTable
-            ->find()
-            ->where(['id' => $id])
-            ->first();
-
+        $page = $seoTable->find()->where(['id' => $id])->first();
         if ($page === null) {
             throw new NotFoundException();
         }
@@ -237,42 +164,18 @@ class SeoController extends AppController
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
 
-        if (!$request->getData('img_edit')) {
-            $alreadyUploaded = $request->getData('img-uploaded') !== null;
+        $faviconResult = $this->Util->handleImageField($request, 'favicon', 'favicons', ['png', 'jpg', 'jpeg']);
+        if (($faviconResult['status'] ?? false) === false) {
+            return $this->jsonError($faviconResult['messages'] ?? __('FORM__ERROR_WHEN_SAVE'));
+        }
 
-            if ($alreadyUploaded) {
-                $request = $request->withData(
-                    'favicon_url',
-                    Router::url('/') . 'img' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . $request->getData('img-uploaded')
-                );
-                $this->setRequest($request);
-            } else {
-                $isValidImg = $this->Util->isValidImage($request, ['png', 'jpg', 'jpeg']);
-                if (!$isValidImg['status']) {
-                    return $this->response->withStringBody(json_encode([
-                        'status' => false,
-                        'messages' => $isValidImg['msg'],
-                    ]));
-                }
-
-                $infos = $isValidImg['infos'];
-                $time = date('Y-m-d_His');
-
-                $filePath = WWW_ROOT . 'img' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'favicons' . DIRECTORY_SEPARATOR . $time . '.' . $infos['extension'];
-
-                if (!$this->Util->uploadImage($request, $filePath)) {
-                    return $this->response->withStringBody(json_encode([
-                        'status' => false,
-                        'messages' => __('FORM__ERROR_WHEN_UPLOAD'),
-                    ]));
-                }
-
-                $request = $request->withData(
-                    'favicon_url',
-                    Router::url('/') . 'img' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'favicons' . DIRECTORY_SEPARATOR . $time . '.' . $infos['extension']
-                );
-                $this->setRequest($request);
-            }
+        $faviconDelete = (int)($request->getData('favicon.delete') ?? 0) === 1;
+        if ($faviconDelete) {
+            $request = $request->withData('favicon_url', '');
+            $this->setRequest($request);
+        } elseif (!empty($faviconResult['url'])) {
+            $request = $request->withData('favicon_url', $faviconResult['url']);
+            $this->setRequest($request);
         }
 
         $data = $this->getRequest()->getData();
@@ -283,23 +186,20 @@ class SeoController extends AppController
                 empty($data['title'])
                 && empty($data['description'])
                 && empty($data['favicon_url'])
-                && empty($data['img-url'])
+                && empty($data['img_url'])
             )
         ) {
-            return $this->response->withStringBody(json_encode([
-                'status' => false,
-                'messages' => __('ERROR__FILL_ALL_FIELDS'),
-            ]));
+            return $this->jsonError(__('ERROR__FILL_ALL_FIELDS'));
         }
 
-        $seo = $seoTable->get($page['id']);
-        $seo->set($data);
-        $seoTable->save($seo);
+        $seo = $seoTable->get((int)$page['id']);
+        $seo = $seoTable->patchEntity($seo, $data);
 
-        return $this->response->withStringBody(json_encode([
-            'status' => true,
-            'messages' => __('SEO__EDIT_SUCCESS'),
-        ]));
+        if (!$seoTable->save($seo)) {
+            return $this->jsonError($seo->getErrors() ?: __('FORM__ERROR_WHEN_SAVE'));
+        }
+
+        return $this->jsonOk(__('SEO__EDIT_SUCCESS'));
     }
 
     public function delete(int|string|null $id = null): Response
@@ -316,8 +216,22 @@ class SeoController extends AppController
 
         $this->Flash->success(__('SEO__PAGE_DELETE_SUCCESS'));
 
-        return $this->redirect([
-            '_name' => 'admin_seo_index',
-        ]);
+        return $this->redirect(['_name' => 'admin_seo_index']);
+    }
+
+    private function jsonOk(string $message): Response
+    {
+        return $this->response->withStringBody(json_encode([
+            'status' => true,
+            'messages' => $message,
+        ]));
+    }
+
+    private function jsonError(mixed $message): Response
+    {
+        return $this->response->withStringBody(json_encode([
+            'status' => false,
+            'messages' => $message,
+        ]));
     }
 }

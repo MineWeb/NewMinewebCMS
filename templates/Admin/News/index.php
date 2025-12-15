@@ -49,12 +49,12 @@
 
                                 <td>
                                     <a class="btn btn-info"
-                                       href="<?= $this->Url->build(['_name' => 'admin_news_edit', 'pass' => [$v['id']]]) ?>">
+                                       href="<?= $this->Url->build(['_name' => 'admin_news_edit', $v['id']]) ?>">
                                         <?= __('GLOBAL__EDIT') ?>
                                     </a>
 
                                     <a class="btn btn-danger"
-                                       onclick="confirmDel('<?= $this->Url->build(['_name' => 'admin_news_delete', 'pass' => [$v['id']]]) ?>')">
+                                       onclick="confirmDel('<?= $this->Url->build(['_name' => 'admin_news_delete', $v['id']]) ?>')">
                                         <?= __('GLOBAL__DELETE') ?>
                                     </a>
                                 </td>

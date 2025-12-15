@@ -345,32 +345,59 @@
         "NAVBAR__LINK_TYPE_PAGE": "Page",
         "NAVBAR__LINK_TYPE_CUSTOM": "Personnalisé",
         "SEO__TITLE": "SEO",
+
         "SEO__CALLOUT": "SEO",
-        "SEO__CALLOUT_MESSAGE": "L'optimisation pour les moteurs de recherche (SEO pour Search Engine Optimization) permet d'aider les moteurs de recherche à chercher les informations de votre site et de ses pages.<br>Les paramètres par défaut seront appliqués sur toutes les pages de votre site sauf si vous avez modifié les informations pour une page en particulier.",
-        "SEO__TITLE_DEFAULT": "Informations par Défauts (Pour toutes les pages)",
-        "SEO__TITLE_OTHER": "Informations page par page",
+        "SEO__CALLOUT_MESSAGE": "L&apos;optimisation pour les moteurs de recherche (SEO pour Search Engine Optimization) aide les moteurs à comprendre le contenu de votre site et à améliorer les aperçus.<br>Les paramètres par défaut s&apos;appliquent à toutes les pages, sauf si une configuration spécifique est définie.",
+
+        "SEO__TITLE_DEFAULT": "SEO par défaut",
+        "SEO__TITLE_OTHER": "SEO par page",
+
+        "SEO__FORM_INTRO": "Ces paramètres sont utilisés lorsqu&apos;une page ne possède pas de configuration SEO spécifique.",
+        "SEO__ADD_INTRO": "Crée une configuration SEO spécifique pour une page. Les champs laissés vides utiliseront les valeurs par défaut.",
+        "SEO__EDIT_INTRO": "Modifie la configuration SEO de cette page. Laisse un champ vide pour revenir aux valeurs par défaut.",
+
+        "SEO__ADD_PAGE": "Ajouter une page",
+        "SEO__EDIT_PAGE": "Modifier une page",
+
+        "SEO__PAGE": "Page",
+        "SEO__PAGE_DESC": "Chemin de la page concernée.",
+        "SEO__PAGE_PLACEHOLDER": "ex: /shop",
+
         "SEO__FORM_TITLE": "Titre",
-        "SEO__FORM_TITLE_DESC_T": "Titre de la page géré par le CMS",
-        "SEO__FORM_TITLE_DESC_W": "Nom du site dans les paramètres généraux",
         "SEO__FORM_DESCRIPTION": "Description",
+
+        "SEO__FORM_TITLE_DESC_T": "Titre de la page (variable dynamique).",
+        "SEO__FORM_TITLE_DESC_W": "Nom du site (variable dynamique).",
+
+        "SEO__FORM_DESCRIPTION_HELP": "Une description claire et concise améliore l&apos;affichage dans les moteurs de recherche et sur les réseaux sociaux.",
+
         "SEO__FORM_FAVICON": "Favicon",
-        "SEO__FORM_FAVICON_DESC": "(Petit icône dans la barre du navigateur)",
-        "SEO__FORM_IMG_URL": "Url de l'image",
-        "SEO__FORM_IMG_URL_DESC": "(Pour Discord, Facebook, Twitter...) Laisser vide pour utiliser le favicon à la place",
-        "SEO__FORM_THEME_COLOR": "Couleur thématique",
-        "SEO__FORM_THEME_COLOR_DESC": "(Pour l'embed discord par exemple)",
-        "SEO__FORM_TWITTER_SITE": "Tag Twitter",
-        "SEO__FORM_TWITTER_SITE_DESC": "(De votre serveur par exemple)",
-        "SEO__ADD_PAGE": "Ajouter une Page",
-        "SEO__EDIT_PAGE": "Modifier une Page",
-        "SEO__EDIT_SUCCESS": "Informations SEO éditées avec succès",
-        "SEO__DEFAULT_VALUE": "Valeur par défaut",
-        "SEO__PAGE": "Url de la Page",
-        "SEO__PAGE_DESC": "Exemple : \/shop",
+        "SEO__FORM_FAVICON_DESC": "Icône affichée dans l&apos;onglet du navigateur et dans certains aperçus.",
+
+        "SEO__FORM_IMG_URL": "Image de partage",
+        "SEO__FORM_IMG_URL_DESC": "Image utilisée pour les aperçus (Open Graph). Une image large et lisible est recommandée.",
+
+        "SEO__FORM_THEME_COLOR": "Couleur du thème",
+        "SEO__FORM_THEME_COLOR_DESC": "Couleur utilisée par certains navigateurs et interfaces lors de l&apos;affichage du site.",
+
+        "SEO__FORM_TWITTER_SITE": "Compte Twitter",
+        "SEO__FORM_TWITTER_SITE_DESC": "Nom d&apos;utilisateur Twitter sans le @. Optionnel.",
+
+        "SEO__PLACEHOLDER_IMG_URL": "https://exemple.com/image.png",
+        "SEO__PLACEHOLDER_TWITTER": "mineweb",
+
+        "SEO__KEEP_EMPTY": "Valeur par défaut",
+        "SEO__KEEP_EMPTY_HELP": "Laisse ce champ vide pour utiliser la valeur définie dans le SEO par défaut.",
+
+        "SEO__DEFAULT_VALUE": "Par défaut",
+
+        "SEO__CONFIRM_DELETE": "Confirmer la suppression de cette configuration SEO ?",
+
         "SEO__PAGE_ADD_SUCCESS": "Page ajoutée avec succès !",
         "SEO__PAGE_EDIT_SUCCESS": "Page modifiée avec succès !",
         "SEO__PAGE_DELETE_SUCCESS": "Page supprimée avec succès !",
-        "SEO__KEEP_EMPTY": "Laisser vide pour utiliser les valeurs par défaut",
+        "SEO__EDIT_SUCCESS": "Informations SEO mises à jour avec succès",
+
         "MOTD__TITLE": "Gérer les MOTD",
         "MOTD__TITLE_DESC": "Vous pouvez dans cette section éditer facilement et instantanément le MOTD de tous vos serveurs, il faut cependant lier votre serveur Bukkit\/Bungee (ou autres fork) avec le plugin de MineWeb (en version 3.0.2 ou supérieur) pour que votre serveur s'affiche dans cette liste ! <br>De plus vous pouvez réinitialiser votre MOTD pour que la config de votre serveur ou d'un autre plugin puisse prendre le dessus !",
         "MOTD__RESET": "Réinitialiser le MOTD",
@@ -397,6 +424,17 @@
         "FORM__INVALID_CAPTCHA": "Code de sécurité invalide",
         "FORM__RELOAD_CAPTCHA": "Recharger le code de sécurité",
         "FORM__ERROR_WHEN_UPLOAD": "Une erreur est survenue lors de l'enregistrement de l'image",
+        "FORM__NO_FILE_SELECTED": "Aucun fichier sélectionné",
+        "FORM__NO_IMAGE_DEFINED": "Aucune image définie",
+        "FORM__REMOVE_CURRENT_IMAGE": "Supprimer l'image actuelle",
+        "FORM__DELETE": "Supprimer",
+        "FORM__CURRENT_IMAGE_HELP": "Cette image est celle actuellement enregistrée. La nouvelle sélection ne sera appliquée qu'après validation du formulaire.",
+        "FORM__CLEAR": "Effacer",
+        "FORM__CURRENT_IMAGE": "Image actuelle",
+        "FORM__NEW_IMAGE": "Nouvelle sélection",
+        "FORM__OPEN": "Ouvrir",
+        "FORM__NEW_IMAGE_HINT": "Prévisualisation avant envoi",
+        "FORM__CLEAR_NEW_SELECTION": "Effacer la sélection",
         "LOGIN__BLOCKED": "Vous avez été bloqué ! Vous avez tenté de vous connecter sans succès 10 fois, veuillez patienter pour pouvoir réessayer.",
         "USER__MSG_NOT_CONFIRMED_EMAIL": "Votre email n'est pas confirmé ! Vous avez reçu un email contenant un lien de confirmation. <a style=\"text-decoration:underline;\" class=\"text-warning pull-right\" href=\"{URL_RESEND_EMAIL}\">Renvoyer l'email<\/a>",
         "USER__EMAIL_CONFIRMED": "Email confirmé",
