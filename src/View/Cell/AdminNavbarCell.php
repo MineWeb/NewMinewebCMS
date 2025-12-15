@@ -6,6 +6,7 @@ namespace App\View\Cell;
 use App\Service\AdminNavbarService;
 use Cake\Routing\Router;
 use Cake\View\Cell;
+use Throwable;
 
 final class AdminNavbarCell extends Cell
 {
@@ -40,7 +41,7 @@ final class AdminNavbarCell extends Cell
                 continue;
             }
 
-            $url = $hasRoute ? Router::url($node['route']) : '#';
+            $url = $this->safeUrl($node['route'] ?? null);
             $urlPath = $url !== '#'
                 ? (string)(parse_url($url, PHP_URL_PATH) ?? '')
                 : '';
@@ -53,7 +54,7 @@ final class AdminNavbarCell extends Cell
             $open = !$active && $children !== [] && $this->hasActiveChild($children);
 
             $items[] = [
-                'label' => (string)$label,
+                'label' => __((string)$label),
                 'icon' => (string)($node['icon'] ?? ''),
                 'permission' => isset($node['permission']) ? (string)$node['permission'] : null,
                 'url' => $url,
@@ -64,6 +65,19 @@ final class AdminNavbarCell extends Cell
         }
 
         return $items;
+    }
+
+    private function safeUrl(mixed $route): string
+    {
+        if ($route === null) {
+            return '#';
+        }
+
+        try {
+            return Router::url($route);
+        } catch (Throwable) {
+            return '#';
+        }
     }
 
     private function hasActiveChild(array $children): bool
