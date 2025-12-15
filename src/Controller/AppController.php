@@ -5,15 +5,14 @@ namespace App\Controller;
 
 use App\Service\AddonService;
 use App\Service\ConfigurationService;
-use App\Service\LangService;
 use App\Service\PermissionService;
 use App\Service\ServerBridgeService;
 use App\Service\ThemeService;
 use Cake\Event\EventInterface;
+use Cake\I18n\I18n;
 
 /**
  * @property \App\Controller\Component\AuthComponent $Auth
- * @property \App\Controller\Component\UtilComponent $Util
  */
 class AppController extends BaseController
 {
@@ -26,7 +25,6 @@ class AppController extends BaseController
     protected AddonService $addons;
     protected ThemeService $themes;
     protected ServerBridgeService $serverBridge;
-
 
     public function initialize(): void
     {
@@ -76,13 +74,7 @@ class AppController extends BaseController
     {
         parent::beforeFilter($event);
 
-        $siteConfigLang = $this->config->get('lang');
-
-        $localeService = new LangService();
-
-        $locale = $localeService->resolveLocale($this->getRequest(), (string)$siteConfigLang);
-
-        $localeService->apply($locale);
+        $locale = (string)($this->getRequest()->getAttribute('app.locale') ?? I18n::getLocale());
 
         $this->set('currentLocale', $locale);
         $this->set('isAdminPrefix', $this->getRequest()->getParam('prefix') === 'Admin');

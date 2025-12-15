@@ -42,19 +42,25 @@ final class JsonFileLoader
         $raw = @file_get_contents($file);
         if (!is_string($raw) || trim($raw) === '') {
             Cache::write($key, ['mtime' => $mtime, 'data' => []]);
-
             return [];
         }
 
         $decoded = json_decode($raw, true);
         if (!is_array($decoded)) {
             Cache::write($key, ['mtime' => $mtime, 'data' => []]);
-
             return [];
         }
 
+        $source = $decoded;
+
+        if (isset($decoded['MESSAGES']) && is_array($decoded['MESSAGES'])) {
+            $source = $decoded['MESSAGES'];
+        } elseif (isset($decoded['messages']) && is_array($decoded['messages'])) {
+            $source = $decoded['messages'];
+        }
+
         $clean = [];
-        foreach ($decoded as $k => $v) {
+        foreach ($source as $k => $v) {
             if (!is_string($k) || $k === '') {
                 continue;
             }

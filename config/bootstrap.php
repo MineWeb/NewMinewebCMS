@@ -153,7 +153,9 @@ I18n::config('_fallback', function (string $domain, string $locale) {
         Cache::write($cacheKey, $messages);
     }
 
-    return new Package('default', null, $messages);
+    Log::info(sprintf('Loaded %d messages for locale "%s" and domain "%s".', count($messages), $locale, $domain));
+
+    return new Package($domain, null, $messages);
 });
 
 Configure::write('Permissions.list', require CONFIG . 'permissions.php');

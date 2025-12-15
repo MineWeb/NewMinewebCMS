@@ -5,7 +5,6 @@ namespace App\Middleware;
 
 use App\Service\InstallState;
 use App\Service\PermissionService;
-use Cake\Datasource\ConnectionManager;
 use Cake\Log\Log;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use PDOException;
@@ -28,10 +27,6 @@ final class AuthContextMiddleware implements MiddlewareInterface
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $identity = null;
-        $isConnected = false;
-        $permissions = [];
-
         $request = $request
             ->withAttribute('auth.identity', null)
             ->withAttribute('auth.isConnected', false)
@@ -41,32 +36,32 @@ final class AuthContextMiddleware implements MiddlewareInterface
             return $handler->handle($request);
         }
 
+        $identity = null;
+        $isConnected = false;
+        $permissions = [];
+
         try {
             $session = $request->getSession();
             $userId = (int)$session->read('user');
 
-            if ($userId <= 0) {
-                return $handler->handle($request);
+            if ($userId > 0) {
+                $Users = $this->fetchTable('Users');
+
+                $identity = $Users
+                    ->find()
+                    ->select(['id', 'username', 'email', 'role_id'])
+                    ->where(['id' => $userId])
+                    ->first();
+
+                if ($identity === null) {
+                    $session->delete('user');
+                } else {
+                    $isConnected = true;
+
+                    $roleId = (int)($identity->get('role_id') ?? 0);
+                    $permissions = $roleId > 0 ? $this->permissionService->getRolePermissions($roleId) : [];
+                }
             }
-
-            $Users = $this->fetchTable('Users');
-
-            $identity = $Users
-                ->find()
-                ->select(['id', 'username', 'email', 'role_id'])
-                ->where(['id' => $userId])
-                ->first();
-
-            if ($identity === null) {
-                $session->delete('user');
-
-                return $handler->handle($request);
-            }
-
-            $isConnected = true;
-
-            $roleId = (int)($identity->get('role_id') ?? 0);
-            $permissions = $roleId > 0 ? $this->permissionService->getRolePermissions($roleId) : [];
         } catch (PDOException $e) {
             Log::warning('AuthContextMiddleware PDO Error: ' . $e->getMessage());
         } catch (Throwable $e) {

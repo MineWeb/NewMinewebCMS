@@ -3,6 +3,7 @@
 use Cake\Cache\Engine\FileEngine;
 use Cake\Database\Connection;
 use Cake\Database\Driver\Mysql;
+use Cake\Http\Exception\NotFoundException;
 use Cake\Log\Engine\FileLog;
 use Cake\Mailer\Transport\MailTransport;
 use function Cake\Core\env;
@@ -183,7 +184,9 @@ return [
      */
     'Error' => [
         'errorLevel' => E_ALL,
-        'skipLog' => [],
+        'skipLog' => [
+            NotFoundException::class,
+        ],
         'log' => true,
         'trace' => true,
         'ignoredDeprecationPaths' => [],
@@ -422,7 +425,7 @@ return [
      * To use database sessions, load the SQL file located at config/schema/sessions.sql
      */
     'Session' => [
-        'defaults' => 'cake',
+        'defaults' => 'php',
     ],
 
     /**

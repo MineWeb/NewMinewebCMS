@@ -6,10 +6,12 @@ namespace App;
 use App\Middleware\AuthContextMiddleware;
 use App\Middleware\BanMiddleware;
 use App\Middleware\InstallMiddleware;
+use App\Middleware\LocaleMiddleware;
 use App\Middleware\MaintenanceMiddleware;
 use Cake\Cache\Cache;
 use Cake\Core\Configure;
 use Cake\Core\ContainerInterface;
+use Cake\Datasource\ConnectionManager;
 use Cake\Datasource\FactoryLocator;
 use Cake\Error\Middleware\ErrorHandlerMiddleware;
 use Cake\Http\BaseApplication;
@@ -24,17 +26,20 @@ use Throwable;
 
 final class Application extends BaseApplication
 {
+    private const SESSION_TYPES = ['php', 'cake', 'database'];
+
     public function bootstrap(): void
     {
         parent::bootstrap();
 
         if (PHP_SAPI === 'cli') {
             $this->bootstrapCli();
-        } else {
-            FactoryLocator::add('Table', (new TableLocator())->allowFallbackClass(false));
+            return;
         }
 
-        if (Configure::read('debug')) {
+        FactoryLocator::add('Table', (new TableLocator())->allowFallbackClass(false));
+
+        if (Configure::read('debug') && extension_loaded('pdo_sqlite')) {
             $this->addPlugin('DebugKit');
         }
 
@@ -43,6 +48,8 @@ final class Application extends BaseApplication
 
         Configure::write('RuntimePlugins.addons', $addons);
         Configure::write('RuntimePlugins.themes', $themes);
+
+        $this->applyRuntimeSessionDefaults();
     }
 
     public function middleware(MiddlewareQueue $middlewareQueue): MiddlewareQueue
@@ -53,14 +60,15 @@ final class Application extends BaseApplication
             ->add(new AssetMiddleware([
                 'cacheTime' => Configure::read('Asset.cacheTime'),
             ]))
+            ->add(new LocaleMiddleware())
             ->add(new AuthContextMiddleware())
             ->add(new RoutingMiddleware($this))
+            ->add(new BodyParserMiddleware())
             ->add(new CsrfProtectionMiddleware([
                 'httponly' => true,
             ]))
             ->add(new BanMiddleware())
-            ->add(new MaintenanceMiddleware())
-            ->add(new BodyParserMiddleware());
+            ->add(new MaintenanceMiddleware());
 
         return $middlewareQueue;
     }
@@ -80,6 +88,74 @@ final class Application extends BaseApplication
 
         Configure::write('RuntimePlugins.addons', $addons);
         Configure::write('RuntimePlugins.themes', $themes);
+
+        $this->applyRuntimeSessionDefaults();
+    }
+
+    private function applyRuntimeSessionDefaults(): void
+    {
+        $type = $this->resolveSessionType();
+
+        if ($type === 'database' && !$this->databaseSessionsReady()) {
+            $type = 'php';
+            Cache::write('runtime_session_type', $type);
+        }
+
+        Configure::write('Session.defaults', $type);
+    }
+
+    private function databaseSessionsReady(): bool
+    {
+        if (!Configure::read('Install.dbConfigured') || !Configure::read('Install.installed')) {
+            return false;
+        }
+
+        try {
+            $connection = ConnectionManager::get('default');
+            $tables = $connection->getSchemaCollection()->listTables();
+
+            return in_array('sessions', $tables, true);
+        } catch (Throwable) {
+            return false;
+        }
+    }
+
+    private function resolveSessionType(): string
+    {
+        if (!Configure::read('Install.dbConfigured') || !Configure::read('Install.installed')) {
+            return 'php';
+        }
+
+        $cacheKey = 'runtime_session_type';
+        $cached = Cache::read($cacheKey);
+        if (is_string($cached) && in_array($cached, self::SESSION_TYPES, true)) {
+            return $cached;
+        }
+
+        $type = 'php';
+
+        try {
+            $locator = FactoryLocator::get('Table');
+            $Configurations = $locator->get('Configurations');
+
+            $row = $Configurations
+                ->find()
+                ->select(['session_type'])
+                ->where(['id' => 1])
+                ->enableHydration(false)
+                ->first();
+
+            $value = is_array($row) ? (string)($row['session_type'] ?? '') : '';
+            if (in_array($value, self::SESSION_TYPES, true)) {
+                $type = $value;
+            }
+        } catch (Throwable) {
+            $type = 'php';
+        }
+
+        Cache::write($cacheKey, $type);
+
+        return $type;
     }
 
     private function loadEnabledAddons(): array

@@ -177,7 +177,8 @@ class ConfigurationsTable extends Table
         $validator
             ->scalar('session_type')
             ->maxLength('session_type', 10)
-            ->allowEmptyString('session_type');
+            ->allowEmptyString('session_type')
+            ->inList('session_type', ['php', 'cake', 'database']);
 
         $validator
             ->scalar('microsoft_client_id')

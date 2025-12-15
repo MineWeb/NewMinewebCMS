@@ -5,15 +5,11 @@ namespace App\Controller\Admin;
 
 use App\Controller\AppController;
 use App\Service\LangService;
+use Cake\Cache\Cache;
 use Cake\Http\Response;
 use Cake\I18n\I18n;
 use Throwable;
 
-/**
- * @property \App\Controller\Component\AuthComponent $Auth
- * @property \App\Controller\Component\HistoryComponent $History
- * @property \App\Service\ConfigurationService $config
- */
 class ConfigurationController extends AppController
 {
     public function index(): ?Response
@@ -88,6 +84,7 @@ class ConfigurationController extends AppController
 
             $this->History->set('EDIT_CONFIGURATION', 'configuration');
             $this->config->clearCache();
+            Cache::delete('runtime_session_type');
 
             return $this->response->withStringBody(json_encode([
                 'status' => true,
