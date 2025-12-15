@@ -4,7 +4,9 @@ declare(strict_types=1);
 namespace App\Controller\Component;
 
 use App\Model\Table\HistoriesTable;
+use App\Service\AuthService;
 use Cake\Controller\Component;
+use Cake\Controller\ComponentRegistry;
 use Cake\Log\Log;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use Cake\ORM\ResultSet;
@@ -15,6 +17,17 @@ final class HistoryComponent extends Component
     use LocatorAwareTrait;
 
     private HistoriesTable $Histories;
+    private AuthService $authService;
+
+    public function __construct(
+        ComponentRegistry $registry,
+        array $config = [],
+        ?AuthService $authService = null,
+    ) {
+        parent::__construct($registry, $config);
+
+        $this->authService = $authService ?? new AuthService();
+    }
 
     public function initialize(array $config): void
     {
@@ -26,8 +39,8 @@ final class HistoryComponent extends Component
     public function set(string $action, string $category, mixed $optional = null, ?int $userId = null): bool
     {
         try {
-            $controller = $this->getController();
-            $resolvedUserId = $userId ?? ($controller->Auth->id() ?: null);
+            $request = $this->getController()->getRequest();
+            $resolvedUserId = $userId ?? $this->authService->id($request);
 
             if (!$resolvedUserId) {
                 return false;
@@ -43,6 +56,7 @@ final class HistoryComponent extends Component
             return (bool)$this->Histories->save($entity);
         } catch (Throwable $e) {
             $this->logThrowable('HistoryComponent::set', $e);
+
             return false;
         }
     }
@@ -68,6 +82,7 @@ final class HistoryComponent extends Component
             return $this->translateActions($query->all());
         } catch (Throwable $e) {
             $this->logThrowable('HistoryComponent::get', $e);
+
             return [];
         }
     }
@@ -85,6 +100,7 @@ final class HistoryComponent extends Component
             return $this->translateActions($query->all());
         } catch (Throwable $e) {
             $this->logThrowable('HistoryComponent::getByAuthor', $e);
+
             return [];
         }
     }
