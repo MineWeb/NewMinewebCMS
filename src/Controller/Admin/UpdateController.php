@@ -10,6 +10,9 @@ use FilesystemIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
+/**
+ * @property \App\Controller\Component\UpdateComponent $Update
+ */
 final class UpdateController extends AppController
 {
     public function index(): ?Response

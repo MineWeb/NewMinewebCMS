@@ -31,6 +31,8 @@
                     </div>
 
                     <div class="card-body">
+                        <div id="update-msg"></div>
+                        <br>
                         <div class="overlay-wrapper">
                             <div id="update-overlay" class="overlay dark d-none">
                                 <i class="fas fa-2x fa-sync-alt fa-spin"></i>
@@ -43,7 +45,8 @@
                                             <i class="fas fa-code-branch"></i>
                                         </span>
                                         <div class="info-box-content">
-                                            <span class="info-box-text text-muted text-uppercase"><?= __('UPDATE__CMS_VERSION') ?></span>
+                                            <span
+                                                class="info-box-text text-muted text-uppercase"><?= __('UPDATE__CMS_VERSION') ?></span>
                                             <span class="info-box-number"><?= h($current) ?></span>
                                         </div>
                                     </div>
@@ -55,7 +58,8 @@
                                             <i class="fas fa-cloud-download-alt"></i>
                                         </span>
                                         <div class="info-box-content">
-                                            <span class="info-box-text text-muted text-uppercase"><?= __('UPDATE__LAST_VERSION') ?></span>
+                                            <span
+                                                class="info-box-text text-muted text-uppercase"><?= __('UPDATE__LAST_VERSION') ?></span>
                                             <span class="info-box-number"><?= h($latest) ?></span>
                                         </div>
                                     </div>
@@ -71,12 +75,14 @@
                                     <p class="mb-0"><?= __('UPDATE__MAJOR_WARNING_EXTENSION') ?></p>
                                 </div>
                             <?php } ?>
+                            <br>
 
-                            <div id="update-msg"></div>
 
                             <div class="mt-3">
                                 <div id="update-progress" class="progress progress-sm d-none">
-                                    <div id="update-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width: 0%"></div>
+                                    <div id="update-progress-bar"
+                                         class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
+                                         style="width: 0%"></div>
                                 </div>
                             </div>
                         </div>
@@ -90,7 +96,8 @@
                             <a class="btn btn-outline-secondary btn-sm" href="<?= h($clearCacheUrl) ?>">
                                 <i class="fas fa-broom mr-1"></i><?= __('UPDATE__CLEAR_CACHE') ?>
                             </a>
-                            <a class="btn btn-outline-secondary btn-sm" target="_blank" rel="noopener noreferrer" href="<?= h($changelogUrl) ?>">
+                            <a class="btn btn-outline-secondary btn-sm" target="_blank" rel="noopener noreferrer"
+                               href="<?= h($changelogUrl) ?>">
                                 <i class="fas fa-external-link-alt mr-1"></i><?= __('UPDATE__VIEW_CHANGELOG') ?>
                             </a>
                         </div>
@@ -142,9 +149,12 @@
                 headers: {
                     'X-CSRF-Token': csrf,
                     'Accept': 'application/json'
-                },
-                body: new FormData()
+                }
             });
+
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
 
             return response.json();
         }
@@ -156,20 +166,20 @@
 
                 let data = await callUpdate('0');
 
-                if (data && data.statut === 'continue') {
+                if (data && data.status === 'continue') {
                     bar.style.width = '55%';
                     data = await callUpdate('1');
                 }
 
-                if (data && data.statut === 'success') {
+                if (data && data.status === 'success') {
                     bar.style.width = '100%';
-                    setMsg('success', '<b><?= addslashes(__('GLOBAL__SUCCESS')) ?> :</b> ' + (data.msg || ''));
+                    setMsg('success', '<b><?= addslashes(__('GLOBAL__SUCCESS')) ?> :</b> ' + (data.messages || ''));
                     window.location = clearCacheUrl;
                     return;
                 }
 
-                if (data && data.statut === 'error') {
-                    setMsg('danger', '<b><?= addslashes(__('GLOBAL__ERROR')) ?> :</b> ' + (data.msg || ''));
+                if (data && data.status === 'error') {
+                    setMsg('danger', '<b><?= addslashes(__('GLOBAL__ERROR')) ?> :</b> ' + (data.messages || ''));
                     setBusy(false);
                     return;
                 }
