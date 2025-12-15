@@ -3,25 +3,24 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Table\UsersTable;
+use App\Service\UserAuthService;
 use Cake\Event\Event;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Response;
 use Cake\Routing\Router;
 
-/**
- * @property \App\Controller\Component\AuthComponent $Auth
- * @property \App\Controller\Component\APIComponent $API
- * @property \App\Controller\Component\UtilComponent $Util
- *
- * @property \App\Model\Table\UsersTable $User
- * @property \App\Model\Table\ServersTable $Server
- * @property \App\Model\Table\ConfigurationsTable $Configuration
- */
-class UserController extends AppController
+final class UserController extends AppController
 {
+    private UsersTable $Users;
+    private UserAuthService $userAuth;
+
     public function initialize(): void
     {
         parent::initialize();
+
+        $this->Users = $this->fetchTable('Users');
+        $this->userAuth = new UserAuthService();
 
         $this->loadComponent('API');
     }
@@ -55,9 +54,9 @@ class UserController extends AppController
                 $userId = (int)$id;
             }
 
-            $p = $identity->get('username');
-            if (is_string($p)) {
-                $username = $p;
+            $u = $identity->get('username');
+            if (is_string($u)) {
+                $username = $u;
             }
         }
 
@@ -77,7 +76,7 @@ class UserController extends AppController
         $this->set('twoFactorAuthStatus', !empty($infos));
         $this->set('title_for_layout', $username);
 
-        $this->viewBuilder()->setLayout($this->config->get('layout'));
+        $this->viewBuilder()->setLayout((string)$this->config->get('layout'));
 
         if ($this->addons->isInstalled('eywek.shop')) {
             $itemsHistoryTable = $this->fetchTable('Shop.ItemsBuyHistory');
@@ -106,8 +105,8 @@ class UserController extends AppController
         }
         $this->set(compact('available_ranks'));
 
-        $this->set('can_cape', $this->API->can_cape());
-        $this->set('can_skin', $this->API->can_skin());
+        $this->set('can_cape', (bool)$this->API->can_cape());
+        $this->set('can_skin', (bool)$this->API->can_skin());
 
         $apiConfigTable = $this->fetchTable('ApiConfigurations');
         $configAPI = $apiConfigTable->find()->first();
@@ -169,51 +168,48 @@ class UserController extends AppController
 
         $data = (array)$this->getRequest()->getData();
 
-        if (empty($data['password']) || empty($data['password_confirmation'])) {
+        $passwordRaw = (string)($data['password'] ?? '');
+        $passwordConfirmRaw = (string)($data['password_confirmation'] ?? '');
+
+        if ($passwordRaw === '' || $passwordConfirmRaw === '') {
             return $this->json([
                 'status' => false,
                 'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ], 400);
         }
 
-        $identity = $this->Auth->identity();
-        $username = '';
-        $userId = null;
-
-        if (is_object($identity) && method_exists($identity, 'get')) {
-            $p = $identity->get('username');
-            if (is_string($p)) {
-                $username = $p;
-            }
-
-            $id = $identity->get('id');
-            if (is_numeric($id)) {
-                $userId = (int)$id;
-            }
-        }
-
-        if ($username === '' || $userId === null) {
-            return $this->json([
-                'status' => false,
-                'messages' => __('USER__ERROR_MUST_BE_LOGGED'),
-            ], 403);
-        }
-
-        $password = $this->Util->password((string)$data['password'], $username);
-        $password_confirmation = $this->Util->password((string)$data['password_confirmation'], $username, $password);
-
-        if ($password !== $password_confirmation) {
+        if ($passwordRaw !== $passwordConfirmRaw) {
             return $this->json([
                 'status' => false,
                 'messages' => __('USER__ERROR_PASSWORDS_NOT_SAME'),
             ], 400);
         }
 
+        $identity = $this->Auth->identity();
+        $userId = null;
+
+        if (is_object($identity) && method_exists($identity, 'get')) {
+            $id = $identity->get('id');
+            if (is_numeric($id)) {
+                $userId = (int)$id;
+            }
+        }
+
+        if ($userId === null) {
+            return $this->json([
+                'status' => false,
+                'messages' => __('USER__ERROR_MUST_BE_LOGGED'),
+            ], 403);
+        }
+
+        $hashedPassword = $this->userAuth->hashPassword($passwordRaw);
+
         $event = new Event('beforeUpdatePassword', $this, [
             'user' => $identity,
-            'new_password' => $password,
+            'new_password' => $hashedPassword,
         ]);
         $this->getEventManager()->dispatch($event);
+
         if ($event->isStopped()) {
             $result = $event->getResult();
             if ($result instanceof Response) {
@@ -223,12 +219,12 @@ class UserController extends AppController
             return $this->json((array)$result, 400);
         }
 
-        $userEntity = $this->User->get($userId);
+        $userEntity = $this->Users->get($userId);
         $userEntity->patch([
-            'password' => $password,
-            'password_hash' => $this->Util->getPasswordHashType(),
+            'password' => $hashedPassword,
+            'password_hash' => $this->userAuth->getPasswordHashType(),
         ]);
-        $this->User->save($userEntity);
+        $this->Users->save($userEntity);
 
         $this->clearAuthContext();
 
@@ -255,21 +251,24 @@ class UserController extends AppController
 
         $data = (array)$this->getRequest()->getData();
 
-        if (empty($data['email']) || empty($data['email_confirmation'])) {
+        $email = (string)($data['email'] ?? '');
+        $emailConfirmation = (string)($data['email_confirmation'] ?? '');
+
+        if ($email === '' || $emailConfirmation === '') {
             return $this->json([
                 'status' => false,
                 'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ], 400);
         }
 
-        if ((string)$data['email'] !== (string)$data['email_confirmation']) {
+        if ($email !== $emailConfirmation) {
             return $this->json([
                 'status' => false,
                 'messages' => __('USER__ERROR_EMAIL_NOT_SAME'),
             ], 400);
         }
 
-        if (!filter_var((string)$data['email'], FILTER_VALIDATE_EMAIL)) {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return $this->json([
                 'status' => false,
                 'messages' => __('USER__ERROR_EMAIL_NOT_VALID'),
@@ -292,9 +291,10 @@ class UserController extends AppController
 
         $event = new Event('beforeUpdateEmail', $this, [
             'user' => $identity,
-            'new_email' => (string)$data['email_confirmation'],
+            'new_email' => $emailConfirmation,
         ]);
         $this->getEventManager()->dispatch($event);
+
         if ($event->isStopped()) {
             $result = $event->getResult();
             if ($result instanceof Response) {
@@ -304,11 +304,11 @@ class UserController extends AppController
             return $this->json((array)$result, 400);
         }
 
-        $newEmail = htmlentities((string)$data['email']);
+        $newEmail = htmlentities($email, ENT_QUOTES, 'UTF-8');
 
-        $userEntity = $this->User->get($userId);
+        $userEntity = $this->Users->get($userId);
         $userEntity->patch(['email' => $newEmail]);
-        $this->User->save($userEntity);
+        $this->Users->save($userEntity);
 
         $this->clearAuthContext();
 

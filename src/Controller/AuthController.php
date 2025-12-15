@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Model\Table\UsersTable;
-use App\Service\ConfigurationService;
 use App\Service\UserAuthService;
 use Cake\Http\Cookie\Cookie;
 use Cake\Http\Exception\BadRequestException;
@@ -34,7 +33,7 @@ class AuthController extends AppController
         return $this->response
             ->withStatus($status)
             ->withType('application/json')
-            ->withStringBody(json_encode($payload));
+            ->withStringBody((string)json_encode($payload));
     }
 
     private function clearAuthContext(): void
@@ -46,11 +45,14 @@ class AuthController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!$this->getRequest()->is('post')) {
+        $request = $this->getRequest();
+
+        if (!$request->is('post')) {
             throw new BadRequestException();
         }
 
-        $data = (array)$this->getRequest()->getData();
+        $data = (array)$request->getData();
+        $ip = $request->clientIp();
 
         $conditionsRequired = (bool)$this->config->get('condition');
         if (
@@ -63,11 +65,11 @@ class AuthController extends AppController
             return $this->json(['status' => false, 'messages' => __('ERROR__FILL_ALL_FIELDS')], 400);
         }
 
-        if ($data['password'] !== $data['password_confirmation']) {
+        if ((string)$data['password'] !== (string)$data['password_confirmation']) {
             return $this->json(['status' => false, 'messages' => __('USER__ERROR_PASSWORDS_NOT_SAME')], 400);
         }
 
-        if ($this->config->get('check_uuid')) {
+        if ((bool)$this->config->get('check_uuid')) {
             $username = (string)$data['username'];
             $res = @file_get_contents('https://api.mojang.com/users/profiles/minecraft/' . rawurlencode($username));
             if (!$res) {
@@ -86,12 +88,12 @@ class AuthController extends AppController
         if ($captchaType === 2 || $captchaType === 3) {
             $validCaptcha = $this->Util->isValidReCaptcha(
                 (string)($data['recaptcha'] ?? ''),
-                $this->Util->getIP(),
+                $ip,
                 (string)$this->config->get('captcha_secret'),
                 $captchaType
             );
         } else {
-            $captcha = $this->getRequest()->getSession()->read('captcha_code');
+            $captcha = $request->getSession()->read('captcha_code');
             $validCaptcha = (string)$captcha !== '' && (string)$captcha === (string)($data['captcha'] ?? '');
         }
 
@@ -99,14 +101,14 @@ class AuthController extends AppController
             return $this->json(['status' => false, 'messages' => __('FORM__INVALID_CAPTCHA')], 400);
         }
 
-        $userId = $this->userAuth->createUser($data, $this->Util->getIP());
+        $userId = $this->userAuth->createUser($data, $ip);
 
         if ((bool)$this->config->get('confirm_mail_signup')) {
             $confirmCode = substr(md5(uniqid('', true)), 0, 12);
 
             $mail = __('EMAIL__CONTENT_CONFIRM_MAIL', [
-                'LINK' => $this->config->get('website_url') . '/auth/confirm/' . $confirmCode,
-                'IP' => $this->Util->getIP(),
+                'LINK' => (string)$this->config->get('website_url') . '/auth/confirm/' . $confirmCode,
+                'IP' => $ip,
                 'USERNAME' => (string)$data['username'],
                 'DATE' => FrozenTime::now()->i18nFormat('dd/MM/yyyy HH:mm'),
             ]);
@@ -119,7 +121,7 @@ class AuthController extends AppController
         }
 
         if (!(bool)$this->config->get('confirm_mail_signup_block')) {
-            $this->getRequest()->getSession()->write('user', $userId);
+            $request->getSession()->write('user', $userId);
             $this->clearAuthContext();
         }
 
@@ -130,11 +132,14 @@ class AuthController extends AppController
     {
         $this->disableAutoRender();
 
-        if (!$this->getRequest()->is('post')) {
+        $request = $this->getRequest();
+
+        if (!$request->is('post')) {
             throw new BadRequestException();
         }
 
-        $data = (array)$this->getRequest()->getData();
+        $data = (array)$request->getData();
+        $ip = (string)$request->clientIp();
 
         if (empty($data['username']) || empty($data['password'])) {
             return $this->json(['status' => false, 'messages' => __('ERROR__FILL_ALL_FIELDS')], 400);
@@ -148,7 +153,7 @@ class AuthController extends AppController
         $login = $this->userAuth->attemptLogin(
             $user,
             (string)$data['password'],
-            $this->Util->getIP(),
+            $ip,
             (bool)$this->config->get('confirm_mail_signup_block'),
             (bool)$this->config->get('check_uuid')
         );
@@ -157,7 +162,7 @@ class AuthController extends AppController
             return $this->json(['status' => false, 'messages' => __((string)$login)], 400);
         }
 
-        $this->getRequest()->getSession()->write('user', (int)$login['session']);
+        $request->getSession()->write('user', (int)$login['session']);
         $this->clearAuthContext();
 
         return $this->json(['status' => true, 'messages' => __('USER__REGISTER_LOGIN')]);
@@ -167,8 +172,10 @@ class AuthController extends AppController
     {
         $this->disableAutoRender();
 
-        $this->getRequest()->getSession()->delete('user');
-        $this->getRequest()->getSession()->delete('user_id_two_factor_auth');
+        $request = $this->getRequest();
+
+        $request->getSession()->delete('user');
+        $request->getSession()->delete('user_id_two_factor_auth');
         $this->clearAuthContext();
 
         return $this->redirect($this->referer())

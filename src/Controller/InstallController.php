@@ -17,16 +17,12 @@ use PDO;
 use PDOException;
 use Throwable;
 
-/**
- * @property \App\Controller\Component\UtilComponent $Util
- */
 class InstallController extends BaseController
 {
     public function initialize(): void
     {
         parent::initialize();
 
-        $this->loadComponent('Util');
         $this->viewBuilder()->setLayout('install');
     }
 
@@ -295,12 +291,9 @@ class InstallController extends BaseController
     private function handleUserPost(): Response
     {
         $this->disableAutoRender();
-
         $data = $this->request->getData();
 
-        $ip = method_exists($this->Util, 'getIP')
-            ? (string)$this->Util->getIP()
-            : $this->request->clientIp();
+        $ip = $this->request->clientIp();
 
         if (empty($data['username']) || empty($data['password']) || empty($data['password_confirmation']) || empty($data['email'])) {
             return $this->response

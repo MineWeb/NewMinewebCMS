@@ -113,15 +113,6 @@ class UtilComponent extends Component
         return $table->get($key);
     }
 
-    public function getIP(): string
-    {
-        if (isset($_SERVER['HTTP_CF_CONNECTING_IP'])) {
-            return htmlentities((string)$_SERVER['HTTP_CF_CONNECTING_IP']);
-        }
-
-        return isset($_SERVER['REMOTE_ADDR']) ? htmlentities((string)$_SERVER['REMOTE_ADDR']) : '0.0.0.0';
-    }
-
     public function prepareMail(string $to, string $subject, string $message): self
     {
         $this->to = $to;

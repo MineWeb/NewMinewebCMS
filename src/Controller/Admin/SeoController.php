@@ -9,6 +9,10 @@ use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
 use Cake\Routing\Router;
 
+/**
+ * @property \App\Controller\Component\AuthComponent $Auth
+ * @property \App\Controller\Component\UtilComponent $Util
+ */
 class SeoController extends AppController
 {
     public function index(): ?Response
@@ -174,7 +178,8 @@ class SeoController extends AppController
 
         $page = (string)$this->getRequest()->getData('page', '');
 
-        if ($page === ''
+        if (
+            $page === ''
             || (
                 (string)$this->getRequest()->getData('title', '') === ''
                 && (string)$this->getRequest()->getData('description', '') === ''
