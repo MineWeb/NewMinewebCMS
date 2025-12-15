@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\LoginRetry;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
@@ -12,6 +13,8 @@ class LoginRetriesTable extends Table
     {
         $this->setTable('login_retries');
         $this->setPrimaryKey('id');
+
+        $this->setEntityClass(LoginRetry::class);
 
         $this->addBehavior('Timestamp', [
             'events' => [

@@ -102,12 +102,12 @@ return [
         'default' => [
             'className' => FileEngine::class,
             'path' => CACHE,
-            'url' => env('CACHE_DEFAULT_URL', null),
+            'url' => env('CACHE_DEFAULT_URL'),
         ],
 
         '_cake_core_' => [
             'className' => FileEngine::class,
-            'prefix' => 'myapp_cake_core_',
+            'prefix' => 'mw_cake_core_',
             'path' => CACHE . 'persistent' . DS,
             'serialize' => true,
             'duration' => '+1 years',
@@ -122,7 +122,7 @@ return [
          */
         '_cake_translations_' => [
             'className' => FileEngine::class,
-            'prefix' => 'myapp_cake_translations_',
+            'prefix' => 'mw_cake_translations_',
             'path' => CACHE . 'persistent' . DS,
             'serialize' => true,
             'duration' => '+1 years',
@@ -137,7 +137,7 @@ return [
          */
         '_cake_model_' => [
             'className' => FileEngine::class,
-            'prefix' => 'myapp_cake_model_',
+            'prefix' => 'mw_cake_model_',
             'path' => CACHE . 'models' . DS,
             'serialize' => true,
             'duration' => '+1 years',
@@ -425,7 +425,7 @@ return [
      * To use database sessions, load the SQL file located at config/schema/sessions.sql
      */
     'Session' => [
-        'defaults' => 'php',
+        'defaults' => 'cake',
     ],
 
     /**

@@ -14,6 +14,7 @@ class MaintenancesTable extends Table
         $this->setTable('maintenances');
         $this->setPrimaryKey('id');
         $this->setDisplayField('url');
+        $this->setEntityClass(Maintenance::class);
         $this->addBehavior('Timestamp', [
             'events' => [
                 'Model.beforeSave' => [

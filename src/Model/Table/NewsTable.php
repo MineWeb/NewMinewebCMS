@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\News;
 use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
@@ -17,6 +18,8 @@ class NewsTable extends Table
         $this->setTable('news');
         $this->setPrimaryKey('id');
         $this->setDisplayField('title');
+
+        $this->setEntityClass(News::class);
 
         $this->belongsTo('Users', [
             'foreignKey' => 'user_id',

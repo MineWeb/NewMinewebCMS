@@ -26,7 +26,7 @@ use Throwable;
 
 final class Application extends BaseApplication
 {
-    private const SESSION_TYPES = ['php', 'cake', 'database'];
+    private const SESSION_TYPES = ['php', 'cake', 'cache', 'database'];
 
     public function bootstrap(): void
     {
@@ -34,6 +34,7 @@ final class Application extends BaseApplication
 
         if (PHP_SAPI === 'cli') {
             $this->bootstrapCli();
+
             return;
         }
 
@@ -79,10 +80,6 @@ final class Application extends BaseApplication
 
     protected function bootstrapCli(): void
     {
-        $this->addOptionalPlugin('Cake/Repl');
-        $this->addOptionalPlugin('Bake');
-        $this->addPlugin('Migrations');
-
         $addons = $this->loadEnabledAddons();
         $themes = $this->loadInstalledThemes();
 
@@ -101,7 +98,25 @@ final class Application extends BaseApplication
             Cache::write('runtime_session_type', $type);
         }
 
+        if ($type === 'cache' && !$this->cacheSessionsReady()) {
+            $type = 'php';
+            Cache::write('runtime_session_type', $type);
+        }
+
         Configure::write('Session.defaults', $type);
+
+        if ($type === 'cache') {
+            Configure::write('Session.handler.config', 'sessions');
+        }
+    }
+
+    private function cacheSessionsReady(): bool
+    {
+        try {
+            return Cache::getConfig('sessions') !== null;
+        } catch (Throwable) {
+            return false;
+        }
     }
 
     private function databaseSessionsReady(): bool

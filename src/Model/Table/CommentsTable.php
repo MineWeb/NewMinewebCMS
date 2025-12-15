@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Comment;
 use ArrayObject;
 use Cake\Cache\Cache;
 use Cake\Datasource\EntityInterface;
@@ -20,6 +21,8 @@ class CommentsTable extends Table
 
         $this->setTable('comments');
         $this->setPrimaryKey('id');
+
+        $this->setEntityClass(Comment::class);
 
         $this->belongsTo('Users', [
             'foreignKey' => 'user_id',

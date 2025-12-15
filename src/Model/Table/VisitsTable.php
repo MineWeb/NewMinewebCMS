@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Visit;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
@@ -14,6 +15,8 @@ class VisitsTable extends Table
 
         $this->setTable('visits');
         $this->setPrimaryKey('id');
+
+        $this->setEntityClass(Visit::class);
 
         $this->belongsTo('Users', [
             'foreignKey' => 'user_id',

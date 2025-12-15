@@ -218,6 +218,8 @@
         "CONFIG__KEY_SESSION_TYPE": "Type d'enregistrement des sessions",
         "CONFIG__KEY_SESSION_TYPE_INFO": "Ceci est un réglage avancé de votre site, il n'est pas nécessaire de le modifier si vous n'en avez pas l'utilité. Par défaut, le CMS utilise les sessions php.",
         "CONFIG__KEY_SESSION_TYPE_PHP": "PHP \/ Par défaut",
+        "CONFIG__KEY_SESSION_TYPE_CAKE": "CakePHP",
+        "CONFIG__KEY_SESSION_TYPE_CACHE": "Cache",
         "CONFIG__KEY_SESSION_TYPE_DB": "Base de données",
         "CONFIG__CHECK_UUID": "Permettre aux utilisateurs seulement premium de s'inscrire",
         "CONFIG__CHECK_UUID_CHANGE": "Ainsi que l'activation de la sauvegarde des UUID pour changer automatiquement le pseudo du joueur ?",

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Server;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
@@ -13,6 +14,8 @@ class ServersTable extends Table
         $this->setTable('servers');
         $this->setPrimaryKey('id');
         $this->setDisplayField('name');
+
+        $this->setEntityClass(Server::class);
 
         $this->hasMany('ServerCmds', [
             'foreignKey' => 'server_id',

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Page;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -14,6 +15,8 @@ class PagesTable extends Table
         $this->setTable('pages');
         $this->setPrimaryKey('id');
         $this->setDisplayField('title');
+
+        $this->setEntityClass(Page::class);
 
         $this->belongsTo('Users', [
             'foreignKey' => 'user_id',

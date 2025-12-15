@@ -331,6 +331,8 @@
                                                     'session_type',
                                                     [
                                                         'php' => __('CONFIG__KEY_SESSION_TYPE_PHP'),
+                                                        'cake' => __('CONFIG__KEY_SESSION_TYPE_CAKE'),
+                                                        'cache' => __('CONFIG__KEY_SESSION_TYPE_CACHE'),
                                                         'database' => __('CONFIG__KEY_SESSION_TYPE_DB'),
                                                     ],
                                                     [

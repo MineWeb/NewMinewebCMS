@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\ServerCmd;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -13,6 +14,7 @@ class ServerCmdsTable extends Table
     {
         $this->setTable('server_cmds');
         $this->setPrimaryKey('id');
+        $this->setEntityClass(ServerCmd::class);
 
         $this->belongsTo('Servers', [
             'foreignKey' => 'server_id',

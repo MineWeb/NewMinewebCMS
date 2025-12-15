@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\ApiConfiguration;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -13,6 +14,7 @@ class ApiConfigurationsTable extends Table
     {
         $this->setTable('api_configurations');
         $this->setPrimaryKey('id');
+        $this->setEntityClass(ApiConfiguration::class);
 
         $this->belongsTo('Servers', [
             'foreignKey' => 'skin_restorer_server_id',

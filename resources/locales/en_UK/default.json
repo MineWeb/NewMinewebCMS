@@ -234,6 +234,8 @@
         "CONFIG__KEY_SESSION_TYPE": "Session Recording Type",
         "CONFIG__KEY_SESSION_TYPE_INFO": "This is an advanced tuning of your site, you do not need to change it if you do not use it, by default the CMS uses PHP sessions.",
         "CONFIG__KEY_SESSION_TYPE_PHP": "PHP/Default",
+        "CONFIG__KEY_SESSION_TYPE_CAKE": "CakePHP",
+        "CONFIG__KEY_SESSION_TYPE_CACHE": "Cache",
         "CONFIG__KEY_SESSION_TYPE_DB": "Database",
 
         "EMAIL__TITLE_CONFIRM_MAIL": "Confirm your email",

@@ -7,12 +7,39 @@ final class CreateSessions extends AbstractMigration
 {
     public function change(): void
     {
-        $table = $this->table('sessions', ['id' => false, 'primary_key' => ['id']]);
+        $table = $this->table('sessions', [
+            'id' => false,
+            'primary_key' => ['id'],
+            'engine' => 'InnoDB',
+            'encoding' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+        ]);
 
         $table
-            ->addColumn('id', 'string', ['limit' => 40, 'null' => false])
-            ->addColumn('data', 'blob', ['null' => true])
-            ->addColumn('expires', 'integer', ['null' => true, 'limit' => 11])
+            ->addColumn('id', 'string', [
+                'limit' => 40,
+                'null' => false,
+                'encoding' => 'ascii',
+                'collation' => 'ascii_bin',
+            ])
+            ->addColumn('created', 'datetime', [
+                'null' => true,
+                'default' => 'CURRENT_TIMESTAMP',
+            ])
+            ->addColumn('modified', 'datetime', [
+                'null' => true,
+                'default' => 'CURRENT_TIMESTAMP',
+                'update' => 'CURRENT_TIMESTAMP',
+            ])
+            ->addColumn('data', 'blob', [
+                'null' => true,
+                'default' => null,
+            ])
+            ->addColumn('expires', 'integer', [
+                'null' => true,
+                'signed' => false,
+                'limit' => 10,
+            ])
             ->addIndex(['expires'])
             ->create();
     }

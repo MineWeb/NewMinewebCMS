@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Like;
 use ArrayObject;
 use Cake\Cache\Cache;
 use Cake\Datasource\EntityInterface;
@@ -17,6 +18,8 @@ class LikesTable extends Table
     {
         $this->setTable('likes');
         $this->setPrimaryKey('id');
+
+        $this->setEntityClass(Like::class);
 
         $this->belongsTo('News', [
             'foreignKey' => 'news_id',

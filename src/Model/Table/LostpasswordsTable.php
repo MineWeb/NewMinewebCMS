@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Lostpassword;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
@@ -12,6 +13,8 @@ class LostpasswordsTable extends Table
     {
         $this->setTable('lostpasswords');
         $this->setPrimaryKey('id');
+
+        $this->setEntityClass(Lostpassword::class);
 
         $this->addBehavior('Timestamp', [
             'events' => [

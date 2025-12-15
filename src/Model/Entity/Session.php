@@ -5,16 +5,17 @@ namespace App\Model\Entity;
 
 use Cake\ORM\Entity;
 
-/**
- * @property string $id
- * @property string|null $data
- * @property int|null $expires
- */
 class Session extends Entity
 {
     protected array $_accessible = [
         'id' => true,
+        'created' => true,
+        'modified' => true,
         'data' => true,
         'expires' => true,
+    ];
+
+    protected array $_hidden = [
+        'data',
     ];
 }

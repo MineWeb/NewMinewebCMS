@@ -21,6 +21,8 @@ class NotificationsTable extends Table
         $this->setTable('notifications');
         $this->setPrimaryKey('id');
 
+        $this->setEntityClass(Notification::class);
+
         $this->addBehavior('Timestamp', [
             'events' => [
                 'Model.beforeSave' => [

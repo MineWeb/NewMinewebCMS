@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Model\Table;
 
 use App\Controller\Component\UtilComponent;
+use App\Model\Entity\User;
 use Cake\Datasource\EntityInterface;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
@@ -19,6 +20,8 @@ class UsersTable extends Table
         $this->setTable('users');
         $this->setPrimaryKey('id');
         $this->setDisplayField('username');
+
+        $this->setEntityClass(User::class);
 
         $this->belongsTo('Roles', [
             'foreignKey' => 'role_id',

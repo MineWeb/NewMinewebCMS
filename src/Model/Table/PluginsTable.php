@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Plugin;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
@@ -13,6 +14,8 @@ class PluginsTable extends Table
         $this->setTable('plugins');
         $this->setPrimaryKey('id');
         $this->setDisplayField('name');
+
+        $this->setEntityClass(Plugin::class);
 
         $this->addBehavior('Timestamp', [
             'events' => [

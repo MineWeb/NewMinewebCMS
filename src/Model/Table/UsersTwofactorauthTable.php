@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\UsersTwofactorauth;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -13,6 +14,8 @@ class UsersTwofactorauthTable extends Table
     {
         $this->setTable('users__twofactorauth');
         $this->setPrimaryKey('id');
+
+        $this->setEntityClass(UsersTwofactorauth::class);
 
         $this->belongsTo('Users', [
             'foreignKey' => 'user_id',

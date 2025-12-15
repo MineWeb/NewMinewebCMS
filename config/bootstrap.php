@@ -54,6 +54,20 @@ if (Configure::read('debug')) {
     Configure::write('Cache.default.duration', '+2 minutes');
 }
 
+$paths = [
+    TMP,
+    TMP . 'cache',
+    TMP . 'cache' . DS . 'models',
+    TMP . 'cache' . DS . 'persistent',
+    TMP . 'sessions',
+];
+
+foreach ($paths as $p) {
+    if (!is_dir($p)) {
+        @mkdir($p, 0775, true);
+    }
+}
+
 date_default_timezone_set((string)Configure::read('App.defaultTimezone'));
 mb_internal_encoding((string)Configure::read('App.encoding'));
 ini_set('intl.default_locale', (string)Configure::read('App.defaultLocale'));

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Navbar;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
@@ -13,6 +14,7 @@ class NavbarsTable extends Table
         $this->setTable('navbars');
         $this->setPrimaryKey('id');
         $this->setDisplayField('name');
+        $this->setEntityClass(Navbar::class);
         $this->addBehavior('Timestamp', [
             'events' => [
                 'Model.beforeSave' => [

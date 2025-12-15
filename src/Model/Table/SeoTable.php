@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Seo;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
@@ -13,6 +14,8 @@ class SeoTable extends Table
         $this->setTable('seo');
         $this->setPrimaryKey('id');
         $this->setDisplayField('page');
+
+        $this->setEntityClass(Seo::class);
         $this->addBehavior('Timestamp', [
             'events' => [
                 'Model.beforeSave' => [

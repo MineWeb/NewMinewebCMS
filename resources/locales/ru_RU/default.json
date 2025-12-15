@@ -234,6 +234,8 @@
         "CONFIG__KEY_SESSION_TYPE": "Тип записи сеанса",
         "CONFIG__KEY_SESSION_TYPE_INFO" : "Это расширенная настройка вашего сайта, вам не нужно менять ее, если вы ее не используете, по умолчанию CMS использует сеансы PHP." ,
         "CONFIG__KEY_SESSION_TYPE_PHP": "PHP / Default",
+        "CONFIG__KEY_SESSION_TYPE_CAKE": "CakePHP",
+        "CONFIG__KEY_SESSION_TYPE_CACHE": "Cache",
         "CONFIG__KEY_SESSION_TYPE_DB": "База данных",
         "CONFIG__CHECK_UUID" : "Разрешить регистрацию только премиум-пользователям" ,
         "CONFIG__CHECK_UUID_CHANGE" : "Помимо активации резервной копии UUID для автоматического изменения никнейма игрока?" ,

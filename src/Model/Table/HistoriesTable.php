@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\History;
 use App\Service\LangService;
 use Cake\Datasource\ResultSetInterface;
 use Cake\ORM\Query;
@@ -18,6 +19,8 @@ class HistoriesTable extends Table
 
         $this->setTable('histories');
         $this->setPrimaryKey('id');
+
+        $this->setEntityClass(History::class);
 
         $this->belongsTo('Users', [
             'foreignKey' => 'user_id',

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Ban;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -15,6 +16,8 @@ class BansTable extends Table
 
         $this->setTable('bans');
         $this->setPrimaryKey('id');
+
+        $this->setEntityClass(Ban::class);
 
         $this->belongsTo('Users', [
             'foreignKey' => 'user_id',

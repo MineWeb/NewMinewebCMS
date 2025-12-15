@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Role;
 use ArrayObject;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
@@ -19,6 +20,8 @@ class RolesTable extends Table
         $this->setTable('roles');
         $this->setPrimaryKey('id');
         $this->setDisplayField('display_name');
+
+        $this->setEntityClass(Role::class);
 
         $this->hasMany('Users', [
             'foreignKey' => 'role_id',
