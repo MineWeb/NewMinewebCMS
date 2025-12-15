@@ -167,8 +167,6 @@ I18n::config('_fallback', function (string $domain, string $locale) {
         Cache::write($cacheKey, $messages);
     }
 
-    Log::info(sprintf('Loaded %d messages for locale "%s" and domain "%s".', count($messages), $locale, $domain));
-
     return new Package('default', null, $messages);
 });
 
