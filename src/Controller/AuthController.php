@@ -10,6 +10,10 @@ use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Response;
 use Cake\I18n\FrozenTime;
 
+/**
+ * @property \App\Controller\Component\CaptchaComponent $Captcha
+ * @property \App\Controller\Component\UtilComponent $Util
+ */
 class AuthController extends AppController
 {
     private UserAuthService $userAuth;
@@ -69,7 +73,7 @@ class AuthController extends AppController
             return $this->json(['status' => false, 'messages' => __('USER__ERROR_PASSWORDS_NOT_SAME')], 400);
         }
 
-        if ((bool)$this->config->get('check_uuid')) {
+        if ($this->config->get('check_uuid')) {
             $username = (string)$data['username'];
             $res = @file_get_contents('https://api.mojang.com/users/profiles/minecraft/' . rawurlencode($username));
             if (!$res) {
@@ -86,7 +90,7 @@ class AuthController extends AppController
 
         $captchaType = (int)$this->config->get('captcha_type');
         if ($captchaType === 2 || $captchaType === 3) {
-            $validCaptcha = $this->Util->isValidReCaptcha(
+            $validCaptcha = $this->Captcha->isValidReCaptcha(
                 (string)($data['recaptcha'] ?? ''),
                 $ip,
                 (string)$this->config->get('captcha_secret'),
@@ -103,11 +107,11 @@ class AuthController extends AppController
 
         $userId = $this->userAuth->createUser($data, $ip);
 
-        if ((bool)$this->config->get('confirm_mail_signup')) {
+        if ($this->config->get('confirm_mail_signup')) {
             $confirmCode = substr(md5(uniqid('', true)), 0, 12);
 
             $mail = __('EMAIL__CONTENT_CONFIRM_MAIL', [
-                'LINK' => (string)$this->config->get('website_url') . '/auth/confirm/' . $confirmCode,
+                'LINK' => $this->config->get('website_url') . '/auth/confirm/' . $confirmCode,
                 'IP' => $ip,
                 'USERNAME' => (string)$data['username'],
                 'DATE' => FrozenTime::now()->i18nFormat('dd/MM/yyyy HH:mm'),
@@ -120,7 +124,7 @@ class AuthController extends AppController
             }
         }
 
-        if (!(bool)$this->config->get('confirm_mail_signup_block')) {
+        if (!$this->config->get('confirm_mail_signup_block')) {
             $request->getSession()->write('user', $userId);
             $this->clearAuthContext();
         }
@@ -139,7 +143,7 @@ class AuthController extends AppController
         }
 
         $data = (array)$request->getData();
-        $ip = (string)$request->clientIp();
+        $ip = $request->clientIp();
 
         if (empty($data['username']) || empty($data['password'])) {
             return $this->json(['status' => false, 'messages' => __('ERROR__FILL_ALL_FIELDS')], 400);

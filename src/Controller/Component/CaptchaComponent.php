@@ -5,7 +5,7 @@ namespace App\Controller\Component;
 
 use Cake\Controller\Component;
 use Cake\Controller\ComponentRegistry;
-use Cake\Http\CallbackStream;
+use Cake\Http\Response;
 use RuntimeException;
 
 final class CaptchaComponent extends Component
@@ -29,16 +29,26 @@ final class CaptchaComponent extends Component
         parent::__construct($registry, $config);
     }
 
-    public function showImage(array $custom = []): CallbackStream
+    public function showImage(array $custom = []): Response
     {
         $settings = array_merge($this->getConfig(), $custom);
+        $png = $this->buildPng($settings);
 
-        return $this->buildStream($settings);
+        $response = new Response();
+        $response = $response->withType('png');
+        $response = $response->withHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        $response = $response->withHeader('Pragma', 'no-cache');
+        $response = $response->withHeader('Expires', '0');
+
+        return $response->withStringBody($png);
     }
 
-    private function buildStream(array $settings): CallbackStream
+    private function buildPng(array $settings): string
     {
-        $image = imagecreatetruecolor((int)$settings['winWidth'], (int)$settings['winHeight']);
+        $width = (int)$settings['winWidth'];
+        $height = (int)$settings['winHeight'];
+
+        $image = imagecreatetruecolor($width, $height);
         if ($image === false) {
             throw new RuntimeException('Cannot initialize GD image stream');
         }
@@ -54,7 +64,7 @@ final class CaptchaComponent extends Component
         for ($x = 0; $x < $noiseLevel; $x++) {
             for ($y = 0; $y < $noiseLevel; $y++) {
                 $tempColor = imagecolorallocate($image, $noiseColor[0], $noiseColor[1], $noiseColor[2]);
-                imagesetpixel($image, rand(0, (int)$settings['winWidth']), rand(0, (int)$settings['winHeight']), $tempColor);
+                imagesetpixel($image, rand(0, $width), rand(0, $height), $tempColor);
             }
         }
 
@@ -71,7 +81,7 @@ final class CaptchaComponent extends Component
 
         $rX1 = 10;
         $rX2 = 20;
-        $rY1 = (int)((float)$settings['winHeight'] / 1.8);
+        $rY1 = (int)($height / 1.8);
         $rY2 = $rY1 + 10;
 
         $len = strlen($characters);
@@ -87,12 +97,11 @@ final class CaptchaComponent extends Component
             $rX2 += 40;
         }
 
-        if ((bool)$settings['bgNoise']) {
-            $image = $this->applyWave($image, (int)$settings['winWidth'], (int)$settings['winHeight']);
+        if (!empty($settings['bgNoise'])) {
+            $image = $this->applyWave($image, $width, $height);
         }
 
-        if ((bool)$settings['lineNoise']) {
-            $width = (int)$settings['winWidth'];
+        if (!empty($settings['lineNoise'])) {
             for ($i = 0; $i < $width; $i++) {
                 if ($i % 10 === 0) {
                     imageline($image, $i, 0, $i + 10, 50, $charColor);
@@ -101,10 +110,12 @@ final class CaptchaComponent extends Component
             }
         }
 
-        return new CallbackStream(function () use ($image): void {
-            imagepng($image);
-            imagedestroy($image);
-        });
+        ob_start();
+        imagepng($image);
+        $png = (string)ob_get_clean();
+        imagedestroy($image);
+
+        return $png;
     }
 
     private function hex2rgb(string $hex): array
@@ -126,7 +137,7 @@ final class CaptchaComponent extends Component
         return [$r, $g, $b];
     }
 
-    private function applyWave($image, int $width, int $height)
+    private function applyWave(mixed $image, int $width, int $height): mixed
     {
         $xPeriod = 10;
         $yPeriod = 10;
@@ -146,5 +157,55 @@ final class CaptchaComponent extends Component
         }
 
         return $image;
+    }
+
+    public function isValidReCaptcha(string $code, ?string $ip, string $secret, int $type = 2): bool
+    {
+        if ($code === '' || $secret === '') {
+            return false;
+        }
+
+        $params = ['secret' => $secret, 'response' => $code];
+        if ($ip) {
+            $params['remoteip'] = $ip;
+        }
+
+        $website = '';
+        if ($type === 2) {
+            $website = 'https://www.google.com/recaptcha/api/siteverify';
+        } elseif ($type === 3) {
+            $website = 'https://hcaptcha.com/siteverify';
+        }
+
+        if ($website === '') {
+            return false;
+        }
+
+        $url = $website . '?' . http_build_query($params);
+
+        if (function_exists('curl_version')) {
+            $curl = curl_init($url);
+            if ($curl === false) {
+                return false;
+            }
+            curl_setopt($curl, CURLOPT_HEADER, false);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($curl, CURLOPT_TIMEOUT, 2);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 1);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
+            $response = curl_exec($curl);
+            curl_close($curl);
+        } else {
+            $context = stream_context_create(['http' => ['timeout' => 2]]);
+            $response = @file_get_contents($url, false, $context);
+        }
+
+        if (empty($response)) {
+            return false;
+        }
+
+        $json = json_decode((string)$response);
+
+        return is_object($json) && !empty($json->success);
     }
 }

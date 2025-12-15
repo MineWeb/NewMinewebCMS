@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Component;
 
-use App\Model\Table\ConfigurationsTable;
+use App\Service\ConfigurationService;
 use Cake\Controller\Component;
 use Cake\Database\Driver\Sqlite;
 use Cake\Datasource\ConnectionManager;
@@ -12,7 +12,6 @@ use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Mailer\Mailer;
 use Cake\Mailer\TransportFactory;
-use Cake\ORM\Locator\LocatorAwareTrait;
 use Exception;
 use Laminas\Diactoros\UploadedFile;
 use RecursiveDirectoryIterator;
@@ -20,11 +19,9 @@ use RecursiveIteratorIterator;
 use Throwable;
 use ZipArchive;
 
-class UtilComponent extends Component
+final class UtilComponent extends Component
 {
-    use LocatorAwareTrait;
-
-    private ?ConfigurationsTable $Configurations = null;
+    private ConfigurationService $configuration;
 
     private mixed $to = null;
     private mixed $from = null;
@@ -39,7 +36,9 @@ class UtilComponent extends Component
     public function initialize(array $config): void
     {
         parent::initialize($config);
+
         $this->dbAvailable = $this->checkDatabaseAvailable();
+        $this->configuration = new ConfigurationService();
     }
 
     private function checkDatabaseAvailable(): bool
@@ -72,74 +71,31 @@ class UtilComponent extends Component
         }
     }
 
-    private function configurationsTable(): ?ConfigurationsTable
-    {
-        if (!$this->dbAvailable) {
-            return null;
-        }
-
-        if ($this->Configurations !== null) {
-            return $this->Configurations;
-        }
-
-        try {
-            $table = $this->fetchTable('Configurations');
-        } catch (Throwable) {
-            return null;
-        }
-
-        if ($table instanceof ConfigurationsTable) {
-            $this->Configurations = $table;
-
-            return $this->Configurations;
-        }
-
-        if (method_exists($table, 'get')) {
-            $this->Configurations = $table;
-
-            return $this->Configurations;
-        }
-
-        return null;
-    }
-
-    private function configurationKey(string $key): mixed
-    {
-        $table = $this->configurationsTable();
-        if ($table === null) {
-            return null;
-        }
-
-        return $table->get($key);
-    }
-
     public function prepareMail(string $to, string $subject, string $message): self
     {
         $this->to = $to;
         $this->message = $message;
 
-        $siteName = $this->configurationKey('name');
-        $siteNameValue = is_string($siteName) && $siteName !== '' ? $siteName : null;
+        $siteNameValue = $this->configuration->getWebsiteName();
+        $this->subject = $siteNameValue !== '' ? ($subject . ' | ' . $siteNameValue) : $subject;
 
-        $this->subject = $siteNameValue ? ($subject . ' | ' . $siteNameValue) : $subject;
-
-        $fromEmail = $this->configurationKey('email');
-        if (is_string($fromEmail) && $fromEmail !== '' && $siteNameValue) {
+        $fromEmail = $this->configuration->get('email');
+        if (is_string($fromEmail) && $fromEmail !== '' && $siteNameValue !== '') {
             $this->from = [$fromEmail => $siteNameValue];
         } else {
             $this->from = null;
         }
 
-        $sendType = $this->configurationKey('email_send_type');
-        $this->typeSend = !$sendType || (int)$sendType !== 2 ? 'default' : 'smtp';
+        $sendType = $this->configuration->get('email_send_type');
+        $this->typeSend = is_numeric($sendType) && (int)$sendType === 2 ? 'smtp' : 'default';
 
         if ($this->typeSend === 'smtp') {
             $this->smtpOptions = [
                 'className' => 'Smtp',
-                'host' => (string)($this->configurationKey('smtpHost') ?? ''),
-                'port' => (int)($this->configurationKey('smtpPort') ?? 0),
-                'username' => (string)($this->configurationKey('smtpUsername') ?? ''),
-                'password' => (string)($this->configurationKey('smtpPassword') ?? ''),
+                'host' => (string)($this->configuration->get('smtpHost') ?? ''),
+                'port' => (int)($this->configuration->get('smtpPort') ?? 0),
+                'username' => (string)($this->configuration->get('smtpUsername') ?? ''),
+                'password' => (string)($this->configuration->get('smtpPassword') ?? ''),
                 'timeout' => 30,
             ];
         } else {
@@ -175,8 +131,8 @@ class UtilComponent extends Component
             ->setLayout(null)
             ->setVar('message', $this->message);
 
-        $theme = $this->configurationKey('theme');
-        if (is_string($theme) && $theme !== '') {
+        $theme = $this->configuration->getThemeName();
+        if ($theme !== '') {
             $mailer->viewBuilder()->setTheme($theme);
         }
 
@@ -189,58 +145,6 @@ class UtilComponent extends Component
 
             return false;
         }
-    }
-
-    public function isValidReCaptcha(string $code, ?string $ip, string $secret, int $type = 2): bool
-    {
-        if ($code === '' || $secret === '') {
-            return false;
-        }
-
-        $params = ['secret' => $secret, 'response' => $code];
-        if ($ip) {
-            $params['remoteip'] = $ip;
-        }
-
-        $website = '';
-        if ($type === 2) {
-            $website = 'https://www.google.com/recaptcha/api/siteverify';
-        } elseif ($type === 3) {
-            $website = 'https://hcaptcha.com/siteverify';
-        }
-
-        if ($website === '') {
-            return false;
-        }
-
-        $url = $website . '?' . http_build_query($params);
-
-        $response = null;
-
-        if (function_exists('curl_version')) {
-            $curl = curl_init($url);
-            if ($curl === false) {
-                return false;
-            }
-            curl_setopt($curl, CURLOPT_HEADER, false);
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($curl, CURLOPT_TIMEOUT, 2);
-            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 1);
-            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
-            $response = curl_exec($curl);
-            curl_close($curl);
-        } else {
-            $context = stream_context_create(['http' => ['timeout' => 2]]);
-            $response = @file_get_contents($url, false, $context);
-        }
-
-        if (empty($response)) {
-            return false;
-        }
-
-        $json = json_decode((string)$response);
-
-        return is_object($json) && !empty($json->success);
     }
 
     public function useSqlite(): bool
@@ -357,7 +261,7 @@ class UtilComponent extends Component
     public function uploadImage(ServerRequest $request, string $name): bool
     {
         $pathInfo = pathinfo($name);
-        $path = $pathInfo['dirname'] ?? '.';
+        $path = (string)($pathInfo['dirname'] ?? '.');
 
         if (!is_dir($path)) {
             if (!mkdir($path, 0755, true) && !is_dir($path)) {
