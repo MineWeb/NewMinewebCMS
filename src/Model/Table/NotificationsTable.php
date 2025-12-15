@@ -189,15 +189,11 @@ class NotificationsTable extends Table
 
     public function setToAll(string $content, ?int $from = null): void
     {
-        if ($from === null) {
-            $from = 0;
-        }
-
         $group = $this->generateGroup();
 
         $this->getConnection()->execute(
             "INSERT INTO notifications (`group`, `user_id`, `from`, `content`, `type`, `created_at`, `updated_at`)
-             SELECT :group, id, :from, :content, 'user', :now, :now FROM users",
+         SELECT :group, id, :from, :content, 'user', :now, :now FROM users",
             [
                 'group' => $group,
                 'from' => $from,

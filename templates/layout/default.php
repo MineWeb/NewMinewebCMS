@@ -12,7 +12,6 @@
     <?= $this->Seo->favicon() ?>
     <?= $this->Seo->metaTags() ?>
 
-    <!-- Font Awesome 5 -->
     <script src="https://kit.fontawesome.com/fb032ab5a6.js" crossorigin="anonymous"></script>
     <?= $this->Html->css('bootstrap') ?>
     <?= $this->Html->css('modern-business') ?>
@@ -33,7 +32,7 @@
 
 </head>
 
-<body><!-- grey.png -->
+<body>
 <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
     <div class="mini-navbar mini-navbar-default">
         <div class="container">
@@ -66,7 +65,7 @@
                         <?php if (empty($value['submenu'])) { ?>
                             <li class="li-nav<?php if ($this->getRequest()->getParam('controller') == $value['name']) {
                                 ?> actived<?php
-                                             } ?>">
+                            } ?>">
                                 <a href="<?= $value['url'] ?>"<?= $value['open_new_tab'] ? ' target="_blank"' : '' ?>>
                                     <?php if (!empty($value['icon'])) : ?>
                                         <i class="<?= (strpos($value['icon'], 'fa-') ? $value['icon'] : 'fa fa-' . $value['icon']) ?>"></i>
@@ -98,7 +97,8 @@
                 <li class="button">
                     <div class="btn-group">
                         <?php if ($this->Auth->isConnected()) { ?>
-                            <button type="button" class="btn btn-success"><?= h((string)$this->Auth->username()) ?></button>
+                            <button type="button"
+                                    class="btn btn-success"><?= h((string)$this->Auth->username()) ?></button>
                         <?php } else { ?>
                             <button type="button" class="btn btn-success"><i class="fa fa-user"></i></button>
                         <?php } ?>
@@ -113,9 +113,10 @@
                                     <a href="<?= $this->Url->build(['_name' => 'user_profile']) ?>"><?= __('USER__PROFILE') ?></a>
                                 </li>
                                 <li style="position:relative;">
-                                    <a href="#notifications_modal" onclick="notification.markAllAsSeen(2)"
-                                       data-toggle="modal"><?= __('NOTIFICATIONS__LIST') ?></a>
-                                    <span class="notification-indicator"></span>
+                                    <a href="#notifications_modal" data-toggle="modal"
+                                       id="openNotificationsModal"><?= __('NOTIFICATIONS__LIST') ?>
+                                        <span class="notification-indicator"></span>
+                                    </a>
                                 </li>
                                 <?php if ($this->Auth->can('ACCESS_DASHBOARD')) { ?>
                                     <li class="divider"></li>
@@ -147,7 +148,6 @@ if (!empty($flash_messages)) {
     echo '<div class="container">' . $flash_messages . '</div>';
 } ?>
 <?= $this->fetch('content'); ?>
-<!-- Footer -->
 <footer style="height: 50px;">
     <div class="container">
         <div class="row">
@@ -168,23 +168,93 @@ if (!empty($flash_messages)) {
 <?= $this->Html->script('notification') ?>
 <script>
     <?php if ($this->Auth->isConnected()) { ?>
-    // Notifications
-    let notification = new $.Notification({
-        'url': {
-            'get': '<?= $this->Url->build(['_name' => 'notifications_get_all']) ?>',
-            'clear': '<?= $this->Url->build(['_name' => 'notifications_clear', 'NOTIF_ID']) ?>',
-            'clearAll': '<?= $this->Url->build(['_name' => 'notifications_clear_all']) ?>',
-            'markAsSeen': '<?= $this->Url->build(['_name' => 'notifications_mark_as_seen', 'NOTIF_ID']) ?>',
-            'markAllAsSeen': '<?= $this->Url->build(['_name' => 'notifications_mark_all_as_seen']) ?>'
-        },
-        'messages': {
-            'markAsSeen': '<?= __('NOTIFICATION__MARK_AS_SEEN') ?>',
-            'notifiedBy': '<?= __('NOTIFICATION__NOTIFIED_BY') ?>'
+    document.addEventListener('DOMContentLoaded', function () {
+        window.notification = new window.Notification({
+            type: 'user',
+            limit: 0,
+            urls: {
+                get: '<?= $this->Url->build(['_name' => 'notifications_get_all']) ?>',
+                clear: '<?= $this->Url->build(['_name' => 'notifications_clear', 'NOTIF_ID']) ?>',
+                clearAll: '<?= $this->Url->build(['_name' => 'notifications_clear_all']) ?>',
+                markAsSeen: '<?= $this->Url->build(['_name' => 'notifications_mark_as_seen', 'NOTIF_ID']) ?>',
+                markAllAsSeen: '<?= $this->Url->build(['_name' => 'notifications_mark_all_as_seen']) ?>'
+            },
+            selectors: {
+                indicator: '.notification-indicator',
+                list: '.notifications-list'
+            },
+            texts: {
+                empty: "<?= __('NOTIFICATIONS__EMPTY') ?>",
+                markAsSeen: "<?= __('NOTIFICATION__MARK_AS_SEEN') ?>"
+            },
+            templates: {
+                header: function () {
+                    return '';
+                },
+                footer: function () {
+                    return '';
+                },
+                empty: function (t) {
+                    return ''
+                        + '<div class="p-3 text-muted text-center" style="padding:12px 15px;">'
+                        + '  <span>' + t.empty + '</span>'
+                        + '</div>';
+                },
+                item: function (n, id) {
+                    const content = (window.Notification && window.Notification.__escapeHtml)
+                        ? window.Notification.__escapeHtml(n && n.content)
+                        : String(n && n.content ? n.content : '');
+                    const time = (window.Notification && window.Notification.__escapeHtml)
+                        ? window.Notification.__escapeHtml(n && n.time)
+                        : String(n && n.time ? n.time : '');
+
+                    const seen = n && n.seen;
+                    const bg = seen ? '' : 'background:#f7f7f7;';
+                    const opacity = seen ? 'opacity:0.75;' : '';
+
+                    return ''
+                        + '<div class="dropdown-item" style="white-space:normal; border-bottom:1px solid #eee; padding:12px 15px;' + bg + opacity + '">'
+                        + '  <div style="display:flex; align-items:flex-start; gap:10px;">'
+                        + '    <div style="flex:1; min-width:0;">'
+                        + '      <div style="font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + content + '</div>'
+                        + '      <div class="small text-muted">' + time + '</div>'
+                        + '    </div>'
+                        + '    <div class="btn-group btn-group-sm" style="flex:none;">'
+                        + '      <button type="button" class="btn btn-default" data-notif-action="mark" data-notif-id="' + id + '" title="✓">'
+                        + '        <i class="fa fa-check"></i>'
+                        + '      </button>'
+                        + '      <button type="button" class="btn btn-default" data-notif-action="clear" data-notif-id="' + id + '" title="×" style="color:#d9534f;">'
+                        + '        <i class="fa fa-times"></i>'
+                        + '      </button>'
+                        + '    </div>'
+                        + '  </div>'
+                        + '</div>';
+                }
+            }
+        });
+
+        if (window.notification) {
+            window.notification.load();
+            window.notification.startAutoRefresh(15);
+        }
+
+        const modalEl = document.getElementById('notifications_modal');
+        if (modalEl && window.jQuery) {
+            window.jQuery(modalEl).on('show.bs.modal', function () {
+                if (!window.notification) return;
+                window.notification.load();
+                window.notification.markAllAsSeen(0);
+            });
+        }
+
+        const openBtn = document.getElementById('openNotificationsModal');
+        if (openBtn) {
+            openBtn.addEventListener('click', function () {
+                if (window.notification) window.notification.markAllAsSeen(0);
+            });
         }
     });
     <?php } ?>
-
-    // Config FORM/APP.JS
 
     let LIKE_URL = "<?= $this->Url->build(['_name' => 'news_like']) ?>";
     let DISLIKE_URL = "<?= $this->Url->build(['_name' => 'news_dislike']) ?>";

@@ -18,41 +18,41 @@
                 'data-ajax' => 'true',
                 'data-callback-function' => 'afterLogin',
             ]) ?>
-                <div class="modal-body">
-                    <div class="ajax-msg"></div>
+            <div class="modal-body">
+                <div class="ajax-msg"></div>
 
-                    <div class="form-group">
-                        <label for="login-username"><?= __('USER__USERNAME') ?></label>
-                        <input type="text" class="form-control" id="login-username" name="username"
-                               placeholder="<?= __('USER__USERNAME_LABEL') ?>">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="login-password"><?= __('USER__PASSWORD') ?></label>
-                        <input type="password" class="form-control" id="login-password" name="password"
-                               placeholder="<?= __('USER__PASSWORD_LABEL') ?>">
-                    </div>
-
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <div class="checkbox">
-                                <label for="login-remember">
-                                    <input type="checkbox" id="login-remember" name="remember_me">
-                                    <?= __('USER__REMEMBER_ME') ?>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 text-center">
-                            <a href="#" data-toggle="modal" data-target="#lostpasswd" data-dismiss="modal">
-                                <?= __('USER__PASSWORD_FORGOT_LABEL') ?>
-                            </a>
-                        </div>
-                    </div>
+                <div class="form-group">
+                    <label for="login-username"><?= __('USER__USERNAME') ?></label>
+                    <input type="text" class="form-control" id="login-username" name="username"
+                           placeholder="<?= __('USER__USERNAME_LABEL') ?>">
                 </div>
 
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary btn-block"><?= __('USER__LOGIN') ?></button>
+                <div class="form-group">
+                    <label for="login-password"><?= __('USER__PASSWORD') ?></label>
+                    <input type="password" class="form-control" id="login-password" name="password"
+                           placeholder="<?= __('USER__PASSWORD_LABEL') ?>">
                 </div>
+
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="checkbox">
+                            <label for="login-remember">
+                                <input type="checkbox" id="login-remember" name="remember_me">
+                                <?= __('USER__REMEMBER_ME') ?>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 text-center">
+                        <a href="#" data-toggle="modal" data-target="#lostpasswd" data-dismiss="modal">
+                            <?= __('USER__PASSWORD_FORGOT_LABEL') ?>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary btn-block"><?= __('USER__LOGIN') ?></button>
+            </div>
             <?= $this->Form->end() ?>
 
             <script type="text/javascript">
@@ -85,20 +85,20 @@
                 'data-ajax' => 'true',
                 'data-redirect-url' => '?',
             ]) ?>
-                <div class="modal-body">
-                    <div class="ajax-msg"></div>
-                    <input type="hidden" name="remember_me">
+            <div class="modal-body">
+                <div class="ajax-msg"></div>
+                <input type="hidden" name="remember_me">
 
-                    <div class="form-group">
-                        <label for="login-2fa-code"><?= __('USER__LOGIN_CODE') ?></label>
-                        <input type="text" class="form-control" id="login-2fa-code" name="code"
-                               placeholder="<?= __('USER__LOGIN_CODE') ?>">
-                    </div>
+                <div class="form-group">
+                    <label for="login-2fa-code"><?= __('USER__LOGIN_CODE') ?></label>
+                    <input type="text" class="form-control" id="login-2fa-code" name="code"
+                           placeholder="<?= __('USER__LOGIN_CODE') ?>">
                 </div>
+            </div>
 
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary btn-block"><?= __('USER__LOGIN') ?></button>
-                </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary btn-block"><?= __('USER__LOGIN') ?></button>
+            </div>
             <?= $this->Form->end() ?>
         </div>
     </div>
@@ -121,21 +121,21 @@
                 'type' => 'post',
                 'data-ajax' => 'true',
             ]) ?>
-                <div class="modal-body">
-                    <div class="ajax-msg"></div>
+            <div class="modal-body">
+                <div class="ajax-msg"></div>
 
-                    <div class="form-group">
-                        <label for="lost-email"><?= __('USER__EMAIL') ?></label>
-                        <input type="email" class="form-control" id="lost-email" name="email"
-                               placeholder="<?= __('USER__EMAIL_LABEL') ?>">
-                    </div>
+                <div class="form-group">
+                    <label for="lost-email"><?= __('USER__EMAIL') ?></label>
+                    <input type="email" class="form-control" id="lost-email" name="email"
+                           placeholder="<?= __('USER__EMAIL_LABEL') ?>">
                 </div>
+            </div>
 
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary btn-block">
-                        <?= __('USER__PASSWORD_FORGOT_SEND_MAIL') ?>
-                    </button>
-                </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary btn-block">
+                    <?= __('USER__PASSWORD_FORGOT_SEND_MAIL') ?>
+                </button>
+            </div>
             <?= $this->Form->end() ?>
         </div>
     </div>
@@ -160,30 +160,30 @@
                     'data-ajax' => 'true',
                     'data-redirect-url' => '?',
                 ]) ?>
-                    <div class="modal-body">
-                        <div class="ajax-msg"></div>
+                <div class="modal-body">
+                    <div class="ajax-msg"></div>
 
-                        <input type="hidden" name="key" value="<?= $resetpsswd['key'] ?>">
-                        <input type="hidden" name="email" value="<?= $resetpsswd['email'] ?>">
+                    <input type="hidden" name="key" value="<?= $resetpsswd['key'] ?>">
+                    <input type="hidden" name="email" value="<?= $resetpsswd['email'] ?>">
 
-                        <div class="form-group">
-                            <label for="reset-password"><?= __('USER__PASSWORD') ?></label>
-                            <input type="password" class="form-control" id="reset-password" name="password"
-                                   placeholder="<?= __('USER__PASSWORD_LABEL') ?>">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="reset-password-confirm"><?= __('USER__PASSWORD_CONFIRM') ?></label>
-                            <input type="password" class="form-control" id="reset-password-confirm" name="password2"
-                                   placeholder="<?= __('USER__PASSWORD_CONFIRM_LABEL') ?>">
-                        </div>
+                    <div class="form-group">
+                        <label for="reset-password"><?= __('USER__PASSWORD') ?></label>
+                        <input type="password" class="form-control" id="reset-password" name="password"
+                               placeholder="<?= __('USER__PASSWORD_LABEL') ?>">
                     </div>
 
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-success btn-block">
-                            <?= __('GLOBAL__SAVE') ?>
-                        </button>
+                    <div class="form-group">
+                        <label for="reset-password-confirm"><?= __('USER__PASSWORD_CONFIRM') ?></label>
+                        <input type="password" class="form-control" id="reset-password-confirm" name="password2"
+                               placeholder="<?= __('USER__PASSWORD_CONFIRM_LABEL') ?>">
                     </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success btn-block">
+                        <?= __('GLOBAL__SAVE') ?>
+                    </button>
+                </div>
                 <?= $this->Form->end() ?>
             </div>
         </div>
@@ -208,50 +208,50 @@
                 'data-ajax' => 'true',
                 'data-redirect-url' => '?',
             ]) ?>
-                <div class="modal-body">
-                    <div class="ajax-msg"></div>
+            <div class="modal-body">
+                <div class="ajax-msg"></div>
 
-                    <div class="form-group">
-                        <label for="register-username"><?= __('USER__USERNAME') ?></label>
-                        <input type="text" class="form-control" id="register-username" name="username"
-                               placeholder="<?= __('USER__USERNAME_LABEL') ?>">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="register-password"><?= __('USER__PASSWORD') ?></label>
-                        <input type="password" class="form-control" id="register-password" name="password"
-                               placeholder="<?= __('USER__PASSWORD_LABEL') ?>">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="register-password-confirm"><?= __('USER__PASSWORD_CONFIRM') ?></label>
-                        <input type="password" class="form-control" id="register-password-confirm"
-                               name="password_confirmation"
-                               placeholder="<?= __('USER__PASSWORD_CONFIRM_LABEL') ?>">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="register-email"><?= __('USER__EMAIL') ?></label>
-                        <input type="email" class="form-control" id="register-email" name="email"
-                               placeholder="<?= __('USER__EMAIL_LABEL') ?>">
-                    </div>
-
-                    <?php if (!empty($condition)) { ?>
-                        <div class="checkbox">
-                            <label for="register-condition">
-                                <input type="checkbox" id="register-condition" name="condition">
-                                <?= __('USER__CONDITION_1') ?>
-                                <a href="<?= $condition ?>"><?= __('USER__CONDITION_2') ?></a>
-                            </label>
-                        </div>
-                    <?php } ?>
+                <div class="form-group">
+                    <label for="register-username"><?= __('USER__USERNAME') ?></label>
+                    <input type="text" class="form-control" id="register-username" name="username"
+                           placeholder="<?= __('USER__USERNAME_LABEL') ?>">
                 </div>
 
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary btn-block">
-                        <?= __('USER__REGISTER') ?>
-                    </button>
+                <div class="form-group">
+                    <label for="register-password"><?= __('USER__PASSWORD') ?></label>
+                    <input type="password" class="form-control" id="register-password" name="password"
+                           placeholder="<?= __('USER__PASSWORD_LABEL') ?>">
                 </div>
+
+                <div class="form-group">
+                    <label for="register-password-confirm"><?= __('USER__PASSWORD_CONFIRM') ?></label>
+                    <input type="password" class="form-control" id="register-password-confirm"
+                           name="password_confirmation"
+                           placeholder="<?= __('USER__PASSWORD_CONFIRM_LABEL') ?>">
+                </div>
+
+                <div class="form-group">
+                    <label for="register-email"><?= __('USER__EMAIL') ?></label>
+                    <input type="email" class="form-control" id="register-email" name="email"
+                           placeholder="<?= __('USER__EMAIL_LABEL') ?>">
+                </div>
+
+                <?php if (!empty($condition)) { ?>
+                    <div class="checkbox">
+                        <label for="register-condition">
+                            <input type="checkbox" id="register-condition" name="condition">
+                            <?= __('USER__CONDITION_1') ?>
+                            <a href="<?= $condition ?>"><?= __('USER__CONDITION_2') ?></a>
+                        </label>
+                    </div>
+                <?php } ?>
+            </div>
+
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary btn-block">
+                    <?= __('USER__REGISTER') ?>
+                </button>
+            </div>
             <?= $this->Form->end() ?>
         </div>
     </div>
