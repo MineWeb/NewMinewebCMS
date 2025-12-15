@@ -19,13 +19,14 @@ class HistoriesTable extends Table
 
         $this->setTable('histories');
         $this->setPrimaryKey('id');
-
         $this->setEntityClass(History::class);
 
         $this->belongsTo('Users', [
             'foreignKey' => 'user_id',
             'joinType' => 'LEFT',
+            'propertyName' => 'user',
         ]);
+
         $this->addBehavior('Timestamp', [
             'events' => [
                 'Model.beforeSave' => [

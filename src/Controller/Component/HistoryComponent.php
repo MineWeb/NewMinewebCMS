@@ -26,7 +26,9 @@ final class HistoryComponent extends Component
     public function set(string $action, string $category, mixed $optional = null, ?int $userId = null): bool
     {
         try {
-            $resolvedUserId = $userId ?? $this->getController()->Auth->id();
+            $controller = $this->getController();
+            $resolvedUserId = $userId ?? ($controller->Auth->id() ?: null);
+
             if (!$resolvedUserId) {
                 return false;
             }
@@ -41,7 +43,6 @@ final class HistoryComponent extends Component
             return (bool)$this->Histories->save($entity);
         } catch (Throwable $e) {
             $this->logThrowable('HistoryComponent::set', $e);
-
             return false;
         }
     }
@@ -55,9 +56,10 @@ final class HistoryComponent extends Component
         try {
             $conditions = $this->buildConditions($category, $date, $action);
 
-            $query = $this->Histories->find()
+            $query = $this->Histories
+                ->find('withUser')
                 ->where($conditions)
-                ->orderBy(['id' => 'DESC']);
+                ->orderBy(['Histories.id' => 'DESC']);
 
             if ($limit !== false) {
                 $query->limit($limit);
@@ -66,7 +68,6 @@ final class HistoryComponent extends Component
             return $this->translateActions($query->all());
         } catch (Throwable $e) {
             $this->logThrowable('HistoryComponent::get', $e);
-
             return [];
         }
     }
@@ -74,14 +75,16 @@ final class HistoryComponent extends Component
     public function getByAuthor(string $author): array
     {
         try {
-            $query = $this->Histories->find()
-                ->where(['author' => $author])
-                ->orderBy(['id' => 'DESC']);
+            $query = $this->Histories
+                ->find('withUser')
+                ->matching('Users', function ($q) use ($author) {
+                    return $q->where(['Users.username' => $author]);
+                })
+                ->orderBy(['Histories.id' => 'DESC']);
 
             return $this->translateActions($query->all());
         } catch (Throwable $e) {
             $this->logThrowable('HistoryComponent::getByAuthor', $e);
-
             return [];
         }
     }
@@ -96,13 +99,13 @@ final class HistoryComponent extends Component
         $conditions = [];
 
         if ($category !== false) {
-            $conditions['category'] = $category;
+            $conditions['Histories.category'] = $category;
         }
         if ($date !== false) {
-            $conditions['created_at LIKE'] = $date . '%';
+            $conditions['Histories.created_at LIKE'] = $date . '%';
         }
         if ($action !== false) {
-            $conditions['action'] = $action;
+            $conditions['Histories.action'] = $action;
         }
 
         return $conditions;
@@ -113,8 +116,8 @@ final class HistoryComponent extends Component
         $rows = $resultSet->toArray();
 
         foreach ($rows as $row) {
-            $action = $row->get('action');
-            $row->set('action', __((string)$action));
+            $action = (string)$row->get('action');
+            $row->set('action', __($action));
         }
 
         return $rows;
