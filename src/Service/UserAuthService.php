@@ -231,7 +231,7 @@ final class UserAuthService
         $userId = (int)($user->get('id') ?? 0);
         if ($userId > 0 && $conditions !== []) {
             $userEntity = $Users->get($userId);
-            $userEntity->set($conditions);
+            $userEntity->patch($conditions);
             $Users->save($userEntity);
         }
 
@@ -272,7 +272,7 @@ final class UserAuthService
         $newPassword = (string)($data['password'] ?? '');
 
         $userEntity = $Users->get((int)$user->get('id'));
-        $userEntity->set([
+        $userEntity->patch([
             'password' => $this->hashPassword($newPassword),
             'password_hash' => $this->getPasswordHashType(),
         ]);

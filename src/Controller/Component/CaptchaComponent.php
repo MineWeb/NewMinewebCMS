@@ -1,17 +1,16 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller\Component;
-/*
-CaptchaComponent
-*/
 
 use Cake\Controller\Component;
 use Cake\Controller\ComponentRegistry;
 use Cake\Http\CallbackStream;
+use RuntimeException;
 
-class CaptchaComponent extends Component
+final class CaptchaComponent extends Component
 {
-
-    public $settings = [
+    protected array $_defaultConfig = [
         'characters' => null,
         'winHeight' => 50,
         'winWidth' => 320,
@@ -22,155 +21,130 @@ class CaptchaComponent extends Component
         'bgColor' => '#F58220',
         'noiseColor' => '#000',
         'textColor' => '#fff',
-        'noiseLevel' => '45'
-
+        'noiseLevel' => 45,
     ];
-
-
-////////////////////////////////////////////////////////////////////////////////
-
 
     public function __construct(ComponentRegistry $registry, array $config = [])
     {
         parent::__construct($registry, $config);
-
-        $this->Controller = $this->getController();
     }
 
-////////////////////////////////////////////////////////////////////////////////
-    public function ShowImage($custom = [])
+    public function showImage(array $custom = []): CallbackStream
     {
-        $new_settings = array_merge($this->settings, $custom);
+        $settings = array_merge($this->getConfig(), $custom);
 
-        $this->settings = $new_settings;
-        return $this->win();
+        return $this->buildStream($settings);
     }
 
-////////////////////////////////////////////////////////////////////////////////
-    private function win()
+    private function buildStream(array $settings): CallbackStream
     {
-        //background image
-        $image = imagecreatetruecolor($this->settings['winWidth'], $this->settings['winHeight'])
-        or die("<b>" . __FILE__ . "</b><br />" . __LINE__ . " :
-            	" . "Cannot Initialize new GD image stream");
+        $image = imagecreatetruecolor((int)$settings['winWidth'], (int)$settings['winHeight']);
+        if ($image === false) {
+            throw new RuntimeException('Cannot initialize GD image stream');
+        }
 
-        $bgColor = $this->hex2rgb($this->settings['bgColor']);
-        $noiseColor = $this->hex2rgb($this->settings['noiseColor']);
-        $textColor = $this->hex2rgb($this->settings['textColor']);
+        $bgColor = $this->hex2rgb((string)$settings['bgColor']);
+        $noiseColor = $this->hex2rgb((string)$settings['noiseColor']);
+        $textColor = $this->hex2rgb((string)$settings['textColor']);
 
         $bg = imagecolorallocate($image, $bgColor[0], $bgColor[1], $bgColor[2]);
         imagefill($image, 10, 10, $bg);
 
-        for ($x = 0; $x < $this->settings['noiseLevel']; $x++) {
-            for ($y = 0; $y < $this->settings['noiseLevel']; $y++) {
-                $temp_color = imagecolorallocate($image, $noiseColor[0], $noiseColor[1], $noiseColor[2]);
-                imagesetpixel($image, rand(0, $this->settings['winWidth']), rand(0, $this->settings['winHeight']), $temp_color);
+        $noiseLevel = (int)$settings['noiseLevel'];
+        for ($x = 0; $x < $noiseLevel; $x++) {
+            for ($y = 0; $y < $noiseLevel; $y++) {
+                $tempColor = imagecolorallocate($image, $noiseColor[0], $noiseColor[1], $noiseColor[2]);
+                imagesetpixel($image, rand(0, (int)$settings['winWidth']), rand(0, (int)$settings['winHeight']), $tempColor);
             }
         }
 
-        $char_color = imagecolorallocatealpha($image, $textColor[0], $textColor[1], $textColor[2], 0);
+        $charColor = imagecolorallocatealpha($image, $textColor[0], $textColor[1], $textColor[2], 0);
 
-        //Font
-        $font = $this->settings['fontPath'];
-
-        $font_size = $this->settings['fontSize'];
-        ////////////////////////////////////
-        //Image characters
-
-        $char = "";
-        if (empty($this->settings['characters'])) {
-            $this->settings['characters'] = mt_rand(100, 10000);
+        $characters = $settings['characters'];
+        if ($characters === null || $characters === '') {
+            $characters = (string)mt_rand(100, 10000);
         }
-        $r_x1 = 10;
-        $r_x2 = 20;
-        $r_y1 = $this->settings['winHeight'] / 1.8;
-        $r_y2 = $r_y1 + 10;
+        $characters = (string)$characters;
 
+        $font = (string)$settings['fontPath'];
+        $fontSize = (int)$settings['fontSize'];
 
-        $this->settings['characters'] = (string)$this->settings['characters'];
+        $rX1 = 10;
+        $rX2 = 20;
+        $rY1 = (int)((float)$settings['winHeight'] / 1.8);
+        $rY2 = $rY1 + 10;
 
-        for ($i = 0; $i < strlen($this->settings['characters']); $i++) {
-            $char = $this->settings['characters'][$i];
-            $random_x = mt_rand($r_x1, $r_x2);
-            $random_y = mt_rand((int)$r_y1, (int)$r_y2);
-            $random_angle = mt_rand(-20, 20);
-            imagettftext($image, $font_size, $random_angle,
-                $random_x, $random_y, $char_color, $font, $char);
+        $len = strlen($characters);
+        for ($i = 0; $i < $len; $i++) {
+            $char = $characters[$i];
+            $randomX = mt_rand($rX1, $rX2);
+            $randomY = mt_rand($rY1, $rY2);
+            $randomAngle = mt_rand(-20, 20);
 
-            $r_x1 += 40;
-            $r_x2 += 40;
+            imagettftext($image, $fontSize, $randomAngle, $randomX, $randomY, $charColor, $font, $char);
+
+            $rX1 += 40;
+            $rX2 += 40;
         }
 
+        if ((bool)$settings['bgNoise']) {
+            $image = $this->applyWave($image, (int)$settings['winWidth'], (int)$settings['winHeight']);
+        }
 
-        ////////////////////////////////////
-        if ($this->settings['bgNoise'])
-            $image = $this->apply_wave($image, $this->settings['winWidth'],
-                $this->settings['winHeight']);
-
-        ////////////////////////////////////
-        //lines
-        if ($this->settings['lineNoise']) {
-            for ($i = 0; $i < $this->settings['winWidth']; $i++) {
-                if ($i % 10 == 0) {
-                    imageline($image, $i, 0,
-                        $i + 10, 50, $char_color);
-                    imageline($image, $i, 0,
-                        $i - 10, 50, $char_color);
+        if ((bool)$settings['lineNoise']) {
+            $width = (int)$settings['winWidth'];
+            for ($i = 0; $i < $width; $i++) {
+                if ($i % 10 === 0) {
+                    imageline($image, $i, 0, $i + 10, 50, $charColor);
+                    imageline($image, $i, 0, $i - 10, 50, $charColor);
                 }
             }
         }
 
-        ////////////////////////////////////
-        return new CallbackStream(function() use ($image) {
+        return new CallbackStream(function () use ($image): void {
             imagepng($image);
+            imagedestroy($image);
         });
     }
 
-
-///////////////////////////////////////////////////////////
-
-    private function hex2rgb($hex)
+    private function hex2rgb(string $hex): array
     {
-        $hex = str_replace("#", "", $hex);
+        $hex = str_replace('#', '', $hex);
 
-        if (strlen($hex) == 3) {
+        if (strlen($hex) === 3) {
             $r = hexdec(substr($hex, 0, 1) . substr($hex, 0, 1));
             $g = hexdec(substr($hex, 1, 1) . substr($hex, 1, 1));
             $b = hexdec(substr($hex, 2, 1) . substr($hex, 2, 1));
-        } else {
-            $r = hexdec(substr($hex, 0, 2));
-            $g = hexdec(substr($hex, 2, 2));
-            $b = hexdec(substr($hex, 4, 2));
+
+            return [$r, $g, $b];
         }
-        $rgb = [$r, $g, $b];
-        //return implode(",", $rgb); // returns the rgb values separated by commas
-        return $rgb; // returns an array with the rgb values
+
+        $r = hexdec(substr($hex, 0, 2));
+        $g = hexdec(substr($hex, 2, 2));
+        $b = hexdec(substr($hex, 4, 2));
+
+        return [$r, $g, $b];
     }
 
-    private function apply_wave($image, $width, $height)
+    private function applyWave($image, int $width, int $height)
     {
-        $x_period = 10;
-        $y_period = 10;
-        $y_amplitude = 5;
-        $x_amplitude = 5;
+        $xPeriod = 10;
+        $yPeriod = 10;
+        $yAmplitude = 5;
+        $xAmplitude = 5;
 
-        $xp = $x_period * rand(1, 3);
+        $xp = $xPeriod * rand(1, 3);
         $k = rand(0, 100);
-        for ($a = 0; $a < $width; $a++)
-            imagecopy($image, $image, $a - 1, sin($k + $a / $xp) * $x_amplitude,
-                $a, 0, 1, $height);
+        for ($a = 0; $a < $width; $a++) {
+            imagecopy($image, $image, $a - 1, (int)(sin($k + $a / $xp) * $xAmplitude), $a, 0, 1, $height);
+        }
 
-        $yp = $y_period * rand(1, 2);
+        $yp = $yPeriod * rand(1, 2);
         $k = rand(0, 100);
-        for ($a = 0; $a < $height; $a++)
-            imagecopy($image, $image, sin($k + $a / $yp) * $y_amplitude,
-                $a - 1, 0, $a, $width, 1);
+        for ($a = 0; $a < $height; $a++) {
+            imagecopy($image, $image, (int)(sin($k + $a / $yp) * $yAmplitude), $a - 1, 0, $a, $width, 1);
+        }
 
         return $image;
     }
-
-
 }
-
-
-

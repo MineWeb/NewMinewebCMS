@@ -224,7 +224,7 @@ class UserController extends AppController
         }
 
         $userEntity = $this->User->get($userId);
-        $userEntity->set([
+        $userEntity->patch([
             'password' => $password,
             'password_hash' => $this->Util->getPasswordHashType(),
         ]);
@@ -307,7 +307,7 @@ class UserController extends AppController
         $newEmail = htmlentities((string)$data['email']);
 
         $userEntity = $this->User->get($userId);
-        $userEntity->set(['email' => $newEmail]);
+        $userEntity->patch(['email' => $newEmail]);
         $this->User->save($userEntity);
 
         $this->clearAuthContext();

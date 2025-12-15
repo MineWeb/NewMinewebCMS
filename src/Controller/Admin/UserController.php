@@ -226,7 +226,7 @@ class UserController extends AppController
         }
 
         $user = $this->Users->get((int)$find->get('id'));
-        $user->set(['confirmed' => date('Y-m-d H:i:s')]);
+        $user->patch(['confirmed' => date('Y-m-d H:i:s')]);
         $this->Users->save($user);
 
         return $this->redirect([
@@ -328,7 +328,7 @@ class UserController extends AppController
         }
 
         $user = $this->Users->get((int)$findUser->get('id'));
-        $user->set($data);
+        $user->patch($data);
         $this->Users->save($user);
 
         $this->History->set('EDIT_USER', 'user');
