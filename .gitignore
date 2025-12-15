@@ -61,8 +61,7 @@ yarn-error.log
 /config/install.lock
 /config/bypass_compatibility
 
-/webroot/img/uploads/favicons/*
-/webroot/img/uploads/slider/*
+/webroot/img/uploads/*
 
 /webroot/database.db
 

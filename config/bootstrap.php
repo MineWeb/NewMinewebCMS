@@ -60,6 +60,7 @@ $paths = [
     TMP . 'cache' . DS . 'models',
     TMP . 'cache' . DS . 'persistent',
     TMP . 'sessions',
+    WWW_ROOT . 'img' . DS . 'uploads',
 ];
 
 foreach ($paths as $p) {
