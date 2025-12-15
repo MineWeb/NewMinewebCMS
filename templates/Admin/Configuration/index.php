@@ -175,7 +175,7 @@
                                                 <input
                                                     type="text"
                                                     id="config-version"
-                                                    value="<?= file_get_contents(ROOT . DS . 'VERSION') ?>"
+                                                    value="<?= $this->Update->cmsVersion() ?>"
                                                     class="form-control"
                                                     disabled
                                                 >
