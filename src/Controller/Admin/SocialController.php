@@ -26,9 +26,7 @@ class SocialController extends AppController
         $this->set('title_for_layout', __('SOCIAL__HOME'));
 
         $socialButtonTable = $this->fetchTable('SocialButtons');
-        $buttons = $socialButtonTable
-            ->find()
-            ->orderBy(['order' => 'ASC']);
+        $buttons = $socialButtonTable->find()->orderBy(['order' => 'ASC'])->toArray();
 
         $this->set('social_buttons', $buttons);
 
@@ -42,12 +40,16 @@ class SocialController extends AppController
 
     public function saveAjax(): Response
     {
-        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SOCIAL'))) {
-            return $this->redirect('/');
-        }
-
         $this->disableAutoRender();
         $this->response = $this->response->withType('application/json');
+
+        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SOCIAL'))) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('FORBIDDEN'),
+            ]));
+        }
+
         $request = $this->getRequest();
 
         if (!$request->is('post')) {
@@ -57,32 +59,35 @@ class SocialController extends AppController
             ]));
         }
 
-        $raw = (string)$request->getData('social_button_order', '');
-        if ($raw === '') {
-            return $this->response->withStringBody(json_encode([
-                'status' => false,
-                'messages' => __('ERROR__FILL_ALL_FIELDS'),
-            ]));
+        $contentType = strtolower((string)$request->getHeaderLine('Content-Type'));
+        $order = [];
+
+        if (strpos($contentType, 'application/json') !== false) {
+            $payload = (array)$request->getData();
+            $order = isset($payload['order']) && is_array($payload['order']) ? $payload['order'] : [];
+        } else {
+            $raw = (string)$request->getData('social_button_order', '');
+            if ($raw !== '') {
+                $pairs = explode('&', $raw);
+                foreach ($pairs as $pair) {
+                    $parts = explode('=', $pair, 2);
+                    $key = $parts[0] ?? '';
+                    if ($key === '') {
+                        continue;
+                    }
+                    if (substr($key, -2) === '[]') {
+                        $key = substr($key, 0, -2);
+                    }
+                    $order[] = $key;
+                }
+            }
         }
 
-        $pairs = explode('&', $raw);
-        $orderMap = [];
-        $position = 1;
+        $order = array_values(array_filter($order, function ($v) {
+            return is_string($v) && $v !== '' && ctype_digit($v);
+        }));
 
-        foreach ($pairs as $pair) {
-            $parts = explode('=', $pair);
-            if (!isset($parts[0])) {
-                continue;
-            }
-            $key = $parts[0];
-            $id = substr($key, 0, -2);
-            if ($id !== '') {
-                $orderMap[$id] = $position;
-                $position++;
-            }
-        }
-
-        if (empty($orderMap)) {
+        if (!$order) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
                 'messages' => __('ERROR__FILL_ALL_FIELDS'),
@@ -90,27 +95,22 @@ class SocialController extends AppController
         }
 
         $socialButtonTable = $this->fetchTable('SocialButtons');
-        $error = false;
 
-        foreach ($orderMap as $id => $order) {
-            $button = $socialButtonTable
-                ->find()
-                ->where(['id' => $id])
-                ->first();
-
-            if ($button) {
-                $entity = $socialButtonTable->get($button['id']);
-                $entity->set(['order' => $order]);
-                $socialButtonTable->save($entity);
-            } else {
-                $error = true;
-            }
-        }
-
-        if ($error) {
+        try {
+            $socialButtonTable->getConnection()->transactional(function () use ($socialButtonTable, $order) {
+                $pos = 1;
+                foreach ($order as $id) {
+                    $socialButtonTable->updateAll(
+                        ['order' => $pos],
+                        ['id' => (int)$id]
+                    );
+                    $pos++;
+                }
+            });
+        } catch (\Throwable) {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+                'messages' => __('ERROR__INTERNAL_ERROR'),
             ]));
         }
 
@@ -126,7 +126,7 @@ class SocialController extends AppController
             throw new ForbiddenException();
         }
 
-        $this->set('title_for_layout', __('SOCIAL__HOME'));
+        $this->set('title_for_layout', __('SOCIAL__ADD'));
         $this->set('social_default', $this->social_default);
 
         $this->viewBuilder()
@@ -144,57 +144,51 @@ class SocialController extends AppController
         $this->response = $this->response->withType('application/json');
 
         $url = (string)$request->getData('url', '');
+        $type = (string)$request->getData('type', '');
+        $title = (string)$request->getData('title', '');
+        $img = (string)$request->getData('img', '');
+        $icon = (string)$request->getData('icon', '');
+        $color = (string)$request->getData('color', '');
 
-        if ($url === '') {
+        if ($title === '' || $url === '' || $color === '') {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
                 'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
-        if (!empty($request->getData('img')) && !empty($request->getData('icon')) && empty($request->getData('type'))) {
+        if ($img !== '' && $icon !== '') {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'messages' => __('SOCIAL__CANNOT_TOW_TYPE'),
+                'messages' => __('SOCIAL__CANNOT_TWO_TYPE'),
             ]));
         }
 
-        $extra = null;
-        $type = (string)$request->getData('type', '');
-
-        if ($type !== '') {
-            if ($type === 'img') {
-                $extra = $request->getData('img');
-            } else {
-                $extra = $request->getData('icon');
-            }
-        }
+        $extra = $type === 'img' ? $img : ($type === 'icon' ? $icon : null);
 
         $socialButtonTable = $this->fetchTable('SocialButtons');
-
-        $last = $socialButtonTable
-            ->find()
-            ->orderBy(['order' => 'DESC'])
-            ->limit(1)
-            ->first();
-
+        $last = $socialButtonTable->find()->orderBy(['order' => 'DESC'])->limit(1)->first();
         $order = $last ? (int)$last['order'] + 1 : 1;
 
         $button = $socialButtonTable->newEntity([
             'order' => $order,
-            'title' => $request->getData('title'),
+            'title' => $title,
             'extra' => $extra,
-            'color' => $request->getData('color'),
+            'color' => $color,
             'url' => $url,
         ]);
 
-        $socialButtonTable->save($button);
-
-        $this->History->set('ADD_SOCIAL', 'social network');
+        if ($socialButtonTable->save($button)) {
+            $this->History->set('ADD_SOCIAL', 'social network');
+            return $this->response->withStringBody(json_encode([
+                'status' => true,
+                'messages' => __('SOCIAL__BUTTON_SUCCESS'),
+            ]));
+        }
 
         return $this->response->withStringBody(json_encode([
-            'status' => true,
-            'messages' => __('SOCIAL__BUTTON_SUCCESS'),
+            'status' => false,
+            'messages' => __('ERROR__INTERNAL_ERROR'),
         ]));
     }
 
@@ -209,30 +203,20 @@ class SocialController extends AppController
         }
 
         $socialButtonTable = $this->fetchTable('SocialButtons');
-
-        $button = $socialButtonTable
-            ->find()
-            ->where(['id' => $id])
-            ->orderBy(['id' => 'DESC'])
-            ->first();
+        $button = $socialButtonTable->find()->where(['id' => $id])->first();
 
         if (!$button) {
             throw new NotFoundException();
         }
 
-        $this->set('title_for_layout', __('SOCIAL__HOME'));
+        $this->set('title_for_layout', __('SOCIAL__EDIT'));
+        $this->set('social_button', $button);
+        $this->set('social_default', $this->social_default);
 
         $type = null;
         if (!empty($button['extra'])) {
-            if (strpos((string)$button['extra'], 'fa-') !== false) {
-                $type = 'fa';
-            } else {
-                $type = 'img';
-            }
+            $type = (strpos((string)$button['extra'], 'fa-') !== false) ? 'icon' : 'img';
         }
-
-        $this->set('social_button', $button);
-        $this->set('social_default', $this->social_default);
         $this->set('social_button_type', $type);
 
         $this->viewBuilder()
@@ -250,53 +234,57 @@ class SocialController extends AppController
         $this->response = $this->response->withType('application/json');
 
         $url = (string)$request->getData('url', '');
+        $type = (string)$request->getData('type', '');
+        $title = (string)$request->getData('title', '');
+        $img = (string)$request->getData('img', '');
+        $icon = (string)$request->getData('icon', '');
+        $color = (string)$request->getData('color', '');
 
-        if ($url === '') {
+        if ($title === '' || $url === '' || $color === '') {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
                 'messages' => __('ERROR__FILL_ALL_FIELDS'),
             ]));
         }
 
-        if (!empty($request->getData('img')) && !empty($request->getData('icon')) && empty($request->getData('type'))) {
+        if ($img !== '' && $icon !== '' && $type === '') {
             return $this->response->withStringBody(json_encode([
                 'status' => false,
-                'messages' => __('SOCIAL__CANNOT_TOW_TYPE'),
+                'messages' => __('SOCIAL__CANNOT_TWO_TYPE'),
             ]));
         }
 
         $extra = null;
-        $type = (string)$request->getData('type', '');
-
-        if ($type !== '') {
-            if ($type === 'img') {
-                $extra = $request->getData('img');
-            } else {
-                $extra = $request->getData('icon');
-            }
+        if ($type === 'img') {
+            $extra = $img;
+        } elseif ($type === 'icon') {
+            $extra = $icon;
         }
 
         $entity = $socialButtonTable->get($id);
-        $entity->set([
-            'title' => $request->getData('title'),
+        $entity = $socialButtonTable->patchEntity($entity, [
+            'title' => $title,
             'extra' => $extra,
-            'color' => $request->getData('color'),
+            'color' => $color,
             'url' => $url,
         ]);
-        $socialButtonTable->save($entity);
 
-        $this->History->set('EDIT_SOCIAL', 'social network');
+        if ($socialButtonTable->save($entity)) {
+            $this->History->set('EDIT_SOCIAL', 'social network');
+            return $this->response->withStringBody(json_encode([
+                'status' => true,
+                'messages' => __('SOCIAL__BUTTON_EDIT_SUCCESS'),
+            ]));
+        }
 
         return $this->response->withStringBody(json_encode([
-            'status' => true,
-            'messages' => __('SOCIAL__BUTTON_EDIT_SUCCESS'),
+            'status' => false,
+            'messages' => __('ERROR__INTERNAL_ERROR'),
         ]));
     }
 
     public function delete(int|string|null $id = null): Response
     {
-        $this->disableAutoRender();
-
         if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SOCIAL'))) {
             return $this->redirect('/');
         }

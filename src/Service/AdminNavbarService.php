@@ -11,6 +11,8 @@ final class AdminNavbarService
     {
         $nav = $this->baseNav();
 
+        $nav = $this->injectThemeMenus($nav);
+
         $addons = new AddonService();
         $pluginMenus = $addons->findPluginsAdminMenus();
 
@@ -29,6 +31,49 @@ final class AdminNavbarService
         }
 
         $nav[$key]['menu'] = $this->mergeMenusAtIndexes((array)$nav[$key]['menu'], $pluginMenus);
+
+        return $nav;
+    }
+
+    private function injectThemeMenus(array $nav): array
+    {
+        $slug = (string)Configure::read('theme', 'default');
+
+        $theme = new ThemeService();
+        [, $config] = $theme->getCustomData($slug);
+
+        $sliderEnabled = !empty($config['slider']);
+        if (!$sliderEnabled) {
+            return $nav;
+        }
+
+        $groupKey = 'GLOBAL__CUSTOMIZE';
+
+        if (!isset($nav[$groupKey]) || !is_array($nav[$groupKey])) {
+            $nav[$groupKey] = [
+                'icon' => 'fas fa-paint-brush',
+                'menu' => [],
+            ];
+        }
+
+        if (!isset($nav[$groupKey]['menu']) || !is_array($nav[$groupKey]['menu'])) {
+            $nav[$groupKey]['menu'] = [];
+        }
+
+        if (isset($nav[$groupKey]['menu']['SLIDER__TITLE'])) {
+            return $nav;
+        }
+
+        $nav[$groupKey]['menu']['SLIDER__TITLE'] = [
+            'icon' => 'far fa-image',
+            'permission' => 'MANAGE_SLIDER',
+            'route' => [
+                'controller' => 'Slider',
+                'action' => 'index',
+                'prefix' => 'Admin',
+                'plugin' => null,
+            ],
+        ];
 
         return $nav;
     }

@@ -1,136 +1,167 @@
 <section class="content">
-    <div class="row">
-        <div class="col-md-12">
+    <div class="container-fluid">
 
-            <div class="card">
-                <div class="card-header with-border">
-                    <h3 class="card-title"><?= __('NEWS__EDIT') ?></h3>
-                </div>
+        <div class="row">
+            <div class="col-12">
 
-                <div class="card-body">
+                <div class="card card-outline card-primary">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h3 class="card-title mb-0">
+                                <i class="fas fa-pen mr-2"></i><?= __('NEWS__EDIT') ?>
+                            </h3>
 
-                    <?= $this->Form->create(null, [
-                        'url' => ['_name' => 'admin_news_edit_ajax'],
-                        'data-ajax' => 'true',
-                        'data-redirect-url' => $this->Url->build(['_name' => 'admin_news_index'])
-                    ]) ?>
+                            <div class="d-flex align-items-center">
+                                <?php
+                                $slug = (string)($news['slug'] ?? '');
+                                $publicUrl = $this->Url->build('/blog/' . $slug, ['fullBase' => true]);
+                                ?>
+                                <a href="<?= h($publicUrl) ?>" target="_blank" class="btn btn-outline-secondary btn-sm mr-2">
+                                    <i class="fas fa-external-link-alt mr-1"></i><?= __('GLOBAL__VIEW') ?>
+                                </a>
 
-                    <div class="ajax-msg"></div>
-
-                    <input type="hidden" name="id" value="<?= h($news['id']) ?>">
-
-                    <div class="form-group">
-                        <label for="news-title"><?= __('GLOBAL__TITLE') ?></label>
-                        <input
-                            id="news-title"
-                            name="title"
-                            class="form-control"
-                            value="<?= h($news['title']) ?>"
-                            placeholder="<?= __('GLOBAL__TITLE') ?>"
-                            type="text"
-                        >
-                    </div>
-
-                    <div class="form-group">
-                        <label for="slug"><?= __('GLOBAL__SLUG') ?></label>
-                        <div class="input-group mb-3">
-
-                            <div class="input-group-prepend">
-                                <span class="input-group-text"><?= h($this->Url->build('/blog/', true)) ?></span>
-                            </div>
-
-                            <input
-                                id="slug"
-                                name="slug"
-                                class="form-control"
-                                value="<?= h($news['slug']) ?>"
-                                placeholder="<?= __('GLOBAL__SLUG') ?>"
-                                type="text"
-                            >
-
-                            <div class="input-group-append">
-                                <a href="#" id="generate_slug" class="btn btn-info"><?= __('GLOBAL__GENERATE') ?></a>
+                                <a href="<?= $this->Url->build(['_name' => 'admin_news_index']) ?>"
+                                   class="btn btn-default btn-sm">
+                                    <i class="fas fa-arrow-left mr-2"></i><?= __('GLOBAL__BACK') ?>
+                                </a>
                             </div>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <?= $this->Html->script('admin/tinymce/tinymce.min.js') ?>
+                    <div class="card-body p-0">
+                        <div class="p-3 p-md-4">
 
-                        <script>
-                            tinymce.init({
-                                selector: "textarea#editor",
-                                license_key: 'gpl',
-                                promotion: false,
-                                branding: false,
-                                height: 300,
-                                width: "100%",
-                                language: "<?= $currentLocale ?>",
-                                plugins: "code image link",
-                                toolbar: "fontselect fontsizeselect bold italic underline strikethrough link image forecolor backcolor alignleft aligncenter alignright alignjustify cut copy paste bullist numlist outdent indent blockquote code"
-                            });
-                        </script>
+                            <?= $this->Form->create(null, [
+                                'url' => ['_name' => 'admin_news_edit_ajax'],
+                                'data-ajax' => 'true',
+                                'data-redirect-url' => $this->Url->build(['_name' => 'admin_news_index']),
+                            ]) ?>
 
-                        <label for="editor"><?= __('GLOBAL__CONTENT') ?></label>
-                        <textarea
-                            id="editor"
-                            name="content"
-                            cols="30"
-                            rows="10"
-                        ><?= h($news['content']) ?></textarea>
-                    </div>
+                            <div class="ajax-msg"></div>
 
-                    <div class="form-group">
-                        <div class="form-check">
-                            <input
-                                id="news-published"
-                                name="published"
-                                type="checkbox"
-                                class="form-check-input"
-                                value="1"<?= $news['published'] ? ' checked' : '' ?>
-                            >
-                            <label class="form-check-label" for="news-published">
-                                <?= __('NEWS__WANT_TO_PUBLISH') ?>
-                            </label>
+                            <input type="hidden" name="id" value="<?= h((string)$news['id']) ?>">
+
+                            <div class="form-group">
+                                <label for="news-title"><?= __('GLOBAL__TITLE') ?></label>
+                                <input
+                                    id="news-title"
+                                    name="title"
+                                    class="form-control"
+                                    value="<?= h((string)($news['title'] ?? '')) ?>"
+                                    placeholder="<?= __('GLOBAL__TITLE') ?>"
+                                    type="text"
+                                    autocomplete="off"
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label for="news-slug"><?= __('GLOBAL__SLUG') ?></label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><?= h($this->Url->build('/blog/', ['fullBase' => true])) ?></span>
+                                    </div>
+
+                                    <input
+                                        id="news-slug"
+                                        name="slug"
+                                        class="form-control"
+                                        value="<?= h((string)($news['slug'] ?? '')) ?>"
+                                        placeholder="<?= __('GLOBAL__SLUG') ?>"
+                                        type="text"
+                                        autocomplete="off"
+                                    >
+
+                                    <div class="input-group-append">
+                                        <button type="button" id="generate_slug" class="btn btn-info">
+                                            <i class="fas fa-magic mr-1"></i><?= __('GLOBAL__GENERATE') ?>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="news-content"><?= __('GLOBAL__CONTENT') ?></label>
+
+                                <?= $this->Html->script('admin/tinymce/tinymce.min.js') ?>
+
+                                <script>
+                                    tinymce.init({
+                                        selector: "#news-content",
+                                        license_key: "gpl",
+                                        promotion: false,
+                                        branding: false,
+                                        height: 380,
+                                        width: "100%",
+                                        language: "<?= $currentLocale ?>",
+                                        plugins: "code image link lists",
+                                        toolbar: "fontselect fontsizeselect bold italic underline strikethrough link image forecolor backcolor alignleft aligncenter alignright alignjustify bullist numlist outdent indent blockquote code",
+                                        menubar: false,
+                                        statusbar: true
+                                    });
+                                </script>
+
+                                <textarea id="news-content" name="content" cols="30" rows="10"><?= h((string)($news['content'] ?? '')) ?></textarea>
+                            </div>
+
+                            <div class="form-group mb-4">
+                                <div class="custom-control custom-switch">
+                                    <input
+                                        id="news-published"
+                                        name="published"
+                                        type="checkbox"
+                                        class="custom-control-input"
+                                        value="1"<?= !empty($news['published']) ? ' checked' : '' ?>
+                                    >
+                                    <label class="custom-control-label" for="news-published">
+                                        <?= __('NEWS__WANT_TO_PUBLISH') ?>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end">
+                                <a href="<?= $this->Url->build(['_name' => 'admin_news_index']) ?>"
+                                   class="btn btn-default mr-2">
+                                    <i class="fas fa-times mr-1"></i><?= __('GLOBAL__CANCEL') ?>
+                                </a>
+
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="fas fa-check mr-1"></i><?= __('GLOBAL__SUBMIT') ?>
+                                </button>
+                            </div>
+
+                            <?= $this->Form->end() ?>
+
                         </div>
                     </div>
 
-                    <div class="float-right">
-                        <a
-                            href="<?= $this->Url->build(['_name' => 'admin_news_index']) ?>"
-                            class="btn btn-default"
-                        >
-                            <?= __('GLOBAL__CANCEL') ?>
-                        </a>
-
-                        <button class="btn btn-primary" type="submit">
-                            <?= __('GLOBAL__SUBMIT') ?>
-                        </button>
-                    </div>
-
-                    <?= $this->Form->end() ?>
-
                 </div>
+
             </div>
         </div>
+
     </div>
 </section>
 
 <script>
-    document.querySelector('#generate_slug')?.addEventListener('click', function (e) {
-        e.preventDefault();
-        const titleInput = document.querySelector('input[name="title"]');
-        const slugInput = document.querySelector('#slug');
+    (function () {
+        const btn = document.querySelector('#generate_slug');
+        const titleEl = document.querySelector('#news-title');
+        const slugEl = document.querySelector('#news-slug');
 
-        if (!titleInput || !slugInput) {
+        if (!btn || !titleEl || !slugEl) {
             return;
         }
 
-        const title = titleInput.value || "";
-        slugInput.value = title
-            .trim()
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-+|-+$/g, "");
-    });
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const title = String(titleEl.value || '');
+            slugEl.value = title
+                .trim()
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+        });
+    })();
 </script>

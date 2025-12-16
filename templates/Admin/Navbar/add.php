@@ -5,9 +5,16 @@
 
                 <div class="card card-outline card-primary">
                     <div class="card-header">
-                        <h3 class="card-title mb-0">
-                            <i class="fas fa-plus mr-2"></i><?= __('NAVBAR__ADD_LINK') ?>
-                        </h3>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h3 class="card-title mb-0">
+                                <i class="fas fa-plus mr-2"></i><?= __('NAVBAR__ADD_LINK') ?>
+                            </h3>
+
+                            <a href="<?= $this->Url->build(['_name' => 'admin_navbar_index']) ?>"
+                               class="btn btn-default btn-sm">
+                                <i class="fas fa-arrow-left mr-2"></i><?= __('GLOBAL__BACK') ?>
+                            </a>
+                        </div>
                     </div>
 
                     <div class="card-body p-0">

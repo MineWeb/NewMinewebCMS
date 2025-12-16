@@ -21,7 +21,7 @@ class NewsController extends AppController
         $this->set('title_for_layout', __('NEWS__LIST_PUBLISHED'));
 
         $newsTable = $this->fetchTable('News');
-        $view_news = $newsTable->find()->all();
+        $view_news = $newsTable->find()->toArray();
 
         $this->set(compact('view_news'));
 
@@ -45,7 +45,7 @@ class NewsController extends AppController
 
         $event = new Event('beforeDeleteNews', $this, [
             'news_id' => $id,
-            'user' => $this->User->getAllFromCurrentUser(),
+            'user' => $this->Auth->user(),
         ]);
         $this->getEventManager()->dispatch($event);
         if ($event->isStopped()) {
@@ -110,7 +110,9 @@ class NewsController extends AppController
         $title = (string)$request->getData('title', '');
         $content = (string)$request->getData('content', '');
         $slugRaw = (string)$request->getData('slug', '');
-        $published = $request->getData('published');
+
+        $publishedRaw = $request->getData('published');
+        $published = $publishedRaw === '1' || $publishedRaw === 1 || $publishedRaw === true || $publishedRaw === 'on' ? 1 : 0;
 
         if ($title === '' || $content === '' || $slugRaw === '') {
             return $this->response->withStringBody(json_encode([
@@ -119,9 +121,19 @@ class NewsController extends AppController
             ]));
         }
 
+        $authUser = $this->Auth->user();
+        $authUserId = $authUser ? (int)$authUser->id : null;
+
+        if ($authUserId === null) {
+            return $this->response->withStringBody(json_encode([
+                'status' => false,
+                'messages' => __('ERROR__BAD_REQUEST'),
+            ]));
+        }
+
         $event = new Event('beforeAddNews', $this, [
             'news' => $request->getData(),
-            'user' => $this->User->getAllFromCurrentUser(),
+            'user' => $authUser,
         ]);
         $this->getEventManager()->dispatch($event);
         if ($event->isStopped()) {
@@ -141,7 +153,7 @@ class NewsController extends AppController
         $entity = $newsTable->newEntity([
             'title' => $title,
             'content' => $content,
-            'user_id' => $this->User->get('id'),
+            'user_id' => $authUserId,
             'updated_at' => date('Y-m-d H:i:s'),
             'comments' => 0,
             'likes' => 0,
@@ -226,7 +238,7 @@ class NewsController extends AppController
         $event = new Event('beforeEditNews', $this, [
             'news' => $request->getData(),
             'news_id' => $id,
-            'user' => $this->User->getAllFromCurrentUser(),
+            'user' => $this->Auth->user(),
         ]);
         $this->getEventManager()->dispatch($event);
         if ($event->isStopped()) {

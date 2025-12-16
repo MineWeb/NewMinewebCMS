@@ -22,8 +22,29 @@ class PagesController extends AppController
         $pageTable = $this->fetchTable('Pages');
         $pages = $pageTable->find()->toArray();
 
+        $userIds = [];
+        foreach ($pages as $p) {
+            if (!empty($p['user_id'])) {
+                $userIds[(int)$p['user_id']] = true;
+            }
+        }
+
+        $authors = [];
+        if ($userIds !== []) {
+            $usersTable = $this->fetchTable('Users');
+            $rows = $usersTable->find()
+                ->select(['id', 'username'])
+                ->where(['id IN' => array_keys($userIds)])
+                ->all();
+
+            foreach ($rows as $u) {
+                $authors[(int)$u->id] = (string)$u->username;
+            }
+        }
+
         foreach ($pages as $index => $page) {
-            $pages[$index]['author'] = $this->User->getFromUser('username', $page['user_id']);
+            $uid = isset($page['user_id']) ? (int)$page['user_id'] : 0;
+            $pages[$index]['author'] = $authors[$uid] ?? '';
         }
 
         $this->set('pages', $pages);
@@ -81,12 +102,17 @@ class PagesController extends AppController
             ]));
         }
 
+        $userId = $this->Auth->id();
+        if ($userId === null) {
+            throw new ForbiddenException();
+        }
+
         $pageTable = $this->fetchTable('Pages');
 
         $entity = $pageTable->newEntity([
             'title' => $title,
             'content' => $content,
-            'user_id' => $this->User->get('id'),
+            'user_id' => $userId,
             'slug' => Text::slug($slugRaw),
             'updated_at' => date('Y-m-d H:i:s'),
         ]);

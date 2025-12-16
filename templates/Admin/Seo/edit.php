@@ -5,9 +5,15 @@
 
                 <div class="card card-outline card-primary">
                     <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-edit mr-2"></i><?= __('SEO__EDIT_PAGE') ?>
-                        </h3>
+                        <div class="d-flex align-items-center justify-content-between flex-wrap" style="gap:10px;">
+                            <h3 class="card-title mb-0">
+                                <i class="fas fa-edit mr-2"></i><?= __('SEO__EDIT_PAGE') ?>
+                            </h3>
+
+                            <a href="<?= $this->Url->build(['_name' => 'admin_seo_index']) ?>" class="btn btn-default btn-sm mt-2 mt-sm-0">
+                                <i class="fas fa-arrow-left mr-2"></i><?= __('GLOBAL__BACK') ?>
+                            </a>
+                        </div>
                     </div>
 
                     <div class="card-body p-0">
@@ -242,9 +248,6 @@
 
                                 <div class="col-12">
                                     <div class="d-flex justify-content-end mt-3">
-                                        <a href="<?= $this->Url->build(['_name' => 'admin_seo_index']) ?>" class="btn btn-default mr-2">
-                                            <?= __('GLOBAL__CANCEL') ?>
-                                        </a>
                                         <button class="btn btn-primary" type="submit">
                                             <i class="fas fa-save mr-2"></i><?= __('GLOBAL__SUBMIT') ?>
                                         </button>

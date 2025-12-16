@@ -783,7 +783,7 @@
         "SOCIAL__BUTTON_IMG_SIZE": "(Желательно, чтобы изображение было шире, чем его высота)",
         "SOCIAL__BUTTON_IMG_ALT": "Репрезентативное изображение",
         "SOCIAL__BUTTON_ICON": "Значки Button FontAwesome (необязательно)",
-        "SOCIAL__CANNOT_TOW_TYPE": "Не может быть одновременно определено 2 типа иллюстраций!",
+        "SOCIAL__CANNOT_TWO_TYPE": "Не может быть одновременно определено 2 типа иллюстраций!",
         "SOCIAL__BUTTON_SUCCESS": "Кнопка успешно создана!",
         "SOCIAL__BUTTON_EDIT_SUCCESS": "Кнопка успешно отредактирована!",
         "SOCIAL__BUTTON_DELETE_SUCCESS": "Кнопка была успешно удалена!",
