@@ -5,6 +5,7 @@ return [
     'Dashboard' => [
         'icon' => 'fas fa-tachometer-alt',
         'route' => ['_name' => 'admin_index'],
+        'match' => 'exact',
     ],
 
     'GLOBAL__ADMIN_USERS' => [

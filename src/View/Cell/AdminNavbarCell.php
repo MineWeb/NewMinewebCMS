@@ -50,11 +50,13 @@ final class AdminNavbarCell extends Cell
                 ? $this->normalizeNav($node['menu'], $currentPath)
                 : [];
 
-            $active = $urlPath !== '' && $urlPath === $currentPath;
+            $match = isset($node['match']) ? (string)$node['match'] : 'prefix';
+
+            $active = $this->isActivePath($urlPath, $currentPath, $match);
             $open = !$active && $children !== [] && $this->hasActiveChild($children);
 
             $items[] = [
-                'label' => __((string)$label),
+                'label' => (string)$label,
                 'icon' => (string)($node['icon'] ?? ''),
                 'permission' => isset($node['permission']) ? (string)$node['permission'] : null,
                 'url' => $url,
@@ -65,6 +67,26 @@ final class AdminNavbarCell extends Cell
         }
 
         return $items;
+    }
+
+    private function isActivePath(string $urlPath, string $currentPath, string $match): bool
+    {
+        if ($urlPath === '' || $urlPath === '#') {
+            return false;
+        }
+
+        if ($match === 'exact') {
+            return $currentPath === $urlPath;
+        }
+
+        if ($currentPath === $urlPath) {
+            return true;
+        }
+
+        $base = rtrim($urlPath, '/');
+        $prefix = $base . '/';
+
+        return $base !== '' && str_starts_with($currentPath, $prefix);
     }
 
     private function safeUrl(mixed $route): string
