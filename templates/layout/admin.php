@@ -40,7 +40,7 @@
 
         <ul class="navbar-nav ml-auto">
             <li class="nav-item">
-                <div class="nav-link custom-control custom-switch custom-switch-off-danger custom-switch-on-success" data-children-count="1">
+                <div class="nav-link custom-control custom-switch custom-switch-off-light custom-switch-on-success" data-children-count="1">
                     <input type="checkbox" class="custom-control-input switchAdminDarkMode"
                            id="customSwitch3" <?= $this->AdminUi->darkModeEnabled() ? 'checked' : '' ?>>
                     <label class="custom-control-label" for="customSwitch3">Dark-Mode</label>

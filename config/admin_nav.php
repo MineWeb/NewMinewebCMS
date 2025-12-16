@@ -6,46 +6,54 @@ return [
         'icon' => 'fas fa-tachometer-alt',
         'route' => ['_name' => 'admin_index'],
     ],
-    'GLOBAL__ADMIN_GENERAL' => [
-        'icon' => 'cogs',
+
+    'GLOBAL__ADMIN_USERS' => [
+        'icon' => 'fas fa-users-cog',
         'menu' => [
             'USER__MEMBERS_REGISTERED' => [
-                'icon' => 'users',
+                'icon' => 'fas fa-users',
                 'permission' => 'MANAGE_USERS',
                 'route' => ['_name' => 'admin_user_index'],
             ],
             'BAN__MEMBERS' => [
-                'icon' => 'ban',
+                'icon' => 'fas fa-user-slash',
                 'permission' => 'MANAGE_BAN',
                 'route' => ['_name' => 'admin_ban_index'],
             ],
             'PERMISSIONS__LABEL' => [
-                'icon' => 'user',
+                'icon' => 'fas fa-user-shield',
                 'permission' => 'MANAGE_PERMISSIONS',
                 'route' => ['_name' => 'admin_roles_index'],
             ],
+        ],
+    ],
+
+    'GLOBAL__ADMIN_SETTINGS' => [
+        'icon' => 'fas fa-sliders-h',
+        'menu' => [
             'CONFIG__GENERAL_PREFERENCES' => [
-                'icon' => 'cog',
+                'icon' => 'fas fa-cog',
                 'permission' => 'MANAGE_CONFIGURATION',
                 'route' => ['_name' => 'admin_configuration_index'],
             ],
-            'STATS__TITLE' => [
-                'icon' => 'far fa-chart-bar',
-                'permission' => 'VIEW_STATISTICS',
-                'route' => ['_name' => 'admin_statistics_index'],
-            ],
             'MAINTENANCE__TITLE' => [
-                'icon' => 'fas fa-hand-paper',
+                'icon' => 'fas fa-tools',
                 'permission' => 'MANAGE_MAINTENANCE',
                 'route' => ['_name' => 'admin_maintenance_index'],
             ],
+            'API__LABEL' => [
+                'icon' => 'fas fa-sitemap',
+                'permission' => 'MANAGE_API',
+                'route' => ['_name' => 'admin_api_index'],
+            ],
         ],
     ],
-    'GLOBAL__CUSTOMIZE' => [
-        'icon' => 'fas fa-copy',
+
+    'GLOBAL__ADMIN_CONTENT' => [
+        'icon' => 'fas fa-edit',
         'menu' => [
             'NEWS__TITLE' => [
-                'icon' => 'fas fa-pencil-ruler',
+                'icon' => 'fas fa-newspaper',
                 'permission' => 'MANAGE_NEWS',
                 'route' => ['_name' => 'admin_news_index'],
             ],
@@ -74,90 +82,90 @@ return [
                 'permission' => 'MANAGE_MOTD',
                 'route' => ['_name' => 'admin_motd_index'],
             ],
+            'NOTIFICATION__TITLE' => [
+                'icon' => 'fas fa-bell',
+                'permission' => 'MANAGE_NOTIFICATIONS',
+                'route' => ['_name' => 'admin_notifications_index'],
+            ],
         ],
     ],
+
     'SERVER__TITLE' => [
-        'icon' => 'server',
+        'icon' => 'fas fa-server',
         'permission' => 'MANAGE_SERVERS',
         'menu' => [
             'SERVER__LINK' => [
-                'icon' => 'fas fa-arrows-alt-h',
+                'icon' => 'fas fa-link',
                 'permission' => 'MANAGE_SERVERS',
                 'route' => ['_name' => 'admin_server_link'],
             ],
-            'SERVER__BANLIST' => [
-                'icon' => 'ban',
-                'permission' => 'MANAGE_SERVERS',
-                'route' => ['_name' => 'admin_server_banlist'],
-            ],
-            'SERVER__WHITELIST' => [
-                'icon' => 'list',
-                'permission' => 'MANAGE_SERVERS',
-                'route' => ['_name' => 'admin_server_whitelist'],
-            ],
             'SERVER__ONLINE_PLAYERS' => [
-                'icon' => 'list-ul',
+                'icon' => 'fas fa-users',
                 'permission' => 'MANAGE_SERVERS',
                 'route' => ['_name' => 'admin_server_online'],
             ],
+            'SERVER__WHITELIST' => [
+                'icon' => 'fas fa-user-check',
+                'permission' => 'MANAGE_SERVERS',
+                'route' => ['_name' => 'admin_server_whitelist'],
+            ],
+            'SERVER__BANLIST' => [
+                'icon' => 'fas fa-ban',
+                'permission' => 'MANAGE_SERVERS',
+                'route' => ['_name' => 'admin_server_banlist'],
+            ],
             'SERVER__CMD' => [
-                'icon' => 'key',
+                'icon' => 'fas fa-terminal',
                 'permission' => 'MANAGE_SERVERS',
                 'route' => ['_name' => 'admin_server_cmd'],
             ],
         ],
     ],
-    'GLOBAL__ADMIN_PLUGINS' => [
-        'icon' => 'puzzle-piece',
-    ],
-    'GLOBAL__ADMIN_LOGS_TITLE' => [
-        'icon' => 'scroll',
-        'menu' => [
-            'LOG__VIEW_ERROR' => [
-                'icon' => 'exclamation-circle',
-                'permission' => 'VIEW_WEBSITE_LOGS',
-                'route' => ['_name' => 'admin_log_error'],
-            ],
-            'LOG__VIEW_DEBUG' => [
-                'icon' => 'exclamation-triangle',
-                'permission' => 'VIEW_WEBSITE_LOGS',
-                'route' => ['_name' => 'admin_log_debug'],
-            ],
-        ],
-    ],
-    'GLOBAL__ADMIN_OTHER_TITLE' => [
-        'icon' => 'fas fa-folder-open',
+
+    'GLOBAL__ADMIN_EXTENSIONS' => [
+        'icon' => 'fas fa-puzzle-piece',
         'menu' => [
             'PLUGIN__TITLE' => [
-                'icon' => 'plus',
+                'icon' => 'fas fa-plug',
                 'permission' => 'MANAGE_PLUGINS',
                 'route' => ['_name' => 'admin_plugin_index'],
             ],
             'THEME__TITLE' => [
-                'icon' => 'mobile',
+                'icon' => 'fas fa-palette',
                 'permission' => 'MANAGE_THEMES',
                 'route' => ['_name' => 'admin_theme_index'],
             ],
-            'API__LABEL' => [
-                'icon' => 'sitemap',
-                'permission' => 'MANAGE_API',
-                'route' => ['_name' => 'admin_api_index'],
+        ],
+    ],
+
+    'GLOBAL__ADMIN_SYSTEM' => [
+        'icon' => 'fas fa-shield-alt',
+        'menu' => [
+            'STATS__TITLE' => [
+                'icon' => 'far fa-chart-bar',
+                'permission' => 'VIEW_STATISTICS',
+                'route' => ['_name' => 'admin_statistics_index'],
             ],
-            'NOTIFICATION__TITLE' => [
-                'icon' => 'flag',
-                'permission' => 'MANAGE_NOTIFICATIONS',
-                'route' => ['_name' => 'admin_notifications_index'],
+            'GLOBAL__ADMIN_LOGS_TITLE' => [
+                'icon' => 'fas fa-scroll',
+                'menu' => [
+                    'LOG__VIEW_ERROR' => [
+                        'icon' => 'fas fa-times-circle',
+                        'permission' => 'VIEW_WEBSITE_LOGS',
+                        'route' => ['_name' => 'admin_log_error'],
+                    ],
+                    'LOG__VIEW_DEBUG' => [
+                        'icon' => 'fas fa-exclamation-triangle',
+                        'permission' => 'VIEW_WEBSITE_LOGS',
+                        'route' => ['_name' => 'admin_log_debug'],
+                    ],
+                ],
             ],
             'HISTORY__VIEW_GLOBAL' => [
-                'icon' => 'table',
+                'icon' => 'fas fa-history',
                 'permission' => 'VIEW_WEBSITE_HISTORY',
                 'route' => ['_name' => 'admin_history_index'],
             ],
         ],
-    ],
-    'GLOBAL__UPDATE' => [
-        'icon' => 'wrench',
-        'permission' => 'MANAGE_UPDATE',
-        'route' => ['_name' => 'admin_update_index'],
     ],
 ];
