@@ -60,10 +60,13 @@
                         <script>
                             tinymce.init({
                                 selector: "textarea#editor",
+                                license_key: 'gpl',
+                                promotion: false,
+                                branding: false,
                                 height: 300,
                                 width: "100%",
-                                language: "fr_FR",
-                                plugins: "textcolor code image link",
+                                language: "<?= $currentLocale ?>",
+                                plugins: "code image link",
                                 toolbar: "fontselect fontsizeselect bold italic underline strikethrough link image forecolor backcolor alignleft aligncenter alignright alignjustify cut copy paste bullist numlist outdent indent blockquote code"
                             });
                         </script>

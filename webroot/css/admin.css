@@ -6,6 +6,13 @@
     padding: 5px 0px 5px 0px;
 }
 
+.tox {
+    border-radius: 0.25rem !important;
+    border: 1px solid #d2d6de !important;
+    background-color: #fff !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
 .checkbox label {
     display: inline-block;
     position: relative;
