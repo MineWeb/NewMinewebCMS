@@ -1,15 +1,1 @@
-<?php
-/**
- * @let \App\View\AppView $this
- * @let array $params
- * @let string $message
- */
-$class = 'message';
-if (!empty($params['class'])) {
-    $class .= ' ' . $params['class'];
-}
-if (!isset($params['escape']) || $params['escape'] !== false) {
-    $message = h($message);
-}
-?>
-<div class="<?= h($class) ?>" onclick="this.classList.add('hidden');"><?= $message ?></div>
+<?= $this->element('flash/_flash', ['message' => $message, 'params' => ['type' => 'info'] + $params]) ?>

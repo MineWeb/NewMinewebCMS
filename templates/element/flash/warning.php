@@ -1,15 +1,1 @@
-<?php
-/**
- * @let \App\View\AppView $this
- * @let array $params
- * @let string $message
- */
-if (!isset($params['escape']) || $params['escape'] !== false) {
-    $message = h($message);
-}
-?>
-<div class="alert alert-warning alert-dismissible" role="alert">
-    <strong><?= (__('GLOBAL__WARNING') !== null) ? __('GLOBAL__WARNING') : 'Warning' ?>
-        :</strong> <?php echo h($message); ?>
-</div>
-
+<?= $this->element('flash/_flash', ['message' => $message, 'params' => ['type' => 'warning'] + $params]) ?>

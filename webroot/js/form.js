@@ -251,8 +251,8 @@ const AjaxForms = (() => {
             const select = form.querySelector(`select[name="${CSS.escape(name)}"]`);
 
             if (textarea) {
-                if (textarea.id === "editor" && typeof tinymce !== "undefined" && tinymce.get("editor")) {
-                    obj[name] = tinymce.get("editor").getContent();
+                if (typeof tinymce !== "undefined" && textarea.id && tinymce.get(textarea.id)) {
+                    obj[name] = tinymce.get(textarea.id).getContent();
                 } else {
                     obj[name] = textarea.value;
                 }
