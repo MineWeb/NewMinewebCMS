@@ -27,6 +27,8 @@ class BanController extends AppController
         $this->Users = $this->fetchTable('Users');
 
         $this->permissions = new PermissionService();
+
+        $this->loadComponent('DataTable');
     }
 
     public function index(): ?Response

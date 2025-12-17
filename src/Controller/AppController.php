@@ -14,6 +14,7 @@ use Cake\I18n\I18n;
 /**
  * @property \App\Controller\Component\AuthComponent $Auth
  * @property \App\Controller\Component\HistoryComponent $History
+ * /
  */
 class AppController extends BaseController
 {

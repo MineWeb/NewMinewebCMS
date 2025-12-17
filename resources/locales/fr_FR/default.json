@@ -798,6 +798,7 @@
         "BAN__MEMBERS": "Membres bannis",
         "BAN__HOME": "Bannissements",
         "BAN__QUESTION": "Bannir ?",
+        "BAN__ADD_HINT": "Coche les joueurs à bannir, puis indique une raison. Optionnellement, coche aussi la case IP pour bannir leur adresse IP.",
         "BAN__IP_QUESTION": "Bannir l'IP ?",
         "BAN__REASON": "Raison du bannissement",
         "BAN__ADD": "Bannir un ou des membres",

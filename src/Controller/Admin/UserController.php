@@ -15,6 +15,9 @@ use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
 use Cake\Routing\Router;
 
+/**
+ * @property \App\Controller\Component\DataTableComponent $DataTable
+ */
 class UserController extends AppController
 {
     private UserAuthService $userAuth;

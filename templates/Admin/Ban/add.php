@@ -29,7 +29,7 @@
                             <div class="col-12">
                                 <div class="alert alert-light border d-flex align-items-start">
                                     <i class="fas fa-info-circle mt-1 mr-2"></i>
-                                    <div class="text-sm mb-0"><?= __('BAN__QUESTION') ?></div>
+                                    <div class="text-sm mb-0"><?= __('BAN__ADD_HINT') ?></div>
                                 </div>
                             </div>
 
