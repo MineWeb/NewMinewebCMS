@@ -93,7 +93,6 @@ final class SeoHelper extends Helper
         $request = $view->getRequest();
 
         $titleFallback = (string)($view->get('title') ?? $view->get('title_for_layout') ?? 'MineWeb');
-        $websiteNameFallback = (string)($view->get('website_name') ?? 'MineWeb');
 
         $seoTable = $this->fetchTable('Seo');
 
@@ -102,7 +101,6 @@ final class SeoHelper extends Helper
             $seoTable,
             $request->getRequestTarget(),
             $titleFallback,
-            $websiteNameFallback,
             $service->isSqliteDefaultConnection()
         );
 

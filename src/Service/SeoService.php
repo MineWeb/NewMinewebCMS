@@ -9,6 +9,13 @@ use Cake\Routing\Router;
 
 final class SeoService
 {
+    private ConfigurationService $configuration;
+
+    public function __construct(?ConfigurationService $configuration = null)
+    {
+        $this->configuration = $configuration ?? new ConfigurationService();
+    }
+
     public function isSqliteDefaultConnection(): bool
     {
         $conn = ConnectionManager::get('default');
@@ -17,13 +24,19 @@ final class SeoService
         return str_contains($driver, 'sqlite');
     }
 
+    private function getWebsiteNameFallback(): string
+    {
+        return $this->configuration->getWebsiteName();
+    }
+
     public function build(
         Table $seoTable,
         string $requestTarget,
         string $titleFallback,
-        string $websiteNameFallback,
         bool $isSqlite,
     ): array {
+        $websiteNameFallback = $this->getWebsiteNameFallback();
+
         $default = $seoTable->find()
             ->where(['Seo.page IS' => null])
             ->first();
