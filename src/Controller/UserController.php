@@ -9,6 +9,7 @@ use Cake\Event\Event;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Response;
 use Cake\Routing\Router;
+use Throwable;
 
 final class UserController extends AppController
 {
@@ -45,22 +46,24 @@ final class UserController extends AppController
         }
 
         $identity = $this->Auth->identity();
-        $userId = null;
-        $username = '';
+        $userId = (int)$identity->get('id');
+        $username = (string)$identity->get('username');
 
-        if (is_object($identity) && method_exists($identity, 'get')) {
-            $id = $identity->get('id');
-            if (is_numeric($id)) {
-                $userId = (int)$id;
-            }
-
-            $u = $identity->get('username');
-            if (is_string($u)) {
-                $username = $u;
-            }
+        if ($userId <= 0) {
+            return $this->redirect(['_name' => 'home']);
         }
 
-        if ($userId === null) {
+        $user = $this->Users
+            ->find()
+            ->where(['Users.id' => $userId])
+            ->contain([
+                'Roles' => function ($q) {
+                    return $q->select(['id', 'name', 'slug', 'is_system', 'sort']);
+                }
+            ])
+            ->first();
+
+        if ($user === null) {
             return $this->redirect(['_name' => 'home']);
         }
 
@@ -73,7 +76,7 @@ final class UserController extends AppController
             ])
             ->first();
 
-        $this->set('twoFactorAuthStatus', !empty($infos));
+        $this->set('twoFactorAuthStatus', (bool)$infos);
         $this->set('title_for_layout', $username);
 
         $this->viewBuilder()->setLayout((string)$this->config->get('layout'));
@@ -92,18 +95,7 @@ final class UserController extends AppController
             $this->set('shop_active', false);
         }
 
-        $available_ranks = [
-            0 => __('USER__RANK_MEMBER'),
-            2 => __('USER__RANK_MODERATOR'),
-            3 => __('USER__RANK_ADMINISTRATOR'),
-            4 => __('USER__RANK_ADMINISTRATOR'),
-        ];
-
-        $rankTable = $this->fetchTable('Ranks');
-        foreach ($rankTable->find()->all() as $value) {
-            $available_ranks[(int)$value['rank_id']] = (string)$value['name'];
-        }
-        $this->set(compact('available_ranks'));
+        $this->set('user', $user);
 
         $this->set('can_cape', (bool)$this->API->can_cape());
         $this->set('can_skin', (bool)$this->API->can_skin());
@@ -112,21 +104,20 @@ final class UserController extends AppController
         $configAPI = $apiConfigTable->find()->first();
 
         if ($configAPI !== null) {
-            $skin_width_max = (int)$configAPI['skin_width'];
-            $skin_height_max = (int)$configAPI['skin_height'];
-            $cape_width_max = (int)$configAPI['cape_width'];
-            $cape_height_max = (int)$configAPI['cape_height'];
+            $skin_width_max = (int)$configAPI->skin_width;
+            $skin_height_max = (int)$configAPI->skin_height;
+            $cape_width_max = (int)$configAPI->cape_width;
+            $cape_height_max = (int)$configAPI->cape_height;
 
-            $this->set(compact('skin_width_max', 'skin_height_max', 'cape_width_max', 'cape_height_max'));
+            $this->set(compact(
+                'skin_width_max',
+                'skin_height_max',
+                'cape_width_max',
+                'cape_height_max'
+            ));
         }
 
-        $confirmed = '';
-        if (is_object($identity) && method_exists($identity, 'get')) {
-            $c = $identity->get('confirmed');
-            if (is_string($c)) {
-                $confirmed = $c;
-            }
-        }
+        $confirmed = (string)$identity->get('confirmed');
 
         if (
             (bool)$this->config->get('confirm_mail_signup') &&
@@ -147,6 +138,7 @@ final class UserController extends AppController
 
         return $this->render();
     }
+
 
     public function changePw(): Response
     {

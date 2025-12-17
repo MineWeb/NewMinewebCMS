@@ -12,32 +12,30 @@
             <div class="section">
                 <p><b><?= __('USER__USERNAME') ?> :</b> <?= h($this->Auth->username()) ?></p>
             </div>
+
             <div class="section">
-                <p><b><?= __('USER__EMAIL') ?> :</b> <span id="email"><?= h($user['email']) ?></span></p>
+                <p><b><?= __('USER__EMAIL') ?> :</b> <span id="email"><?= h((string)($user->email ?? '')) ?></span></p>
             </div>
+
             <div class="section">
                 <p>
                     <b><?= __('USER__RANK') ?> :</b>
-                    <?php foreach ($available_ranks as $key => $value) {
-                        if ($user['rank'] == $key) {
-                            echo h($value);
-                        }
-                    } ?>
+                    <?= h($user->role ? (string)$user->role->display_name : (string)($user->role_id ?? '')) ?>
                 </p>
             </div>
 
             <?php if ($this->Plugin->isInstalled('eywek.shop')) { ?>
                 <div class="section">
-                    <p><b><?= __('USER__MONEY') ?> :</b> <span class="money"><?= h($user['money']) ?></span></p>
+                    <p><b><?= __('USER__MONEY') ?> :</b> <span class="money"><?= h((string)($user->money ?? '')) ?></span></p>
                 </div>
             <?php } ?>
 
             <div class="section">
-                <p><b><?= __('IP') ?> :</b> <?= h($user['ip']) ?></p>
+                <p><b><?= __('IP') ?> :</b> <?= h((string)($user->ip ?? '')) ?></p>
             </div>
 
             <div class="section">
-                <p><b><?= __('GLOBAL__CREATED') ?> :</b> <?= $this->Lang->date($user['created_at']) ?></p>
+                <p><b><?= __('GLOBAL__CREATED') ?> :</b> <?= $this->Lang->date((string)($user->created_at ?? '')) ?></p>
             </div>
 
             <div class="callout" id="twoFactorAuthStatus">
@@ -45,12 +43,12 @@
                     <div class="col-md-12 col-sm-12">
                         <a
                             id="toggleTwoFactorAuth"
-                            data-status="<?= (isset($twoFactorAuthStatus) && $twoFactorAuthStatus) ? '1' : '0' ?>"
+                            data-status="<?= (!empty($twoFactorAuthStatus)) ? '1' : '0' ?>"
                             class="btn btn-info"
                         >
                             Voulez-vous
                             <span id="twoFactorAuthStatusInfos">
-                                <?= (isset($twoFactorAuthStatus) && $twoFactorAuthStatus) ? 'désactiver' : 'activer' ?>
+                                <?= (!empty($twoFactorAuthStatus)) ? 'désactiver' : 'activer' ?>
                             </span>
                             la double authentification ?
                         </a>
@@ -59,7 +57,7 @@
             </div>
 
             <div id="twoFactorAuthValid" class="text-center" style="display: none;">
-                <img src="" id="two-factor-auth-qrcode" alt=""/>
+                <div id="two-factor-auth-qrcode"></div>
                 <p>
                     <small class="text-muted">Secret : <em id="two-factor-auth-secret"></em></small>
                 </p>
@@ -96,17 +94,30 @@
                     if (!toggleBtn) {
                         return;
                     }
+
                     let statusInfos = document.getElementById('twoFactorAuthStatusInfos');
                     let statusBlock = document.getElementById('twoFactorAuthStatus');
                     let validBlock = document.getElementById('twoFactorAuthValid');
-                    let qrcodeImg = document.getElementById('two-factor-auth-qrcode');
+                    let qrcodeBox = document.getElementById('two-factor-auth-qrcode');
                     let secretSpan = document.getElementById('two-factor-auth-secret');
+
+                    function setLoading(btn, isLoading) {
+                        if (!btn) {
+                            return;
+                        }
+                        if (isLoading) {
+                            btn.innerHTML = '<i class="fa fa-refresh fa-spin"></i>';
+                            btn.classList.add('disabled');
+                        } else {
+                            btn.classList.remove('disabled');
+                        }
+                    }
 
                     toggleBtn.addEventListener('click', function (e) {
                         e.preventDefault();
+
                         let status = parseInt(toggleBtn.getAttribute('data-status') || '0', 10);
-                        toggleBtn.innerHTML = '<i class="fa fa-refresh fa-spin"></i>';
-                        toggleBtn.classList.add('disabled');
+                        setLoading(toggleBtn, true);
 
                         if (!status) {
                             fetch('<?= $this->Url->build(['_name' => 'auth_2fa_generate_secret']) ?>', {
@@ -119,12 +130,23 @@
                                     return response.json();
                                 })
                                 .then(function (data) {
-                                    if (qrcodeImg && data.qrcode_url) {
-                                        qrcodeImg.setAttribute('src', data.qrcode_url);
+                                    if (!data || !data.status) {
+                                        return;
                                     }
+
                                     if (secretSpan && data.secret) {
                                         secretSpan.textContent = data.secret;
                                     }
+
+                                    if (qrcodeBox) {
+                                        let src = data.qrcode_svg || '';
+                                        if (src) {
+                                            qrcodeBox.innerHTML = '<img alt="QRCode" style="width:260px;height:260px" src="' + src + '">';
+                                        } else {
+                                            qrcodeBox.innerHTML = '';
+                                        }
+                                    }
+
                                     if (statusBlock) {
                                         statusBlock.style.display = 'none';
                                     }
@@ -133,7 +155,7 @@
                                     }
                                 })
                                 .finally(function () {
-                                    toggleBtn.classList.remove('disabled');
+                                    setLoading(toggleBtn, false);
                                 });
                         } else {
                             fetch('<?= $this->Url->build(['_name' => 'auth_2fa_disable']) ?>', {
@@ -148,9 +170,13 @@
                                     toggleBtn.classList.remove('btn-primary');
                                     toggleBtn.classList.add('btn-primary');
                                     toggleBtn.setAttribute('data-status', '0');
+
                                     if (statusInfos) {
                                         statusInfos.textContent = 'activer';
                                     }
+                                })
+                                .finally(function () {
+                                    setLoading(toggleBtn, false);
                                 });
                         }
                     });
@@ -169,12 +195,15 @@
                         toggleBtn.classList.add('btn-primary');
                         toggleBtn.setAttribute('data-status', '1');
                     }
+
                     if (statusInfos) {
                         statusInfos.textContent = 'désactiver';
                     }
+
                     if (validBlock) {
                         validBlock.style.display = 'none';
                     }
+
                     if (statusBlock) {
                         statusBlock.style.display = 'block';
                     }
@@ -378,10 +407,10 @@
                     <tbody>
                     <?php foreach ($histories as $value) { ?>
                         <tr>
-                            <td><?= h($value["ItemsBuyHistory"]["id"]) ?></td>
-                            <td><?= h($value["ItemsBuyHistory"]["created_at"]) ?></td>
-                            <td><?= h($value["Item"]["price"]) ?></td>
-                            <td><?= h($value["Item"]["name"]) ?></td>
+                            <td><?= h($value['ItemsBuyHistory']['id']) ?></td>
+                            <td><?= h($value['ItemsBuyHistory']['created_at']) ?></td>
+                            <td><?= h($value['Item']['price']) ?></td>
+                            <td><?= h($value['Item']['name']) ?></td>
                         </tr>
                     <?php } ?>
                     </tbody>

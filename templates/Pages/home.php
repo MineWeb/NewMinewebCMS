@@ -12,10 +12,10 @@ $sliderEnabled = !array_key_exists('slider', $theme_config) || (string)$theme_co
                 <?php $i = 0; ?>
                 <?php foreach ($search_slider as $k => $v) { ?>
                     <div class="item<?= ($i === 0 ? ' active' : '') ?>">
-                        <div class="fill" style="background-image:url('<?= h($v['Slider']['url_img'] ?? '') ?>');"></div>
+                        <div class="fill" style="background-image:url('<?= h($v['url_img'] ?? '') ?>');"></div>
                         <div class="carousel-caption">
-                            <h2><?= before_display((string)($v['Slider']['title'] ?? '')) ?></h2>
-                            <p><?= before_display((string)($v['Slider']['subtitle'] ?? '')) ?></p>
+                            <h2><?= before_display((string)($v['title'] ?? '')) ?></h2>
+                            <p><?= before_display((string)($v['subtitle'] ?? '')) ?></p>
                         </div>
                     </div>
                     <?php $i++; ?>
@@ -63,7 +63,7 @@ $sliderEnabled = !array_key_exists('slider', $theme_config) || (string)$theme_co
 
         <?php if (!empty($search_news)) { ?>
             <ul id="items">
-                <?php foreach ($search_news as $k => $v) { ?>
+                <?php foreach ($search_news as $v) { ?>
                     <li class="col-md-4 animated fadeInUp">
                         <div class="bloc <?= h(rand_color_news()) ?>" style="width:100%;">
                             <h2><?= h(cut((string)($v['title'] ?? ''), 15)) ?></h2>
