@@ -109,10 +109,10 @@
                         list: '#notification-container'
                     },
                     texts: {
-                        list: "<?= __('NOTIFICATIONS__LIST') ?>",
-                        clearAll: "<?= __('NOTIFICATIONS__CLEAR_ALL') ?>",
-                        markAsSeen: "<?= __('NOTIFICATION__MARK_AS_SEEN') ?>",
-                        empty: "<?= __('NOTIFICATIONS__EMPTY') ?>"
+                        list: <?= json_encode(__('NOTIFICATIONS__LIST'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>,
+                        clearAll: <?= json_encode(__('NOTIFICATIONS__CLEAR_ALL'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>,
+                        markAsSeen: <?= json_encode(__('NOTIFICATION__MARK_AS_SEEN'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>,
+                        empty: <?= json_encode(__('NOTIFICATIONS__EMPTY'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>
                     },
                     templates: {
                         header: function (t) {
@@ -238,11 +238,11 @@
 <?= $this->Html->script('form') ?>
 
 <script type="text/javascript">
-    let LOADING_MSG = "<?= __('GLOBAL__LOADING') ?>";
-    let ERROR_MSG = "<?= __('GLOBAL__ERROR') ?>";
-    let INTERNAL_ERROR_MSG = "<?= __('ERROR__INTERNAL_ERROR') ?>";
-    let FORBIDDEN_ERROR_MSG = "<?= __('ERROR__FORBIDDEN') ?>";
-    let SUCCESS_MSG = "<?= __('GLOBAL__SUCCESS') ?>";
+    let LOADING_MSG = <?= json_encode(__('GLOBAL__LOADING'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    let ERROR_MSG = <?= json_encode(__('GLOBAL__ERROR'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    let INTERNAL_ERROR_MSG = <?= json_encode(__('ERROR__INTERNAL_ERROR'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    let FORBIDDEN_ERROR_MSG = <?= json_encode(__('ERROR__FORBIDDEN'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    let SUCCESS_MSG = <?= json_encode(__('GLOBAL__SUCCESS'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
 </script>
 
 <script type="text/javascript">

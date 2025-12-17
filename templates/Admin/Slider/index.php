@@ -36,7 +36,7 @@
                                     <?php if (empty($sliders) || count($sliders) === 0) { ?>
                                         <tr>
                                             <td colspan="4" class="text-center text-muted py-4">
-                                                <i class="far fa-folder-open mr-2"></i><?= __('GLOBAL__NO_RESULT') ?>
+                                                <i class="far fa-folder-open mr-2"></i><?= __('TABLE__NO_RESULT') ?>
                                             </td>
                                         </tr>
                                     <?php } else { ?>
@@ -61,7 +61,7 @@
                                                             >
                                                         </a>
                                                     <?php } else { ?>
-                                                        <span class="badge badge-light"><?= __('GLOBAL__NO_RESULT') ?></span>
+                                                        <span class="badge badge-light"><?= __('TABLE__NO_RESULT') ?></span>
                                                     <?php } ?>
                                                 </td>
 

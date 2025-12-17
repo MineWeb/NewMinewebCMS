@@ -95,7 +95,7 @@ return [
         'icon' => 'fas fa-server',
         'permission' => 'MANAGE_SERVERS',
         'menu' => [
-            'SERVER__LINK' => [
+            'SERVER__LINK_TITLE' => [
                 'icon' => 'fas fa-link',
                 'permission' => 'MANAGE_SERVERS',
                 'route' => ['_name' => 'admin_server_link'],

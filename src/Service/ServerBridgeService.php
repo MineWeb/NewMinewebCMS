@@ -62,13 +62,13 @@ final class ServerBridgeService
                     }
 
                     $ok = $this->rcon(
-                        [
+                            [
                                 'ip' => $config['ip'],
                                 'port' => $config['data']['rcon_port'] ?? null,
                                 'password' => $config['data']['rcon_password'] ?? null,
                             ],
-                        (string)$method['RUN_COMMAND']
-                    ) !== false;
+                            (string)$method['RUN_COMMAND']
+                        ) !== false;
 
                     $result[$k]['RUN_COMMAND'] = $ok;
                 }
@@ -525,7 +525,7 @@ final class ServerBridgeService
     {
 
         if (!is_array($methods)) {
-            return [[[ (string)$methods => [] ]], false];
+            return [[[(string)$methods => []]], false];
         }
 
         if (isset($methods[0])) {
@@ -662,5 +662,39 @@ final class ServerBridgeService
         }
 
         return $flat;
+    }
+
+    public function linkDebugFull(string $host, string $port, bool $udp = false): array
+    {
+        $lines = $this->linkDebugPing();
+
+        if ($this->ping(['ip' => $host, 'port' => (int)$port, 'udp' => $udp])) {
+            $lines[] = __('SERVER__SEEMS_USED');
+        } else {
+            $lines[] = __('SERVER__PORT_CLOSE_OR_BAD');
+        }
+
+        return $lines;
+    }
+
+    public function linkDebugPing(): array
+    {
+        $lines = [];
+
+        $hypixelIp = gethostbyname('mc.hypixel.net');
+        if ($this->ping(['ip' => $hypixelIp, 'port' => 25565, 'udp' => false])) {
+            $lines[] = __('SERVER__PORT_OPEN');
+        } else {
+            $lines[] = __('SERVER__SEEMS_CLOSE_OR_BLOCKED');
+        }
+
+        return $lines;
+    }
+
+    public function testRcon(array $config, string $cmd): bool
+    {
+        $ok = $this->rcon($config, $cmd);
+
+        return $ok !== false;
     }
 }

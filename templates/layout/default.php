@@ -184,8 +184,8 @@ if (!empty($flash_messages)) {
                 list: '.notifications-list'
             },
             texts: {
-                empty: "<?= __('NOTIFICATIONS__EMPTY') ?>",
-                markAsSeen: "<?= __('NOTIFICATION__MARK_AS_SEEN') ?>"
+                empty: <?= json_encode(__('NOTIFICATIONS__EMPTY'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>,
+                markAsSeen: <?= json_encode(__('NOTIFICATION__MARK_AS_SEEN'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>
             },
             templates: {
                 header: function () {
@@ -259,11 +259,11 @@ if (!empty($flash_messages)) {
     let LIKE_URL = "<?= $this->Url->build(['_name' => 'news_like']) ?>";
     let DISLIKE_URL = "<?= $this->Url->build(['_name' => 'news_dislike']) ?>";
 
-    let LOADING_MSG = "<?= __('GLOBAL__LOADING') ?>";
-    let ERROR_MSG = "<?= __('GLOBAL__ERROR') ?>";
-    let INTERNAL_ERROR_MSG = "<?= __('ERROR__INTERNAL_ERROR') ?>";
-    let FORBIDDEN_ERROR_MSG = "<?= __('ERROR__FORBIDDEN') ?>";
-    let SUCCESS_MSG = "<?= __('GLOBAL__SUCCESS') ?>";
+    let LOADING_MSG = <?= json_encode(__('GLOBAL__LOADING'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    let ERROR_MSG = <?= json_encode(__('GLOBAL__ERROR'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    let INTERNAL_ERROR_MSG = <?= json_encode(__('ERROR__INTERNAL_ERROR'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    let FORBIDDEN_ERROR_MSG = <?= json_encode(__('ERROR__FORBIDDEN'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    let SUCCESS_MSG = <?= json_encode(__('GLOBAL__SUCCESS'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
 
     $(".navbar-collapse").css({maxHeight: ($(window).height() - 130) - $(".navbar-header").height() + "px"});
 </script>

@@ -1,9 +1,37 @@
 const AjaxForms = (() => {
     const STATE_ATTR = "data-ajax-bound";
+    const OBS_ATTR = "data-ajax-observer";
+    let observer = null;
 
     function init(root = document) {
         const forms = root.querySelectorAll('form[data-ajax="true"]');
         forms.forEach((form) => bind(form));
+
+        if (root === document && document.documentElement.getAttribute(OBS_ATTR) !== "1") {
+            document.documentElement.setAttribute(OBS_ATTR, "1");
+            observeDom();
+        }
+    }
+
+    function observeDom() {
+        if (observer) return;
+
+        observer = new MutationObserver((mutations) => {
+            for (const m of mutations) {
+                for (const node of m.addedNodes) {
+                    if (!(node instanceof Element)) continue;
+
+                    if (node.matches && node.matches('form[data-ajax="true"]')) {
+                        bind(node);
+                    }
+
+                    const nested = node.querySelectorAll ? node.querySelectorAll('form[data-ajax="true"]') : [];
+                    nested.forEach((f) => bind(f));
+                }
+            }
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
     }
 
     function bind(form) {
@@ -287,25 +315,38 @@ const AjaxForms = (() => {
     }
 
     function ensureCsrf(target, form) {
-        if (!form) return;
+        let token = null;
+        let fieldName = "_csrfToken";
 
-        const csrfInput =
-            form.querySelector('input[name="_csrfToken"]') ||
-            form.querySelector('input[name="data[_Token][key]"]');
+        if (form) {
+            const csrfInput =
+                form.querySelector('input[name="_csrfToken"]') ||
+                form.querySelector('input[name="data[_Token][key]"]');
 
-        if (!csrfInput) return;
+            if (csrfInput) {
+                token = csrfInput.value;
+                fieldName = csrfInput.name;
+            }
+        }
 
-        const token = csrfInput.value;
+        if (!token) {
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            if (meta && meta.content) {
+                token = meta.content;
+            }
+        }
+
+        if (!token) return;
 
         if (target instanceof FormData) {
-            if (!target.has("_csrfToken") && !target.has("data[_Token][key]")) {
-                target.set(csrfInput.name, token);
+            if (!target.has(fieldName)) {
+                target.set(fieldName, token);
             }
             return;
         }
 
-        if (target && target[csrfInput.name] === undefined) {
-            target[csrfInput.name] = token;
+        if (target && target[fieldName] === undefined) {
+            target[fieldName] = token;
         }
     }
 

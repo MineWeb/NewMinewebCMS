@@ -36,10 +36,9 @@
 </div>
 
 <script>
-
-    let TEXT__LOADING = "Chargement..."
-    let TEXT__ERROR = "Erreur"
-    let TEXT__INTERNAL_ERROR = "Une erreur interne est survenue"
+    let TEXT__LOADING = <?= json_encode(__('GLOBAL__LOADING'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    let TEXT__ERROR = <?= json_encode(__('GLOBAL__ERROR'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    let TEXT__INTERNAL_ERROR = <?= json_encode(__('ERROR__INTERNAL_ERROR'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
 </script>
 
 

@@ -11,14 +11,33 @@ use Cake\Http\Response;
 
 class ServerController extends AppController
 {
-
-    public function link(): ?Response
+    private function requireManageServers(): void
     {
         if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
             throw new ForbiddenException();
         }
+    }
 
-        $this->set('title_for_layout', __('SERVER__LINK'));
+    private function requireAjax(): void
+    {
+        if (!$this->getRequest()->is('ajax')) {
+            throw new NotFoundException();
+        }
+    }
+
+    private function jsonResponse(array $payload): Response
+    {
+        $this->disableAutoRender();
+        $this->response = $this->response->withType('application/json');
+
+        return $this->response->withStringBody((string)json_encode($payload));
+    }
+
+    public function link(): ?Response
+    {
+        $this->requireManageServers();
+
+        $this->set('title_for_layout', __('SERVER__LINK_TITLE'));
 
         $Servers = $this->fetchTable('Servers');
         $servers = $Servers->find()->all()->toArray();
@@ -39,9 +58,9 @@ class ServerController extends AppController
         $bannerMsg = __('SERVER__STATUS_MESSAGE');
 
         $this->set(compact('servers', 'bannerMsg'));
-        $this->set('isEnabled', $this->config->get('server_state'));
-        $this->set('isCacheEnabled', $this->config->get('server_cache'));
-        $this->set('timeout', $this->config->get('server_timeout'));
+        $this->set('isEnabled', (bool)$this->config->get('server_state'));
+        $this->set('isCacheEnabled', (bool)$this->config->get('server_cache'));
+        $this->set('timeout', (string)$this->config->get('server_timeout'));
 
         $this->viewBuilder()
             ->setLayout('admin')
@@ -51,155 +70,23 @@ class ServerController extends AppController
         return null;
     }
 
-    public function cmd(): ?Response
-    {
-        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
-            throw new ForbiddenException();
-        }
-
-        $this->set('title_for_layout', __('SERVER__CMD'));
-
-        $ServerCmds = $this->fetchTable('ServerCmds');
-        $Servers = $this->fetchTable('Servers');
-
-        $search_cmd = $ServerCmds
-            ->find()
-            ->orderBy(['server_id' => 'DESC'])
-            ->all();
-
-        $search_server = $Servers->find()->all();
-
-        $this->set(compact('search_cmd', 'search_server'));
-
-        $this->viewBuilder()
-            ->setLayout('admin')
-            ->setTemplatePath('Admin/Server')
-            ->setTemplate('cmd');
-
-        return null;
-    }
-
-    public function deleteCmd(int $id): Response
-    {
-        $this->disableAutoRender();
-
-        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
-            throw new ForbiddenException();
-        }
-
-        $ServerCmds = $this->fetchTable('ServerCmds');
-        $entity = $ServerCmds->get($id);
-        $ServerCmds->delete($entity);
-
-        return $this->redirect(['_name' => 'admin_server_cmd']);
-    }
-
-    public function executeCmd(): Response
-    {
-        $this->disableAutoRender();
-        $this->response = $this->response->withType('application/json');
-
-        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
-            throw new ForbiddenException();
-        }
-
-        $request = $this->getRequest();
-        $cmd = (string)$request->getData('cmd', '');
-        $serverId = $this->normalizeServerId($request->getData('server_id'));
-
-        if ($cmd === '' || $serverId === null) {
-            return $this->response->withStringBody(json_encode([
-                'status' => false,
-                'messages' => __('ERROR__FILL_ALL_FIELDS'),
-            ]));
-        }
-
-        $this->serverBridge->sendCommand($cmd, $serverId);
-
-        return $this->response->withStringBody(json_encode([
-            'status' => true,
-            'messages' => __('SERVER__SEND_COMMAND_SUCCESS'),
-        ]));
-    }
-
-    public function addCmd(): Response
-    {
-        $this->disableAutoRender();
-        $this->response = $this->response->withType('application/json');
-
-        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
-            throw new ForbiddenException();
-        }
-
-        $request = $this->getRequest();
-
-        if (!$request->is('ajax')) {
-            return $this->response->withStringBody(json_encode([
-                'status' => false,
-                'messages' => __('ERROR__BAD_REQUEST'),
-            ]));
-        }
-
-        $name = (string)$request->getData('name', '');
-        $cmd = (string)$request->getData('cmd', '');
-        $serverId = $this->normalizeServerId($request->getData('server_id'));
-
-        if ($name === '' || $cmd === '' || $serverId === null) {
-            return $this->response->withStringBody(json_encode([
-                'status' => false,
-                'messages' => __('ERROR__FILL_ALL_FIELDS'),
-            ]));
-        }
-
-        if (str_contains($cmd, '/')) {
-            return $this->response->withStringBody(json_encode([
-                'status' => false,
-                'messages' => __('SERVER__CMD_SLASH'),
-            ]));
-        }
-
-        $ServerCmds = $this->fetchTable('ServerCmds');
-        $entity = $ServerCmds->newEntity([
-            'name' => $name,
-            'cmd' => $cmd,
-            'server_id' => $serverId,
-        ]);
-        $ServerCmds->save($entity);
-
-        return $this->response->withStringBody(json_encode([
-            'status' => true,
-            'messages' => __('SERVER__CMD_ADD'),
-        ]));
-    }
-
     public function editBannerMsg(): Response
     {
-        $this->disableAutoRender();
-        $this->response = $this->response->withType('application/json');
+        $this->requireManageServers();
+        $this->requireAjax();
 
-        if (!($this->Auth->isConnected() && $this->Auth->can('MANAGE_SERVERS'))) {
-            throw new ForbiddenException();
-        }
+        $msg = (string)$this->getRequest()->getData('msg', '');
+        LangService::set('SERVER__STATUS_MESSAGE', $msg);
 
-        $request = $this->getRequest();
-
-        if (!$request->is('ajax')) {
-            throw new NotFoundException();
-        }
-
-        LangService::set('SERVER__STATUS_MESSAGE', (string)$request->getData('msg'));
-
-        return $this->response->withStringBody(json_encode([
+        return $this->jsonResponse([
             'status' => true,
             'messages' => __('SERVER__EDIT_BANNER_MSG_SUCCESS'),
-        ]));
+        ]);
     }
 
     public function switchState(): Response
     {
-        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
-            throw new ForbiddenException();
-        }
+        $this->requireManageServers();
 
         $this->disableAutoRender();
 
@@ -213,9 +100,7 @@ class ServerController extends AppController
 
     public function switchCacheState(): Response
     {
-        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
-            throw new ForbiddenException();
-        }
+        $this->requireManageServers();
 
         $this->disableAutoRender();
 
@@ -229,11 +114,9 @@ class ServerController extends AppController
 
     public function switchBanner(?int $id = null): Response
     {
-        $this->disableAutoRender();
+        $this->requireManageServers();
 
-        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
-            throw new ForbiddenException();
-        }
+        $this->disableAutoRender();
 
         if ($id !== null) {
             $bannerRaw = (string)$this->config->get('banner_server');
@@ -296,115 +179,194 @@ class ServerController extends AppController
 
     public function config(): Response
     {
-        $this->disableAutoRender();
-        $this->response = $this->response->withType('application/json');
+        $this->requireManageServers();
+        $this->requireAjax();
 
-        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
-            throw new ForbiddenException();
-        }
-
-        $request = $this->getRequest();
-
-        if (!$request->is('ajax')) {
-            throw new NotFoundException();
-        }
-
-        $timeoutRaw = $request->getData('timeout');
+        $timeoutRaw = $this->getRequest()->getData('timeout');
 
         if ($timeoutRaw === null || $timeoutRaw === '') {
-            return $this->response->withStringBody(json_encode([
+            return $this->jsonResponse([
                 'status' => false,
                 'messages' => __('ERROR__FILL_ALL_FIELDS'),
-            ]));
+            ]);
         }
 
         if (!filter_var($timeoutRaw, FILTER_VALIDATE_FLOAT)) {
-            return $this->response->withStringBody(json_encode([
+            return $this->jsonResponse([
                 'status' => false,
                 'messages' => __('SERVER__INVALID_TIMEOUT'),
-            ]));
+            ]);
         }
 
-        $this->config->set('server_timeout', $timeoutRaw);
+        $this->config->set('server_timeout', (string)$timeoutRaw);
 
-        return $this->response->withStringBody(json_encode([
+        return $this->jsonResponse([
             'status' => true,
             'messages' => __('SERVER__TIMEOUT_SAVE_SUCCESS'),
-        ]));
+        ]);
     }
 
     public function linkAjax(): Response
     {
-        $this->disableAutoRender();
-        $this->response = $this->response->withType('application/json');
-
-        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
-            return $this->redirect(['_name' => 'home']);
-        }
+        $this->requireManageServers();
+        $this->requireAjax();
 
         $request = $this->getRequest();
 
-        if (!$request->is('ajax')) {
-            return $this->response->withStringBody(json_encode([
-                'status' => false,
-                'messages' => __('ERROR__BAD_REQUEST'),
-            ]));
+        $idRaw = $request->getData('id');
+        $id = null;
+        if (is_int($idRaw) && $idRaw > 0) {
+            $id = $idRaw;
+        } elseif (is_string($idRaw) && ctype_digit($idRaw) && (int)$idRaw > 0) {
+            $id = (int)$idRaw;
         }
 
-        $host = (string)$request->getData('host', '');
-        $port = (string)$request->getData('port', '');
-        $name = (string)$request->getData('name', '');
-        $type = $request->getData('type');
+        $host = trim((string)$request->getData('host', ''));
+        $portRaw = trim((string)$request->getData('port', ''));
+        $name = trim((string)$request->getData('name', ''));
+        $typeRaw = $request->getData('type');
 
-        if ($host === '' || $port === '' || $name === '' || $type === null) {
-            return $this->response->withStringBody(json_encode([
-                'status' => false,
-                'messages' => __('ERROR__FILL_ALL_FIELDS'),
-            ]));
+        if ($host === '' || $portRaw === '' || $name === '' || $typeRaw === null) {
+            return $this->jsonResponse(['status' => false, 'messages' => __('ERROR__FILL_ALL_FIELDS')]);
         }
 
-        return $this->response->withStringBody(json_encode([
-            'status' => true,
-            'messages' => __('SERVER__LINK_SUCCESS'),
-        ]));
-    }
-
-    public function banlist(?int $server_id = null): ?Response
-    {
-        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
-            throw new ForbiddenException();
+        if (!ctype_digit($portRaw)) {
+            return $this->jsonResponse(['status' => false, 'messages' => __('ERROR__FILL_ALL_FIELDS')]);
         }
 
-        $call = $this->serverBridge->call('GET_BANNED_PLAYERS', $server_id);
-        $list = [];
+        $port = (int)$portRaw;
+        if ($port < 1 || $port > 65535) {
+            return $this->jsonResponse(['status' => false, 'messages' => __('ERROR__FILL_ALL_FIELDS')]);
+        }
 
-        if (is_array($call) && isset($call['GET_BANNED_PLAYERS']) && $call['GET_BANNED_PLAYERS'] !== 'NOT_FOUND') {
-            foreach ((array)$call['GET_BANNED_PLAYERS'] as $player) {
-                $list[] = $player;
+        $type = null;
+        if (is_int($typeRaw)) {
+            $type = $typeRaw;
+        } elseif (is_string($typeRaw) && ctype_digit($typeRaw)) {
+            $type = (int)$typeRaw;
+        }
+
+        if ($type === null || $type < 0 || $type > 3) {
+            return $this->jsonResponse(['status' => false, 'messages' => __('ERROR__FILL_ALL_FIELDS')]);
+        }
+
+        $serverData = [];
+        if ($type === 2) {
+            $sd = $request->getData('server_data');
+            $rconPortRaw = trim((string)($request->getData('server_data.rcon_port') ?? (is_array($sd) ? ($sd['rcon_port'] ?? '') : '')));
+            $rconPassword = (string)($request->getData('server_data.rcon_password') ?? (is_array($sd) ? ($sd['rcon_password'] ?? '') : ''));
+
+            if ($rconPortRaw === '' || !ctype_digit($rconPortRaw) || trim($rconPassword) === '') {
+                return $this->jsonResponse(['status' => false, 'messages' => __('ERROR__FILL_ALL_FIELDS')]);
+            }
+
+            $rconPort = (int)$rconPortRaw;
+            if ($rconPort < 1 || $rconPort > 65535) {
+                return $this->jsonResponse(['status' => false, 'messages' => __('ERROR__FILL_ALL_FIELDS')]);
+            }
+
+            $serverData = [
+                'rcon_port' => $rconPort,
+                'rcon_password' => $rconPassword,
+            ];
+        }
+
+        if ($type === 0) {
+            $timeout = (string)$this->config->get('server_timeout');
+            if ($timeout === '' || !filter_var($timeout, FILTER_VALIDATE_FLOAT)) {
+                return $this->jsonResponse(['status' => false, 'messages' => __('SERVER__TIMEOUT_UNDEFINED')]);
+            }
+
+            $ok = $this->serverBridge->check('connection', [
+                'host' => $host,
+                'port' => $portRaw,
+                'timeout' => (int)$timeout,
+            ]);
+
+            if (!$ok) {
+                $code = $this->serverBridge->linkErrorCode ?? 'FAILED';
+                $base = __('SERVER__LINK_ERROR_' . $code);
+
+                $lines = [$base];
+                $lines = array_merge($lines, $this->serverBridge->linkDebugFull($host, $portRaw, false));
+
+                return $this->jsonResponse([
+                    'status' => false,
+                    'messages' => $lines,
+                ]);
+            }
+        } elseif ($type === 1 || $type === 3) {
+            $ok = $this->serverBridge->pingPublic([
+                'ip' => $host,
+                'port' => $port,
+                'udp' => $type === 3,
+            ]);
+
+            if ($ok === false) {
+                $base = __('SERVER__LINK_ERROR_FAILED');
+
+                $lines = [$base];
+                $lines = array_merge($lines, $this->serverBridge->linkDebugPing());
+
+                return $this->jsonResponse([
+                    'status' => false,
+                    'messages' => $lines,
+                ]);
+            }
+        } elseif ($type === 2) {
+            $ok = $this->serverBridge->testRcon(
+                [
+                    'ip' => $host,
+                    'port' => (int)$serverData['rcon_port'],
+                    'password' => (string)$serverData['rcon_password'],
+                ],
+                'say ' . __('SERVER__LINK_SUCCESS')
+            );
+
+            if (!$ok) {
+                $base = __('SERVER__LINK_ERROR_FAILED');
+
+                $lines = [$base];
+                $lines = array_merge($lines, $this->serverBridge->linkDebugPing());
+
+                return $this->jsonResponse([
+                    'status' => false,
+                    'messages' => $lines,
+                ]);
             }
         }
 
+        $this->config->set('server_state', 1);
+
         $Servers = $this->fetchTable('Servers');
-        $servers = $Servers->find()->where(['type' => 0])->all();
+        $entity = $id !== null ? $Servers->get($id) : $Servers->newEmptyEntity();
 
-        $this->set(compact('list', 'servers'));
-        $this->set('title_for_layout', __('SERVER__BANLIST'));
+        $payload = [
+            'name' => $name,
+            'ip' => $host,
+            'port' => $port,
+            'type' => $type,
+            'data' => json_encode($serverData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+        ];
 
-        $this->viewBuilder()
-            ->setLayout('admin')
-            ->setTemplatePath('Admin/Server')
-            ->setTemplate('banlist');
+        $entity = $Servers->patchEntity($entity, $payload);
 
-        return null;
+        if ($entity->hasErrors()) {
+            return $this->jsonResponse(['status' => false, 'messages' => __('ERROR__FILL_ALL_FIELDS')]);
+        }
+
+        if (!$Servers->save($entity)) {
+            return $this->jsonResponse(['status' => false, 'messages' => __('ERROR__INTERNAL_ERROR')]);
+        }
+
+        return $this->jsonResponse(['status' => true, 'messages' => __('SERVER__LINK_SUCCESS')]);
     }
 
     public function whitelist(?int $server_id = null): ?Response
     {
-        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
-            throw new ForbiddenException();
-        }
+        $this->requireManageServers();
 
-        $call = $this->serverBridge->call('GET_WHITELISTED_PLAYERS', $server_id);
+        $call = $this->serverBridge->call('GET_WHITELISTED_PLAYERS', $server_id ?? false);
         $list = [];
 
         if (is_array($call) && isset($call['GET_WHITELISTED_PLAYERS']) && $call['GET_WHITELISTED_PLAYERS'] !== 'NOT_FOUND') {
@@ -429,11 +391,9 @@ class ServerController extends AppController
 
     public function online(?int $server_id = null): ?Response
     {
-        if (!$this->Auth->isConnected() || !$this->Auth->can('MANAGE_SERVERS')) {
-            throw new ForbiddenException();
-        }
+        $this->requireManageServers();
 
-        $call = $this->serverBridge->call('GET_PLAYER_LIST', $server_id);
+        $call = $this->serverBridge->call('GET_PLAYER_LIST', $server_id ?? false);
         $list = [];
 
         if (is_array($call) && isset($call['GET_PLAYER_LIST']) && $call['GET_PLAYER_LIST'] !== 'NOT_FOUND') {
@@ -456,6 +416,140 @@ class ServerController extends AppController
         return null;
     }
 
+    public function banlist(?int $server_id = null): ?Response
+    {
+        $this->requireManageServers();
+
+        $call = $this->serverBridge->call('GET_BANNED_PLAYERS', $server_id ?? false);
+        $list = [];
+
+        if (is_array($call) && isset($call['GET_BANNED_PLAYERS']) && $call['GET_BANNED_PLAYERS'] !== 'NOT_FOUND') {
+            foreach ((array)$call['GET_BANNED_PLAYERS'] as $player) {
+                $list[] = $player;
+            }
+        }
+
+        $Servers = $this->fetchTable('Servers');
+        $servers = $Servers->find()->where(['type' => 0])->all();
+
+        $this->set(compact('list', 'servers'));
+        $this->set('title_for_layout', __('SERVER__BANLIST'));
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Server')
+            ->setTemplate('banlist');
+
+        return null;
+    }
+
+    public function cmd(): ?Response
+    {
+        $this->requireManageServers();
+
+        $this->set('title_for_layout', __('SERVER__CMD'));
+
+        $ServerCmds = $this->fetchTable('ServerCmds');
+        $Servers = $this->fetchTable('Servers');
+
+        $search_cmd = $ServerCmds
+            ->find()
+            ->orderBy(['server_id' => 'DESC'])
+            ->all();
+
+        $search_server = $Servers->find()->all();
+
+        $this->set(compact('search_cmd', 'search_server'));
+
+        $this->viewBuilder()
+            ->setLayout('admin')
+            ->setTemplatePath('Admin/Server')
+            ->setTemplate('cmd');
+
+        return null;
+    }
+
+    public function deleteCmd(int $id): Response
+    {
+        $this->requireManageServers();
+
+        $this->disableAutoRender();
+
+        $ServerCmds = $this->fetchTable('ServerCmds');
+        $entity = $ServerCmds->get($id);
+        $ServerCmds->delete($entity);
+
+        return $this->redirect(['_name' => 'admin_server_cmd']);
+    }
+
+    public function executeCmd(): Response
+    {
+        $this->requireManageServers();
+        $this->requireAjax();
+
+        $cmd = (string)$this->getRequest()->getData('cmd', '');
+        $serverIdRaw = $this->getRequest()->getData('server_id');
+        $serverId = $this->normalizeServerId($serverIdRaw);
+
+        if ($cmd === '' || $serverId === null) {
+            return $this->jsonResponse([
+                'status' => false,
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+            ]);
+        }
+
+        $this->serverBridge->sendCommand($cmd, $serverId);
+
+        return $this->jsonResponse([
+            'status' => true,
+            'messages' => __('SERVER__SEND_COMMAND_SUCCESS'),
+        ]);
+    }
+
+    public function addCmd(): Response
+    {
+        $this->requireManageServers();
+        $this->requireAjax();
+
+        $name = trim((string)$this->getRequest()->getData('name', ''));
+        $cmd = trim((string)$this->getRequest()->getData('cmd', ''));
+        $serverIdRaw = $this->getRequest()->getData('server_id');
+        $serverId = $this->normalizeServerId($serverIdRaw);
+
+        if ($name === '' || $cmd === '' || $serverId === null) {
+            return $this->jsonResponse([
+                'status' => false,
+                'messages' => __('ERROR__FILL_ALL_FIELDS'),
+            ]);
+        }
+
+        if (str_contains($cmd, '/')) {
+            return $this->jsonResponse([
+                'status' => false,
+                'messages' => __('SERVER__CMD_SLASH'),
+            ]);
+        }
+
+        $ServerCmds = $this->fetchTable('ServerCmds');
+        $entity = $ServerCmds->newEntity([
+            'name' => $name,
+            'cmd' => $cmd,
+            'server_id' => $serverId,
+        ]);
+
+        if ($entity->hasErrors() || !$ServerCmds->save($entity)) {
+            return $this->jsonResponse([
+                'status' => false,
+                'messages' => __('ERROR__INTERNAL_ERROR'),
+            ]);
+        }
+
+        return $this->jsonResponse([
+            'status' => true,
+            'messages' => __('SERVER__CMD_ADDED'),
+        ]);
+    }
+
     private function normalizeServerId(mixed $raw): ?int
     {
         if ($raw === null || $raw === '' || $raw === false) {
@@ -473,37 +567,5 @@ class ServerController extends AppController
         }
 
         return null;
-    }
-
-    private function linkDebugFull(string $msg, string $host, string $port, bool $udp = false): string
-    {
-        $msg .= $this->linkDebugPing();
-
-        $msg .= '<br /><br />';
-        $msg .= '<i class="fa fa-times"></i> ';
-
-        if ($this->serverBridge->ping(['ip' => $host, 'port' => (int)$port, 'udp' => $udp])) {
-            $msg .= __('SERVER__SEEMS_USED');
-        } else {
-            $msg .= __('SERVER__PORT_CLOSE_OR_BAD');
-        }
-
-        return $msg;
-    }
-
-    private function linkDebugPing(): string
-    {
-        $msg = '<br /><br />';
-
-        $hypixelIp = gethostbyname('mc.hypixel.net');
-        if ($this->serverBridge->ping(['ip' => $hypixelIp, 'port' => 25565, 'udp' => false])) {
-            $msg .= '<i class="fa fa-check"></i> ';
-            $msg .= __('SERVER__PORT_OPEN');
-        } else {
-            $msg .= '<i class="fa fa-times"></i> ';
-            $msg .= __('SERVER__SEEMS_CLOSE_OR_BLOCKED');
-        }
-
-        return $msg;
     }
 }

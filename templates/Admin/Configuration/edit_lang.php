@@ -40,28 +40,28 @@
 
                                 <?php if ($key === 'GLOBAL__FORMAT_DATE') { ?>
                                     <small>
-                                        <?= __('CONFIG__LANG_AVAILABLE_letIABLES') ?> :
+                                        <?= __('CONFIG__LANG_AVAILABLE_VARIABLES') ?> :
                                         {%day}, {%month}, {%year}, {%hour|24}, {%hour|12}, {%minutes}
                                     </small>
                                 <?php } ?>
 
                                 <?php if ($key === 'SERVER__STATUS_MESSAGE') { ?>
                                     <small>
-                                        <?= __('CONFIG__LANG_AVAILABLE_letIABLES') ?> :
+                                        <?= __('CONFIG__LANG_AVAILABLE_VARIABLES') ?> :
                                         {MOTD}, {VERSION}, {ONLINE}, {ONLINE_LIMIT}
                                     </small>
                                 <?php } ?>
 
                                 <?php if ($key === 'VOTE_SUCCESS_SERVER') { ?>
                                     <small>
-                                        <?= __('CONFIG__LANG_AVAILABLE_letIABLES') ?> :
+                                        <?= __('CONFIG__LANG_AVAILABLE_VARIABLES') ?> :
                                         {PLAYER}
                                     </small>
                                 <?php } ?>
 
                                 <?php if ($key === 'RESET_PASSWORD_MAIL') { ?>
                                     <small>
-                                        <?= __('CONFIG__LANG_AVAILABLE_letIABLES') ?> :
+                                        <?= __('CONFIG__LANG_AVAILABLE_VARIABLES') ?> :
                                         {EMAIL}, {USERNAME}, {LINK}
                                     </small>
                                 <?php } ?>

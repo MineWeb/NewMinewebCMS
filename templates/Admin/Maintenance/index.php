@@ -35,7 +35,7 @@
                                     <?php if (empty($pages) || count($pages) === 0) : ?>
                                         <tr>
                                             <td colspan="5" class="text-center text-muted py-4">
-                                                <i class="far fa-folder-open mr-2"></i><?= __('GLOBAL__NO_RESULT') ?>
+                                                <i class="far fa-folder-open mr-2"></i><?= __('TABLE__NO_RESULT') ?>
                                             </td>
                                         </tr>
                                     <?php else : ?>

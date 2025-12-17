@@ -8,7 +8,7 @@
                     <div class="card-header">
                         <div class="d-flex align-items-center justify-content-between">
                             <h3 class="card-title mb-0">
-                                <i class="fas fa-share-alt mr-2"></i><?= __("SOCIAL__HOME") ?>
+                                <i class="fas fa-share-alt mr-2"></i><?= __('SOCIAL__HOME') ?>
                             </h3>
 
                             <a class="btn btn-primary btn-sm" href="<?= $this->Url->build(['_name' => 'admin_social_add']) ?>">
@@ -30,11 +30,11 @@
                                     <thead class="thead-light">
                                     <tr>
                                         <th style="width: 44px;"></th>
-                                        <th><?= __("SOCIAL__BUTTON_TITLE") ?></th>
-                                        <th><?= __("SOCIAL__BUTTON_TYPE") ?></th>
-                                        <th><?= __("SOCIAL__BUTTON_URL") ?></th>
-                                        <th><?= __("SOCIAL__BUTTON_COLOR") ?></th>
-                                        <th class="text-right" style="width: 1%; white-space: nowrap;"><?= __("GLOBAL__ACTIONS") ?></th>
+                                        <th><?= __('SOCIAL__BUTTON_TITLE') ?></th>
+                                        <th><?= __('SOCIAL__BUTTON_TYPE') ?></th>
+                                        <th><?= __('SOCIAL__BUTTON_URL') ?></th>
+                                        <th><?= __('SOCIAL__BUTTON_COLOR') ?></th>
+                                        <th class="text-right" style="width: 1%; white-space: nowrap;"><?= __('GLOBAL__ACTIONS') ?></th>
                                     </tr>
                                     </thead>
 
@@ -42,12 +42,14 @@
                                     <?php if (empty($social_buttons) || count($social_buttons) === 0) { ?>
                                         <tr>
                                             <td colspan="6" class="text-center text-muted py-4">
-                                                <i class="far fa-folder-open mr-2"></i><?= __('GLOBAL__NO_RESULT') ?>
+                                                <i class="far fa-folder-open mr-2"></i><?= __('TABLE__NO_RESULT') ?>
                                             </td>
                                         </tr>
                                     <?php } else { ?>
-                                        <?php $i = 0; foreach ($social_buttons as $key => $value) { $i++; ?>
-                                            <tr class="item" style="cursor: move;" id="<?= (int)$value["id"] ?>-<?= $i ?>">
+                                        <?php $i = 0;
+                                        foreach ($social_buttons as $value) {
+                                            $i++; ?>
+                                            <tr class="item" style="cursor: move;" id="<?= (int)$value['id'] ?>-<?= $i ?>">
                                                 <td class="align-middle text-muted text-center">
                                                     <span class="js-drag-handle d-inline-flex align-items-center justify-content-center"
                                                           style="width: 28px; height: 28px; cursor: grab;"
@@ -70,13 +72,13 @@
                                                             <a href="<?= h((string)$value['extra']) ?>" target="_blank" rel="noopener" class="text-decoration-none">
                                                                 <img
                                                                     src="<?= h((string)$value['extra']) ?>"
-                                                                    alt="<?= h(__("SOCIAL__BUTTON_IMG_ALT") . (string)$value['title']) ?>"
+                                                                    alt="<?= h(__('SOCIAL__BUTTON_IMG_ALT') . (string)$value['title']) ?>"
                                                                     style="height: 2.2em;"
                                                                 >
                                                             </a>
                                                         <?php } ?>
                                                     <?php } else { ?>
-                                                        <span class="text-muted"><?= __("SOCIAL__EMPTY_TYPE") ?></span>
+                                                        <span class="text-muted"><?= __('SOCIAL__EMPTY_TYPE') ?></span>
                                                     <?php } ?>
                                                 </td>
 
