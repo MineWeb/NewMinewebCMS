@@ -448,18 +448,22 @@ final class PackageManager
         $Plugins = $this->fetchTable('Plugins');
 
         $pluginEntity = $Plugins->find()->where(['name' => $slug])->first();
+        $isFirstInstall = $pluginEntity === null;
+
         if ($pluginEntity === null) {
             $pluginEntity = $Plugins->newEmptyEntity();
             $pluginEntity->set('name', $slug);
             $pluginEntity->set('state', 1);
         }
 
-        $pluginEntity->set('author', (string)($manifest->author ?? ''));
-        $pluginEntity->set('version', (string)($manifest->version ?? ''));
+        $pluginEntity->set('author', $manifest->author ?? '');
+        $pluginEntity->set('version', $manifest->version ?? '');
         $Plugins->saveOrFail($pluginEntity);
 
-        $defaults = (array)($manifest->permissions['defaults'] ?? []);
-        $this->permissionSync->applyDefaults($defaults);
+        if ($isFirstInstall) {
+            $defaults = (array)($manifest->permissions['defaults'] ?? []);
+            $this->permissionSync->applyDefaults($defaults);
+        }
 
         $allowed = array_merge(
             $this->permissionSync->corePermissions(),
