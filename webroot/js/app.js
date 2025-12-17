@@ -1,100 +1,230 @@
-$(document).ready(function(){
-
-	// Captcha reload
-
- 	$('#reload').click(function() {
-        var captcha = $("#captcha_image");
-        captcha.attr('src', captcha.attr('src')+'?'+Math.random());
-        return false;
-    });
-
-    // Caroussel
-    if($('.carousel').length > 0) {
-	    $('.carousel').carousel({
-	        interval: 5000 //changer la vitesse
-	    })
-
-	    //Events that reset and restart the timer animation when the slides change
-	    $("#myCarousel").on("slide.bs.carousel", function(event) {
-	        //The animate class gets removed so that it jumps straight back to 0%
-	        $(".transition-timer-carousel-progress-bar", this).removeClass("animate").css("width", "0%");
-	    }).on("slid.bs.carousel", function(event) {
-	        //The slide transition finished, so re-add the animate class so that
-	        //the timer bar takes time to fill up
-	            $(".transition-timer-carousel-progress-bar", this).addClass("animate").css("width", "100%");
-	    });
-	}
-
-    //Kick off the initial slide animation when the document is ready
-    $(".transition-timer-carousel-progress-bar", "#myCarousel").css("width", "100%");
-
-    // Home news
-    if($('ul#items').length > 0) {
-	    $('ul#items').easyPaginate({
-	        step:3
-	    });
-	}
-
-	// Like des news
-	$(".like").click(function() {
-  	if($(this).hasClass("active")) {
-    	$(this).removeClass("active");
-    	var nbr = $(this).html();
-    	nbr = nbr.split('<');
-    	nbr = nbr['0'];
-    	nbr = parseInt(nbr) - 1;
-    	$(this).html(nbr+' <i class="fa fa-thumbs-up"></i>');
-    	var id = $(this).attr("id");
-      var inputs = {};
-      inputs["id"] = id;
-      inputs["data[_Token][key]"] = CSRF_TOKEN;
-    	$.post(DISLIKE_URL, inputs);
-  	} else {
-    	$(this).addClass("active");
-    	var nbr = $(this).html();
-    	nbr = nbr.split('<');
-    	nbr = nbr['0'];
-    	nbr = parseInt(nbr) + 1;
-    	$(this).html(nbr + ' <i class="fa fa-thumbs-up"></i>');
-    	var id = $(this).attr("id");
-      var inputs = {};
-      inputs["id"] = id;
-      inputs["data[_Token][key]"] = CSRF_TOKEN;
-    	$.post(LIKE_URL, inputs);
+(function () {
+    function qs(selector, root) {
+        return (root || document).querySelector(selector);
     }
-  });
 
-  // Form ajax
-  
+    function qsa(selector, root) {
+        return Array.from((root || document).querySelectorAll(selector));
+    }
 
-  function isNumber(n) {
-    return !isNaN(parseFloat(n)) && isFinite(n);
-  }
+    function on(el, evt, handler, opts) {
+        if (!el) return;
+        el.addEventListener(evt, handler, opts || false);
+    }
 
-  // type (numbers)
-  $('body').find('input[data-type]').each(function(e) {
-    var element = $(this);
-    element.on('keyup', function(e) {
-      var last_char = element.val().substr(element.val().length - 1);
-      var val_without_last = element.val().substr(0, element.val().length - 1);
-      if(element.attr('data-type') == "numbers") {
-        if(!isNumber(element.val())) {
-          element.val(val_without_last);
+    function getCsrfToken() {
+        const meta = document.querySelector('meta[name="csrf-token"]');
+        return meta ? String(meta.getAttribute("content") || "") : "";
+    }
+
+    function postUrlEncoded(url, data) {
+        const body = new URLSearchParams();
+        Object.keys(data || {}).forEach(function (k) {
+            const v = data[k];
+            body.append(k, v === null || v === undefined ? "" : String(v));
+        });
+
+        return fetch(url, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRF-Token": getCsrfToken()
+            },
+            body: body.toString()
+        });
+    }
+
+    function initCaptchaReload() {
+        const btn = qs("#reload");
+        const img = qs("#captcha_image");
+        if (!btn || !img) return;
+
+        on(btn, "click", function (e) {
+            e.preventDefault();
+            const src = String(img.getAttribute("src") || "");
+            const sep = src.indexOf("?") === -1 ? "?" : "&";
+            img.setAttribute("src", src + sep + Math.random());
+        });
+    }
+
+    function initBootstrapCarouselTimer() {
+        const carousel = qs("#myCarousel");
+        if (!carousel) return;
+
+        const bar = qs(".transition-timer-carousel-progress-bar", carousel);
+        if (bar) bar.style.width = "100%";
+
+        on(carousel, "slide.bs.carousel", function () {
+            const b = qs(".transition-timer-carousel-progress-bar", carousel);
+            if (!b) return;
+            b.classList.remove("animate");
+            b.style.width = "0%";
+        });
+
+        on(carousel, "slid.bs.carousel", function () {
+            const b = qs(".transition-timer-carousel-progress-bar", carousel);
+            if (!b) return;
+            b.classList.add("animate");
+            b.style.width = "100%";
+        });
+    }
+
+    function initHomePaginationFallback() {
+        const ul = qs("ul#items");
+        if (!ul) return;
+
+        const step = 3;
+        const items = qsa(":scope > li", ul);
+        if (items.length <= step) return;
+
+        const pager = qs("ol#pagination");
+        if (!pager) return;
+
+        let page = 0;
+        const pages = Math.ceil(items.length / step);
+
+        function render() {
+            const start = page * step;
+            const end = start + step;
+
+            items.forEach(function (li, idx) {
+                li.style.display = idx >= start && idx < end ? "" : "none";
+            });
+
+            pager.innerHTML = "";
+            for (let i = 0; i < pages; i++) {
+                const li = document.createElement("li");
+                li.style.display = "inline-block";
+                li.style.marginRight = "6px";
+
+                const a = document.createElement("a");
+                a.href = "#";
+                a.textContent = String(i + 1);
+                if (i === page) a.style.fontWeight = "700";
+
+                on(a, "click", function (e) {
+                    e.preventDefault();
+                    page = i;
+                    render();
+                });
+
+                li.appendChild(a);
+                pager.appendChild(li);
+            }
         }
-      }
+
+        render();
+    }
+
+    function parseLikeCount(btn) {
+        const txt = (btn.textContent || "").trim();
+        const n = parseInt(txt, 10);
+        return Number.isFinite(n) ? n : 0;
+    }
+
+    function setLikeHtml(btn, count) {
+        btn.innerHTML = String(count) + ' <i class="fa fa-thumbs-up"></i>';
+    }
+
+    function getLikeUrls() {
+        const likeUrl = typeof window.LIKE_URL !== "undefined" ? String(window.LIKE_URL || "") : "";
+        const dislikeUrl = typeof window.DISLIKE_URL !== "undefined" ? String(window.DISLIKE_URL || "") : "";
+
+        if (!likeUrl && typeof window.LIKE_URL === "undefined" && typeof LIKE_URL !== "undefined") {
+            return { likeUrl: String(LIKE_URL || ""), dislikeUrl: String(DISLIKE_URL || "") };
+        }
+
+        return { likeUrl: likeUrl, dislikeUrl: dislikeUrl };
+    }
+
+    function initLikes() {
+        const urls = getLikeUrls();
+        const likeUrl = urls.likeUrl;
+        const dislikeUrl = urls.dislikeUrl;
+
+        if (!likeUrl || !dislikeUrl) return;
+
+        document.addEventListener("click", function (e) {
+            const btn = e.target && e.target.closest ? e.target.closest(".like") : null;
+            if (!btn) return;
+
+            if (btn.disabled === true) return;
+            if (btn.hasAttribute("disabled")) return;
+            if (btn.classList.contains("disabled")) return;
+
+            const id = btn.getAttribute("id") || "";
+            if (!id) return;
+
+            const active = btn.classList.contains("active");
+            const current = parseLikeCount(btn);
+
+            if (active) {
+                btn.classList.remove("active");
+                setLikeHtml(btn, Math.max(0, current - 1));
+                postUrlEncoded(dislikeUrl, { id: id }).catch(function () {});
+            } else {
+                btn.classList.add("active");
+                setLikeHtml(btn, current + 1);
+                postUrlEncoded(likeUrl, { id: id }).catch(function () {});
+            }
+        });
+    }
+
+    function isNumberValue(v) {
+        if (v === "" || v === null || v === undefined) return false;
+        return Number.isFinite(Number(v));
+    }
+
+    function initTypedNumbers() {
+        qsa('input[data-type="numbers"]').forEach(function (input) {
+            on(input, "keyup", function () {
+                const v = input.value;
+                if (v === "") return;
+                if (!isNumberValue(v)) {
+                    input.value = v.slice(0, -1);
+                }
+            });
+        });
+    }
+
+    function initAutotab() {
+        qsa("input[maxlength][tabindex]").forEach(function (input) {
+            on(input, "keyup", function () {
+                const max = parseInt(input.getAttribute("maxlength") || "0", 10);
+                if (!max) return;
+
+                if (input.value.length >= max) {
+                    const nextIndex = parseInt(input.getAttribute("tabindex") || "0", 10) + 1;
+                    const next = qs('input[maxlength][tabindex="' + CSS.escape(String(nextIndex)) + '"]');
+                    if (next) next.focus();
+                }
+            });
+        });
+    }
+
+    function initNavbarCollapseMaxHeight() {
+        const navCollapse = qs(".navbar-collapse");
+        const navHeader = qs(".navbar-header");
+        if (!navCollapse || !navHeader) return;
+
+        function apply() {
+            const h = Math.max(0, (window.innerHeight - 130) - navHeader.offsetHeight);
+            navCollapse.style.maxHeight = String(h) + "px";
+        }
+
+        apply();
+        on(window, "resize", apply);
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        initCaptchaReload();
+        initBootstrapCarouselTimer();
+        initHomePaginationFallback();
+        initLikes();
+        initTypedNumbers();
+        initAutotab();
+        initNavbarCollapseMaxHeight();
     });
-  });
-
-  // Autotab
-
-  $('body').find('input[maxlength]').each(function(e) {
-    var all_inputs = $('body').find('input[maxlength]');
-    var element = $(this);
-    element.on('keyup', function(e) {
-      if(element.attr('maxlength') <= element.val().length) {
-        var next_tab_index = parseInt(element.attr('tabindex'))+1;
-        $('body').find('input[maxlength][tabindex="'+next_tab_index+'"]').focus();
-      }
-    })
-  });
-});
+})();

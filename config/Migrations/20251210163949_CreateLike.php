@@ -15,9 +15,9 @@ final class CreateLike extends AbstractMigration
             ->addTimestamps()
             ->addIndex(['news_id'])
             ->addIndex(['user_id'])
+            ->addIndex(['news_id', 'user_id'], ['unique' => true])
             ->addForeignKey('news_id', 'news', 'id', ['delete' => 'CASCADE', 'update' => 'NO_ACTION'])
             ->addForeignKey('user_id', 'users', 'id', ['delete' => 'CASCADE', 'update' => 'NO_ACTION'])
             ->create();
-
     }
 }

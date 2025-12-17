@@ -6,55 +6,38 @@ namespace App\Controller;
 use Cake\Event\Event;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
-use Cake\ORM\TableRegistry;
+use Cake\ORM\Locator\LocatorAwareTrait;
 use Cake\Routing\Router;
 
-/**
- * @property \App\Model\Table\UsersTable $User
- * @property \App\Model\Table\NewsTable $News
- * @property \App\Model\Table\CommentsTable $Comment
- * @property \App\Model\Table\LikesTable $Like
- *
- * @property \App\Controller\Component\AuthComponent $Auth
- */
 class NewsController extends AppController
 {
+    use LocatorAwareTrait;
+
     public function blog(): Response
     {
-        $search_news = $this->getNews();
+        $userId = $this->getConnectedUserId();
 
-        $userId = null;
-        if ($this->Auth->isConnected()) {
-            $identity = $this->Auth->identity();
-            if (is_object($identity) && method_exists($identity, 'get')) {
-                $id = $identity->get('id');
-                if (is_numeric($id)) {
-                    $userId = (int)$id;
-                }
-            }
-        }
+        $News = $this->fetchTable('News');
 
-        if ($userId !== null) {
-            foreach ($search_news as $i => $val) {
-                if (!isset($val['likes'])) {
-                    continue;
-                }
-
-                foreach ($val['likes'] as $value) {
-                    foreach ($value as $v) {
-                        if ((int)$v === $userId) {
-                            $search_news[$i]['liked'] = true;
-                            break 2;
-                        }
+        $search_news = $News->find()
+            ->where(['News.published' => 1])
+            ->orderBy(['News.id' => 'DESC'])
+            ->contain([
+                'Likes' => function ($q) use ($userId) {
+                    if (!$userId) {
+                        return $q->where(['Likes.id IS' => null]);
                     }
-                }
-            }
-        }
 
-        foreach ($search_news as $i => $val) {
-            if (!isset($val['liked'])) {
-                $search_news[$i]['liked'] = false;
-            }
+                    return $q->select(['id', 'news_id', 'user_id'])
+                        ->where(['Likes.user_id' => $userId]);
+                },
+            ])
+            ->all()
+            ->toArray();
+
+        foreach ($search_news as $k => $n) {
+            $search_news[$k]['liked'] = !empty($n['likes']);
+            $search_news[$k]['absolute_url'] = Router::url('/blog/' . ($n['slug'] ?? ''), true);
         }
 
         $can_like = $this->Auth->can('LIKE_NEWS');
@@ -72,66 +55,58 @@ class NewsController extends AppController
     public function api(): Response
     {
         $this->disableAutoRender();
-        $this->response = $this->response->withType('application/json');
 
-        $search_news = $this->getNews();
-
-        return $this->response->withStringBody(json_encode($search_news));
+        return $this->response
+            ->withType('application/json')
+            ->withStringBody(json_encode($this->getNews(), JSON_UNESCAPED_UNICODE));
     }
 
-    public function index(string $slug): Response
+    public function index(): Response
     {
+        $slug = (string)($this->request->getParam('pass.0') ?? '');
         if ($slug === '') {
             throw new NotFoundException();
         }
 
-        $this->News = TableRegistry::getTableLocator()->get('News');
+        $userId = $this->getConnectedUserId();
 
-        $news = $this->News->find(
-            'all',
-            recursive: 1,
-            order: ['News.id' => 'DESC'],
-            conditions: ['News.slug' => $slug],
-        )->first();
+        $News = $this->fetchTable('News');
+
+        $news = $News->find()
+            ->where(['News.slug' => $slug])
+            ->contain([
+                'Comments',
+                'Likes' => function ($q) use ($userId) {
+                    if (!$userId) {
+                        return $q->where(['Likes.id IS' => null]);
+                    }
+
+                    return $q->select(['id', 'news_id', 'user_id'])
+                        ->where(['Likes.user_id' => $userId]);
+                },
+            ])
+            ->orderBy(['News.id' => 'DESC'])
+            ->first();
 
         if (!$news) {
             throw new NotFoundException();
         }
 
-        $userId = null;
-        if ($this->Auth->isConnected()) {
-            $identity = $this->Auth->identity();
-            if (is_object($identity) && method_exists($identity, 'get')) {
-                $id = $identity->get('id');
-                if (is_numeric($id)) {
-                    $userId = (int)$id;
-                }
-            }
+        $news['liked'] = !empty($news['likes']);
+
+        $this->set('title_for_layout', (string)($news['title'] ?? __('NEWS__TITLE')));
+
+        $search_news = $News->find()
+            ->where(['News.published' => 1])
+            ->select(['id', 'slug', 'title', 'updated_at', 'created_at', 'published'])
+            ->orderBy(['News.id' => 'DESC'])
+            ->limit(4)
+            ->all()
+            ->toArray();
+
+        foreach ($search_news as $k => $model) {
+            $search_news[$k]['absolute_url'] = Router::url('/blog/' . ($model['slug'] ?? ''), true);
         }
-
-        if ($userId !== null && isset($news['likes'])) {
-            foreach ($news['likes'] as $value) {
-                foreach ($value as $v) {
-                    if ((int)$v === $userId) {
-                        $news['liked'] = true;
-                        break 2;
-                    }
-                }
-            }
-        }
-
-        if (!isset($news['liked'])) {
-            $news['liked'] = false;
-        }
-
-        $this->set('title_for_layout', $news['title']);
-
-        $search_news = $this->News->find(
-            'all',
-            limit: 4,
-            order: ['News.id' => 'DESC'],
-            conditions: ['News.published' => 1],
-        )->all();
 
         $this->set(compact('search_news', 'news'));
 
@@ -145,33 +120,27 @@ class NewsController extends AppController
     public function addComment(): Response
     {
         $this->disableAutoRender();
-        $this->response = $this->response->withType('application/json');
 
         if (!$this->request->is('post')) {
-            return $this->response->withStringBody(json_encode([
-                'status' => false,
-                'messages' => __('ERROR__BAD_REQUEST'),
-            ]));
+            return $this->json(false, (string)__('ERROR__BAD_REQUEST'));
         }
 
         if (!$this->Auth->can('COMMENT_NEWS')) {
-            return $this->response->withStringBody(json_encode([
-                'status' => false,
-                'messages' => __('USER__ERROR_MUST_BE_LOGGED'),
-            ]));
+            return $this->json(false, (string)__('USER__ERROR_MUST_BE_LOGGED'));
         }
 
-        $content = (string)$this->getRequest()->getData('content', '');
-        $newsId = (int)$this->getRequest()->getData('news_id', 0);
+        $content = (string)$this->request->getData('content', '');
+        $newsId = (int)$this->request->getData('news_id', 0);
 
         if ($content === '' || $newsId <= 0) {
-            return $this->response->withStringBody(json_encode([
-                'status' => false,
-                'messages' => __('ERROR__FILL_ALL_FIELDS'),
-            ]));
+            return $this->json(false, (string)__('ERROR__FILL_ALL_FIELDS'));
         }
 
         $identity = $this->Auth->identity();
+        $userId = $this->getConnectedUserId();
+        if ($userId === null) {
+            return $this->json(false, (string)__('USER__ERROR_MUST_BE_LOGGED'));
+        }
 
         $event = new Event('beforeAddComment', $this, [
             'content' => $content,
@@ -179,42 +148,33 @@ class NewsController extends AppController
             'user' => $identity,
         ]);
         $this->getEventManager()->dispatch($event);
+
         if ($event->isStopped()) {
             $result = $event->getResult();
             if ($result instanceof Response) {
                 return $result;
             }
-
-            return $this->response->withStringBody(json_encode($result));
-        }
-
-        $userId = null;
-        if (is_object($identity) && method_exists($identity, 'get')) {
-            $id = $identity->get('id');
-            if (is_numeric($id)) {
-                $userId = (int)$id;
+            if (is_array($result)) {
+                return $this->response
+                    ->withType('application/json')
+                    ->withStringBody(json_encode($result, JSON_UNESCAPED_UNICODE));
             }
+
+            return $this->json(false, (string)__('ERROR__INTERNAL_ERROR'));
         }
 
-        if ($userId === null) {
-            return $this->response->withStringBody(json_encode([
-                'status' => false,
-                'messages' => __('USER__ERROR_MUST_BE_LOGGED'),
-            ]));
-        }
-
-        $this->Comment = TableRegistry::getTableLocator()->get('Comments');
-        $comment = $this->Comment->newEntity([
+        $Comments = $this->fetchTable('Comments');
+        $comment = $Comments->newEntity([
             'content' => $content,
             'user_id' => $userId,
             'news_id' => $newsId,
         ]);
-        $this->Comment->save($comment);
 
-        return $this->response->withStringBody(json_encode([
-            'status' => true,
-            'messages' => 'success',
-        ]));
+        if (!$Comments->save($comment)) {
+            return $this->json(false, (string)__('ERROR__INTERNAL_ERROR'));
+        }
+
+        return $this->json(true, (string)__('GLOBAL__SUCCESS'));
     }
 
     public function like(): Response
@@ -222,86 +182,64 @@ class NewsController extends AppController
         $this->disableAutoRender();
 
         if (!$this->request->is('post')) {
-            return $this->response->withType('application/json')
-                ->withStringBody(json_encode([
-                    'status' => false,
-                    'messages' => __('ERROR__BAD_REQUEST'),
-                ]));
+            return $this->json(false, (string)__('ERROR__BAD_REQUEST'));
         }
 
         if (!$this->Auth->can('LIKE_NEWS')) {
-            return $this->response->withType('application/json')
-                ->withStringBody(json_encode([
-                    'status' => false,
-                    'messages' => __('USER__ERROR_MUST_BE_LOGGED'),
-                ]));
+            return $this->json(false, (string)__('USER__ERROR_MUST_BE_LOGGED'));
+        }
+
+        $userId = $this->getConnectedUserId();
+        if ($userId === null) {
+            return $this->json(false, (string)__('USER__ERROR_MUST_BE_LOGGED'));
+        }
+
+        $newsId = (int)$this->request->getData('id', 0);
+        if ($newsId <= 0) {
+            return $this->json(false, (string)__('ERROR__BAD_REQUEST'));
+        }
+
+        $Likes = $this->fetchTable('Likes');
+
+        $already = $Likes->find()
+            ->where(['news_id' => $newsId, 'user_id' => $userId])
+            ->first();
+
+        if ($already) {
+            return $this->json(false, (string)__('ERROR__INTERNAL_ERROR'));
         }
 
         $identity = $this->Auth->identity();
-        $userId = null;
-        if (is_object($identity) && method_exists($identity, 'get')) {
-            $id = $identity->get('id');
-            if (is_numeric($id)) {
-                $userId = (int)$id;
-            }
-        }
-
-        if ($userId === null) {
-            return $this->response->withType('application/json')
-                ->withStringBody(json_encode([
-                    'status' => false,
-                    'messages' => __('USER__ERROR_MUST_BE_LOGGED'),
-                ]));
-        }
-
-        $newsId = (int)$this->getRequest()->getData('id', 0);
-        if ($newsId <= 0) {
-            return $this->response->withType('application/json')
-                ->withStringBody(json_encode([
-                    'status' => false,
-                    'messages' => __('ERROR__BAD_REQUEST'),
-                ]));
-        }
-
-        $this->Like = TableRegistry::getTableLocator()->get('Likes');
-        $already = $this->Like->find(
-            'all',
-            conditions: [
-                'news_id' => $newsId,
-                'user_id' => $userId,
-            ],
-        )->first();
-
-        if (!empty($already)) {
-            return $this->response->withType('application/json')
-                ->withStringBody(json_encode([
-                    'status' => false,
-                    'messages' => __('ERROR__INTERNAL_ERROR'),
-                ]));
-        }
-
         $event = new Event('beforeLike', $this, [
             'news_id' => $newsId,
             'user' => $identity,
         ]);
         $this->getEventManager()->dispatch($event);
+
         if ($event->isStopped()) {
             $result = $event->getResult();
             if ($result instanceof Response) {
                 return $result;
             }
+            if (is_array($result)) {
+                return $this->response
+                    ->withType('application/json')
+                    ->withStringBody(json_encode($result, JSON_UNESCAPED_UNICODE));
+            }
 
-            return $this->response->withType('application/json')
-                ->withStringBody(json_encode($result));
+            return $this->json(false, (string)__('ERROR__INTERNAL_ERROR'));
         }
 
-        $like = $this->Like->newEntity([
+        $like = $Likes->newEntity([
             'news_id' => $newsId,
             'user_id' => $userId,
         ]);
-        $this->Like->save($like);
 
-        return $this->response;
+        if (!$Likes->save($like)) {
+            return $this->json(false, (string)__('ERROR__INTERNAL_ERROR'));
+        }
+
+        return $this->json(true, (string)__('GLOBAL__SUCCESS'));
     }
 
     public function dislike(): Response
@@ -309,97 +247,79 @@ class NewsController extends AppController
         $this->disableAutoRender();
 
         if (!$this->request->is('post')) {
-            return $this->response->withType('application/json')
-                ->withStringBody(json_encode([
-                    'status' => false,
-                    'messages' => __('ERROR__BAD_REQUEST'),
-                ]));
+            return $this->json(false, (string)__('ERROR__BAD_REQUEST'));
         }
 
         if (!$this->Auth->can('LIKE_NEWS')) {
-            return $this->response->withType('application/json')
-                ->withStringBody(json_encode([
-                    'status' => false,
-                    'messages' => __('USER__ERROR_MUST_BE_LOGGED'),
-                ]));
+            return $this->json(false, (string)__('USER__ERROR_MUST_BE_LOGGED'));
+        }
+
+        $userId = $this->getConnectedUserId();
+        if ($userId === null) {
+            return $this->json(false, (string)__('USER__ERROR_MUST_BE_LOGGED'));
+        }
+
+        $newsId = (int)$this->request->getData('id', 0);
+        if ($newsId <= 0) {
+            return $this->json(false, (string)__('ERROR__BAD_REQUEST'));
+        }
+
+        $Likes = $this->fetchTable('Likes');
+
+        $already = $Likes->find()
+            ->where(['news_id' => $newsId, 'user_id' => $userId])
+            ->first();
+
+        if (!$already) {
+            return $this->json(false, (string)__('ERROR__INTERNAL_ERROR'));
         }
 
         $identity = $this->Auth->identity();
-        $userId = null;
-        if (is_object($identity) && method_exists($identity, 'get')) {
-            $id = $identity->get('id');
-            if (is_numeric($id)) {
-                $userId = (int)$id;
-            }
-        }
-
-        if ($userId === null) {
-            return $this->response->withType('application/json')
-                ->withStringBody(json_encode([
-                    'status' => false,
-                    'messages' => __('USER__ERROR_MUST_BE_LOGGED'),
-                ]));
-        }
-
-        $newsId = (int)$this->getRequest()->getData('id', 0);
-        if ($newsId <= 0) {
-            return $this->response->withType('application/json')
-                ->withStringBody(json_encode([
-                    'status' => false,
-                    'messages' => __('ERROR__BAD_REQUEST'),
-                ]));
-        }
-
-        $this->Like = TableRegistry::getTableLocator()->get('Likes');
-        $already = $this->Like->find(
-            'all',
-            conditions: [
-                'news_id' => $newsId,
-                'user_id' => $userId,
-            ],
-        )->first();
-
-        if (empty($already)) {
-            return $this->response->withType('application/json')
-                ->withStringBody(json_encode([
-                    'status' => false,
-                    'messages' => __('ERROR__INTERNAL_ERROR'),
-                ]));
-        }
-
         $event = new Event('beforeDislike', $this, [
             'news_id' => $newsId,
             'user' => $identity,
         ]);
         $this->getEventManager()->dispatch($event);
+
         if ($event->isStopped()) {
             $result = $event->getResult();
             if ($result instanceof Response) {
                 return $result;
             }
+            if (is_array($result)) {
+                return $this->response
+                    ->withType('application/json')
+                    ->withStringBody(json_encode($result, JSON_UNESCAPED_UNICODE));
+            }
 
-            return $this->response->withType('application/json')
-                ->withStringBody(json_encode($result));
+            return $this->json(false, (string)__('ERROR__INTERNAL_ERROR'));
         }
 
-        $this->Like->delete($already);
+        if (!$Likes->delete($already)) {
+            return $this->json(false, (string)__('ERROR__INTERNAL_ERROR'));
+        }
 
-        return $this->response;
+        return $this->json(true, (string)__('GLOBAL__SUCCESS'));
     }
 
     public function ajaxCommentDelete(): Response
     {
         $this->disableAutoRender();
-        $this->response = $this->response->withType('text/plain');
 
-        $this->Comment = TableRegistry::getTableLocator()->get('Comments');
-        $search = $this->Comment->find(
-            'all',
-            conditions: ['id' => $this->getRequest()->getData('id')],
-        )->first();
+        if (!$this->request->is('post')) {
+            return $this->response->withType('text/plain')->withStringBody('NOT_POST');
+        }
 
+        $Comments = $this->fetchTable('Comments');
+
+        $id = (int)$this->request->getData('id', 0);
+        if ($id <= 0) {
+            return $this->response->withType('text/plain')->withStringBody('NOT_FOUND');
+        }
+
+        $search = $Comments->find()->where(['id' => $id])->first();
         if (!$search) {
-            return $this->response->withStringBody('NOT_FOUND');
+            return $this->response->withType('text/plain')->withStringBody('NOT_FOUND');
         }
 
         $identity = $this->Auth->identity();
@@ -412,51 +332,87 @@ class NewsController extends AppController
             }
         }
 
+        $author = $search['author'] ?? null;
         $canDeleteAny = $this->Auth->can('DELETE_COMMENT');
-        $canDeleteOwn = $this->Auth->can('DELETE_HIS_COMMENT') && $username !== null && $username === ($search['author'] ?? null);
+        $canDeleteOwn = $this->Auth->can('DELETE_HIS_COMMENT') && $username !== null && $author !== null && $username === $author;
 
         if (!$canDeleteAny && !$canDeleteOwn) {
-            return $this->response->withStringBody('NOT_ADMIN');
-        }
-
-        if (!$this->request->is('post')) {
-            return $this->response->withStringBody('NOT_POST');
+            return $this->response->withType('text/plain')->withStringBody('NOT_ADMIN');
         }
 
         $event = new Event('beforeDeleteComment', $this, [
-            'comment_id' => $this->getRequest()->getData('id'),
+            'comment_id' => $id,
             'news_id' => $search['news_id'] ?? null,
             'user' => $identity,
         ]);
         $this->getEventManager()->dispatch($event);
+
         if ($event->isStopped()) {
             $result = $event->getResult();
             if ($result instanceof Response) {
                 return $result;
             }
 
-            return $this->response->withStringBody((string)$result);
+            return $this->response->withType('text/plain')->withStringBody((string)$result);
         }
 
-        $this->Comment->delete($search);
+        $Comments->delete($search);
 
-        return $this->response->withStringBody('true');
+        return $this->response->withType('text/plain')->withStringBody('true');
     }
 
     public function getNews(): array
     {
-        $this->News = TableRegistry::getTableLocator()->get('News');
-        $search_news = $this->News->find(
-            'all',
-            recursive: 1,
-            order: ['News.id' => 'DESC'],
-            conditions: ['News.published' => 1],
-        )->toArray();
+        $userId = $this->getConnectedUserId();
 
-        foreach ($search_news as $key => $model) {
-            $search_news[$key]['absolute_url'] = Router::url('/blog/' . $model['slug'], true);
+        $News = $this->fetchTable('News');
+
+        $search_news = $News->find()
+            ->where(['News.published' => 1])
+            ->orderBy(['News.id' => 'DESC'])
+            ->contain([
+                'Likes' => function ($q) use ($userId) {
+                    if (!$userId) {
+                        return $q->where(['Likes.id IS' => null]);
+                    }
+
+                    return $q->select(['id', 'news_id', 'user_id'])
+                        ->where(['Likes.user_id' => $userId]);
+                },
+                'Comments',
+            ])
+            ->all()
+            ->toArray();
+
+        foreach ($search_news as $k => $model) {
+            $search_news[$k]['liked'] = !empty($model['likes']);
+            $search_news[$k]['absolute_url'] = Router::url('/blog/' . ($model['slug'] ?? ''), true);
         }
 
         return $search_news;
+    }
+
+    private function getConnectedUserId(): ?int
+    {
+        if (!$this->Auth->isConnected()) {
+            return null;
+        }
+
+        $id = $this->Auth->id();
+        if (!is_numeric($id)) {
+            return null;
+        }
+
+        return (int)$id;
+    }
+
+    private function json(bool $status, string $messages): Response
+    {
+        return $this->response
+            ->withType('application/json')
+            ->withStringBody(json_encode([
+                'status' => $status,
+                'messages' => $messages,
+            ], JSON_UNESCAPED_UNICODE));
     }
 }

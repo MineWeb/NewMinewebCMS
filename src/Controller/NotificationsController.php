@@ -3,14 +3,14 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Table\NotificationsTable;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
 
-/**
- * @property \App\Model\Table\NotificationsTable $Notifications
- */
 class NotificationsController extends AppController
 {
+    private NotificationsTable $Notifications;
+
     public function beforeFilter(EventInterface $event): void
     {
         parent::beforeFilter($event);

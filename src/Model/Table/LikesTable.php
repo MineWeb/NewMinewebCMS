@@ -11,6 +11,7 @@ use Cake\Event\EventInterface;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
+use Throwable;
 
 class LikesTable extends Table
 {
@@ -28,6 +29,7 @@ class LikesTable extends Table
         $this->belongsTo('Users', [
             'foreignKey' => 'user_id',
         ]);
+
         $this->addBehavior('Timestamp', [
             'events' => [
                 'Model.beforeSave' => [
@@ -63,11 +65,19 @@ class LikesTable extends Table
 
     public function afterSave(EventInterface $event, EntityInterface $entity, ArrayObject $options): void
     {
-        Cache::delete('news', 'data');
+        $this->clearNewsCache();
     }
 
     public function afterDelete(EventInterface $event, EntityInterface $entity, ArrayObject $options): void
     {
-        Cache::delete('news', 'data');
+        $this->clearNewsCache();
+    }
+
+    private function clearNewsCache(): void
+    {
+        try {
+            Cache::delete('news');
+        } catch (Throwable $e) {
+        }
     }
 }
