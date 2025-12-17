@@ -66,13 +66,8 @@ final class PackageManager
         }
 
         $migrations = new Migrations(['plugin' => $slug]);
-        $migrations->migrate();
-        try {
-            $migrations->seed();
-        } catch (Throwable) {
-        }
 
-        $this->postInstallAddon($slug, $local, null);
+        $this->postInstallAddon($slug, $local, $migrations);
 
         Cache::clearAll();
     }
@@ -443,6 +438,10 @@ final class PackageManager
     {
         if ($migrations instanceof Migrations) {
             $migrations->migrate();
+            try {
+                $migrations->seed();
+            } catch (Throwable) {
+            }
         }
 
         $Plugins = $this->fetchTable('Plugins');
