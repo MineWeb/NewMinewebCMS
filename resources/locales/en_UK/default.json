@@ -363,7 +363,7 @@
         "SEO__CALLOUT": "SEO",
         "SEO__CALLOUT_MESSAGE": "Search Engine Optimization (SEO) helps search engines find information about your site and its pages. <br> Default settings will be applied to all pages on your site unless you have changed the information for a particular page.",
         "SEO__TITLE_DEFAULT": "Default Information (For all pages)",
-        "SEO__TITLE_OTHER": "Information page by page",
+        "SEO__TITLE_PER_PAGE": "Information page by page",
         "SEO__FORM_TITLE": "Title",
         "SEO__FORM_TITLE_DESC_T": "Title of the page managed by the CMS",
         "SEO__FORM_TITLE_DESC_W": "Site name in general settings",

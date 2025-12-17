@@ -211,9 +211,16 @@
                 <div class="card card-outline card-info mt-3">
                     <div class="card-header">
                         <div class="d-flex align-items-center justify-content-between">
-                            <h3 class="card-title mb-0">
-                                <i class="fas fa-list mr-2"></i><?= __('SEO__TITLE_OTHER') ?>
-                            </h3>
+
+                            <div class="d-flex align-items-center flex-wrap" style="gap: 10px;">
+                                <h3 class="card-title mb-0">
+                                    <i class="fas fa-list mr-2"></i><?= __('SEO__TITLE_PER_PAGE') ?>
+                                </h3>
+
+                                <span class="badge badge-light border">
+                                    <i class="fas fa-list mr-1"></i><?= is_countable($seo_other) ? count($seo_other) : 0 ?> <?= __('TABLE__ITEMS') ?>
+                                </span>
+                            </div>
 
                             <a class="btn btn-info btn-sm"
                                href="<?= $this->Url->build(['_name' => 'admin_seo_add']) ?>">

@@ -6,9 +6,17 @@
                 <div class="card card-outline card-primary">
                     <div class="card-header">
                         <div class="d-flex align-items-center justify-content-between">
-                            <h3 class="card-title mb-0">
-                                <i class="fas fa-bars mr-2"></i><?= __('NAVBAR__TITLE') ?>
-                            </h3>
+
+                            <div class="d-flex align-items-center flex-wrap" style="gap: 10px;">
+                                <h3 class="card-title mb-0">
+                                    <i class="fas fa-bars mr-2"></i><?= __('NAVBAR__TITLE') ?>
+                                </h3>
+
+                                <span class="badge badge-light border">
+                                    <i class="fas fa-list mr-1"></i><?= is_countable($navbars) ? count($navbars) : 0 ?> <?= __('TABLE__ITEMS') ?>
+                                </span>
+                            </div>
+
 
                             <a class="btn btn-primary btn-sm"
                                href="<?= $this->Url->build(['_name' => 'admin_navbar_add']) ?>">
@@ -34,7 +42,8 @@
                                         <th style="width: 44px;"></th>
                                         <th><?= __('GLOBAL__NAME') ?></th>
                                         <th><?= __('URL') ?></th>
-                                        <th class="text-right" style="width: 1%; white-space: nowrap;"><?= __('GLOBAL__ACTIONS') ?></th>
+                                        <th class="text-right"
+                                            style="width: 1%; white-space: nowrap;"><?= __('GLOBAL__ACTIONS') ?></th>
                                     </tr>
                                     </thead>
 
@@ -66,10 +75,12 @@
                                                                 <i class="<?= strpos((string)$value['icon'], 'fa-') !== false ? h((string)$value['icon']) : 'fa fa-' . h((string)$value['icon']) ?>"></i>
                                                             </span>
                                                         <?php } ?>
-                                                        <span class="font-weight-bold"><?= h((string)$value['name']) ?></span>
+                                                        <span
+                                                            class="font-weight-bold"><?= h((string)$value['name']) ?></span>
 
                                                         <?php if (!empty($value['open_new_tab'])) { ?>
-                                                            <span class="badge badge-light ml-2" title="<?= h(__('NAVBAR__OPEN_IN_NEW_TAB')) ?>">
+                                                            <span class="badge badge-light ml-2"
+                                                                  title="<?= h(__('NAVBAR__OPEN_IN_NEW_TAB')) ?>">
                                                                 <i class="fas fa-external-link-alt"></i>
                                                             </span>
                                                         <?php } ?>
@@ -97,7 +108,8 @@
                                                 </td>
 
                                                 <td class="align-middle text-right text-nowrap">
-                                                    <div class="btn-group btn-group-sm" role="group" aria-label="<?= h(__('GLOBAL__ACTIONS')) ?>">
+                                                    <div class="btn-group btn-group-sm" role="group"
+                                                         aria-label="<?= h(__('GLOBAL__ACTIONS')) ?>">
                                                         <a class="btn btn-info"
                                                            href="<?= $this->Url->build(['_name' => 'admin_navbar_edit', (int)$value['id']]) ?>">
                                                             <i class="fas fa-edit mr-1"></i><?= __('GLOBAL__EDIT') ?>
@@ -204,7 +216,7 @@
                     'Content-Type': 'application/json',
                     'X-CSRF-Token': csrf
                 },
-                body: JSON.stringify({ order: ids })
+                body: JSON.stringify({order: ids})
             })
                 .then(function (r) {
                     return r.json().catch(function () {

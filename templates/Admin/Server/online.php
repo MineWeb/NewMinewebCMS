@@ -8,7 +8,7 @@ $countId = 'online-count';
 $pass = (array)$this->getRequest()->getParam('pass', []);
 $currentServerId = isset($pass[0]) ? (int)$pass[0] : 0;
 
-$total = is_array($list) ? count($list) : 0;
+$serversCount = $currentServerId === 0 ? count($servers) : 1;
 
 $selfBaseUrl = $this->Url->build(['_name' => 'admin_server_online']);
 $backUrl = $this->Url->build(['_name' => 'admin_server_link']);
@@ -36,8 +36,8 @@ if ($currentServerId !== 0) {
                                     <i class="fas fa-users mr-2"></i><?= __('SERVER__ONLINE_PLAYERS') ?>
                                 </h3>
 
-                                <span class="badge badge-light border">
-                                    <i class="fas fa-list mr-1"></i><?= (int)$total ?> <?= __('TABLE__ITEMS') ?>
+                                <span class="badge badge-secondary">
+                                    <i class="fas fa-server mr-1"></i><?= $serversCount > 1 ? __('SERVER__COUNT_PLURAL', ['COUNT' => $serversCount]) : __('SERVER__COUNT_SINGLE', ['COUNT' => $serversCount]) ?>
                                 </span>
 
                                 <?php if ($currentServerId === 0): ?>
@@ -84,7 +84,8 @@ if ($currentServerId !== 0) {
 
                         <?php if ($list !== 'NEED_SERVER_ON'): ?>
 
-                            <div class="d-flex align-items-center justify-content-between flex-wrap mb-3" style="gap: 10px;">
+                            <div class="d-flex align-items-center justify-content-between flex-wrap mb-3"
+                                 style="gap: 10px;">
                                 <div class="input-group input-group-sm" style="max-width: 360px;">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text bg-white">
@@ -98,7 +99,8 @@ if ($currentServerId !== 0) {
                                            autocomplete="off"
                                            aria-label="<?= h((string)__('TABLE__SEARCH_PLACEHOLDER')) ?>">
                                     <div class="input-group-append">
-                                        <button class="btn btn-default" type="button" id="<?= h($searchId) ?>-clear" title="Clear">
+                                        <button class="btn btn-default" type="button" id="<?= h($searchId) ?>-clear"
+                                                title="Clear">
                                             <i class="fas fa-times"></i>
                                         </button>
                                     </div>
@@ -126,7 +128,8 @@ if ($currentServerId !== 0) {
                                 </table>
                             </div>
 
-                            <div id="<?= h($emptyId) ?>" class="p-3 text-center text-muted border rounded mt-3" style="display:none;">
+                            <div id="<?= h($emptyId) ?>" class="p-3 text-center text-muted border rounded mt-3"
+                                 style="display:none;">
                                 <i class="fas fa-info-circle mr-1"></i><?= __('TABLE__NO_RESULT') ?>
                             </div>
 

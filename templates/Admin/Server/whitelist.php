@@ -8,7 +8,7 @@ $countId = 'whitelist-count';
 $pass = (array)$this->getRequest()->getParam('pass', []);
 $currentServerId = isset($pass[0]) ? (int)$pass[0] : 0;
 
-$total = is_array($list) ? count($list) : 0;
+$serversCount = $currentServerId === 0 ? count($servers) : 1;
 
 $selfBaseUrl = $this->Url->build(['_name' => 'admin_server_whitelist']);
 $backUrl = $this->Url->build(['_name' => 'admin_server_link']);
@@ -36,8 +36,8 @@ if ($currentServerId !== 0) {
                                     <i class="fas fa-user-check mr-2"></i><?= __('SERVER__WHITELIST') ?>
                                 </h3>
 
-                                <span class="badge badge-light border">
-                                    <i class="fas fa-list mr-1"></i><?= (int)$total ?> <?= __('TABLE__ITEMS') ?>
+                                <span class="badge badge-secondary">
+                                    <i class="fas fa-server mr-1"></i><?= $serversCount > 1 ? __('SERVER__COUNT_PLURAL', ['COUNT' => $serversCount]) : __('SERVER__COUNT_SINGLE', ['COUNT' => $serversCount]) ?>
                                 </span>
 
                                 <?php if ($currentServerId === 0): ?>

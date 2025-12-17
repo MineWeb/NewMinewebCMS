@@ -108,9 +108,9 @@ final class DataTableComponent extends Component
         }
 
         return [
+            'recordsTotal' => $total,
+            'recordsFiltered' => $filteredTotal,
             'sEcho' => $dt['sEcho'],
-            'iTotalRecords' => $total,
-            'iTotalDisplayRecords' => $filteredTotal,
             'aaData' => $aaData,
         ];
     }

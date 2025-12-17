@@ -1,218 +1,254 @@
 <section class="content">
-    <div class="row">
+    <div class="container-fluid">
 
-        <div class="col-md-6">
-            <div class="card card-outline card-info">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-bell mr-2"></i><?= __('NOTIFICATION__ADD_NOTIFICATION') ?>
-                    </h3>
-                </div>
-                <div class="card-body">
+        <div class="row">
 
-                    <?= $this->Form->create(null, [
-                        'url' => ['_name' => 'admin_notifications_set_to'],
-                        'method' => 'post',
-                        'data-ajax' => 'true',
-                        'data-callback-function' => 'afterSendNotification',
-                    ]) ?>
-
-                    <div class="form-group">
-                        <label for="notification-content"><?= __('NOTIFICATION__CONTENT') ?></label>
-                        <textarea
-                            class="form-control"
-                            id="notification-content"
-                            name="content"
-                            maxlength="255"
-                            rows="4"
-                        ></textarea>
-                        <small class="form-text text-muted">255</small>
-                    </div>
-
-                    <div class="form-group mb-4">
-                        <div class="custom-control custom-switch">
-                            <input id="notification-from" name="from" type="checkbox" class="custom-control-input">
-                            <label class="custom-control-label" for="notification-from">
-                                <?= __('NOTIFICATION__DISPLAY_FROM') ?>
-                            </label>
+            <div class="col-md-6">
+                <div class="card card-outline card-info h-100">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap" style="gap: 10px;">
+                            <h3 class="card-title mb-0">
+                                <i class="fas fa-bell mr-2"></i><?= __('NOTIFICATION__ADD_NOTIFICATION') ?>
+                            </h3>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="notification-user-id"><?= __('NOTIFICATION__WHO') ?></label>
-                        <select
-                            class="form-control"
-                            id="notification-user-id"
-                            name="user_id"
-                        >
-                            <option value="all"><?= __('NOTIFICATION__ALL') ?></option>
-                            <option value="user"><?= __('NOTIFICATION__USER') ?></option>
-                        </select>
-                    </div>
+                    <div class="card-body">
 
-                    <div class="form-group" style="display:none;" id="userInput">
-                        <label for="notification-user-username"><?= __('NOTIFICATION__WHO_USERNAME') ?></label>
-                        <input
-                            type="text"
-                            id="notification-user-username"
-                            name="user_username"
-                            class="form-control"
-                        >
-                    </div>
+                        <?= $this->Form->create(null, [
+                            'url' => ['_name' => 'admin_notifications_set_to'],
+                            'method' => 'post',
+                            'data-ajax' => 'true',
+                            'data-callback-function' => 'afterSendNotification',
+                        ]) ?>
 
-                    <div class="form-group mb-0">
-                        <button type="submit" class="btn btn-info">
-                            <i class="fas fa-paper-plane mr-1"></i><?= __('GLOBAL__SUBMIT') ?>
-                        </button>
-                    </div>
+                        <div class="form-group">
+                            <label for="notification-content" class="mb-1"><?= __('NOTIFICATION__CONTENT') ?></label>
+                            <textarea
+                                class="form-control"
+                                id="notification-content"
+                                name="content"
+                                maxlength="255"
+                                rows="4"
+                                placeholder="<?= h((string)__('NOTIFICATION__CONTENT_PLACEHOLDER')) ?>"
+                            ></textarea>
 
-                    <?= $this->Form->end() ?>
-
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="card card-outline card-secondary">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-tools mr-2"></i><?= __('NOTIFICATION__OTHER_ACTIONS') ?>
-                    </h3>
-                </div>
-
-                <div class="card-body">
-
-                    <?php
-                    $deleteAllTitle = __('NOTIFICATION__DELETE_ALL_FROM_ALL_USERS');
-                    $markAllTitle = __('NOTIFICATION__MARK_ALL_AS_SEEN_FROM_ALL_USERS');
-
-                    $deleteAllShort = __('NOTIFICATION__DELETE_ALL_SHORT');
-                    $markAllShort = __('NOTIFICATION__MARK_ALL_SEEN_SHORT');
-                    ?>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <div class="card bg-danger mb-0" style="min-height: 130px;">
-                                <div class="card-body p-3">
-                                    <div class="d-flex align-items-start">
-                                        <div class="mr-3" style="font-size:30px;line-height:1;">
-                                            <i class="fas fa-trash"></i>
-                                        </div>
-                                        <div class="flex-grow-1" style="min-width:0;">
-                                            <div class="text-truncate">
-                                                <strong><?= h($deleteAllShort) ?></strong>
-                                            </div>
-                                            <div class="text-truncate" style="opacity:.9;">
-                                                <small><?= h($deleteAllTitle) ?></small>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-3">
-                                        <a
-                                            href="<?= $this->Url->build(['_name' => 'admin_notifications_clear_all_from_all_users']) ?>"
-                                            class="btn btn-block btn-light btn-sm"
-                                            id="delete-all"
-                                        >
-                                            <i class="fas fa-trash mr-1"></i><?= __('GLOBAL__DELETE') ?>
-                                        </a>
-                                    </div>
-                                </div>
+                            <div class="d-flex align-items-center justify-content-between mt-1">
+                                <small class="text-muted"><?= __('NOTIFICATION__CONTENT_HELP') ?></small>
+                                <small class="form-text text-muted mb-0">255</small>
                             </div>
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <div class="card bg-secondary mb-0" style="min-height: 130px;">
-                                <div class="card-body p-3">
-                                    <div class="d-flex align-items-start">
-                                        <div class="mr-3" style="font-size:30px;line-height:1;">
-                                            <i class="fas fa-check-double"></i>
-                                        </div>
-                                        <div class="flex-grow-1" style="min-width:0;">
-                                            <div class="text-truncate">
-                                                <strong><?= h($markAllShort) ?></strong>
-                                            </div>
-                                            <div class="text-truncate" style="opacity:.9;">
-                                                <small><?= h($markAllTitle) ?></small>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-3">
-                                        <a
-                                            href="<?= $this->Url->build(['_name' => 'admin_notifications_mark_all_as_seen_from_all_users']) ?>"
-                                            class="btn btn-block btn-light btn-sm"
-                                            id="mark-all-as-seen"
-                                        >
-                                            <i class="fas fa-check mr-1"></i><?= __('NOTIFICATION__MARK_AS_SEEN') ?>
-                                        </a>
-                                    </div>
-                                </div>
+                        <div class="form-group mb-4">
+                            <div class="custom-control custom-switch">
+                                <input id="notification-from" name="from" type="checkbox" class="custom-control-input">
+                                <label class="custom-control-label" for="notification-from">
+                                    <?= __('NOTIFICATION__DISPLAY_FROM') ?>
+                                </label>
                             </div>
                         </div>
-                    </div>
 
-                    <hr class="mt-0">
-
-                    <div class="mb-2">
-                        <strong><?= __('NOTIFICATION__GROUP_ID_LABEL') ?></strong>
-                    </div>
-
-                    <?= $this->Form->create(null, [
-                        'url' => ['_name' => 'admin_notifications_clear_all_from_group'],
-                        'method' => 'post',
-                        'data-ajax' => 'true',
-                        'data-callback-function' => 'afterSendNotification',
-                    ]) ?>
-
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
+                        <div class="form-group">
+                            <label for="notification-user-id" class="mb-1"><?= __('NOTIFICATION__WHO') ?></label>
+                            <select
+                                class="form-control"
+                                id="notification-user-id"
+                                name="user_id"
+                            >
+                                <option value="all"><?= __('NOTIFICATION__ALL') ?></option>
+                                <option value="user"><?= __('NOTIFICATION__USER') ?></option>
+                            </select>
                         </div>
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="notification-group"
-                            name="group"
-                            placeholder="<?= __('NOTIFICATION__GROUP_ID_PLACEHOLDER') ?>"
-                        >
-                        <div class="input-group-append">
-                            <button class="btn btn-danger" type="submit">
-                                <i class="fas fa-trash-alt mr-1"></i><?= __('GLOBAL__DELETE') ?>
+
+                        <div class="form-group" style="display:none;" id="userInput">
+                            <label for="notification-user-username" class="mb-1"><?= __('NOTIFICATION__WHO_USERNAME') ?></label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-white">
+                                        <i class="fas fa-user text-muted"></i>
+                                    </span>
+                                </div>
+                                <input
+                                    type="text"
+                                    id="notification-user-username"
+                                    name="user_username"
+                                    class="form-control"
+                                    placeholder="<?= h((string)__('NOTIFICATION__WHO_USERNAME_PLACEHOLDER')) ?>"
+                                >
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-end">
+                            <button type="submit" class="btn btn-info">
+                                <i class="fas fa-paper-plane mr-1"></i><?= __('GLOBAL__SUBMIT') ?>
                             </button>
                         </div>
+
+                        <?= $this->Form->end() ?>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card card-outline card-secondary">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap" style="gap: 10px;">
+                            <h3 class="card-title mb-0">
+                                <i class="fas fa-tools mr-2"></i><?= __('NOTIFICATION__OTHER_ACTIONS') ?>
+                            </h3>
+                            <span class="badge badge-secondary">
+                                <i class="fas fa-bolt mr-1"></i><?= __('NOTIFICATION__ACTIONS_QUICK') ?>
+                            </span>
+                        </div>
                     </div>
 
-                    <?= $this->Form->end() ?>
+                    <div class="card-body">
 
+                        <?php
+                        $deleteAllTitle = __('NOTIFICATION__DELETE_ALL_FROM_ALL_USERS');
+                        $markAllTitle = __('NOTIFICATION__MARK_ALL_AS_SEEN_FROM_ALL_USERS');
+
+                        $deleteAllShort = __('NOTIFICATION__DELETE_ALL_SHORT');
+                        $markAllShort = __('NOTIFICATION__MARK_ALL_SEEN_SHORT');
+                        ?>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="card bg-danger mb-0 h-100">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex align-items-start">
+                                            <div class="mr-3" style="font-size:30px;line-height:1;">
+                                                <i class="fas fa-trash"></i>
+                                            </div>
+                                            <div class="flex-grow-1" style="min-width:0;">
+                                                <div class="text-truncate">
+                                                    <strong><?= h($deleteAllShort) ?></strong>
+                                                </div>
+                                                <div class="text-truncate" style="opacity:.9;">
+                                                    <small><?= h($deleteAllTitle) ?></small>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-3">
+                                            <a
+                                                href="<?= $this->Url->build(['_name' => 'admin_notifications_clear_all_from_all_users']) ?>"
+                                                class="btn btn-block btn-light btn-sm"
+                                                id="delete-all"
+                                            >
+                                                <i class="fas fa-trash mr-1"></i><?= __('GLOBAL__DELETE') ?>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <div class="card bg-secondary mb-0 h-100">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex align-items-start">
+                                            <div class="mr-3" style="font-size:30px;line-height:1;">
+                                                <i class="fas fa-check-double"></i>
+                                            </div>
+                                            <div class="flex-grow-1" style="min-width:0;">
+                                                <div class="text-truncate">
+                                                    <strong><?= h($markAllShort) ?></strong>
+                                                </div>
+                                                <div class="text-truncate" style="opacity:.9;">
+                                                    <small><?= h($markAllTitle) ?></small>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-3">
+                                            <a
+                                                href="<?= $this->Url->build(['_name' => 'admin_notifications_mark_all_as_seen_from_all_users']) ?>"
+                                                class="btn btn-block btn-light btn-sm"
+                                                id="mark-all-as-seen"
+                                            >
+                                                <i class="fas fa-check mr-1"></i><?= __('NOTIFICATION__MARK_AS_SEEN') ?>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="mt-0">
+
+                        <div class="d-flex align-items-center justify-content-between flex-wrap" style="gap: 10px;">
+                            <strong><?= __('NOTIFICATION__GROUP_ID_LABEL') ?></strong>
+                            <span class="badge badge-light border">
+                                <i class="fas fa-hashtag mr-1"></i><?= __('NOTIFICATION__GROUP') ?>
+                            </span>
+                        </div>
+
+                        <?= $this->Form->create(null, [
+                            'url' => ['_name' => 'admin_notifications_clear_all_from_group'],
+                            'method' => 'post',
+                            'data-ajax' => 'true',
+                            'data-callback-function' => 'afterSendNotification',
+                        ]) ?>
+
+                        <div class="input-group mt-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white"><i class="fas fa-hashtag text-muted"></i></span>
+                            </div>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="notification-group"
+                                name="group"
+                                placeholder="<?= __('NOTIFICATION__GROUP_ID_PLACEHOLDER') ?>"
+                            >
+                            <div class="input-group-append">
+                                <button class="btn btn-danger" type="submit">
+                                    <i class="fas fa-trash-alt mr-1"></i><?= __('GLOBAL__DELETE') ?>
+                                </button>
+                            </div>
+                        </div>
+
+                        <?= $this->Form->end() ?>
+
+                    </div>
                 </div>
             </div>
         </div>
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <div class="card card-outline card-primary">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap" style="gap: 10px;">
+                            <div class="d-flex align-items-center flex-wrap" style="gap: 10px;">
+                                <h3 class="card-title mb-0">
+                                    <i class="fas fa-list mr-2"></i><?= __('NOTIFICATION__NOTIFICATIONS_LIST') ?>
+                                </h3>
+                                <span id="notifications-total" class="badge badge-light border"></span>
+                            </div>
+                        </div>
+                    </div>
 
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header with-border">
-                    <h3 class="card-title"><?= __('NOTIFICATION__NOTIFICATIONS_LIST') ?></h3>
-                </div>
-                <div class="card-body">
-                    <table class="table table-responsive-sm table-bordered"
-                           style="table-layout: fixed;word-wrap: break-word;">
-                        <thead>
-                        <tr>
-                            <th><?= __('USER__USERNAME') ?></th>
-                            <th><?= __('NOTIFICATION__GROUP_ID') ?></th>
-                            <th><?= __('NOTIFICATION__FROM') ?></th>
-                            <th><?= __('NOTIFICATION__CONTENT') ?></th>
-                            <th><?= __('NOTIFICATION__TYPE') ?></th>
-                            <th><?= __('GLOBAL__CREATED') ?></th>
-                            <th style="width: 240px;"><?= __('GLOBAL__ACTIONS') ?></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
+                    <div class="card-body">
+                        <table class="table table-responsive-sm table-bordered"
+                               style="table-layout: fixed;word-wrap: break-word;">
+                            <thead>
+                            <tr>
+                                <th><?= __('USER__USERNAME') ?></th>
+                                <th><?= __('NOTIFICATION__GROUP_ID') ?></th>
+                                <th><?= __('NOTIFICATION__FROM') ?></th>
+                                <th><?= __('NOTIFICATION__CONTENT') ?></th>
+                                <th><?= __('NOTIFICATION__TYPE') ?></th>
+                                <th><?= __('GLOBAL__CREATED') ?></th>
+                                <th style="width: 240px;"><?= __('GLOBAL__ACTIONS') ?></th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
+
         </div>
 
     </div>
@@ -278,6 +314,19 @@
             ]
         });
 
+        notificationsTable.on('xhr', function () {
+            let json = notificationsTable.ajax.json();
+            if (!json) return;
+
+            let total = (json.recordsTotal ?? json.iTotalRecords ?? 0);
+            let filtered = (json.recordsFiltered ?? json.iTotalDisplayRecords ?? total);
+
+            let badge = document.getElementById('notifications-total');
+            if (badge) {
+                badge.textContent = filtered + " / " + total + " <?= h((string)__('TABLE__ITEMS')) ?>";
+            }
+        });
+
         window.notificationsTable = notificationsTable;
 
         tableElement.addEventListener('click', function (e) {
@@ -294,9 +343,7 @@
 
                 fetch(url, {
                     method: 'GET',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 })
                     .then(function (response) {
                         return response.json();
@@ -331,9 +378,7 @@
 
                 fetch(urlSeen, {
                     method: 'GET',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 })
                     .then(function (response) {
                         return response.json();
@@ -373,9 +418,7 @@
 
                 fetch(url, {
                     method: 'GET',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 })
                     .then(function (response) {
                         return response.json();
@@ -408,9 +451,7 @@
 
                 fetch(url, {
                     method: 'GET',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 })
                     .then(function (response) {
                         return response.json();

@@ -25,9 +25,15 @@ foreach ($search_server as $srv) {
                 <div class="card card-outline card-primary">
                     <div class="card-header">
                         <div class="d-flex align-items-center justify-content-between">
-                            <h3 class="card-title mb-0">
-                                <i class="fas fa-terminal mr-2"></i><?= __('SERVER__CMD_TITLE') ?>
-                            </h3>
+
+                            <div class="d-flex align-items-center flex-wrap" style="gap: 10px;">
+                                <h3 class="card-title mb-0">
+                                    <i class="fas fa-terminal mr-2"></i><?= __('SERVER__CMD_TITLE') ?>
+                                </h3>
+
+                                <span class="badge badge-light border" id="cmd-count"></span>
+                            </div>
+
 
                             <div class="d-flex align-items-center" style="gap: 10px;">
                                 <div class="input-group input-group-sm" style="min-width: 280px;">
@@ -43,7 +49,7 @@ foreach ($search_server as $srv) {
                                     </div>
                                 </div>
 
-                                <span class="badge badge-light border" id="cmd-count"></span>
+
 
                                 <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#executeCommand">
                                     <i class="fas fa-plus"></i>

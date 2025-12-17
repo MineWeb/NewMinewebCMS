@@ -7,9 +7,16 @@
                 <div class="card card-outline card-primary">
                     <div class="card-header">
                         <div class="d-flex align-items-center justify-content-between">
-                            <h3 class="card-title mb-0">
-                                <i class="far fa-newspaper mr-2"></i><?= __('NEWS__LIST_PUBLISHED') ?>
-                            </h3>
+
+                            <div class="d-flex align-items-center flex-wrap" style="gap: 10px;">
+                                <h3 class="card-title mb-0">
+                                    <i class="far fa-newspaper mr-2"></i><?= __('NEWS__LIST_PUBLISHED') ?>
+                                </h3>
+
+                                <span class="badge badge-light border">
+                                    <i class="fas fa-list mr-1"></i><?= is_countable($view_news) ? count($view_news) : 0 ?> <?= __('TABLE__ITEMS') ?>
+                                </span>
+                            </div>
 
                             <a class="btn btn-primary btn-sm"
                                href="<?= $this->Url->build(['_name' => 'admin_news_add']) ?>">
