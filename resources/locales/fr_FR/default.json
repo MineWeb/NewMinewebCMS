@@ -648,7 +648,7 @@
         "PERMISSIONS__VIEW_WEBSITE_LOGS": "Voir les logs du site",
         "SERVER__TITLE": "Serveur",
         "SERVER__LINK_TITLE": "Lier serveur-site",
-        "SERVER__LINKED": "Lier",
+        "SERVER__LINKED": "Lié",
         "SERVER__TYPE": "Type de la connexion",
         "SERVER__TYPE_DEFAULT": "Par défaut",
         "SERVER__TYPE_QUERY": "Ping (pas besoin de plugin)",
