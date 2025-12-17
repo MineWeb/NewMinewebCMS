@@ -8,6 +8,8 @@ use App\Middleware\BanMiddleware;
 use App\Middleware\InstallMiddleware;
 use App\Middleware\LocaleMiddleware;
 use App\Middleware\MaintenanceMiddleware;
+use App\Service\Package\PackageException;
+use App\Service\Package\PackageManagerFactory;
 use Cake\Cache\Cache;
 use Cake\Core\Configure;
 use Cake\Core\ContainerInterface;
@@ -18,6 +20,7 @@ use Cake\Http\BaseApplication;
 use Cake\Http\Middleware\BodyParserMiddleware;
 use Cake\Http\Middleware\CsrfProtectionMiddleware;
 use Cake\Http\MiddlewareQueue;
+use Cake\Log\Log;
 use Cake\ORM\Locator\TableLocator;
 use Cake\Routing\Middleware\AssetMiddleware;
 use Cake\Routing\Middleware\RoutingMiddleware;
@@ -43,6 +46,8 @@ final class Application extends BaseApplication
         if (Configure::read('debug') && extension_loaded('pdo_sqlite')) {
             $this->addPlugin('DebugKit');
         }
+
+        $this->syncLocalAddons();
 
         $addons = $this->loadEnabledAddons();
         $themes = $this->loadInstalledThemes();
@@ -80,6 +85,8 @@ final class Application extends BaseApplication
 
     protected function bootstrapCli(): void
     {
+        $this->syncLocalAddons();
+
         $addons = $this->loadEnabledAddons();
         $themes = $this->loadInstalledThemes();
 
@@ -173,6 +180,90 @@ final class Application extends BaseApplication
         return $type;
     }
 
+    private function syncLocalAddons(): void
+    {
+        if (!Configure::read('Install.dbConfigured') || !Configure::read('Install.installed')) {
+            return;
+        }
+
+        $addonsDir = rtrim((string)Configure::read('Update.addons.folder', ROOT . DS . 'plugins' . DS . 'Addons'), DS);
+        if (!is_dir($addonsDir)) {
+            $alt = ROOT . DS . 'plugins' . DS . 'Addon';
+            if (is_dir($alt)) {
+                $addonsDir = $alt;
+            } else {
+                return;
+            }
+        }
+
+        $manifestFile = (string)Configure::read('Update.addons.manifest', 'manifest.json');
+
+        try {
+            $locator = FactoryLocator::get('Table');
+            $Plugins = $locator->get('Plugins');
+        } catch (Throwable $e) {
+            Log::error('Addon sync failed (Plugins table unavailable): ' . $e->getMessage());
+
+            return;
+        }
+
+        $entries = scandir($addonsDir) ?: [];
+        $installedAny = false;
+
+        foreach ($entries as $slug) {
+            if (!is_string($slug) || $slug === '.' || $slug === '..' || $slug === '.gitkeep') {
+                continue;
+            }
+
+            $path = $addonsDir . DS . $slug;
+            if (!is_dir($path)) {
+                continue;
+            }
+
+            $manifestPath = $path . DS . $manifestFile;
+            if (!is_file($manifestPath)) {
+                Log::warning('Addon detected but invalid (missing manifest): ' . $slug);
+                continue;
+            }
+
+            try {
+                $exists = $Plugins->find()->select(['id'])->where(['name' => $slug])->first();
+            } catch (Throwable $e) {
+                Log::error('Addon sync failed (DB query error): ' . $e->getMessage());
+
+                return;
+            }
+
+            if ($exists !== null) {
+                continue;
+            }
+
+            try {
+                $this->addAddonPlugin($slug, false, true);
+
+                $packages = (new PackageManagerFactory())->create();
+                $packages->registerLocalAddon($slug);
+
+                $installedAny = true;
+
+                try {
+                    $plugin = $this->getPlugins()->get($slug);
+                    $plugin->bootstrap($this);
+                } catch (Throwable $e) {
+                    Log::warning('Addon installed but bootstrap failed: ' . $slug . ' (' . $e->getMessage() . ')');
+                }
+            } catch (PackageException $e) {
+                Log::warning('Addon detected but invalid: ' . $slug . ' (' . $e->messageKey . ')');
+            } catch (Throwable $e) {
+                Log::error('Addon sync failed: ' . $slug . ' (' . $e->getMessage() . ')');
+            }
+        }
+
+        if ($installedAny) {
+            Cache::clearAll();
+        }
+    }
+
     private function loadEnabledAddons(): array
     {
         if (!Configure::read('Install.dbConfigured') || !Configure::read('Install.installed')) {
@@ -185,7 +276,7 @@ final class Application extends BaseApplication
             $slugs = array_values(array_unique(array_filter(array_map('strval', $cached))));
             foreach ($slugs as $slug) {
                 if ($this->addonExists($slug)) {
-                    $this->addAddonPlugin($slug);
+                    $this->addAddonPlugin($slug, true, true);
                 }
             }
 
@@ -216,7 +307,7 @@ final class Application extends BaseApplication
                     continue;
                 }
 
-                $this->addAddonPlugin($slug);
+                $this->addAddonPlugin($slug, true, true);
                 $slugs[] = $slug;
             }
         } catch (Throwable) {
@@ -231,7 +322,7 @@ final class Application extends BaseApplication
 
     private function loadInstalledThemes(): array
     {
-        $dir = ROOT . DS . 'plugins' . DS . 'Themes';
+        $dir = rtrim((string)Configure::read('Update.themes.folder', ROOT . DS . 'plugins' . DS . 'Themes'), DS);
         if (!is_dir($dir)) {
             return [];
         }
@@ -255,24 +346,26 @@ final class Application extends BaseApplication
         return array_values(array_unique($slugs));
     }
 
-    private function addAddonPlugin(string $slug): void
+    private function addAddonPlugin(string $slug, bool $bootstrap = true, bool $routes = true): void
     {
-        $path = ROOT . DS . 'plugins' . DS . 'Addons' . DS . $slug;
+        $base = rtrim((string)Configure::read('Update.addons.folder', ROOT . DS . 'plugins' . DS . 'Addons'), DS);
+        $path = $base . DS . $slug;
 
         $this->registerPluginAutoload($slug, $path);
 
         if (!$this->getPlugins()->has($slug)) {
             $this->addPlugin($slug, [
                 'path' => $path,
-                'bootstrap' => true,
-                'routes' => true,
+                'bootstrap' => $bootstrap,
+                'routes' => $routes,
             ]);
         }
     }
 
     private function addThemePlugin(string $slug): void
     {
-        $path = ROOT . DS . 'plugins' . DS . 'Themes' . DS . $slug;
+        $base = rtrim((string)Configure::read('Update.themes.folder', ROOT . DS . 'plugins' . DS . 'Themes'), DS);
+        $path = $base . DS . $slug;
 
         $this->registerPluginAutoload($slug, $path);
 
@@ -320,11 +413,15 @@ final class Application extends BaseApplication
 
     private function addonExists(string $slug): bool
     {
-        return is_dir(ROOT . DS . 'plugins' . DS . 'Addons' . DS . $slug);
+        $base = rtrim((string)Configure::read('Update.addons.folder', ROOT . DS . 'plugins' . DS . 'Addons'), DS);
+
+        return is_dir($base . DS . $slug);
     }
 
     private function themeExists(string $slug): bool
     {
-        return is_dir(ROOT . DS . 'plugins' . DS . 'Themes' . DS . $slug);
+        $base = rtrim((string)Configure::read('Update.themes.folder', ROOT . DS . 'plugins' . DS . 'Themes'), DS);
+
+        return is_dir($base . DS . $slug);
     }
 }

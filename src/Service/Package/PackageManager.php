@@ -6,6 +6,7 @@ namespace App\Service\Package;
 use App\Service\HttpService;
 use App\Service\Package\Filesystem\FilesystemService;
 use App\Service\Package\Manifest\ManifestLoader;
+use App\Service\Package\Manifest\PackageManifest;
 use App\Service\Package\Market\MarketConfigService;
 use App\Service\Package\Requirement\RequirementChecker;
 use App\Service\Package\Source\GitHubSource;
@@ -34,6 +35,46 @@ final class PackageManager
         private readonly LatestReleaseService $releases,
         private readonly MarketConfigService $markets,
     ) {
+    }
+
+    public function registerLocalAddon(string $slug): void
+    {
+        $slug = trim($slug);
+        if ($slug === '') {
+            throw new PackageException('ERROR__PLUGIN_NOT_VALID');
+        }
+
+        $addonsFolder = rtrim((string)Configure::read('Update.addons.folder', ROOT . DS . 'plugins' . DS . 'Addons'), DS);
+        if (!is_dir($addonsFolder)) {
+            $alt = ROOT . DS . 'plugins' . DS . 'Addon';
+            if (is_dir($alt)) {
+                $addonsFolder = rtrim($alt, DS);
+            }
+        }
+
+        $targetDir = $addonsFolder . DS . $slug;
+        $manifestFile = (string)Configure::read('Update.addons.manifest', 'manifest.json');
+
+        if (!is_dir($targetDir)) {
+            throw new PackageException('ERROR__PLUGIN_NOT_VALID');
+        }
+
+        $local = $this->manifests->loadLocal($targetDir, $manifestFile);
+
+        if ($local->type !== PackageType::Addon || strcasecmp($local->slug, $slug) !== 0) {
+            throw new PackageException('ERROR__PLUGIN_NOT_VALID');
+        }
+
+        $migrations = new Migrations(['plugin' => $slug]);
+        $migrations->migrate();
+        try {
+            $migrations->seed();
+        } catch (Throwable) {
+        }
+
+        $this->postInstallAddon($slug, $local, null);
+
+        Cache::clearAll();
     }
 
     public function cmsCurrentVersion(): string
@@ -398,7 +439,7 @@ final class PackageManager
         }
     }
 
-    private function postInstallAddon(string $slug, object $remoteManifest, ?Migrations $migrations): void
+    private function postInstallAddon(string $slug, PackageManifest $manifest, ?Migrations $migrations): void
     {
         if ($migrations instanceof Migrations) {
             $migrations->migrate();
@@ -413,16 +454,16 @@ final class PackageManager
             $pluginEntity->set('state', 1);
         }
 
-        $pluginEntity->set('author', (string)($remoteManifest->author ?? ''));
-        $pluginEntity->set('version', (string)($remoteManifest->version ?? ''));
+        $pluginEntity->set('author', (string)($manifest->author ?? ''));
+        $pluginEntity->set('version', (string)($manifest->version ?? ''));
         $Plugins->saveOrFail($pluginEntity);
 
-        $defaults = (array)($remoteManifest->permissions['defaults'] ?? []);
+        $defaults = (array)($manifest->permissions['defaults'] ?? []);
         $this->permissionSync->applyDefaults($defaults);
 
         $allowed = array_merge(
             $this->permissionSync->corePermissions(),
-            (array)($this->allInstalledAddonPermissions()),
+            $this->allInstalledAddonPermissions(),
         );
         $this->permissionSync->refreshAllowedPermissions($allowed);
     }
