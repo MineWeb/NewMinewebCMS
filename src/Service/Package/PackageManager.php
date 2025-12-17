@@ -450,7 +450,7 @@ final class PackageManager
         $pluginEntity = $Plugins->find()->where(['name' => $slug])->first();
         $isFirstInstall = $pluginEntity === null;
 
-        if ($pluginEntity === null) {
+        if ($isFirstInstall) {
             $pluginEntity = $Plugins->newEmptyEntity();
             $pluginEntity->set('name', $slug);
             $pluginEntity->set('state', 1);
